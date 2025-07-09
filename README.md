@@ -1,6 +1,6 @@
 # ⚡ Spark: Modular Spiking Neural Networks
 
-<div align="center"><img src="https://raw.githubusercontent.com/nogarx/Spark/main/images/spark_logo.png" alt="Spark Logo"></div>
+<div align="center"><img src="./images/spark_logo.png" width="400" alt="Spark Logo"></div>
 
 <p align="center">
     <strong>
@@ -62,7 +62,7 @@ pip install -e .
 Design your network's structure, set parameters for each component, and connect them to create a model.
 
 <div align="center">
-    <img src="https://raw.githubusercontent.com/nogarx/Spark/main/images/spark_graph_editor.png" alt="Spark Logo"></div>
+    <img src="./images/spark_graph_editor.png" alt="Spark Logo"></div>
     <p>
         <em>The Spark visual interface for building SNNs.</em>
     </p>
