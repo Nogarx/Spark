@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+import jax
+import jax.numpy as jnp
 from typing import Any
 
 # TODO: These methods are useful to prevent some circular imports, specially  
@@ -40,6 +42,7 @@ def _is_spark_type(obj: Any, type_name: str) -> bool:
                 return True
     return False
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 def _is_spark_instance(obj: Any, type_name: str) -> bool:
     """
@@ -63,6 +66,7 @@ def _is_spark_instance(obj: Any, type_name: str) -> bool:
                 return True
     return False
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 def _is_payload_type(obj: Any) -> bool:
     """
@@ -75,6 +79,7 @@ def _is_payload_type(obj: Any) -> bool:
     """
     return _is_spark_type(obj, DEFAULT_PAYLOAD_PATH)
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 def _is_payload_instance(obj: Any) -> bool:
     """
@@ -87,6 +92,7 @@ def _is_payload_instance(obj: Any) -> bool:
     """
     return _is_spark_instance(obj, DEFAULT_PAYLOAD_PATH)
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 def _is_module_type(obj: Any) -> bool:
     """
@@ -99,6 +105,7 @@ def _is_module_type(obj: Any) -> bool:
     """
     return _is_spark_type(obj, DEFAULT_SPARKMODULE_PATH)
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 def _is_module_instance(obj: Any) -> bool:
     """
@@ -111,6 +118,90 @@ def _is_module_instance(obj: Any) -> bool:
     """
     return _is_spark_instance(obj, DEFAULT_SPARKMODULE_PATH)
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def is_shape(obj: Any) -> bool:
+    """
+        Check if an object instance is of 'Shape', i.e., 'tuple[int,...]'.
+
+        Args:
+            obj (Any): The instance to check.
+        Returns:
+            bool: True if the object is an instance of 'Shape', False otherwise.
+    """
+    if isinstance(obj, tuple):
+        if all(isinstance(x, int) for x in obj):    
+            return True
+    return False
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def is_list_shape(obj: Any) -> bool:
+    """
+        Check if an object instance is of 'list[Shape]', i.e., 'list[tuple[int,...]]'.
+
+        Args:
+            obj (Any): The instance to check.
+        Returns:
+            bool: True if the object is an instance of 'Shape', False otherwise.
+    """
+    if isinstance(obj, list):
+        if all(is_shape(o) for o in obj):
+            return True
+    return False
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def is_dict_of(obj: Any, value_cls: type[Any], key_cls: type[Any] = str) -> bool:
+    """
+        Check if an object instance is of 'dict[key_cls, value_cls]'.
+
+        Args:
+            obj (Any): The instance to check.
+        Returns:
+            bool: True if the object is an instance of 'dict[key_cls, value_cls]', False otherwise.
+    """
+    if not isinstance(key_cls, type):
+        raise TypeError(f'Expected "key_cls" to be of a type but got {key_cls}')
+    if not isinstance(value_cls, type):
+        raise TypeError(f'Expected "value_cls" to be of a type but got {key_cls}')
+    if isinstance(obj, dict):
+        if all(isinstance(k, key_cls) and isinstance(v, value_cls) for k, v in obj.items()):    
+            return True
+    return False
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def is_list_of(obj: Any, cls: type[Any]) -> bool:
+    """
+        Check if an object instance is of 'list[cls]'.
+
+        Args:
+            obj (Any): The instance to check.
+        Returns:
+            bool: True if the object is an instance of 'list[cls]', False otherwise.
+    """
+    if not isinstance(cls, type):
+        raise TypeError(f'Expected "cls" to be of a type but got {cls}')
+    if isinstance(obj, list):
+        if all(isinstance(x, cls) for x in obj):    
+            return True
+    return False
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def is_dtype(obj: Any) -> bool:
+    """
+        Check if an object is a 'DTypeLike'.
+
+        Args:
+            obj (Any): The instance to check.
+        Returns:
+            bool: True if the object is a 'DTypeLike', False otherwise.
+    """
+    if isinstance(jnp.dtype(obj), jnp.dtype):
+        return True
+    return False
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

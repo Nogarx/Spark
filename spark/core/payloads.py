@@ -37,6 +37,16 @@ class SparkPayload(abc.ABC):
     @classmethod
     def tree_unflatten(cls, aux_data, children):
         return cls(*aux_data)
+    
+    @property
+    @abc.abstractmethod
+    def shape(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def dtype(self):
+        pass
 
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -65,11 +75,29 @@ class ValueSparkPayload(SparkPayload, abc.ABC):
     def __array__(self, dtype=None) -> jax.Array: 
         return np.array(self.value).astype(dtype if dtype else self.value.dtype)
 
+    @property
+    def shape(self):
+        return self.value.shape
+
+    @property
+    def dtype(self):
+        return self.value.dtype
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 # Delay registry import to prevent circular import.
 from spark.core.registry import register_payload
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@jax.tree_util.register_pytree_node_class
+@dataclass(frozen=True)
+@register_payload
+class DummyArray(ValueSparkPayload):
+    """
+        Dummy array for internal collections.
+    """
+    pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

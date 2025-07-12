@@ -7,7 +7,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.specs import OutputSpecs, InputSpecs
+    from spark.core.specs import OutputSpec, InputSpec
 
 import abc
 import jax.numpy as jnp
@@ -59,7 +59,7 @@ class PortSpecEditor:
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @dataclass(init=False)
-class InputSpecsEditor(PortSpecEditor):
+class InputSpecEditor(PortSpecEditor):
     """
         Specification for an input port of an SparkModule.
     """
@@ -94,7 +94,7 @@ class InputSpecsEditor(PortSpecEditor):
         self.port_maps.remove(port_map)
 
     @classmethod
-    def from_input_specs(cls, input_spec: InputSpecs, port_maps: Optional[List[PortMap]] = []) -> InputSpecsEditor:
+    def from_input_specs(cls, input_spec: InputSpec, port_maps: Optional[List[PortMap]] = []) -> InputSpecEditor:
         return cls(payload_type=input_spec.payload_type,  
                    shape=input_spec.shape, 
                    dtype=input_spec.dtype,  
@@ -105,14 +105,14 @@ class InputSpecsEditor(PortSpecEditor):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @dataclass(init=False)
-class OutputSpecsEditor(PortSpecEditor):
+class OutputSpecEditor(PortSpecEditor):
     """
         Specification for an output port of an SparkModule.
     """
     pass
 
     @classmethod
-    def from_output_specs(cls, output_spec: OutputSpecs) -> OutputSpecsEditor:
+    def from_output_specs(cls, output_spec: OutputSpec) -> OutputSpecEditor:
         return cls(payload_type=output_spec.payload_type,  
                    shape=output_spec.shape, 
                    dtype=output_spec.dtype,  

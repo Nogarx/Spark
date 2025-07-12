@@ -10,7 +10,7 @@ import jax.numpy as jnp
 from typing import TypedDict, List
 from math import prod
 from spark.core.payloads import SpikeArray
-from spark.core.variable_containers import Variable, Constant
+from spark.core.variable_containers import SparkVariable, SparkConstant
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.registry import register_module
 from spark.nn.components.base import Component
@@ -74,7 +74,7 @@ class DummyDelays(Delays):
         self._shape = normalize_shape(input_shape)
         self._units = prod(self._shape)
         # Internal variables
-        self.spikes = Variable(jnp.zeros(self._shape, self._dtype), dtype=self._dtype)
+        self.spikes = SparkVariable(jnp.zeros(self._shape, self._dtype), dtype=self._dtype)
 
     @property
     def input_shapes(self,) -> List[Shape]:
@@ -135,11 +135,11 @@ class NDelays(Delays):
         self._buffer_size = max_delay
         num_bytes = (self._units + 7) // 8
         self._padding = (0, num_bytes * 8 - self._units)
-        self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
-        self._current_idx = Variable(0, dtype=jnp.int32)
+        self._bitmask = SparkVariable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
+        self._current_idx = SparkVariable(0, dtype=jnp.int32)
         # Initialize delay kernel
         delay_kernel = delay_kernel_initializer(scale=self._buffer_size)(self.get_rng_keys(1), self._units)
-        self.delay_kernel = Constant(delay_kernel, dtype=jnp.uint8)
+        self.delay_kernel = SparkConstant(delay_kernel, dtype=jnp.uint8)
 
     @property
     def input_shapes(self,) -> List[Shape]:
@@ -231,11 +231,11 @@ class N2NDelays(Delays):
         self._delay_kernel_initializer = delay_kernel_initializer
         num_bytes = (self._units + 7) // 8
         self._padding = (0, num_bytes * 8 - self._units)
-        self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
-        self._current_idx = Variable(0, dtype=jnp.int32)
+        self._bitmask = SparkVariable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
+        self._current_idx = SparkVariable(0, dtype=jnp.int32)
         # Initialize kernel
         delay_kernel = delay_kernel_initializer(scale=self._buffer_size)(self.get_rng_keys(1), self._kernel_shape)
-        self.delay_kernel = Constant(delay_kernel, dtype=jnp.uint8)
+        self.delay_kernel = SparkConstant(delay_kernel, dtype=jnp.uint8)
 
     @property
     def input_shapes(self,) -> List[Shape]:

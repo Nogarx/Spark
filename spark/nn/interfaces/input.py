@@ -3,13 +3,17 @@
 #################################################################################################################################################
 
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from spark.core.payloads import SparkPayload
+    from spark.core.specs import InputSpec
 
 import abc
 import jax
 import jax.numpy as jnp
-from typing import TypedDict, Dict, List
-from spark.core.payloads import SparkPayload, SpikeArray, FloatArray
-from spark.core.variable_containers import Variable, Constant
+from typing import TypedDict
+from spark.core.payloads import SpikeArray, FloatArray
+from spark.core.variable_containers import SparkVariable, SparkConstant
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.registry import register_module
 from spark.nn.interfaces.base import Interface
@@ -31,11 +35,12 @@ class InputInterface(Interface, abc.ABC):
 
     def __init__(self, 
                  **kwargs):
+        
         # Main attributes
         super().__init__(**kwargs)
 
     @abc.abstractmethod
-    def __call__(self, *args: SparkPayload, **kwargs) -> Dict[str, SparkPayload]:
+    def __call__(self, *args: SparkPayload, **kwargs) -> dict[str, SparkPayload]:
         """
             Transform the input signal into an Spike signal.
         """
@@ -51,29 +56,26 @@ class PoissonSpiker(InputInterface):
     """
 
     def __init__(self, 
-                 input_shape: bShape,
                  max_freq: float = 50, 	# [Hz]
                  **kwargs):
+        # Initialize super
         super().__init__(**kwargs)
-        # Initialize shapes
-        self._shape = normalize_shape(input_shape)
         # Initialize variables
-        self._scale = self._dt * (max_freq / 1000)
+        self.max_freq = max_freq
+        self._scale = self._dt * (self.max_freq / 1000)
 
-    @property
-    def input_shapes(self,) -> List[Shape]:
-        return [self._shape]
-
-    @property
-    def output_shapes(self,) -> List[Shape]:
-        return [self._shape]
+    def build(self, input_specs: dict[str, InputSpec]) -> None:
+        # Initialize shapes
+        self._shape = normalize_shape(input_specs['drive'].shape)
 
     def __call__(self, drive: FloatArray) -> InputInterfaceOutput:
         """
             Input interface operation.
 
-            Input: A FloatArray of values in the range [0,1].
-            Output: A SpikeArray of the same shape as the input.
+            Input: 
+                A FloatArray of values in the range [0,1].
+            Output: 
+                A SpikeArray of the same shape as the input.
         """
         spikes = (jax.random.uniform(self.get_rng_keys(1), shape=self._shape) < self._scale * drive.value).astype(self._dtype)
         return {
@@ -91,42 +93,42 @@ class LinearSpiker(InputInterface):
     """
 
     def __init__(self, 
-                 input_shape: bShape,
                  tau: float = 100, 	 	# [ms]
                  cd: float = 2.0,		# [ms]
                  max_freq: float = 50, 	# [Hz]
                  **kwargs):
+        # Initialize super
         super().__init__(**kwargs)
         # Sanity checks
         if not isinstance(cd, float) and cd > 0:
             raise ValueError(f'"cd" must be a positive float, got {cd}.')
-        # Initialize shapes
-        self._shape = normalize_shape(input_shape)
         # Initialize variables
-        exp_term = jnp.exp((1/tau) * ((1000-cd*max_freq) / max_freq)) # dt cancels out
+        self.tau = tau
+        self.cd = cd
+        self.max_freq = max_freq
+        exp_term = jnp.exp((1/tau) * ((1000-self.cd*self.max_freq) / self.max_freq)) # dt cancels out
         scale = ((1 / (exp_term - 1)) + 1)
-        self._scale = Constant(scale, dtype=self._dtype)
-        self._tau = Constant(tau, dtype=self._dtype)
-        self._decay = Constant(jnp.exp(-self._dt / self._tau), dtype=self._dtype)
-        self._gain = Constant(1 - self._decay, dtype=self._dtype)
-        self._cooldown = Constant(cd * jnp.ones(shape=self._shape), dtype=self._dtype)
-        self._refractory = Variable(self._cooldown, dtype=self._dtype)
-        self.potential = Variable(jnp.zeros(shape=self._shape), dtype=self._dtype)
+        self._tau = SparkConstant(self.tau, dtype=self._dtype)
+        self._scale = SparkConstant(scale, dtype=self._dtype)
+        self._decay = SparkConstant(jnp.exp(-self._dt / self.tau), dtype=self._dtype)
+        self._gain = SparkConstant(1 - self._decay, dtype=self._dtype)
 
-    @property
-    def input_shapes(self,) -> List[Shape]:
-        return [self._shape]
-
-    @property
-    def output_shapes(self,) -> List[Shape]:
-        return [self._shape]
+    def build(self, input_specs: dict[str, InputSpec]) -> None:
+        # Initialize shapes
+        self._shape = normalize_shape(input_specs['drive'].shape)
+        # Initialize variables
+        self._cooldown = SparkConstant(self.cd * jnp.ones(shape=self._shape), dtype=self._dtype)
+        self._refractory = SparkVariable(self._cooldown, dtype=self._dtype)
+        self.potential = SparkVariable(jnp.zeros(shape=self._shape), dtype=self._dtype)
 
     def __call__(self, drive: FloatArray) -> InputInterfaceOutput:
         """
             Input interface operation.
 
-            Input: A FloatArray of values in the range [0,1].
-            Output: A SpikeArray of the same shape as the input.
+            Input: 
+                A FloatArray of values in the range [0,1].
+            Output: 
+                A SpikeArray of the same shape as the input.
         """
         # Update potential
         is_ready = jnp.greater_equal(self._refractory.value, self._cooldown).astype(self._dtype)
@@ -153,7 +155,6 @@ class TopologicalPoissonSpiker(InputInterface):
     """
 
     def __init__(self, 
-                 input_shape: bShape,
                  glue: jax.Array = jnp.array(0),
                  mins: jax.Array = jnp.array(0),
                  maxs: jax.Array = jnp.array(1),
@@ -161,27 +162,29 @@ class TopologicalPoissonSpiker(InputInterface):
                  max_freq: float = 50, 	            # [Hz]
                  sigma: float = 1/32,
                  **kwargs):
+        # Initialize super
         super().__init__(**kwargs)
-        # Initialize shapes
-        self._input_shape = normalize_shape(input_shape)
-        self._output_shape = normalize_shape(self._input_shape + (resolution,))
         # Initialize variables
+        self.resolution = resolution
+        self.max_freq = max_freq
+        self.sigma = sigma
         self._scale = self._dt * (max_freq / 1000)
-        self._glue = Constant(glue, dtype=jnp.bool_)
-        self._mins = Constant(mins, dtype=self._dtype)
-        self._maxs = Constant(maxs, dtype=self._dtype)
-        self._sigma = Constant(sigma, dtype=self._dtype)
-        self._space = Constant(jnp.linspace(jnp.zeros(self._input_shape), 
-                                            jnp.pi*jnp.ones(self._input_shape), resolution), dtype=self._dtype)
+        self._glue = SparkConstant(glue, dtype=jnp.bool_)
+        self._mins = SparkConstant(mins, dtype=self._dtype)
+        self._maxs = SparkConstant(maxs, dtype=self._dtype)
+        self._sigma = SparkConstant(self.sigma, dtype=self._dtype)
 
-    @property
-    def input_shapes(self,) -> List[Shape]:
-        return [self._input_shape]
 
-    @property
-    def output_shapes(self,) -> List[Shape]:
-        return [self._output_shape]
-
+    def build(self, input_specs: dict[str, InputSpec]) -> None:
+        # Initialize shapes
+        input_shape = normalize_shape(input_specs['drive'].shape)
+        self._output_shape = normalize_shape(input_specs['drive'].shape + (self.resolution,))
+        # Initialize variables
+        self._space = SparkConstant(jnp.linspace(jnp.zeros(input_shape), 
+                                                 jnp.pi*jnp.ones(input_shape), 
+                                                 self.resolution), 
+                                    dtype=self._dtype)
+        
     def __call__(self, drive: FloatArray) -> InputInterfaceOutput:
         """
             Input interface operation.
@@ -210,7 +213,6 @@ class TopologicalLinearSpiker(InputInterface):
     """
 
     def __init__(self, 
-                 input_shape: bShape,
                  glue: jax.Array = jnp.array(0),
                  mins: jax.Array = jnp.array(0),
                  maxs: jax.Array = jnp.array(1),
@@ -222,33 +224,35 @@ class TopologicalLinearSpiker(InputInterface):
                  **kwargs):
         # Initialize super.
         super().__init__(**kwargs)
-        # Initialize shapes
-        self._input_shape = normalize_shape(input_shape)
-        self._output_shape = normalize_shape(self._input_shape + (resolution,))
         # Initialize variables
-        self._glue = Constant(glue, dtype=jnp.bool_)
-        self._mins = Constant(mins, dtype=self._dtype)
-        self._maxs = Constant(maxs, dtype=self._dtype)
-        self._sigma = Constant(sigma, dtype=self._dtype)
-        self._space = Constant(jnp.linspace(jnp.zeros(self._input_shape), 
-                                            jnp.pi*jnp.ones(self._input_shape), resolution), dtype=self._dtype)
-        exp_term = jnp.exp((1/tau) * ((1000-cd*max_freq) / max_freq)) # dt cancels out
+        self.resolution = resolution
+        self.tau = tau
+        self.cd = cd
+        self.max_freq = max_freq
+        self.sigma = sigma
+        self._glue = SparkConstant(glue, dtype=jnp.bool_)
+        self._mins = SparkConstant(mins, dtype=self._dtype)
+        self._maxs = SparkConstant(maxs, dtype=self._dtype)
+        self._sigma = SparkConstant(self.sigma, dtype=self._dtype)
+        exp_term = jnp.exp((1/tau) * ((1000-self.cd*self.max_freq) / self.max_freq)) # dt cancels out
         scale = ((1 / (exp_term - 1)) + 1)
-        self._scale = Constant(scale, dtype=self._dtype)
-        self._tau = Constant(tau, dtype=self._dtype)
-        self._decay = Constant(jnp.exp(-self._dt / self._tau), dtype=self._dtype)
-        self._gain = Constant(1 - self._decay, dtype=self._dtype)
-        self._cooldown = Constant(cd * jnp.ones(shape=self._output_shape), dtype=self._dtype)
-        self._refractory = Variable(self._cooldown, dtype=self._dtype)
-        self.potential = Variable(jnp.zeros(shape=self._output_shape), dtype=self._dtype)
+        self._scale = SparkConstant(scale, dtype=self._dtype)
+        self._tau = SparkConstant(tau, dtype=self._dtype)
+        self._decay = SparkConstant(jnp.exp(-self._dt / self._tau), dtype=self._dtype)
+        self._gain = SparkConstant(1 - self._decay, dtype=self._dtype)
 
-    @property
-    def input_shapes(self,) -> List[Shape]:
-        return [self._input_shape]
-
-    @property
-    def output_shapes(self,) -> List[Shape]:
-        return [self._output_shape]
+    def build(self, input_specs: dict[str, InputSpec]) -> None:
+        # Initialize shapes
+        input_shape = normalize_shape(input_specs['drive'].shape)
+        self._output_shape = normalize_shape(input_specs['drive'].shape + (self.resolution,))
+        # Initialize variables
+        self._space = SparkConstant(jnp.linspace(jnp.zeros(input_shape), 
+                                                 jnp.pi*jnp.ones(input_shape), 
+                                                 self.resolution), 
+                                    dtype=self._dtype)
+        self._cooldown = SparkConstant(self.cd * jnp.ones(shape=self._output_shape), dtype=self._dtype)
+        self._refractory = SparkVariable(self._cooldown, dtype=self._dtype)
+        self.potential = SparkVariable(jnp.zeros(shape=self._output_shape), dtype=self._dtype)
 
     def __call__(self, drive: FloatArray) -> InputInterfaceOutput:
         """

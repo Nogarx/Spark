@@ -12,10 +12,10 @@ from typing import Union, List, Tuple
 #################################################################################################################################################
 
 # Canonical shape type.
-Shape = Tuple[int, ...]
+Shape = tuple[int, ...]
 
 # Broadcastable shape type.
-bShape = Union[int, Shape, List[Union[int, Shape]]]
+bShape = int | Shape | list[int | Shape]
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

@@ -10,10 +10,11 @@ if TYPE_CHECKING:
 
 import jax
 import jax.numpy as jnp
+from typing import Any
+from jax.typing import DTypeLike
 from dataclasses import dataclass
-from typing import Type, Dict, List, Any, Optional
-from spark.core.variable_containers import Variable
-from spark.core.shape import bShape, normalize_shape
+
+from spark.core.shape import Shape
 import spark.core.validation as validation
 
 #################################################################################################################################################
@@ -26,27 +27,24 @@ class PortSpecs:
     """
         Base specification for a port of an SparkModule.
     """
-    payload_type: Type[SparkPayload]        
-    shape: bShape               
-    dtype: jnp.dtype                        
-    description: Optional[str] = None       
+    payload_type: type[SparkPayload] | None
+    shape: Shape | list[Shape] | None
+    dtype: DTypeLike | None
+    description: str | None = None
 
     def __init__(self, 
-                 payload_type: Type[SparkPayload], 
-                 shape: bShape, 
-                 dtype: jnp.dtype, 
-                 description: Optional[str] = None):
-        if not validation._is_payload_type(payload_type):
-            raise ValueError(f'Expected payload_type of type "SparkPayload", got "{type(payload_type).__name__}".')
-        try:
-            if not shape is None:
-                shape = normalize_shape(shape)
-        except:
-            raise ValueError(f'Expected shape of type {bShape.__name__}, got "{type(shape).__name__}".')
-        if not isinstance(jnp.dtype(dtype), jnp.dtype):
-            raise ValueError(f'Expected dtype of type {jnp.dtype.__name__}, got  "{type(dtype).__name__}".')
-        if not (isinstance(description, str) or description is None):
-            raise ValueError(f'Expected description {str.__name__}, got "{type(description).__name__}".')
+                 payload_type: type[SparkPayload] | None,
+                 shape: Shape | None, 
+                 dtype: DTypeLike | None, 
+                 description: str | None = None ):
+        if payload_type and not validation._is_payload_type(payload_type):
+            raise TypeError(f'Expected "payload_type" to be of type "SparkPayload" but got "{type(payload_type).__name__}".')
+        if shape and not (validation.is_shape(shape) or validation.is_list_shape(shape)):
+            raise TypeError(f'Expected "shape" to be of type "Shape | list[Shape]" but got "{shape}".')
+        if dtype and not isinstance(jnp.dtype(dtype), jnp.dtype):
+            raise TypeError(f'Expected "dtype" to be of type "{DTypeLike}" but got "{type(dtype).__name__}".')
+        if description and not (isinstance(description, str) or description is None):
+            raise TypeError(f'Expected "description" to be of type "str" but got "{type(description).__name__}".')
         object.__setattr__(self, 'payload_type', payload_type)
         object.__setattr__(self, 'shape', shape)
         object.__setattr__(self, 'dtype', dtype)
@@ -66,21 +64,21 @@ class PortSpecs:
 
 @jax.tree_util.register_pytree_node_class
 @dataclass(init=False, frozen=True)
-class InputSpecs(PortSpecs):
+class InputSpec(PortSpecs):
     """
         Specification for an input port of an SparkModule.
     """
-    is_optional: bool                       
+    is_optional: bool                 
 
     def __init__(self, 
-                 payload_type: Type[SparkPayload], 
-                 shape: bShape, 
-                 dtype: jnp.dtype, 
+                 payload_type: type[SparkPayload] | None, 
+                 shape: Shape | None, 
+                 dtype: DTypeLike | None, 
                  is_optional: bool, 
-                 description: Optional[str] = None):
+                 description: str | None = None):
         super().__init__(payload_type=payload_type, shape=shape, dtype=dtype, description=description)
         if not isinstance(is_optional, bool):
-            raise ValueError(f'Expected is_optional {bool.__name__}, got "{type(is_optional).__name__}".')
+            raise ValueError(f'Expected "is_optional" to be of type "bool" but got "{type(is_optional).__name__}".')
         object.__setattr__(self, 'is_optional', is_optional)
 
     def tree_flatten(self):
@@ -97,7 +95,7 @@ class InputSpecs(PortSpecs):
 
 @jax.tree_util.register_pytree_node_class
 @dataclass(frozen=True)
-class OutputSpecs(PortSpecs):
+class OutputSpec(PortSpecs):
     """
         Specification for an output port of an SparkModule.
     """
@@ -116,9 +114,9 @@ class PortMap:
 
     def __init__(self, origin: str, port: str):
         if not isinstance(origin, str):
-            raise TypeError(f'Expected origin {str.__name__} but got "{type(origin).__name__}".')
+            raise TypeError(f'Expected "origin" to be of type "str" but got "{type(origin).__name__}".')
         if not isinstance(port, str):
-            raise TypeError(f'Expected port {str.__name__} but got "{type(port).__name__}".')
+            raise TypeError(f'Expected "port" to be of type "str" but got "{type(port).__name__}".')
         object.__setattr__(self, 'origin', origin)
         object.__setattr__(self, 'port', port)
 
@@ -134,39 +132,6 @@ class PortMap:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@jax.tree_util.register_pytree_node_class
-@dataclass(init=False)
-class CacheSpec:
-    """
-        Specification for an output port of an SparkModule.
-    """
-    payload_type: SparkPayload        
-    dtype: jnp.dtype
-    var: Variable  
-
-    def tree_flatten(self):
-        children = (self.payload_type, self.dtype, self.var)
-        aux_data = ()
-        return children, aux_data
-
-    @classmethod
-    def tree_unflatten(cls, aux_data, children):
-        (payload_type, dtype, var) = children
-        return cls(payload_type=payload_type, dtype=dtype, var=var)
-
-    def __init__(self, var: Variable, payload_type: SparkPayload, dtype: jnp.dtype):
-        if not isinstance(var, Variable):
-            raise TypeError(f'Expected value {Variable.__name__}, got "{type(var).__name__}".')
-        if not validation._is_payload_type(payload_type):
-            raise TypeError(f'Expected payload_type "SparkPayload", got "{type(payload_type).__name__}".')
-        if not isinstance(jnp.dtype(dtype), jnp.dtype):
-            raise TypeError(f'Expected dtype of type {jnp.dtype.__name__}, got  "{type(dtype).__name__}".')
-        self.var = var
-        self.payload_type = payload_type
-        self.dtype = dtype
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
 # TODO: Inspect for missing mandatory fields.
 @jax.tree_util.register_pytree_node_class
 @dataclass(init=False, frozen=True)
@@ -176,11 +141,11 @@ class ModuleSpecs:
     """
 
     name: str
-    module_cls: Type[SparkModule]        
-    inputs: Dict[str, List[PortMap]]               
-    init_args: Dict[str, Any]                      
+    module_cls: type[SparkModule]        
+    inputs: dict[str, list[PortMap]]               
+    init_args: dict[str, Any]                      
 
-    def __init__(self, name: str, module_cls: Type, inputs: Dict[str, List[PortMap]], init_args: Dict[str, Any]):
+    def __init__(self, name: str, module_cls: type, inputs: dict[str, list[PortMap]], init_args: dict[str, Any]):
         # TODO: Refactor code to remove lazy imports.
         from spark.core.registry import REGISTRY
         # Validate module_cls
@@ -190,7 +155,7 @@ class ModuleSpecs:
             raise ValueError(f'Class "{module_cls.__name__}" does not exists in the registry.')
         # Validate inputs
         if not isinstance(inputs, dict):
-            raise TypeError(f'"inputs" must be of type "{dict.__name__}" but got "{type(inputs).__name__}".')
+            raise TypeError(f'"inputs" must be of type "dict" but got "{type(inputs).__name__}".')
         for key in inputs.keys():
             if not isinstance(key, str):
                 raise TypeError(f'All keys in "inputs" must be strings, but found key "{key}" of type {type(key).__name__}.')
@@ -202,7 +167,7 @@ class ModuleSpecs:
         
         # Validate init_args
         if not isinstance(init_args, dict):
-            raise TypeError(f'"init_args" must be of type "{dict.__name__}" but got "{type(init_args).__name__}".')
+            raise TypeError(f'"init_args" must be of type "dict" but got "{type(init_args).__name__}".')
         for key in init_args.keys():
             if not isinstance(key, str):
                 raise TypeError(f'All keys in "init_args" must be strings, but found key "{key}" of type {type(key).__name__}.')
@@ -227,8 +192,25 @@ class ModuleSpecs:
 @dataclass
 class InputArgSpec:
     
-    arg_type: Type
+    arg_type: type
     is_optional: bool
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@dataclass(init=False)
+class VarSpec:
+    
+    shape: Shape
+    dtype: DTypeLike
+
+    def __init__(self, shape: Shape, dtype: DTypeLike):
+        #if shape and not validation.is_shape(shape):
+        #    raise TypeError(f'Expected "shape" to be of type "Shape" but got "{shape}".')
+        #if dtype and not isinstance(jnp.dtype(dtype), jnp.dtype):
+        #    raise TypeError(f'Expected "dtype" to be of type "{DTypeLike}" but got "{type(dtype).__name__}".')
+        self.shape = shape
+        self.dtype = dtype
+        
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

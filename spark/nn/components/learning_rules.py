@@ -41,15 +41,15 @@ Hebbian_cfgs = HebbianConfigurations()
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# Generic Plasticity output contract.
-class PlasticityOutput(TypedDict):
+# Generic LearningRule output contract.
+class LearningRuleOutput(TypedDict):
     kernel: FloatArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class Plasticity(Component):
+class LearningRule(Component):
     """
-        Abstract plasticy rule model.
+        Abstract learning rule model.
     """
 
     def __init__(self, 
@@ -78,7 +78,7 @@ class Plasticity(Component):
         pass
 
     @abc.abstractmethod
-    def __call__(self, *args: SparkPayload) -> PlasticityOutput:
+    def __call__(self, *args: SparkPayload) -> LearningRuleOutput:
         """
             Computes and returns the next kernel update.
         """
@@ -87,7 +87,7 @@ class Plasticity(Component):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class HebbianRule(Plasticity):
+class HebbianRule(LearningRule):
     """
         Hebbian plasticy rule model.
     """
@@ -160,9 +160,9 @@ class HebbianRule(Plasticity):
             target_trace = jnp.transpose(target_trace, self._ax_transpose)
             # Update
             dK = self._params['gamma'] * (self._params['a'] * pre_trace * post_slow_trace * post_spikes +                       # Triplet LTP
-                                        self._params['b'] * post_trace * pre_spikes +                                         # Doublet LTD
-                                        self._params['c'] * (current_kernel - target_trace) * (post_trace**3) * post_spikes + # Heterosynaptic plasticity.
-                                        self._params['d'] * pre_spikes)                                                       # Transmitter induced.
+                                          self._params['b'] * post_trace * pre_spikes +                                         # Doublet LTD
+                                          self._params['c'] * (current_kernel - target_trace) * (post_trace**3) * post_spikes + # Heterosynaptic plasticity.
+                                          self._params['d'] * pre_spikes)                                                       # Transmitter induced.
             kernel = current_kernel + self._dt * dK
             return jnp.transpose(kernel, self._ax_transpose)
         else: 
@@ -172,13 +172,13 @@ class HebbianRule(Plasticity):
             post_trace = post_trace.reshape(-1, 1)
             # Update
             dK = self._params['gamma'] * (self._params['a'] * pre_trace * post_slow_trace * post_spikes +                       # Triplet LTP
-                                        self._params['b'] * post_trace * pre_spikes +                                         # Doublet LTD
-                                        self._params['c'] * (current_kernel - target_trace) * (post_trace**3) * post_spikes + # Heterosynaptic plasticity.
-                                        self._params['d'] * pre_spikes)                                                       # Transmitter induced.
+                                          self._params['b'] * post_trace * pre_spikes +                                         # Doublet LTD
+                                          self._params['c'] * (current_kernel - target_trace) * (post_trace**3) * post_spikes + # Heterosynaptic plasticity.
+                                          self._params['d'] * pre_spikes)                                                       # Transmitter induced.
             kernel = current_kernel + self._dt * dK
             return kernel
         
-    def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, current_kernel: FloatArray) -> PlasticityOutput:
+    def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, current_kernel: FloatArray) -> LearningRuleOutput:
         """
             Computes and returns the next kernel update.
         """

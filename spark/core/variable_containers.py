@@ -20,7 +20,7 @@ from collections.abc import Iterable
 #################################################################################################################################################
 
 @jax.tree_util.register_static
-class Constant:
+class SparkConstant:
     """
         Jax.Array wrapper for constant arrays.
     """
@@ -29,7 +29,7 @@ class Constant:
         if isinstance(data, jax.Array):
             # Input is an array.
             self.value = data.astype(dtype=dtype if dtype else data.dtype)
-        elif isinstance(data, (np.ndarray, Constant)):
+        elif isinstance(data, (np.ndarray, SparkConstant)):
             # Input is an array.
             self.value = jnp.array(data, dtype=dtype if dtype else data.dtype)
         elif isinstance(data, Iterable):
@@ -38,7 +38,7 @@ class Constant:
         elif isinstance(data, (int, float, complex, bool)):
             # Input is an scalar
             self.value = jnp.array(data, dtype=dtype if dtype else type(data))
-        elif isinstance(data, Variable):
+        elif isinstance(data, SparkVariable):
             # Input is an scalar
             self.value = jnp.array(data.value, dtype=dtype if dtype else data.value.dtype)
         else:
@@ -180,10 +180,10 @@ class ConfigDict:
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class Variable(nnx.Variable):
+class SparkVariable(nnx.Variable):
     """
-        The base class for all ``Variable`` types.
-        Note that this is just a convinience wrapper around Flax's nnx.Variable to simplify imports.
+        The base class for all ``SparkVariable`` types.
+        Note that this is just a convinience wrapper around Flax's nnx.SparkVariable to simplify imports.
     """
     
     def __init__(self, value: Any, dtype: Any = None, **metadata):
@@ -201,7 +201,7 @@ class Variable(nnx.Variable):
             # Input is an scalar
             value = jnp.array(value, dtype=dtype if dtype else type(value))
         #else:
-        #   Variable is a custom object, pass it directly to nnx.Variable
+        #   SparkVariable is a custom object, pass it directly to nnx.SparkVariable
         if isinstance(value, jax.Array) and len(value.shape) == 0:
             value = value.reshape(-1)
         super().__init__(value=value, metadata=metadata)

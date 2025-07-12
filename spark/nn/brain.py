@@ -8,11 +8,14 @@ import jax.numpy as jnp
 import inspect
 from math import prod
 from typing import Dict, List
+
+from spark.core.cache import Cache
 from spark.core.module import SparkModule, SparkMeta
-from spark.core.specs import PortSpecs, PortMap, CacheSpec, OutputSpecs, InputSpecs, ModuleSpecs
-from spark.core.variable_containers import Variable
+from spark.core.specs import PortSpecs, PortMap, OutputSpec, InputSpec, ModuleSpecs
+from spark.core.variable_containers import SparkVariable
 from spark.core.shape import Shape, normalize_shape
 from spark.core.payloads import SparkPayload
+from spark.core.registry import REGISTRY
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -35,10 +38,10 @@ class Brain(SparkModule, metaclass=BrainMeta):
 	_input_shapes: List[Shape]
 	_output_shapes: List[Shape]
 	_modules_list: List[str]
-	_cache: Dict[str, Dict[str, CacheSpec]]
+	_cache: Dict[str, Dict[str, Cache]]
 	_modules_input_map: Dict[str, Dict[str, List[PortMap]]]
-	_modules_input_specs: Dict[str, Dict[str, InputSpecs]]
-	_modules_output_specs: Dict[str, Dict[str, OutputSpecs]]
+	_modules_input_specs: Dict[str, Dict[str, InputSpec]]
+	_modules_output_specs: Dict[str, Dict[str, OutputSpec]]
 
 	def __init__(self, input_map: Dict[str, PortSpecs], output_map: Dict[str, Dict[str, PortSpecs]], modules_map: Dict[str, ModuleSpecs], **kwargs):
 		super().__init__(**kwargs)
@@ -168,14 +171,14 @@ class Brain(SparkModule, metaclass=BrainMeta):
 						if port_map.origin == '__call__':
 							shape += prod(input_map[port_map.port].shape)
 						else:
-							output_specs: OutputSpecs = getattr(self, port_map.origin).get_output_specs()[port_map.port]
+							output_specs: OutputSpec = getattr(self, port_map.origin).get_output_specs()[port_map.port]
 							shape += prod(output_specs.shape)
 				else:
 					# One-to-one input-output.
 					if port_map.origin == '__call__':
 						shape = input_map[port_map.port].shape
 					else:
-						output_specs: OutputSpecs = getattr(self, port_map.origin).get_output_specs()[port_map.port]
+						output_specs: OutputSpec = getattr(self, port_map.origin).get_output_specs()[port_map.port]
 						shape = output_specs.shape
 				# Normalize and compare shapes.
 				shape = normalize_shape(shape)
@@ -188,8 +191,8 @@ class Brain(SparkModule, metaclass=BrainMeta):
 		# Raw model input need to be treated as "outputs" of some virtual node.
 		self._cache['__call__'] = {}
 		for input_name, input_specs in self._input_map.items():
-			self._cache['__call__'][input_name] = CacheSpec(
-				var=Variable(jnp.zeros(input_specs.shape), dtype=input_specs.dtype),
+			self._cache['__call__'][input_name] = Cache(
+				var=SparkVariable(jnp.zeros(input_specs.shape), dtype=input_specs.dtype),
 				payload_type=input_specs.payload_type,
 				dtype=input_specs.dtype
 			)
@@ -197,8 +200,8 @@ class Brain(SparkModule, metaclass=BrainMeta):
 		for module_name in self._modules_list:
 			self._cache[module_name] = {}
 			for port_name, port_specs in self._modules_output_specs[module_name].items():
-				self._cache[module_name][port_name] = CacheSpec(
-				var=Variable(jnp.zeros(port_specs.shape), dtype=port_specs.dtype),
+				self._cache[module_name][port_name] = Cache(
+				var=SparkVariable(jnp.zeros(port_specs.shape), dtype=port_specs.dtype),
 				payload_type=port_specs.payload_type,
 				dtype=port_specs.dtype
 			)

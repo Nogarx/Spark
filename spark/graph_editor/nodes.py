@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.module import SparkModule
     from spark.graph_editor.graph import SparkNodeGraph
-    from spark.core.specs import InputSpecs, OutputSpecs, InputArgSpec, PortMap
+    from spark.core.specs import InputSpec, OutputSpec, InputArgSpec, PortMap
 from spark.core.specs import InputArgSpec
 
 
@@ -19,7 +19,7 @@ from NodeGraphQt import BaseNode, Port
 from typing import Dict, Type, Any, List
 from spark.core.payloads import FloatArray
 from spark.graph_editor.painter import DEFAULT_PALLETE
-from spark.graph_editor.specs import InputSpecsEditor, OutputSpecsEditor, PortMap
+from spark.graph_editor.specs import InputSpecEditor, OutputSpecEditor, PortMap
 from spark.core.registry import RegistryEntry
 from spark.core.shape import normalize_shape
 
@@ -35,8 +35,8 @@ class AbstractNode(BaseNode, abc.ABC):
 
     __identifier__ = 'spark'
     NODE_NAME = 'Abstract Node'
-    input_specs: Dict[str, InputSpecsEditor] = {}
-    output_specs: Dict[str, OutputSpecsEditor] = {}
+    input_specs: Dict[str, InputSpecEditor] = {}
+    output_specs: Dict[str, OutputSpecEditor] = {}
     init_args_specs: Dict[str, InputArgSpec] = {}
     init_args: Dict[str, Dict[str, Any]] = {}
     graph: SparkNodeGraph
@@ -131,7 +131,7 @@ class SourceNode(AbstractNode):
     def __init__(self,):
         super().__init__()
         # Delay specs definition for better control.
-        self.output_specs = {'value': OutputSpecsEditor(payload_type=FloatArray,
+        self.output_specs = {'value': OutputSpecEditor(payload_type=FloatArray,
                                                          shape=None,
                                                          dtype=jnp.float16,
                                                          description='Model input port.')}
@@ -151,7 +151,7 @@ class SinkNode(AbstractNode):
     def __init__(self,):
         super().__init__()
         # Delay specs definition for better control.
-        self.input_specs = {'value': InputSpecsEditor(payload_type=FloatArray,
+        self.input_specs = {'value': InputSpecEditor(payload_type=FloatArray,
                                                        shape=None,
                                                        dtype=jnp.float16,
                                                        is_optional=False,
@@ -190,8 +190,8 @@ def module_to_nodegraph(entry: RegistryEntry) -> Type[SparkModuleNode]:
             '__identifier__': f'spark',
             'NODE_NAME': module_cls.__name__,
             'cls_name': entry.name,
-            'input_specs': {key: InputSpecsEditor.from_input_specs(value, []) for key, value in module_cls._get_input_specs().items()},
-            'output_specs': {key: OutputSpecsEditor.from_output_specs(value) for key, value in module_cls._get_output_specs().items()},
+            'input_specs': {key: InputSpecEditor.from_input_specs(value, []) for key, value in module_cls._get_input_specs().items()},
+            'output_specs': {key: OutputSpecEditor.from_output_specs(value) for key, value in module_cls._get_output_specs().items()},
             'init_args_specs': {**module_cls._get_init_signature(), 
                                 **{'dtype': InputArgSpec(arg_type=jnp.dtype, is_optional=True),
                                     'seed': InputArgSpec(arg_type=int, is_optional=True),

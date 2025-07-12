@@ -13,7 +13,7 @@ from spark.nn.components.base import Component
 from spark.core.tracers import Tracer, DoubleTracer
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.payloads import SpikeArray, CurrentArray, FloatArray, BooleanMask
-from spark.core.variable_containers import Variable, ConfigDict
+from spark.core.variable_containers import SparkVariable, ConfigDict
 from spark.core.registry import register_module
 from spark.nn.initializers.kernel import KernelInitializer, sparse_uniform_kernel_initializer
 
@@ -101,8 +101,8 @@ class SimpleSynapses(Synanpses):
         self._kernel_initializer = kernel_initializer
         self._params = params
         # Inhibitory mask
-        #self._inhibition_mask = Constant(inhibition_mask if inhibition_mask else jnp.zeros(self._input_shape), dtype=jnp.bool_)
-        #self._inhibition = Constant(1 - 2 * self._inhibition_mask, dtype=self._dtype)
+        #self._inhibition_mask = SparkConstant(inhibition_mask if inhibition_mask else jnp.zeros(self._input_shape), dtype=jnp.bool_)
+        #self._inhibition = SparkConstant(1 - 2 * self._inhibition_mask, dtype=self._dtype)
         # Initialize state variables
         kernel = kernel_initializer(density=self._params['kernel_density'] if 'kernel_density' in self._params else 0.2, 
                                     scale=self._params['kernel_scale'] if 'kernel_scale' in self._params else 1, 
@@ -110,7 +110,7 @@ class SimpleSynapses(Synanpses):
                                    (key=self.get_rng_keys(1), 
                                     input_shape=self._real_input_shape,
                                     output_shape=self._output_shape)
-        self.kernel = Variable(kernel, dtype=self._dtype)
+        self.kernel = SparkVariable(kernel, dtype=self._dtype)
 
 
     @property

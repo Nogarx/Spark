@@ -11,7 +11,7 @@ import jax.numpy as jnp
 import flax.nnx as nnx
 from typing import Any, Optional
 from spark.core.shape import bShape, normalize_shape
-from spark.core.variable_containers import Variable, Constant
+from spark.core.variable_containers import SparkVariable, SparkConstant
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -34,7 +34,7 @@ class BaseTracer(nnx.Module, abc.ABC):
 		# Main attributes
 		self.shape = normalize_shape(shape)
 		self._seed = int.from_bytes(os.urandom(4), 'little') if seed is None else seed
-		self.rng = nnx.Variable(jax.random.PRNGKey(self._seed))
+		self.rng = SparkVariable(jax.random.PRNGKey(self._seed))
 		self._dtype = dtype
 		self._dt = dt
 
@@ -76,10 +76,10 @@ class Tracer(BaseTracer):
 		# Initialize super.
 		super().__init__(shape, **kwargs)
 		# Main attributes
-		self.scale = Constant(scale, dtype=self._dtype)
-		self.base = Constant(base, dtype=self._dtype)
-		self.decay = Constant(self._dt / tau, dtype=self._dtype)
-		self.trace = Variable(base * jnp.ones(self.shape), dtype=self._dtype)
+		self.scale = SparkConstant(scale, dtype=self._dtype)
+		self.base = SparkConstant(base, dtype=self._dtype)
+		self.decay = SparkConstant(self._dt / tau, dtype=self._dtype)
+		self.trace = SparkVariable(base * jnp.ones(self.shape), dtype=self._dtype)
 
 	def reset(self,) -> None:
 		self.trace.value = self.base * jnp.ones(self.shape, dtype=self._dtype)
@@ -116,14 +116,14 @@ class DoubleTracer(BaseTracer):
 		# Initialize super.
 		super().__init__(shape, **kwargs)
 		# Main attributes
-		self.scale_1 = Constant(scale_1, dtype=self._dtype)
-		self.scale_2 = Constant(scale_2, dtype=self._dtype)
-		self.base_1 = Constant(base_1, dtype=self._dtype)
-		self.base_2 = Constant(base_2, dtype=self._dtype)
-		self.decay_1 = Constant(self._dt / tau_1, dtype=self._dtype)
-		self.decay_2 = Constant(self._dt / tau_2, dtype=self._dtype)
-		self.trace_1 = Variable(jnp.zeros(self.shape, dtype=self._dtype), dtype=self._dtype)
-		self.trace_2 = Variable(jnp.zeros(self.shape, dtype=self._dtype), dtype=self._dtype)
+		self.scale_1 = SparkConstant(scale_1, dtype=self._dtype)
+		self.scale_2 = SparkConstant(scale_2, dtype=self._dtype)
+		self.base_1 = SparkConstant(base_1, dtype=self._dtype)
+		self.base_2 = SparkConstant(base_2, dtype=self._dtype)
+		self.decay_1 = SparkConstant(self._dt / tau_1, dtype=self._dtype)
+		self.decay_2 = SparkConstant(self._dt / tau_2, dtype=self._dtype)
+		self.trace_1 = SparkVariable(jnp.zeros(self.shape, dtype=self._dtype), dtype=self._dtype)
+		self.trace_2 = SparkVariable(jnp.zeros(self.shape, dtype=self._dtype), dtype=self._dtype)
 
 	def reset(self,) -> None:
 		self.trace_1.value = self.base_1 * jnp.zeros(self.shape, dtype=self._dtype)
@@ -187,11 +187,11 @@ class RUTracer(BaseTracer):
 		# Initialize super.
 		super().__init__(shape, **kwargs)
 		# Main attributes
-		self.scale_U = Constant(scale_U, dtype=self._dtype)
-		self.decay_R = Constant(self._dt / R_tau, dtype=self._dtype)
-		self.decay_U = Constant(self._dt / U_tau, dtype=self._dtype)
-		self.trace_R = Variable(jnp.ones(self.shape), dtype=self._dtype)
-		self.trace_U = Variable(jnp.zeros(self.shape), dtype=self._dtype)
+		self.scale_U = SparkConstant(scale_U, dtype=self._dtype)
+		self.decay_R = SparkConstant(self._dt / R_tau, dtype=self._dtype)
+		self.decay_U = SparkConstant(self._dt / U_tau, dtype=self._dtype)
+		self.trace_R = SparkVariable(jnp.ones(self.shape), dtype=self._dtype)
+		self.trace_U = SparkVariable(jnp.zeros(self.shape), dtype=self._dtype)
 
 	def reset(self,) -> None:
 		self.trace_R.value = jnp.ones(self.shape, dtype=self._dtype)

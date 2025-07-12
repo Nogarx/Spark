@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from spark.core.tracers import Tracer
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.payloads import SpikeArray, CurrentArray, PotentialArray
-from spark.core.variable_containers import Variable, Constant, ConfigDict
+from spark.core.variable_containers import SparkVariable, SparkConstant, ConfigDict
 from spark.core.registry import register_module
 from spark.nn.components.base import Component
 
@@ -69,7 +69,7 @@ class Soma(Component):
         self.units = prod(self._shape)
         # Initialize variables
         self._params = params
-        self._potential = Variable(jnp.zeros(self._shape, dtype=self._dtype), dtype=self._dtype)
+        self._potential = SparkVariable(jnp.zeros(self._shape, dtype=self._dtype), dtype=self._dtype)
 
     @property
     def potential(self,) -> PotentialArray:
@@ -137,10 +137,10 @@ class ALIFSoma(Soma):
         self._params = ConfigDict(config=self._params)
         # Initialize parameters.
         # Membrane. Substract potential_rest to potential related terms to rebase potential at zero.
-        self._potential_reset = Constant(self._params['potential_reset'] - self._params['potential_rest'], dtype=self._dtype)
-        self._potential_scale = Constant(self._dt / self._params['potential_tau'], dtype=self._dtype)
+        self._potential_reset = SparkConstant(self._params['potential_reset'] - self._params['potential_rest'], dtype=self._dtype)
+        self._potential_scale = SparkConstant(self._dt / self._params['potential_tau'], dtype=self._dtype)
         # Conductance.
-        self._conductance = Constant(1/self._params['conductance'], dtype=self._dtype)
+        self._conductance = SparkConstant(1/self._params['conductance'], dtype=self._dtype)
         # Threshold.
         self._threshold = Tracer(self._shape,
                                  tau=self._params['threshold_tau'], 
@@ -148,8 +148,8 @@ class ALIFSoma(Soma):
                                  scale=self._params['threshold_delta'], 
                                  dt=self._dt, dtype=self._dtype)
         # Refractory period.
-        self.cooldown = Constant(self._params['cooldown'], dtype=self._dtype)
-        self.refractory = Variable(jnp.array(self.cooldown), dtype=self._dtype)
+        self.cooldown = SparkConstant(self._params['cooldown'], dtype=self._dtype)
+        self.refractory = SparkVariable(jnp.array(self.cooldown), dtype=self._dtype)
 
         
 
