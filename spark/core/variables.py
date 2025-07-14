@@ -12,15 +12,15 @@ import numpy as np
 import jax.numpy as jnp
 import flax.nnx as nnx
 from dataclasses import dataclass
-from typing import Any, Dict
-from collections.abc import Iterable
+from typing import Any
+from collections.abc import Iterable, ValuesView, KeysView, ItemsView
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
 @jax.tree_util.register_static
-class SparkConstant:
+class Constant:
     """
         Jax.Array wrapper for constant arrays.
     """
@@ -29,7 +29,7 @@ class SparkConstant:
         if isinstance(data, jax.Array):
             # Input is an array.
             self.value = data.astype(dtype=dtype if dtype else data.dtype)
-        elif isinstance(data, (np.ndarray, SparkConstant)):
+        elif isinstance(data, (np.ndarray, Constant)):
             # Input is an array.
             self.value = jnp.array(data, dtype=dtype if dtype else data.dtype)
         elif isinstance(data, Iterable):
@@ -38,7 +38,7 @@ class SparkConstant:
         elif isinstance(data, (int, float, complex, bool)):
             # Input is an scalar
             self.value = jnp.array(data, dtype=dtype if dtype else type(data))
-        elif isinstance(data, SparkVariable):
+        elif isinstance(data, Variable):
             # Input is an scalar
             self.value = jnp.array(data.value, dtype=dtype if dtype else data.value.dtype)
         else:
@@ -154,36 +154,71 @@ class SparkConstant:
 @dataclass(init=False, frozen=True)
 class ConfigDict:
     """
-        Abstract payload definition to single value payloads.
+        Dataclass wrapper for configuration dictionaries used to prevent JIT from detecting some parameters as leaf nodes.
     """
-    config: Dict
+    config: dict[str, Any]
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: dict):
         if not isinstance(config, dict):
             raise TypeError(f'"config" must be of type "{dict.__name__}", got "{type(config).__name__}"')
         object.__setattr__(self, 'config', config)
 
     def __getitem__(self, key):
-        """Enables using `config_instance['key']`."""
+        """
+        	Redirects __getitem__ to internal config.__getitem__.
+        """
         return self.config[key]
 
+    def __setitem__(self, key, value):
+        """
+        	Redirects __setitem__ to internal config.__setitem__.
+        """
+        self.config[key] = value
+
     def __iter__(self):
-        """Enables iterating `for key in config_instance`."""
+        """
+        	Redirects __iter__ to internal config.__iter__.
+        """
         return iter(self.config)
 
     def __len__(self):
-        """Enables using `len(config_instance)`."""
+        """
+        	Redirects __len__ to internal config.__len__.
+        """
         return len(self.config)
     
+    def values(self,) -> ValuesView[Any]:
+        """
+        	Redirects values to internal config.values.
+        """
+        return self.config.values()
+    
+    def keys(self,) -> KeysView[str]:
+        """
+        	Redirects keys to internal config.keys.
+        """
+        return self.config.keys()
+        
+    def items(self,) -> ItemsView[str, Any]:
+        """
+        	Redirects items to internal config.items.
+        """
+        return self.config.items()
+        
+    def setdefault(self, key: str, default: Any) -> Any:
+        """
+        	Redirects setdefault to internal config.setdefault.
+        """
+        self.config.setdefault(key, default)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class SparkVariable(nnx.Variable):
+class Variable(nnx.Variable):
     """
-        The base class for all ``SparkVariable`` types.
-        Note that this is just a convinience wrapper around Flax's nnx.SparkVariable to simplify imports.
+        The base class for all ``Variable`` types.
+        Note that this is just a convinience wrapper around Flax's nnx.Variable to simplify imports.
     """
     
     def __init__(self, value: Any, dtype: Any = None, **metadata):
@@ -201,7 +236,7 @@ class SparkVariable(nnx.Variable):
             # Input is an scalar
             value = jnp.array(value, dtype=dtype if dtype else type(value))
         #else:
-        #   SparkVariable is a custom object, pass it directly to nnx.SparkVariable
+        #   Variable is a custom object, pass it directly to nnx.Variable
         if isinstance(value, jax.Array) and len(value.shape) == 0:
             value = value.reshape(-1)
         super().__init__(value=value, metadata=metadata)

@@ -51,8 +51,6 @@ class SparkMeta(nnx.module.ModuleMeta, HookingMeta):
             return cls
 
 
-        # This is a safeguard. If a class in the hierarchy has already been
-        # processed by this metaclass, its __call__ will already be wrapped.
         # We check for a marker on the function to avoid wrapping it again.
         if getattr(original_call, '__is_wrapped__', False):
             return cls
@@ -65,13 +63,13 @@ class SparkMeta(nnx.module.ModuleMeta, HookingMeta):
             """
             # Use getattr for a safe check on the instance's `__built__` flag.
             if not getattr(self, '__built__', False):
-                try:
-                    # Call the _build method.
-                    self._build(*args, **kwargs)
-                except Exception as e:
-                    # Provide a more informative error message upon failure.
-                    raise RuntimeError(f'An error was encountered while trying to build module "{self.name}": {e}.') from e
-            
+                self._build(*args, **kwargs)
+                #try:
+                #    # Call the _build method.
+                #    self._build(*args, **kwargs)
+                #except Exception as e:
+                #    # Provide a more informative error message upon failure.
+                #    raise RuntimeError(f'An error was encountered while trying to build module "{self.name}": {e}.') from e
             # After potentially building, execute the original __call__ logic.
             return original_call(self, *args, **kwargs)
 
@@ -120,15 +118,12 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         self._output_specs: dict[str, OutputSpec] = None
         # Flags
         self.__built__: bool = False
-        self.__self_recurrence__: bool = False
-        self.__partial_specs__: bool = False
-        self.__has_variadic_arg__: bool = False
+        self.__allow_cycles__: bool = False
         self._default_payload_type = DummyArray
 
 
-    def compile(self, 
-                shape: Shape = None, dtype: DTypeLike = None, 
-                specs: dict[str, VarSpec] = None) -> None:
+
+    def initialize(self, shape: Shape = None, dtype: DTypeLike = None, specs: dict[str, VarSpec] = None) -> None:
         # Skip if already compiled
         if self.__built__:
             return
@@ -182,6 +177,10 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         # Use call with the mock input.
         self.__call__(**mock_input)
 
+        # Reset stateful modules 
+        self.reset()
+
+
 
     def _build(self, *abc_args: SparkPayload, **kwargs) -> None:
         """
@@ -204,9 +203,9 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         self.__built__ = True
 
         # TODO: The correct approach to build the model is through eval_shape. 
-        # However, SparkConstant and SparkVariable are clashing with JAX tracer
-        # For some reason, the tracer thinks that SparkConstant produces a side effect 
-        # when interacting with other arrays and SparkVariable leaks.
+        # However, Constant and Variable are clashing with JAX tracer
+        # For some reason, the tracer thinks that Constant produces a side effect 
+        # when interacting with other arrays and Variable leaks.
         # This probably requires extending both classes to tell them what to do with ShapeDtypeStruct 
         if False:
             # Replace arrays with spec-backed shape proxies.
@@ -240,6 +239,14 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
 
 
+    def reset(self,):
+        """
+            Reset module to its default state.
+        """
+        pass
+
+
+
     def set_output_shapes(self, output_specs: Shape | dict[str, Shape | OutputSpec | SparkPayload]) -> None:
         """
             Auxiliary function prematurely defines the shape of the output_specs.
@@ -254,26 +261,25 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         if validation.is_shape(output_specs):
             # Set the same shape for all outputs
             for k in self._output_specs.keys():
-                object.__setattr__(self._output_specs[k].shape, output_specs)
+                object.__setattr__(self._output_specs[k], 'shape', output_specs)
 
         # Check if is dict[str, Shape]
         elif validation.is_dict_of(output_specs, Shape):
             for k in self._output_specs.keys():
-                object.__setattr__(self._output_specs[k].shape, output_specs[k])
+                object.__setattr__(self._output_specs[k], 'shape', output_specs[k])
 
         # Check if is dict[str, OutputSpec] or dict[str, SparkPayload]
         elif validation.is_dict_of(output_specs, OutputSpec) or validation.is_dict_of(output_specs, SparkPayload):
             for k in self._output_specs.keys():
-                object.__setattr__(self._output_specs[k].shape, output_specs[k].shape)
+                object.__setattr__(self._output_specs[k], 'shape', output_specs[k].shape)
 
         # Raise error, output_spec is invalid
         else:
             raise TypeError(f'Expected "output_spec" to be of type "Shape | dict[str, Shape | OutputSpec | SparkPayload]" '
                             f'but got "{type(output_specs).__name__}".')
 
-        # Enable __self_recurrence__ flag.
-        self.__self_recurrence__ = True
-        self.__partial_specs__ = True
+        # Enable recurrence flag.
+        self.__allow_cycles__ = True
 
 
 
@@ -321,9 +327,6 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
     def _construct_output_specs(self, abc_args: dict[str, SparkPayload]) -> dict[str, OutputSpec]:
 
-        # If _output_specs was partially initialized we only need to collect dtypes and validate paylodas.
-        replace_shape = False if self._output_specs else True
-
         # Get default spec from signature. Default specs helps validate the user didn't make a mistake.
         self._output_specs = sig_parser.get_output_specs(type(self))
 
@@ -334,7 +337,6 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         
         # Finish specs
         for key in self._output_specs.keys():
-
             # Unpack
             value = self._output_specs[key]
             abc_paylaod = abc_args[key]
@@ -345,8 +347,7 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
                                 f'of type "{value.payload_type}" but got type {type(abc_paylaod)}')
             
             # Replace default spec (Specs are frozen)
-            if replace_shape:
-                object.__setattr__(self._output_specs[key], 'shape', abc_paylaod.shape if abc_paylaod else None)
+            object.__setattr__(self._output_specs[key], 'shape', abc_paylaod.shape if abc_paylaod else None)
             object.__setattr__(self._output_specs[key], 'dtype', abc_paylaod.dtype if abc_paylaod else None)
             object.__setattr__(self._output_specs[key], 'description', 
                             f'Auto-generated output spec for input "{key}" of module "{self.name}".')
@@ -363,7 +364,7 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
             Returns a dictionary of the SparkModule's input port specifications.
         """
         if not self._input_specs:
-            raise RuntimeError('Module requires to be compiled first.')
+            raise RuntimeError('Module requires to be initialized first.')
         return self._input_specs
 
 
@@ -374,7 +375,7 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         """
         # Build the spec.
         if not self._output_specs:
-            raise RuntimeError('Module requires to be compiled first.')
+            raise RuntimeError('Module requires to be initialized first.')
         return self._output_specs
 
 
@@ -417,6 +418,8 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
     @abc.abstractmethod
     def __call__(self, *args: SparkPayload, **kwargs) -> dict[str, SparkPayload]:
         pass
+
+
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

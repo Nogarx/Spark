@@ -3,15 +3,18 @@
 #################################################################################################################################################
 
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from spark.core.specs import InputSpec
 
 import abc
 import jax
 import jax.numpy as jnp
-from typing import TypedDict, List
+from typing import TypedDict
 from math import prod
 from spark.core.payloads import SpikeArray
-from spark.core.variable_containers import SparkVariable, SparkConstant
-from spark.core.shape import bShape, Shape, normalize_shape
+from spark.core.variables import Variable, Constant
+from spark.core.shape import Shape, normalize_shape
 from spark.core.registry import register_module
 from spark.nn.components.base import Component
 from spark.nn.initializers.delay import DelayInitializer, uniform_delay_initializer
@@ -22,7 +25,7 @@ from spark.nn.initializers.delay import DelayInitializer, uniform_delay_initiali
 
 # Generic Delays output contract.
 class DelaysOutput(TypedDict):
-    spikes: SpikeArray
+    out_spikes: SpikeArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -31,7 +34,8 @@ class Delays(Component):
         Abstract synaptic delay model.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, 
+                 **kwargs):
         # Initialize super.
         super().__init__(**kwargs)
     
@@ -49,12 +53,12 @@ class Delays(Component):
         """
         pass
 
-    def __call__(self, input_spikes: SpikeArray) -> DelaysOutput:
-        self._push(input_spikes)
-        spikes = self._gather()
-        return {
-            'spikes': spikes
-        }
+    @abc.abstractmethod
+    def reset(self) -> None:
+        """
+            Resets component state.
+        """
+        pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -64,25 +68,27 @@ class DummyDelays(Delays):
         A dummy delay that is equivalent to no delay at all, it simply forwards its input.
         This is a convinience module, that should be avoided whenever is possible and its 
         only purpose is to simplify some scenarios.
+
+        Init:
+
+        Input:
+            in_spikes: SpikeArray
+            
+        Output:
+            out_spikes: SpikeArray
     """
 
     def __init__(self, 
-                 input_shape: bShape,
                  **kwargs):
+        # Initialize super.
         super().__init__(**kwargs)
+
+    def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
-        self._shape = normalize_shape(input_shape)
+        self._shape = normalize_shape(input_specs['in_spikes'].shape)
         self._units = prod(self._shape)
-        # Internal variables
-        self.spikes = SparkVariable(jnp.zeros(self._shape, self._dtype), dtype=self._dtype)
-
-    @property
-    def input_shapes(self,) -> List[Shape]:
-        return [self._shape]
-
-    @property
-    def output_shapes(self,) -> List[Shape]:
-        return [self._shape]
+        # Initialize varibles
+        self.spikes = Variable(jnp.zeros(self._shape, self._dtype), dtype=self._dtype)
 
     def reset(self) -> None:
         """
@@ -90,11 +96,11 @@ class DummyDelays(Delays):
         """
         self.spikes.value = jnp.zeros(self._shape, self._dtype)
 
-    def _push(self, spikes: SpikeArray) -> None:
+    def _push(self, in_spikes: SpikeArray) -> None:
         """
             Push operation.
         """
-        self.spikes = spikes.value
+        self.spikes.value = in_spikes.value
 
     def _gather(self,) -> SpikeArray:
         """
@@ -103,9 +109,9 @@ class DummyDelays(Delays):
         return SpikeArray(self.spikes.value)
 
     # Override call, no need to store anything. Push and Gather are defined just for the sake of completion.
-    def __call__(self, input_spikes: SpikeArray) -> DelaysOutput:
+    def __call__(self, in_spikes: SpikeArray) -> DelaysOutput:
         return {
-            'spikes': input_spikes,
+            'out_spikes': in_spikes,
         }
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -117,44 +123,51 @@ class NDelays(Delays):
         This synaptic delay model implements a generic conduction delay of the outputs spikes of neruons. 
         Example: Neuron A fires, every neuron that listens to A recieves its spikes K timesteps later,
                  neuron B fires, every neuron that listens to B recieves its spikes L timesteps later.
+
+        Init:
+            max_delay: int
+            delay_kernel_initializer: DelayInitializer
+
+        Input:
+            in_spikes: SpikeArray
+            
+        Output:
+            out_spikes: SpikeArray
     """
 
     def __init__(self, 
-                 input_shape: bShape,
                  max_delay: int, 
-                 delay_kernel_initializer: DelayInitializer = uniform_delay_initializer,
+                 delay_kernel_initializer: DelayInitializer = uniform_delay_initializer, 
                  **kwargs):
+        # Initialize super.
         super().__init__(**kwargs)
         # Sanity checks
         if not isinstance(max_delay, int) and max_delay > 0:
             raise ValueError(f'"max_delay" must be a positive integer, got {max_delay}.')
+        # Initialize varibles
+        self.max_delay = max_delay
+        self.delay_kernel_initializer = delay_kernel_initializer
+
+    def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
-        self._shape = normalize_shape(input_shape)
+        self._shape = normalize_shape(input_specs['in_spikes'].shape)
         self._units = prod(self._shape)
-        # Internal variables
-        self._buffer_size = max_delay
+        # Initialize varibles
+        self._buffer_size = self.max_delay
         num_bytes = (self._units + 7) // 8
         self._padding = (0, num_bytes * 8 - self._units)
-        self._bitmask = SparkVariable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
-        self._current_idx = SparkVariable(0, dtype=jnp.int32)
+        self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
+        self._current_idx = Variable(0, dtype=jnp.int32)
         # Initialize delay kernel
-        delay_kernel = delay_kernel_initializer(scale=self._buffer_size)(self.get_rng_keys(1), self._units)
-        self.delay_kernel = SparkConstant(delay_kernel, dtype=jnp.uint8)
-
-    @property
-    def input_shapes(self,) -> List[Shape]:
-        return [self._shape]
-
-    @property
-    def output_shapes(self,) -> List[Shape]:
-        return [self._shape]
+        delay_kernel = self.delay_kernel_initializer(scale=self._buffer_size)(self.get_rng_keys(1), self._units)
+        self.delay_kernel = Constant(delay_kernel, dtype=jnp.uint8)
 
     def reset(self) -> None:
         """
             Resets component state.
         """
         self._bitmask.value = jnp.zeros_like(self._bitmask.value, dtype=jnp.uint8)
-        self._current_idx.value = jnp.zeros_like(self._current_idx.value, dtype=jnp.uint8)
+        self._current_idx.value = jnp.zeros_like(self._current_idx.value, dtype=jnp.int32)
 
     def _push(self, spikes: SpikeArray) -> None:
         """
@@ -191,11 +204,11 @@ class NDelays(Delays):
         # Flatten to [buffer_size, num_bytes*8] and truncate to vector_size
         return unpacked.reshape(self._buffer_size, -1)[:, :self._units].astype(self._dtype).reshape((self._buffer_size,self._units))
 
-    def __call__(self, input_spikes: SpikeArray) -> DelaysOutput:
-        self._push(input_spikes)
-        spikes = self._gather(1 - 2 *jnp.signbit(input_spikes.value))
+    def __call__(self, in_spikes: SpikeArray) -> DelaysOutput:
+        self._push(in_spikes)
+        out_spikes = self._gather(1 - 2 *jnp.signbit(in_spikes.value))
         return {
-            'spikes': spikes
+            'out_spikes': out_spikes
         }
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -207,50 +220,55 @@ class N2NDelays(Delays):
         This synaptic delay model implements specific conduction delays between specific neruons. 
         Example: Neuron A fires and neuron B, C, and D listens to A; neuron B recieves A's spikes I timesteps later,
                  neuron C recieves A's spikes J timesteps later and neuron D recieves A's spikes K timesteps later.
+
+        Init:
+            max_delay: int
+            output_shape: Shape
+            delay_kernel_initializer: DelayInitializer
+
+        Input:
+            in_spikes: SpikeArray
+            
+        Output:
+            out_spikes: SpikeArray
     """
 
     def __init__(self, 
-                 input_shape: bShape,
-                 output_shape: bShape, 
                  max_delay: int, 
-                 delay_kernel_initializer: DelayInitializer = uniform_delay_initializer,
+                 output_shape: Shape, 
+                 delay_kernel_initializer: DelayInitializer = uniform_delay_initializer, 
                  **kwargs):
-
         # Sanity checks
         if not isinstance(max_delay, int) and max_delay > 0:
             raise ValueError(f'"max_delay" must be a positive integer, got {max_delay}.')
         # Initialize super.
         super().__init__(**kwargs)
+        # Initialize varibles
+        self.max_delay = max_delay
+        self.output_shape = normalize_shape(output_shape)
+        self.delay_kernel_initializer = delay_kernel_initializer
+
+    def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
-        self._input_shape = normalize_shape(input_shape)
-        self._output_shape = normalize_shape(output_shape)
-        self._kernel_shape = normalize_shape((prod(self._output_shape), prod(self._input_shape)))
-        self._units = prod(self._input_shape)
-        # Internal variables
-        self._buffer_size = max_delay
-        self._delay_kernel_initializer = delay_kernel_initializer
+        self._in_shape = normalize_shape(input_specs['in_spikes'].shape)
+        self._kernel_shape = normalize_shape((prod(self.output_shape), prod(self._in_shape)))
+        self._units = prod(self._in_shape)
+        # Initialize varibles
+        self._buffer_size = self.max_delay
         num_bytes = (self._units + 7) // 8
         self._padding = (0, num_bytes * 8 - self._units)
-        self._bitmask = SparkVariable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
-        self._current_idx = SparkVariable(0, dtype=jnp.int32)
+        self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
+        self._current_idx = Variable(0, dtype=jnp.int32)
         # Initialize kernel
-        delay_kernel = delay_kernel_initializer(scale=self._buffer_size)(self.get_rng_keys(1), self._kernel_shape)
-        self.delay_kernel = SparkConstant(delay_kernel, dtype=jnp.uint8)
-
-    @property
-    def input_shapes(self,) -> List[Shape]:
-        return [self._input_shape]
-
-    @property
-    def output_shapes(self,) -> List[Shape]:
-        return [self._output_shape+self._input_shape]
+        delay_kernel = self.delay_kernel_initializer(scale=self._buffer_size)(self.get_rng_keys(1), self._kernel_shape)
+        self.delay_kernel = Constant(delay_kernel, dtype=jnp.uint8)
 
     def reset(self) -> None:
         """
             Resets component state.
         """
         self._bitmask.value = jnp.zeros_like(self._bitmask.value, dtype=jnp.uint8)
-        self._current_idx.value = jnp.zeros_like(self._current_idx.value, dtype=jnp.uint8)
+        self._current_idx.value = jnp.zeros_like(self._current_idx.value, dtype=jnp.int32)
 
     def _push(self, spikes: SpikeArray) -> None:
         """
@@ -276,7 +294,7 @@ class N2NDelays(Delays):
         delay_idx = (self._current_idx.value - self.delay_kernel.value - 1) % self._buffer_size
         selected_bytes = self._bitmask.value[delay_idx, byte_indices]
         selected_bits = (selected_bytes >> bit_indices) & 1
-        return SpikeArray(selected_bits.astype(self._dtype).reshape(self._output_shape+self._input_shape) * sign)
+        return SpikeArray(selected_bits.astype(self._dtype).reshape(self.output_shape+self._in_shape) * sign)
 
     def get_dense(self,) -> jax.Array:
         """
@@ -287,11 +305,11 @@ class N2NDelays(Delays):
         # Flatten to [buffer_size, num_bytes*8] and truncate to vector_size
         return unpacked.reshape(self._buffer_size, -1)[:, :self._units].astype(self._dtype).reshape((self._buffer_size,self._units))
 
-    def __call__(self, input_spikes: SpikeArray) -> DelaysOutput:
-        self._push(input_spikes)
-        spikes = self._gather(1 - 2 *jnp.signbit(input_spikes.value))
+    def __call__(self, in_spikes: SpikeArray) -> DelaysOutput:
+        self._push(in_spikes)
+        out_spikes = self._gather(1 - 2 *jnp.signbit(in_spikes.value))
         return {
-            'spikes': spikes
+            'out_spikes': out_spikes
         }
 
 #################################################################################################################################################

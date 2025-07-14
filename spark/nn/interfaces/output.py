@@ -16,7 +16,7 @@ from typing import Dict, List, TypedDict
 from spark.nn.interfaces.base import Interface
 from spark.core.tracers import SaturableTracer, SaturableDoubleTracer
 from spark.core.payloads import SpikeArray, FloatArray
-from spark.core.variable_containers import SparkVariable
+from spark.core.variables import Variable
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.registry import register_module
 from spark.nn.interfaces.base import Interface
@@ -27,7 +27,7 @@ from spark.nn.interfaces.base import Interface
 
 # Generic OutputInterface output contract.
 class OutputInterfaceOutput(TypedDict):
-    output: FloatArray
+    signal: FloatArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -36,8 +36,7 @@ class OutputInterface(Interface, abc.ABC):
         Abstract output interface model.
     """
 
-    def __init__(self, 
-                 **kwargs):
+    def __init__(self, **kwargs):
         # Main attributes
         super().__init__(**kwargs)
 
@@ -56,6 +55,19 @@ class ExponentialIntegrator(OutputInterface):
         Transforms a discrete spike signal to a continuous signal.
         This transformation assumes a very simple integration model model without any type of adaptation or plasticity.
         Spikes are grouped into k non-overlaping clusters and every neuron contributes the same amount to the ouput.
+
+        Init:
+            num_outputs: int
+            saturation_freq: float [Hz]
+            tau: float [ms]
+            shuffle: bool
+            smooth_trace: boll
+            
+        Input:
+            spikes: SpikeArray
+            
+        Output:
+            signal: FloatArray
     """
 
     def __init__(self, 
@@ -87,7 +99,7 @@ class ExponentialIntegrator(OutputInterface):
             output_map = output_map
         else: 
             output_map = jax.random.permutation(self.get_rng_keys(1), output_map)
-        self._indices = SparkVariable(output_map, dtype=jnp.uint32)
+        self._indices = Variable(output_map, dtype=jnp.uint32)
 
         # Initialize tracer
         if self.smooth_trace:
@@ -104,7 +116,13 @@ class ExponentialIntegrator(OutputInterface):
                                          scale=(1000/self.saturation_freq)/(self._dt*self.tau*counts), 
                                          dt=self._dt, 
                                          dtype=self._dtype)
-            
+
+    def reset(self,):
+        """
+            Reset module to its default state.
+        """
+        self.trace.reset()
+
     def __call__(self, spikes: SpikeArray) -> OutputInterfaceOutput:
         # Flat array
         x = spikes.value.reshape(-1)
@@ -115,7 +133,7 @@ class ExponentialIntegrator(OutputInterface):
         # Integrate
         output = self.trace(x)
         return {
-            'output': FloatArray(output)
+            'signal': FloatArray(output)
         }
 
 #################################################################################################################################################

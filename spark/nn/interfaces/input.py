@@ -13,7 +13,7 @@ import jax
 import jax.numpy as jnp
 from typing import TypedDict
 from spark.core.payloads import SpikeArray, FloatArray
-from spark.core.variable_containers import SparkVariable, SparkConstant
+from spark.core.variables import Variable, Constant
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.registry import register_module
 from spark.nn.interfaces.base import Interface
@@ -33,9 +33,7 @@ class InputInterface(Interface, abc.ABC):
         Abstract input interface model.
     """
 
-    def __init__(self, 
-                 **kwargs):
-        
+    def __init__(self, **kwargs):
         # Main attributes
         super().__init__(**kwargs)
 
@@ -53,11 +51,18 @@ class PoissonSpiker(InputInterface):
     """
         Transforms a continuous signal to a spiking signal.
         This transformation assumes a very simple poisson neuron model without any type of adaptation or plasticity.
+
+        Init:
+            max_freq: float [Hz]
+
+        Input:
+            signal: FloatArray
+
+        Output:
+            spikes: SpikeArray
     """
 
-    def __init__(self, 
-                 max_freq: float = 50, 	# [Hz]
-                 **kwargs):
+    def __init__(self, max_freq: float = 50, **kwargs):
         # Initialize super
         super().__init__(**kwargs)
         # Initialize variables
@@ -66,9 +71,9 @@ class PoissonSpiker(InputInterface):
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Initialize shapes
-        self._shape = normalize_shape(input_specs['drive'].shape)
+        self._shape = normalize_shape(input_specs['signal'].shape)
 
-    def __call__(self, drive: FloatArray) -> InputInterfaceOutput:
+    def __call__(self, signal: FloatArray) -> InputInterfaceOutput:
         """
             Input interface operation.
 
@@ -77,7 +82,7 @@ class PoissonSpiker(InputInterface):
             Output: 
                 A SpikeArray of the same shape as the input.
         """
-        spikes = (jax.random.uniform(self.get_rng_keys(1), shape=self._shape) < self._scale * drive.value).astype(self._dtype)
+        spikes = (jax.random.uniform(self.get_rng_keys(1), shape=self._shape) < self._scale * signal.value).astype(self._dtype)
         return {
             'spikes': SpikeArray(spikes)
         }
@@ -90,6 +95,17 @@ class LinearSpiker(InputInterface):
         Transforms a continuous signal to a spiking signal.
         This transformation assumes a very simple linear neuron model without any type of adaptation or plasticity.
         Units have a fixed refractory period and at maximum input signal will fire up to some fixed frequency.
+
+        Init:
+            tau: float [ms]
+            cd: float [ms]
+            max_freq: float [Hz]
+
+        Input:
+            signal: FloatArray
+            
+        Output:
+            spikes: SpikeArray
     """
 
     def __init__(self, 
@@ -108,20 +124,27 @@ class LinearSpiker(InputInterface):
         self.max_freq = max_freq
         exp_term = jnp.exp((1/tau) * ((1000-self.cd*self.max_freq) / self.max_freq)) # dt cancels out
         scale = ((1 / (exp_term - 1)) + 1)
-        self._tau = SparkConstant(self.tau, dtype=self._dtype)
-        self._scale = SparkConstant(scale, dtype=self._dtype)
-        self._decay = SparkConstant(jnp.exp(-self._dt / self.tau), dtype=self._dtype)
-        self._gain = SparkConstant(1 - self._decay, dtype=self._dtype)
+        self._tau = Constant(self.tau, dtype=self._dtype)
+        self._scale = Constant(scale, dtype=self._dtype)
+        self._decay = Constant(jnp.exp(-self._dt / self.tau), dtype=self._dtype)
+        self._gain = Constant(1 - self._decay, dtype=self._dtype)
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Initialize shapes
-        self._shape = normalize_shape(input_specs['drive'].shape)
+        self._shape = normalize_shape(input_specs['signal'].shape)
         # Initialize variables
-        self._cooldown = SparkConstant(self.cd * jnp.ones(shape=self._shape), dtype=self._dtype)
-        self._refractory = SparkVariable(self._cooldown, dtype=self._dtype)
-        self.potential = SparkVariable(jnp.zeros(shape=self._shape), dtype=self._dtype)
+        self._cooldown = Constant(self.cd * jnp.ones(shape=self._shape), dtype=self._dtype)
+        self._refractory = Variable(self._cooldown, dtype=self._dtype)
+        self.potential = Variable(jnp.zeros(shape=self._shape), dtype=self._dtype)
 
-    def __call__(self, drive: FloatArray) -> InputInterfaceOutput:
+    def reset(self,):
+        """
+            Reset module to its default state.
+        """
+        self.potential.value = jnp.zeros(shape=self._shape)
+        self._refractory.value = self._cooldown.value
+
+    def __call__(self, signal: FloatArray) -> InputInterfaceOutput:
         """
             Input interface operation.
 
@@ -132,7 +155,7 @@ class LinearSpiker(InputInterface):
         """
         # Update potential
         is_ready = jnp.greater_equal(self._refractory.value, self._cooldown).astype(self._dtype)
-        dV = is_ready * self._tau * self._gain * self._scale * drive.value
+        dV = is_ready * self._tau * self._gain * self._scale * signal.value
         self.potential.value = self._decay * self.potential.value + dV
         # Spike
         spikes = (self.potential.value > self._tau).astype(self._dtype)
@@ -152,6 +175,20 @@ class TopologicalPoissonSpiker(InputInterface):
         Transforms a continuous signal to a spiking signal.
         This transformation maps a vector (a point in a hypercube) into a simple manifold with/without its borders glued.
         This transformation assumes a very simple poisson neuron model without any type of adaptation or plasticity.
+
+        Init:
+            glue: jax.Array
+            mins: jax.Array
+            maxs: jax.Array
+            resolution: int 
+            max_freq: float [Hz]
+            sigma: float
+
+        Input:
+            signal: FloatArray
+            
+        Output:
+            spikes: SpikeArray
     """
 
     def __init__(self, 
@@ -169,23 +206,23 @@ class TopologicalPoissonSpiker(InputInterface):
         self.max_freq = max_freq
         self.sigma = sigma
         self._scale = self._dt * (max_freq / 1000)
-        self._glue = SparkConstant(glue, dtype=jnp.bool_)
-        self._mins = SparkConstant(mins, dtype=self._dtype)
-        self._maxs = SparkConstant(maxs, dtype=self._dtype)
-        self._sigma = SparkConstant(self.sigma, dtype=self._dtype)
+        self._glue = Constant(glue, dtype=jnp.bool_)
+        self._mins = Constant(mins, dtype=self._dtype)
+        self._maxs = Constant(maxs, dtype=self._dtype)
+        self._sigma = Constant(self.sigma, dtype=self._dtype)
 
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Initialize shapes
-        input_shape = normalize_shape(input_specs['drive'].shape)
-        self._output_shape = normalize_shape(input_specs['drive'].shape + (self.resolution,))
+        input_shape = normalize_shape(input_specs['signal'].shape)
+        self._output_shape = normalize_shape(input_specs['signal'].shape + (self.resolution,))
         # Initialize variables
-        self._space = SparkConstant(jnp.linspace(jnp.zeros(input_shape), 
+        self._space = Constant(jnp.linspace(jnp.zeros(input_shape), 
                                                  jnp.pi*jnp.ones(input_shape), 
                                                  self.resolution), 
                                     dtype=self._dtype)
         
-    def __call__(self, drive: FloatArray) -> InputInterfaceOutput:
+    def __call__(self, signal: FloatArray) -> InputInterfaceOutput:
         """
             Input interface operation.
 
@@ -193,7 +230,7 @@ class TopologicalPoissonSpiker(InputInterface):
             Output: A SpikeArray of the same shape as the input.
         """
         # Transform input to [0, 1]
-        x = (drive.value - self._mins) / (self._maxs - self._mins)
+        x = (signal.value - self._mins) / (self._maxs - self._mins)
         x = jnp.where(self._glue.value, jnp.sin(self._space + x*jnp.pi), jnp.tanh(self._space - x*jnp.pi))
         x = jnp.exp( -(0.5 / self._sigma) * (x**2) ).T
         # Poisson process
@@ -210,6 +247,22 @@ class TopologicalLinearSpiker(InputInterface):
         Transforms a continuous signal to a spiking signal.
         This transformation maps a vector (a point in a hypercube) into a simple manifold with/without its borders glued.
         This transformation assumes a very simple linear neuron model without any type of adaptation or plasticity.
+
+        Init:
+            glue: jax.Array
+            mins: jax.Array
+            maxs: jax.Array
+            resolution: int 
+            tau: float [ms]
+            cd: float [ms]
+            max_freq: float [Hz]
+            sigma: float
+
+        Input:
+            signal: FloatArray
+            
+        Output:
+            spikes: SpikeArray
     """
 
     def __init__(self, 
@@ -230,31 +283,38 @@ class TopologicalLinearSpiker(InputInterface):
         self.cd = cd
         self.max_freq = max_freq
         self.sigma = sigma
-        self._glue = SparkConstant(glue, dtype=jnp.bool_)
-        self._mins = SparkConstant(mins, dtype=self._dtype)
-        self._maxs = SparkConstant(maxs, dtype=self._dtype)
-        self._sigma = SparkConstant(self.sigma, dtype=self._dtype)
+        self._glue = Constant(glue, dtype=jnp.bool_)
+        self._mins = Constant(mins, dtype=self._dtype)
+        self._maxs = Constant(maxs, dtype=self._dtype)
+        self._sigma = Constant(self.sigma, dtype=self._dtype)
         exp_term = jnp.exp((1/tau) * ((1000-self.cd*self.max_freq) / self.max_freq)) # dt cancels out
         scale = ((1 / (exp_term - 1)) + 1)
-        self._scale = SparkConstant(scale, dtype=self._dtype)
-        self._tau = SparkConstant(tau, dtype=self._dtype)
-        self._decay = SparkConstant(jnp.exp(-self._dt / self._tau), dtype=self._dtype)
-        self._gain = SparkConstant(1 - self._decay, dtype=self._dtype)
+        self._scale = Constant(scale, dtype=self._dtype)
+        self._tau = Constant(tau, dtype=self._dtype)
+        self._decay = Constant(jnp.exp(-self._dt / self._tau), dtype=self._dtype)
+        self._gain = Constant(1 - self._decay, dtype=self._dtype)
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Initialize shapes
-        input_shape = normalize_shape(input_specs['drive'].shape)
-        self._output_shape = normalize_shape(input_specs['drive'].shape + (self.resolution,))
+        input_shape = normalize_shape(input_specs['signal'].shape)
+        self._output_shape = normalize_shape(input_specs['signal'].shape + (self.resolution,))
         # Initialize variables
-        self._space = SparkConstant(jnp.linspace(jnp.zeros(input_shape), 
+        self._space = Constant(jnp.linspace(jnp.zeros(input_shape), 
                                                  jnp.pi*jnp.ones(input_shape), 
                                                  self.resolution), 
                                     dtype=self._dtype)
-        self._cooldown = SparkConstant(self.cd * jnp.ones(shape=self._output_shape), dtype=self._dtype)
-        self._refractory = SparkVariable(self._cooldown, dtype=self._dtype)
-        self.potential = SparkVariable(jnp.zeros(shape=self._output_shape), dtype=self._dtype)
+        self._cooldown = Constant(self.cd * jnp.ones(shape=self._output_shape), dtype=self._dtype)
+        self._refractory = Variable(self._cooldown, dtype=self._dtype)
+        self.potential = Variable(jnp.zeros(shape=self._output_shape), dtype=self._dtype)
 
-    def __call__(self, drive: FloatArray) -> InputInterfaceOutput:
+    def reset(self,):
+        """
+            Reset module to its default state.
+        """
+        self.potential.value = jnp.zeros(shape=self._output_shape)
+        self._refractory.value = self._cooldown.value
+
+    def __call__(self, signal: FloatArray) -> InputInterfaceOutput:
         """
             Input interface operation.
 
@@ -262,7 +322,7 @@ class TopologicalLinearSpiker(InputInterface):
             Output: A SpikeArray of the same shape as the input.
         """
         # Transform input to [0, 1]
-        x = (drive.value - self._mins) / (self._maxs - self._mins)
+        x = (signal.value - self._mins) / (self._maxs - self._mins)
         x = jnp.where(self._glue.value, jnp.sin(self._space + x*jnp.pi), jnp.tanh(self._space - x*jnp.pi))
         x = jnp.exp( -(0.5 / self._sigma) * (x**2) ).T
         # Update potential

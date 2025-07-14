@@ -13,8 +13,8 @@ from jax.typing import DTypeLike
 from dataclasses import dataclass
 
 import spark.core.validation as validation
-from spark.core.variable_containers import SparkVariable
-
+from spark.core.variables import Variable
+from spark.core.shape import bShape, Shape, normalize_shape
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -26,30 +26,44 @@ class Cache:
     """
         Cache dataclass.
     """
-    payload_type: SparkPayload        
-    dtype: DTypeLike
-    var: SparkVariable  
+    variable: Variable  
+    payload_type: type[SparkPayload]
 
-    def __init__(self, var: SparkVariable, payload_type: SparkPayload, dtype: DTypeLike):
-        if not isinstance(var, SparkVariable):
-            raise TypeError(f'Expected "value" to be of type "SparkVariable" but got "{type(var).__name__}".')
+    def __init__(self, variable: Variable, payload_type: type[SparkPayload]):
+        #if not validation.is_shape(shape):
+        #    raise TypeError(f'Expected "shape" to be of type "Shape" but got "{type(shape).__name__}".')
         if not validation._is_payload_type(payload_type):
             raise TypeError(f'Expected "payload_type" to be of type "SparkPayload" but got "{type(payload_type).__name__}".')
-        if not isinstance(jnp.dtype(dtype), jnp.dtype):
-            raise TypeError(f'Expected "dtype" to be of type "{DTypeLike}" but got  "{type(dtype).__name__}".')
-        self.var = var
+        #if not validation.is_dtype(dtype):
+        #    raise TypeError(f'Expected "dtype" to be of type "{DTypeLike}" but got  "{type(dtype).__name__}".')
+        self.variable = variable
         self.payload_type = payload_type
-        self.dtype = dtype
+
+    @property
+    def value(self,):
+        return self.payload_type(self.variable.value)
+    
+    @value.setter
+    def value(self, new_value):
+        self.variable.value = new_value
+
+    @property
+    def shape(self,):
+        return self.variable.value.shape
+
+    @property
+    def dtype(self,):
+        return self.variable.value.dtype
 
     def tree_flatten(self):
-        children = (self.payload_type, self.dtype, self.var)
+        children = (self.variable, self.payload_type)
         aux_data = ()
         return children, aux_data
 
     @classmethod
     def tree_unflatten(cls, aux_data, children):
-        (payload_type, dtype, var) = children
-        return cls(payload_type=payload_type, dtype=dtype, var=var)
+        (variable, payload_type) = children
+        return cls(variable=variable, payload_type=payload_type)
 
 
 #################################################################################################################################################

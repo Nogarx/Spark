@@ -3,6 +3,9 @@
 #################################################################################################################################################
 
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from spark.core.specs import InputSpec
 
 import abc
 import jax.numpy as jnp
@@ -12,7 +15,7 @@ from dataclasses import dataclass
 from spark.core.tracers import Tracer
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.payloads import SpikeArray, CurrentArray, PotentialArray
-from spark.core.variable_containers import SparkVariable, SparkConstant, ConfigDict
+from spark.core.variables import Variable, Constant, ConfigDict
 from spark.core.registry import register_module
 from spark.nn.components.base import Component
 
@@ -59,17 +62,12 @@ class Soma(Component):
     """
 
     def __init__(self, 
-                 shape: bShape,
                  params: Dict = {},
                  **kwargs):
         # Initialize super.
         super().__init__(**kwargs)
-        # Initialize shapes
-        self._shape = normalize_shape(shape)
-        self.units = prod(self._shape)
         # Initialize variables
-        self._params = params
-        self._potential = SparkVariable(jnp.zeros(self._shape, dtype=self._dtype), dtype=self._dtype)
+        self.params = ConfigDict(params)
 
     @property
     def potential(self,) -> PotentialArray:
@@ -78,13 +76,11 @@ class Soma(Component):
         """
         return PotentialArray(self._potential.value)
     
-    @property
-    def input_shapes(self,) -> List[Shape]:
-        return [self._shape]
-
-    @property
-    def output_shapes(self,) -> List[Shape]:
-        return [self._shape]
+    def build(self, input_specs: dict[str, InputSpec]):
+        # Initialize shapes
+        self._shape = normalize_shape(input_specs['current'].shape)
+        # Initialize variables
+        self._potential = Variable(jnp.zeros(self._shape, dtype=self._dtype), dtype=self._dtype)
 
     @abc.abstractmethod
     def reset(self):
@@ -126,38 +122,37 @@ class ALIFSoma(Soma):
     """
 
     def __init__(self, 
-                 shape: bShape,
                  params: Dict = {},
                  **kwargs):
         # Initialize super.
-        super().__init__(shape, params=params, **kwargs)
+        super().__init__(params=params, **kwargs)
         # Set missing parameters to default values.
         for k in ALIF_cfgs.DEFAULT:
-            self._params.setdefault(k,  ALIF_cfgs.DEFAULT[k])
-        self._params = ConfigDict(config=self._params)
-        # Initialize parameters.
+            self.params.setdefault(k,  ALIF_cfgs.DEFAULT[k])
+
+    def build(self, input_specs: dict[str, InputSpec]):
+        super().build(input_specs)
+        # Initialize variables.
         # Membrane. Substract potential_rest to potential related terms to rebase potential at zero.
-        self._potential_reset = SparkConstant(self._params['potential_reset'] - self._params['potential_rest'], dtype=self._dtype)
-        self._potential_scale = SparkConstant(self._dt / self._params['potential_tau'], dtype=self._dtype)
+        self._potential_reset = Constant(self.params['potential_reset'] - self.params['potential_rest'], dtype=self._dtype)
+        self._potential_scale = Constant(self._dt / self.params['potential_tau'], dtype=self._dtype)
         # Conductance.
-        self._conductance = SparkConstant(1/self._params['conductance'], dtype=self._dtype)
+        self._conductance = Constant(1/self.params['conductance'], dtype=self._dtype)
         # Threshold.
         self._threshold = Tracer(self._shape,
-                                 tau=self._params['threshold_tau'], 
-                                 base=(self._params['threshold'] - self._params['potential_rest']), 
-                                 scale=self._params['threshold_delta'], 
+                                 tau=self.params['threshold_tau'], 
+                                 base=(self.params['threshold'] - self.params['potential_rest']), 
+                                 scale=self.params['threshold_delta'], 
                                  dt=self._dt, dtype=self._dtype)
         # Refractory period.
-        self.cooldown = SparkConstant(self._params['cooldown'], dtype=self._dtype)
-        self.refractory = SparkVariable(jnp.array(self.cooldown), dtype=self._dtype)
-
-        
+        self.cooldown = Constant(self.params['cooldown'], dtype=self._dtype)
+        self.refractory = Variable(jnp.array(self.cooldown), dtype=self._dtype)
 
     def reset(self) -> None:
         """
             Resets component state.
         """
-        self._potential.value = jnp.zeros_like(self._shape, dtype=self._dtype)
+        self._potential.value = jnp.zeros_like(self._potential.value, dtype=self._dtype)
         self.refractory.value = jnp.array(self.cooldown, dtype=self._dtype)
         self._threshold.reset()
 

@@ -173,7 +173,7 @@ class ModuleSpecs:
                 raise TypeError(f'All keys in "init_args" must be strings, but found key "{key}" of type {type(key).__name__}.')
 
         object.__setattr__(self, 'name', name)
-        object.__setattr__(self, 'module_cls', module_cls.__name__)
+        object.__setattr__(self, 'module_cls', module_cls)
         object.__setattr__(self, 'inputs', inputs)
         object.__setattr__(self, 'init_args', init_args)
 

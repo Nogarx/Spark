@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import re
+import string
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -24,6 +25,14 @@ def normalize_name(name: str) -> str:
     s = re.sub(r'[-\s]+', '_', s)
     # Convert the whole string to lowercase.
     return s.lower()
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def get_einsum_labels(num_dims: int, offset: int = 0):
+	if (offset + num_dims) > len(string.ascii_letters):
+		raise ValueError(f'Requested up to {offset + num_dims} symbols but it is only possible to represent up to {len(string.ascii_letters)} '
+						f'different symbols. If this was intentional consider defining a custom label map.')
+	return string.ascii_letters[offset:offset+num_dims]
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

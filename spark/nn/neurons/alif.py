@@ -3,17 +3,22 @@
 #################################################################################################################################################
 
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from spark.core.specs import InputSpec
+    from spark.nn.components.somas import Soma
+    from spark.nn.components.delays import Delays
+    from spark.nn.components.synapses import Synanpses
+    from spark.nn.components.learning_rules import LearningRule
 
 import jax
 import jax.numpy as jnp
-from typing import Dict
 from spark.nn.neurons import Neuron, NeuronOutput
 from spark.core.payloads import SpikeArray
-from spark.core.variable_containers import SparkConstant
+from spark.core.variables import Constant
 from spark.nn.components import ALIFSoma, SimpleSynapses, N2NDelays, HebbianRule, DummyDelays
 from spark.core.shape import bShape
 from spark.core.registry import register_module
-from math import prod
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -25,73 +30,77 @@ class ALIFNeuron(Neuron):
         Leaky integrate and fire neuronal model.
     """
 
+    soma: Soma
+    delays: Delays
+    synapses: Synanpses
+    learning_rule: LearningRule
+
     def __init__(self, 
-                 input_shape: bShape,
-                 output_shape: bShape,
-                 soma_params: Dict = {},
-                 synapses_params: Dict = {},
-                 learning_rule_params: Dict = {},
+                 units: bShape,
                  max_delay: int = 16,
                  inhibitory_rate: float = 0.2,
-                 input_inhibition_mask: jax.Array = None,
+                 async_spikes = True,
+                 soma_params: dict = {},
+                 synapses_params: dict = {},
+                 learning_rule_params: dict = {},
                  **kwargs):
-        super().__init__(output_shape, input_shapes=input_shape, **kwargs)
+        super().__init__(units, **kwargs)
         # Sanity checks
         if not isinstance(inhibitory_rate, float) and inhibitory_rate >= 0 and inhibitory_rate <= 1.0:
             raise ValueError(f'"inhibitory_rate" must be a float in the range [0,1], got {inhibitory_rate}.')
         # Main attributes
-        self._max_delay = max_delay
-        self._inhibitory_rate = inhibitory_rate
+        self.max_delay = max_delay
+        self.inhibitory_rate = inhibitory_rate
+        self.async_spikes = async_spikes
+        # Temporary storage
+        self._soma_params = soma_params
+        self._synapses_params = synapses_params
+        self._learning_rule_params = learning_rule_params
+        # Set output shapes earlier to allow cycles.
+        self.set_output_shapes(self.units)
+
+    def build(self, input_specs: dict[str, InputSpec]):
         # Initialize inhibitory mask.
-        inhibitory_units = int(self.units * self._inhibitory_rate)
-        indices = jax.random.permutation(self.get_rng_keys(1), jnp.arange(prod(self._output_shape)), independent=True)[:inhibitory_units]
-        inhibition_mask = jnp.ones((prod(self._output_shape),), dtype=self._dtype)
-        inhibition_mask = inhibition_mask.at[indices].set(-1).reshape(self._output_shape)
-        self._inhibition_mask = SparkConstant(inhibition_mask, dtype=jnp.float16)
+        inhibitory_units = int(self._units * self.inhibitory_rate)
+        indices = jax.random.permutation(self.get_rng_keys(1), jnp.arange(self._units), independent=True)[:inhibitory_units]
+        inhibition_mask = jnp.ones((self._units,), dtype=self._dtype)
+        inhibition_mask = inhibition_mask.at[indices].set(-1).reshape(self.units)
+        self._inhibition_mask = Constant(inhibition_mask, dtype=jnp.float16)
         # Soma model.
-        self.soma = ALIFSoma(shape=self._output_shape, 
-                             params=soma_params)
+        self.soma = ALIFSoma(params=self._soma_params)
+        del self._soma_params
         # Delays model.
-        self.delays = N2NDelays(input_shape=self._input_shapes[0], 
-                                output_shape=self._output_shape, 
-                                max_delay=self._max_delay)
-
+        if self.async_spikes:
+            self.delays = N2NDelays(output_shape=self.units, 
+                                    max_delay=self.max_delay)
+        else:
+            self.delays = DummyDelays()
         # Synaptic model.
-        self.synapses = SimpleSynapses(input_shape=self._output_shape+self._input_shapes[0], 
-                                       output_shape=self._output_shape, 
-                                       params=synapses_params, 
-                                       async_spikes=True)
-
+        self.synapses = SimpleSynapses(output_shape=self.units, 
+                                    params=self._synapses_params, 
+                                    async_spikes=True)
+        del self._synapses_params
         # Learning rule model.
-        self.learning_rule = HebbianRule(input_shape=self._output_shape+self._input_shapes[0], 
-                                         output_shape=self._output_shape, 
-                                         params=learning_rule_params,
+        self.learning_rule = HebbianRule(output_shape=self.units, 
+                                         params=self._learning_rule_params,
                                          async_spikes=True)
+        del self._learning_rule_params
 
-
-    def reset(self):
-        """
-            Resets neuron states to their initial values.
-        """
-        self.soma.reset()
-        #self.synapses.reset()
-        #self.learning_rule.reset()
-
-    def __call__(self, input_spikes: SpikeArray) -> NeuronOutput:
+    def __call__(self, in_spikes: SpikeArray) -> NeuronOutput:
         """
             Update neuron's states and compute spikes.
         """
         # Inference
-        delays_output = self.delays(input_spikes)
-        synapses_output = self.synapses(delays_output['spikes'])
+        delays_output = self.delays(in_spikes)
+        synapses_output = self.synapses(delays_output['out_spikes'])
         soma_output = self.soma(synapses_output['currents'])
         # Learning
-        learning_rule_output = self.learning_rule(delays_output['spikes'], soma_output['spikes'], self.synapses.get_kernel())
-        #self.synapses.set_kernel(kernel)
+        learning_rule_output = self.learning_rule(delays_output['out_spikes'], soma_output['spikes'], self.synapses.get_kernel())
+        #self.synapses.set_kernel(learning_rule_output['kernel'])
         self.synapses.kernel.value = learning_rule_output['kernel'].value
         # Signed spikes
         return {
-            'spikes': SpikeArray(soma_output['spikes'].value * self._inhibition_mask)
+            'out_spikes': SpikeArray(soma_output['spikes'].value * self._inhibition_mask)
         }
 
 #################################################################################################################################################

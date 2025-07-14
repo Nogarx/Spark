@@ -5,11 +5,11 @@
 from __future__ import annotations
 
 import abc
-from typing import TypedDict, List
+from math import prod
+from typing import TypedDict
 from spark.core.module import SparkModule
 from spark.core.payloads import SpikeArray
-from math import prod
-from spark.core.shape import bShape, Shape, normalize_shape
+from spark.core.shape import bShape, normalize_shape
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -17,36 +17,29 @@ from spark.core.shape import bShape, Shape, normalize_shape
 
 # Generic Soma output contract.
 class NeuronOutput(TypedDict):
-    spikes: SpikeArray
+    out_spikes: SpikeArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-
-class Neuron(SparkModule):
+class Neuron(SparkModule, abc.ABC):
     """
         Abstract neuronal model.
-        This is more a convenience class used to synchronize data more easily.
+
+        This is a convenience class used to synchronize data more easily.
+        Can be thought as the equivalent of Sequential in standard ML frameworks.
     """
 
     def __init__(self, 
                  units: bShape,
-                 input_shapes: List[bShape] = None,
                  **kwargs):
+        # Initialize super.
         super().__init__(**kwargs)
         # Initialize shapes
-        self._input_shapes = [normalize_shape(s) for s in input_shapes] \
-                if isinstance(input_shapes, list) else [normalize_shape(input_shapes)]
-        self._output_shape = normalize_shape(units)
-        self.units = prod(self._output_shape)
+        self.units = normalize_shape(units)
+        self._units = prod(self.units)
+        self._component_names: list[SparkModule] = None
 
-    @property
-    def input_shapes(self,) -> List[Shape]:
-        return self._input_shapes
-
-    @property
-    def output_shapes(self,) -> List[Shape]:
-        return [self._output_shape]
-
+    # TODO: This should be called post build. 
     def _build_component_list(self):
         """
             Inspect the object to collect the names of all child of type Component.
@@ -73,19 +66,12 @@ class Neuron(SparkModule):
         """
             Resets neuron states to their initial values.
         """
-        # Build components list. TODO: This should be called post init. 
-        if self._component_names is not None:
+        # Build components list. 
+        if self._component_names is None:
             self._build_component_list()
         # Reset components.
         for name in self._component_names:
             getattr(self, name).reset()
-
-    @abc.abstractmethod
-    def __call__(self, *spikes: SpikeArray) -> NeuronOutput:
-        """
-            Update neuron's states and compute spikes.
-        """
-        pass
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
