@@ -17,6 +17,7 @@ from spark.core.shape import Shape, normalize_shape
 from spark.core.payloads import SparkPayload, FloatArray
 from spark.core.operations import concatenate_payloads
 from spark.core.registry import REGISTRY
+from spark.core.configuration import SparkConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -32,6 +33,7 @@ class Brain(SparkModule, metaclass=BrainMeta):
 		Abstract brain model.
 		This is more a convenience class used to synchronize data more easily.
 	"""
+	default_config: object = SparkConfig
 
 	# Typing annotations.
 	_modules_list: List[str]

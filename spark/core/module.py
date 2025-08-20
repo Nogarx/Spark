@@ -24,6 +24,7 @@ from functools import wraps
 from dataclasses import dataclass, fields, MISSING, asdict, field
 import spark.core.signature_parser as sig_parser
 import spark.core.validation as validation
+from spark.core.configuration import SparkConfig
 
 # TODO: Support for list[SparkPayloads] was implemented in a wacky manner and 
 # may have damage several parts of the module. This needs to be further validated. 
@@ -82,98 +83,24 @@ class SparkMeta(nnx.module.ModuleMeta, HookingMeta):
 
         return cls
 
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-class SparkConfiguration:
-    """
-        Base class for module configuration.
-    """
-    __SCHEMA_VERSION__ = '1.0'
-    seed: int | None = field(default=None, metadata={})
-    dtype: DTypeLike = field(default=jnp.float16, metadata={})
-    dt: float = field(default=1.0, metadata={})
-
-    @classmethod
-    def create(cls: Type['SparkConfiguration'], partial: dict[str, Any] = None) -> 'SparkConfiguration':
-        """
-            Create config with partial overrides.
-        """
-        # Get default instance
-        instance = cls()
-        # Apply partial updates
-        if partial:
-            valid_fields = {f.name for f in fields(cls)}
-            for key, value in partial.items():
-                if key in valid_fields:
-                    setattr(instance, key, value)
-                else:
-                    raise ValueError(f"Invalid config key: {key}")
-        return instance
-
-    def merge(self, partial: dict[str, Any]) -> None:
-        """
-            Update config with partial overrides.
-        """
-        valid_fields = {f.name for f in fields(self)}
-        for key, value in partial.items():
-            if key in valid_fields:
-                setattr(self, value)
-            else:
-                raise ValueError(f"Invalid config key: {key}")
-
-    def diff(self, other: 'SparkConfiguration') -> dict[str, Any]:
-        """
-            Return differences from another config.
-        """
-        return {
-            field.name: getattr(self, field.name) for field in fields(self) if getattr(self, field.name) != getattr(other, field.name)
-        }
-
-    @classmethod
-    def from_dict(cls: Type['SparkConfiguration'], data: dict) -> 'SparkConfiguration':
-        """
-            Create config instance from dictionary
-        """
-        return cls(**data)
-    
-    def to_dict(self) -> dict:
-        """
-            Serialize config to dictionary
-        """
-        return asdict(self)
-
-    def validate(self,):
-        # Sanity checks.
-        if not isinstance(self.dt, float):
-            raise TypeError(f'Expected "dt" to be of type "float" but got "{type(self.dt).__name__}".')
-        elif not self.dt >= 0:
-            raise ValueError(f'Expected "dt" to be a positive "float" but got "{self.dt}."')
-        if not isinstance(jnp.dtype(self.dtype), jnp.dtype):
-            raise TypeError(f'Expected "dtype" to be of type "{DTypeLike}" but got "{type(self.dtype).__name__}".')
-        if self.seed and not isinstance(self.seed, int):
-            raise TypeError(f'Expected "seed" to be of type "int|None" but got "{type(self.seed).__name__}".')
-        
-    def __post_init__(self):
-        self.validate()
-
-
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
             
 # TODO: We need a reliable way to infer the shape/type for inputs and outputs.
 class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
     name: str = 'name'
-    default_config: object = SparkConfiguration
+    default_config: type[SparkConfig] = SparkConfig
 
-    def __init__(self, *, config: SparkConfiguration = None, **kwargs):
+    def __init__(self, *, config: SparkConfig = None, **kwargs):
         # Initialize super.
         super().__init__()
+        # Override config if provided
+        self.config = self.default_config.create(**kwargs) if config is None else config.merge(**kwargs)
         # Define default parameters.
-        self._dtype = config.dtype
-        self._dt = config.dt
+        self._dtype = self.config.dtype
+        self._dt = self.config.dt
+        self._seed = self.config.seed
         # Random engine key.
-        self._seed = int.from_bytes(os.urandom(4), 'little') if config.seed is None else config.seed
         self.rng = nnx.Variable(jax.random.PRNGKey(self._seed))
         #self.rng = nnx.Rngs(default=42)
         # Specs
@@ -186,18 +113,11 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
     @property
     @abc.abstractmethod
-    def default_config(self):
+    def default_config(self) -> type[SparkConfig]:
         """
             Returns the default configuration dataclass for this module.
         """
         pass
-
-    @classmethod
-    def get_default_config(cls,):
-        """
-            Returns the default configuration dict of the module.
-        """
-        return {}
     
     @classmethod
     def get_config_spec(cls):

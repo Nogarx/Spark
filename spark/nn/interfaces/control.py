@@ -14,7 +14,9 @@ from spark.core.variables import Constant
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.registry import register_module
 from spark.core.payloads import SparkPayload
+from spark.core.configuration import SparkConfig
 from spark.nn.interfaces.base import Interface
+from dataclasses import field
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -35,6 +37,30 @@ class ControlFlowInterface(Interface, abc.ABC):
         # Initialize super.
         super().__init__(**kwargs)
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class MergerConfig(SparkConfig):
+    num_inputs: int = field(
+        default=1, 
+        metadata={
+            'units': None,
+            'valid_types': int,
+            'validators': [
+                (lambda x: isinstance(x, int), lambda x: f'num_inputs must be of type int, got "{type(x)}".'),
+                (lambda x: x > 0, lambda x: f'num_inputs must be positive, got "{x}".'),
+            ]
+        })
+    payload_type: int = field(
+        default=1, 
+        metadata={
+            'units': None,
+            'valid_types': int,
+            'validators': [
+                (lambda x: isinstance(x, int), lambda x: f'num_inputs must be of type int, got "{type(x)}".'),
+                (lambda x: x > 0, lambda x: f'num_inputs must be positive, got "{x}".'),
+            ]
+        })
+    
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
