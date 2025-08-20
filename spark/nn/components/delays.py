@@ -17,7 +17,8 @@ from spark.core.variables import Variable, Constant
 from spark.core.shape import Shape, normalize_shape
 from spark.core.registry import register_module
 from spark.nn.components.base import Component
-from spark.nn.initializers.delay import DelayInitializer, uniform_delay_initializer
+from spark.nn.initializers.base import Initializer
+from spark.nn.initializers.delay import uniform_delay_initializer
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -126,7 +127,7 @@ class NDelays(Delays):
 
         Init:
             max_delay: int
-            delay_kernel_initializer: DelayInitializer
+            delay_kernel_initializer: Initializer
 
         Input:
             in_spikes: SpikeArray
@@ -137,7 +138,7 @@ class NDelays(Delays):
 
     def __init__(self, 
                  max_delay: int, 
-                 delay_kernel_initializer: DelayInitializer = uniform_delay_initializer, 
+                 delay_kernel_initializer: Initializer = uniform_delay_initializer, 
                  **kwargs):
         # Initialize super.
         super().__init__(**kwargs)
@@ -224,7 +225,7 @@ class N2NDelays(Delays):
         Init:
             max_delay: int
             output_shape: Shape
-            delay_kernel_initializer: DelayInitializer
+            delay_kernel_initializer: Initializer
 
         Input:
             in_spikes: SpikeArray
@@ -236,7 +237,7 @@ class N2NDelays(Delays):
     def __init__(self, 
                  max_delay: int, 
                  output_shape: Shape, 
-                 delay_kernel_initializer: DelayInitializer = uniform_delay_initializer, 
+                 delay_kernel_initializer: Initializer = uniform_delay_initializer, 
                  **kwargs):
         # Sanity checks
         if not isinstance(max_delay, int) and max_delay > 0:

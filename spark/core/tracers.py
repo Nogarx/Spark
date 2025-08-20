@@ -9,7 +9,7 @@ import abc
 import jax
 import jax.numpy as jnp
 import flax.nnx as nnx
-from typing import Any, Optional
+from typing import Any
 from spark.core.shape import bShape, normalize_shape
 from spark.core.variables import Variable, Constant
 
@@ -22,9 +22,9 @@ class BaseTracer(nnx.Module, abc.ABC):
 
 	def __init__(self, 
 				shape: bShape, 
-				seed: Optional[int] = None, 
-				dtype: Optional[Any] = jnp.float16, 
-				dt: Optional[float] = 1.0,
+				seed: int | None = None, 
+				dtype: Any | None = jnp.float16, 
+				dt: float | None = 1.0,
 				**kwargs):
 		# Sanity checks
 		if not isinstance(dt, float) and dt >= 0:

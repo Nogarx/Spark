@@ -148,6 +148,13 @@ class ALIFSoma(Soma):
         self.cooldown = Constant(self.params['cooldown'], dtype=self._dtype)
         self.refractory = Variable(jnp.array(self.cooldown), dtype=self._dtype)
 
+    @classmethod
+    def get_default_config(cls,):
+        """
+            Returns the default configuration dict of the module.
+        """
+        return ALIF_cfgs.DEFAULT
+
     def reset(self) -> None:
         """
             Resets component state.

@@ -4,7 +4,8 @@
 
 from __future__ import annotations
 
-from typing import Tuple, List
+import jax.numpy as jnp
+from typing import Tuple, List, Any, Callable
 from Qt import QtCore, QtWidgets, QtGui
 
 #################################################################################################################################################
@@ -62,19 +63,22 @@ class FloatLineEdit(QtWidgets.QLineEdit):
 
 class KeyValueRow(QtWidgets.QWidget):
     """
-    A single row widget for a key-value pair.
-    Labels are now on top of the input fields.
+        A row widget for a key-value pair.
     """
-    def __init__(self, on_delete, parent=None):
+    editingFinished = QtCore.Signal()
+
+    def __init__(self, key: Any, value: Any, on_delete: Callable, parent: QtWidgets.QWidget = None):
         super().__init__(parent)
 
         self.key_edit = QtWidgets.QLineEdit()
         self.key_edit.setPlaceholderText('Key')
         self.key_edit.setMaximumWidth(150)
+        self.key_edit.setText(str(key))
 
         self.value_edit = QtWidgets.QLineEdit()
         self.value_edit.setPlaceholderText('Value')
         self.value_edit.setMaximumWidth(1000)
+        self.value_edit.setText(str(value))
 
         self.delete_button = QtWidgets.QPushButton("-")
         self.delete_button.setFixedSize(20,20)
@@ -92,14 +96,21 @@ class KeyValueRow(QtWidgets.QWidget):
         
         self.delete_button.clicked.connect(lambda: on_delete(self))
 
+        self.key_edit.editingFinished.connect(self.on_update)
+        self.value_edit.editingFinished.connect(self.on_update)
+
+    def on_update(self,):
+        self.editingFinished.emit()
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class KeyValueEditor(QtWidgets.QWidget):
     """
-    A dynamically growing editor for a list of key-value pairs.
-    The "Add" button is now centered.
+        A dynamical list of key-value pairs.
     """
-    def __init__(self, parent=None):
+    editingFinished = QtCore.Signal()
+
+    def __init__(self, initial_dict: dict = None, parent: QtWidgets.QWidget = None):
         super().__init__(parent)
         self.rows = []
 
@@ -113,14 +124,20 @@ class KeyValueEditor(QtWidgets.QWidget):
         self.add_button.setFixedSize(20,20)
         self.add_button.clicked.connect(self.add_row)
         
-        # --- Center the button ---
         main_layout.addWidget(self.add_button, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
 
-        self.add_row()
+        if initial_dict:
+            for key, value in initial_dict:
+                self.add_row(key, value)
+        else:
+            self.add_row(None, None)
 
-    def add_row(self):
+
+
+    def add_row(self, key: Any, value: Any):
         """Creates a new KeyValueRow and adds it to the layout."""
-        row = KeyValueRow(self.remove_row)
+        row = KeyValueRow(key, value, self.remove_row)
+        row.editingFinished.connect(self.on_update)
         self.rows.append(row)
         self.rows_layout.addWidget(row)
 
@@ -140,14 +157,49 @@ class KeyValueEditor(QtWidgets.QWidget):
                 result[key] = value
         return result
 
+    def on_update(self,):
+        self.editingFinished.emit()
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class DtypeWidget(QtWidgets.QComboBox):
+    """
+    A QComboBox widget for selecting a dtype from a predefined list.
+    """
+    editingFinished = QtCore.Signal()
+
+    SUPPORTED_DTYPES = [
+        jnp.float16, jnp.float32, jnp.float64,
+    ]
+
+    def __init__(self, initial_value: jnp.dtype = jnp.float16, parent: QtWidgets.QWidget = None):
+        super().__init__(parent)
+        for dtype in self.SUPPORTED_DTYPES:
+            self.addItem(jnp.dtype(dtype).name, userData=dtype)
+        self.setDType(initial_value)
+
+    def currentDType(self) -> jnp.dtype:
+        """
+            Returns the currently selected dtype object.
+        """
+        return self.currentData()
+
+    def setDType(self, dtype_to_set: jnp.dtype):
+        """
+            Sets the current selection based on a dtype object.
+        """
+        index = self.findData(dtype_to_set)
+        if index != -1:
+            self.setCurrentIndex(index)
+        self.editingFinished.emit()
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class ShapeWidget(QtWidgets.QWidget):
     """
-    A widget for inputting or displaying a shape with a dynamic number of dimensions.
-    This version uses a single button to remove the last dimension.
+        A widget for inputting or displaying a shape with a dynamic number of dimensions.
     """
-    shapeChanged = QtCore.Signal()
+    editingFinished = QtCore.Signal()
 
     def __init__(
         self,
@@ -192,7 +244,9 @@ class ShapeWidget(QtWidgets.QWidget):
             self._update_buttons()
 
     def _add_dimension(self, value: int = 1):
-        """Adds a new line edit for a dimension before the control buttons."""
+        """
+            Adds a new line edit widget.
+        """
         if len(self._dimension_edits) >= self.max_dims:
             return
 
@@ -220,7 +274,9 @@ class ShapeWidget(QtWidgets.QWidget):
         self._on_shape_changed()
 
     def _remove_last_dimension(self):
-        """Removes the last dimension widget."""
+        """
+            Removes the last dimension widget.
+        """
         if len(self._dimension_edits) <= self.min_dims:
             return
 
@@ -232,13 +288,17 @@ class ShapeWidget(QtWidgets.QWidget):
         self._on_shape_changed()
 
     def _clear_dimensions(self):
-        """A much simpler method to clear all dimension widgets."""
+        """
+            Clear all dimension widgets.
+        """
         while self._dimension_edits:
             editor = self._dimension_edits.pop()
             editor.deleteLater()
 
     def _update_buttons(self):
-        """Enable/disable the single add/remove buttons based on dimension count."""
+        """
+            Enable/disable the single add/remove buttons based on dimension count.
+        """
         if self.is_static:
             return
         num_dims = len(self._dimension_edits)
@@ -246,20 +306,24 @@ class ShapeWidget(QtWidgets.QWidget):
         self.removeButton.setEnabled(num_dims > self.min_dims)
 
     def _on_shape_changed(self):
-        self.shapeChanged.emit()
+        self.editingFinished.emit()
 
     def shape(self) -> Tuple[int, ...]:
         return tuple(int(edit.text()) for edit in self._dimension_edits if edit.text())
 
     def setShape(self, new_shape: Tuple[int, ...]):
-        """Clears existing dimensions and sets a new shape."""
+        """
+            Clears existing dimensions and sets a new shape.
+        """
         self._clear_dimensions()
         shape_to_set = new_shape if new_shape else (1,) * self.min_dims
         for value in shape_to_set:
             self._add_dimension(value)
 
     def _adjust_editor_width(self, editor: QtWidgets.QLineEdit):
-        """Adjusts the width of a line edit to fit its content."""
+        """
+            Adjusts the width of a line edit to fit its content.
+        """
         font_metrics = editor.fontMetrics()
         text_width = font_metrics.horizontalAdvance(editor.text()) + 15
         min_width = 30

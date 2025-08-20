@@ -18,7 +18,8 @@ from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.payloads import SpikeArray, CurrentArray, FloatArray, BooleanMask
 from spark.core.variables import Variable, ConfigDict
 from spark.core.registry import register_module
-from spark.nn.initializers.kernel import KernelInitializer, sparse_uniform_kernel_initializer
+from spark.nn.initializers.base import Initializer
+from spark.nn.initializers.kernel import sparse_uniform_kernel_initializer
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -101,7 +102,7 @@ class SimpleSynapses(Synanpses):
             params: Dict
                 -> kernel_density: float
                 -> kernel_scale: float
-            kernel_initializer: KernelInitializer
+            kernel_initializer: Initializer
 
         Input:
             spikes: SpikeArray
@@ -114,7 +115,7 @@ class SimpleSynapses(Synanpses):
                  output_shape: Shape,
                  async_spikes: bool, 
                  params: Dict = {},
-                 kernel_initializer: KernelInitializer =
+                 kernel_initializer: Initializer =
                     lambda density, dtype, scale: sparse_uniform_kernel_initializer(prob=density, scale=scale, dtype=dtype),
                  **kwargs):
         # Initialize super.
@@ -171,7 +172,7 @@ class TracedSynapses(SimpleSynapses):
             params: Dict
                 -> kernel_density: float
                 -> kernel_scale: float
-            kernel_initializer: KernelInitializer
+            kernel_initializer: Initializer
 
         Input:
             spikes: SpikeArray
@@ -185,7 +186,7 @@ class TracedSynapses(SimpleSynapses):
                  async_spikes: bool, 
                  double_traced: bool = False,
                  params: Dict = {},
-                 kernel_initializer: KernelInitializer =
+                 kernel_initializer: Initializer =
                     lambda density, dtype, scale: sparse_uniform_kernel_initializer(prob=density, scale=scale, dtype=dtype),
                  **kwargs):
         # Initialize super.

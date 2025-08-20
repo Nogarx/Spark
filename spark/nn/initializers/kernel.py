@@ -7,9 +7,11 @@ from __future__ import annotations
 import jax
 import jax.numpy as jnp 
 from jax._src import dtypes
-from typing import Any, Protocol, runtime_checkable
+from typing import Any
 from spark.core.shape import Shape
 from math import prod
+from spark.core.registry import register_initializer
+from spark.nn.initializers.base import Initializer
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -23,24 +25,13 @@ BASE_SCALE = 3E3
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-@runtime_checkable
-class KernelInitializer(Protocol):
-    """
-        Base (abstract) class for all spark delay initializers.
-    """
-
-    @staticmethod
-    def __call__(key: jax.Array, shape: Shape, input_shape: Shape, dtype: Any = jnp.float16) -> jax.Array:
-        raise NotImplementedError
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-def uniform_kernel_initializer(scale: Any = 1, dtype: Any = jnp.float16) -> KernelInitializer:
+@register_initializer
+def uniform_kernel_initializer(scale: Any = 1, dtype: Any = jnp.float16) -> Initializer:
     """
         Builds an initializer that returns real uniformly-distributed random arrays.
     """
 
-    def init(key: jax.Array, shape: Shape, input_shape: Shape, dtype: Any = dtype) -> KernelInitializer:
+    def init(key: jax.Array, shape: Shape, input_shape: Shape, dtype: Any = dtype) -> Initializer:
         dtype = dtypes.canonicalize_dtype(dtype)
         _ax_sum = list(range(len(shape[:-len(input_shape)]), len(shape)))
         _ax_transpose = list(range(len(shape[:-len(input_shape)]), len(shape))) +\
@@ -58,12 +49,13 @@ def uniform_kernel_initializer(scale: Any = 1, dtype: Any = jnp.float16) -> Kern
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def sparse_uniform_kernel_initializer(prob: Any = 0.2, scale: Any = 1, dtype: Any = jnp.float16) -> KernelInitializer:
+@register_initializer
+def sparse_uniform_kernel_initializer(prob: Any = 0.2, scale: Any = 1, dtype: Any = jnp.float16) -> Initializer:
     """
         Builds an initializer that returns a real sparse uniformly-distributed random arrays.
     """
 
-    def init(key: jax.Array, output_shape: Shape, input_shape: Shape, dtype: Any = dtype) -> KernelInitializer:
+    def init(key: jax.Array, output_shape: Shape, input_shape: Shape, dtype: Any = dtype) -> Initializer:
         dtype = dtypes.canonicalize_dtype(dtype)
         shape = output_shape + input_shape
         _ax_sum = list(range(len(shape[:-len(input_shape)]), len(shape)))

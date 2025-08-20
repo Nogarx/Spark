@@ -54,7 +54,7 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, InputSpec]:
         if not validation._is_payload_type(payload_type):
             # Raise error, payload is not fully compatible with the framework.
             raise TypeError(f'Error: Input parameter "{parameter.name}" has type {type(payload_type).__name__}, '
-                            f'which is not a valid SparkPayload, Optional[SparkPayload] or sequence of SparkPayload.'
+                            f'which is not a valid SparkPayload, None or sequence of SparkPayload.'
                             f'If you intended to pass a union (e.g. tuple, list, etc.) consider passing each entry '
                             f'in the union directly as SparkPayload type to the __call__ method. '
                             f'Alternatively, consider defining a custom SparkPayload dataclass as a wrapper for your input.')
@@ -105,7 +105,7 @@ def get_output_specs(module: type[SparkModule]) -> dict[str, OutputSpec]:
         if not validation._is_payload_type(payload_type):
             # Raise error, payload is not fully compatible with the framework.
             raise TypeError(f'Error: Output parameter "{name}" has type {type(payload_type).__name__}, '
-                            f'which is not a valid SparkPayload, Optional[SparkPayload] or sequence of SparkPayload.')
+                            f'which is not a valid SparkPayload, None or sequence of SparkPayload.')
 
         output_specs[name] = OutputSpec(
             payload_type=payload_type,
@@ -142,7 +142,7 @@ def get_method_signature(method: Callable) -> dict[str, InputArgSpec]:
         origin = typing.get_origin(input_annotation)
         args = typing.get_args(input_annotation)
 
-        # Handle Optional[T], which is a Union[T, NoneType]
+        # Handle optional.
         if origin is Union and len(args) == 2 and type(None) in args:
             is_optional = True
             input_annotation = next(a for a in args if a is not type(None))

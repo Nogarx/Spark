@@ -19,6 +19,7 @@ from typing import Any
 
 DEFAULT_SPARKMODULE_PATH = 'spark.core.module.SparkModule'
 DEFAULT_PAYLOAD_PATH = 'spark.core.payloads.SparkPayload'
+DEFAULT_INITIALIZER_PATH = 'spark.nn.initializers'
 
 def _is_spark_type(obj: Any, type_name: str) -> bool:
     """
@@ -64,6 +65,14 @@ def _is_spark_instance(obj: Any, type_name: str) -> bool:
             sub_cls_path = str(sub_cls).split("'")[1]
             if sub_cls_path == type_name:
                 return True
+    return False
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+# TODO: Improve initializaer validation.
+def _is_initializer(obj: Any):
+    if callable(obj):
+        return True
     return False
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

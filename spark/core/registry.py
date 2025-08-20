@@ -7,10 +7,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.module import SparkModule
     from spark.core.payloads import SparkPayload
+    from spark.nn.initializers.base import Initializer
 
 import logging
 from dataclasses import dataclass
-from typing import Type, Optional, Union, Dict, Any, Iterator, List, Callable
+from typing import Type, Union, Dict, Any, Iterator, List, Callable
 from collections.abc import Mapping, ItemsView
 from spark.core.utils import normalize_name
 import spark.core.validation as validation
@@ -61,7 +62,7 @@ class SubRegistry(Mapping):
     def items(self) -> ItemsView[str, RegistryEntry]:
         return ItemsView(self)
 
-    def register(self, name: str, cls: Type[object], path: Optional[List[str]] = None):
+    def register(self, name: str, cls: Type[object], path: List[str] | None = None):
         """
             Register new registry_base_type.
         """
@@ -73,13 +74,18 @@ class SubRegistry(Mapping):
                 raise NameError(f'{self._registry_base_type} name "{name}" is already queued to be register.')
             self._raw_registry[name] = cls
 
-    def _register(self, name: str, cls: Type[object], path: Optional[List[str]] = None):
+    def _register(self, name: str, cls: Type[object], path: List[str] | None = None):
         """
             Validate and register new item.
         """
-        if not validation._is_spark_type(cls, self._registry_base_type):
-            raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
-                            f'"{cls.__name__}" does not inherit from {self._registry_base_type}.')
+        if self._registry_base_type == validation.DEFAULT_INITIALIZER_PATH:
+            if not validation._is_initializer(cls):
+                raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
+                                f'"{cls.__name__}" is not a valid Initializer.')
+        else:
+            if not validation._is_spark_type(cls, self._registry_base_type):
+                raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
+                                f'"{cls.__name__}" does not inherit from {self._registry_base_type}.')
         if self._exists(name):
             raise ValueError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
                              f'name "{name}" is already registered to another class.')
@@ -125,22 +131,28 @@ class SubRegistry(Mapping):
         return False
 
     def _get_default_path(self, cls: Any):
-        path = []
-        for base in cls.__mro__:
-            # Start from the class
-            if base in [cls]:
-                continue
-            # Skip inheritance chains of classes that are leaves
-            if base.__name__ in self._leaf_class:
-                continue
-            # Stop at registry_base_type
-            if base.__name__ in [self._registry_base_type_name]:
-                break
-            name = base.__name__
-            name_map = MRO_PATH_ALIAS_MAP.get(name, name)
-            if name_map:
-                path.append(name_map)
-        return path[::-1]
+        if self._registry_base_type == validation.DEFAULT_INITIALIZER_PATH:
+            name = cls.__module__.split('.')[-1]
+            name_map = INITIALIZERS_ALIAS_MAP.get(name, name)
+            path = ['Initializers', name_map]
+            return path
+        else:
+            path = []
+            for base in cls.__mro__:
+                # Start from the class
+                if base in [cls]:
+                    continue
+                # Skip inheritance chains of classes that are leaves
+                if base.__name__ in self._leaf_class:
+                    continue
+                # Stop at registry_base_type
+                if base.__name__ in [self._registry_base_type_name]:
+                    break
+                name = base.__name__
+                name_map = MRO_PATH_ALIAS_MAP.get(name, name)
+                if name_map:
+                    path.append(name_map)
+            return path[::-1]
 
     @property
     def is_finalized(self) -> bool:
@@ -153,20 +165,20 @@ class Registry():
     def __init__(self):
         self.MODULES = SubRegistry(registry_base_type=validation.DEFAULT_SPARKMODULE_PATH)
         self.PAYLOADS = SubRegistry(registry_base_type=validation.DEFAULT_PAYLOAD_PATH)
-        #self.INITIALIZERS = SubRegistry(registry_base_type=Callable)
+        self.INITIALIZERS = SubRegistry(registry_base_type=validation.DEFAULT_INITIALIZER_PATH)
 
     def _build(self,):
         self.MODULES._build()
         self.PAYLOADS._build()
-        #self.INITIALIZERS._build()
+        self.INITIALIZERS._build()
 
 # Default Instance
 REGISTRY = Registry()
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# Decorator method for user-defined modules.
-def register_module(arg: Optional[Union[SparkModule, str]] = None):
+# Decorator method for modules.
+def register_module(arg: SparkModule | str | None = None):
     def decorator(cls):
         name = arg if isinstance(arg, str) else cls.__name__
         REGISTRY.MODULES.register(cls=cls, name=name)
@@ -180,8 +192,8 @@ def register_module(arg: Optional[Union[SparkModule, str]] = None):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# Decorator method for user-defined payloads.
-def register_payload(arg: Optional[Union[SparkPayload, str]] = None):
+# Decorator method for payloads.
+def register_payload(arg: SparkPayload | str | None = None):
     def decorator(cls):
         name = arg if isinstance(arg, str) else cls.__name__
         REGISTRY.PAYLOADS.register(cls=cls, name=name)
@@ -195,8 +207,8 @@ def register_payload(arg: Optional[Union[SparkPayload, str]] = None):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# Decorator method for user-defined payloads.
-def register_initializer(arg: Optional[Union[Callable, str]] = None):
+# Decorator method for payloads.
+def register_initializer(arg: Initializer | str | None = None):
     def decorator(cls):
         name = arg if isinstance(arg, str) else cls.__name__
         REGISTRY.INITIALIZERS.register(cls=cls, name=name)
@@ -225,6 +237,12 @@ MRO_PATH_ALIAS_MAP = {
     'Neuron': 'Neurons',
     # Exclusions
     'ValueSparkPayload': None,
+}
+
+INITIALIZERS_ALIAS_MAP = {
+    # Aliases
+    'kernel': 'Kernel',
+    'delay': 'Dealy',
 }
 
 #################################################################################################################################################

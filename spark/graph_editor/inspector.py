@@ -4,14 +4,16 @@
 
 from __future__ import annotations
 
+import jax.numpy as jnp
 from functools import partial
-from typing import Dict, Any, Type, Optional
+from typing import Dict, Any, Type
 from Qt import QtCore, QtWidgets, QtGui
 from spark.core.specs import InputArgSpec
 from spark.core.shape import Shape
 from spark.graph_editor.nodes import AbstractNode, SinkNode, SourceNode
 from spark.graph_editor.utils import _normalize_section_header, _to_human_readable
-from spark.graph_editor.widgets import IntLineEdit, FloatLineEdit, ShapeWidget, KeyValueEditor, StrLineEdit, NotImplementedWidget
+from spark.graph_editor.widgets import IntLineEdit, FloatLineEdit, ShapeWidget, KeyValueEditor, StrLineEdit, NotImplementedWidget, DtypeWidget
+
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -24,14 +26,14 @@ class NodeInspectorWidget(QtWidgets.QWidget):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._target_node: Optional[AbstractNode] = None
+        self._target_node: AbstractNode | None = None
         self._widgets_map: Dict[str, QtWidgets.QWidget] = {}
-        self._main_layout: Optional[QtWidgets.QVBoxLayout] = None
+        self._main_layout: QtWidgets.QVBoxLayout | None = None
 
         self._setup_ui()
         self._build_idle_menu()
 
-    def set_node(self, node: Optional[AbstractNode]):
+    def set_node(self, node: AbstractNode | None):
         """
         Sets the node to be inspected. If the node is None, it clears the inspector.
         
@@ -132,34 +134,23 @@ class NodeInspectorWidget(QtWidgets.QWidget):
 
     def _build_shape_editors(self):
         """Builds editors for the node's input and output shapes."""
-        self._build_input_shapes_section()
-        self._build_output_shapes_section()
-
-    def _build_input_shapes_section(self):
-        """Builds the section for input shapes."""
         if not self._target_node or not self._target_node.input_specs:
             return
 
-        form_layout = self._add_section('Input Shapes')
+        form_layout = self._add_section('Shapes')
         for name, spec in self._target_node.input_specs.items():
             is_static = not isinstance(self._target_node, SourceNode)
             widget = ShapeWidget(initial_shape=spec.shape, is_static=is_static)
             prefixed_name = f'input_port.{name}'
-            widget.shapeChanged.connect(partial(self._handle_widget_update, prefixed_name))
+            widget.editingFinished.connect(partial(self._handle_widget_update, prefixed_name))
             form_layout.addRow(QtWidgets.QLabel(_to_human_readable(name)), widget)
             self._widgets_map[prefixed_name] = widget
 
-    def _build_output_shapes_section(self):
-        """Builds the section for output shapes."""
-        if not self._target_node or not self._target_node.output_specs:
-            return
-
-        form_layout = self._add_section('Output Shapes')
         for name, spec in self._target_node.output_specs.items():
-            is_static = isinstance(self._target_node, SinkNode)
+            is_static = True#not isinstance(self._target_node, SinkNode)
             widget = ShapeWidget(initial_shape=spec.shape, is_static=is_static)
             prefixed_name = f'output_port.{name}'
-            widget.shapeChanged.connect(partial(self._handle_widget_update, prefixed_name))
+            widget.editingFinished.connect(partial(self._handle_widget_update, prefixed_name))
             form_layout.addRow(QtWidgets.QLabel(_to_human_readable(name)), widget)
             self._widgets_map[prefixed_name] = widget
             
@@ -179,7 +170,7 @@ class NodeInspectorWidget(QtWidgets.QWidget):
                 continue
             self._add_arg_widget_to_layout(form_layout, key, arg_spec.arg_type, self._target_node.init_args.get(key))
 
-    def _add_arg_widget_to_layout(self, layout: QtWidgets.QFormLayout, arg_name: str, arg_type: Type, value: Optional[Any] = None):
+    def _add_arg_widget_to_layout(self, layout: QtWidgets.QFormLayout, arg_name: str, arg_type: Type, value: Any | None = None):
         """
             Creates and adds an appropriate widget for a given argument specification.
         """
@@ -257,7 +248,9 @@ class NodeInspectorWidget(QtWidgets.QWidget):
             int: IntLineEdit,
             float: FloatLineEdit,
             str: StrLineEdit,
-            # Shape: ShapeWidget, # This seems to be handled separately.
+            Shape: ShapeWidget,
+            jnp.dtype: DtypeWidget,
+            dict: KeyValueEditor,
         }
         return WIDGET_TYPE_MAP.get(arg_type, NotImplementedWidget)
 

@@ -330,7 +330,6 @@ class SparkGraphEditor:
                     return 
                 
                 input_map, output_map, model_map = self.build_model()
-                print(input_map, output_map, model_map)
                 model_def = {
                     'input_map': input_map,
                     'output_map': output_map,

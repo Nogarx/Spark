@@ -18,9 +18,10 @@ import jax.numpy as jnp
 import flax.nnx as nnx
 import inspect
 from jax.typing import DTypeLike
-from typing import Any, TypedDict
+from typing import Any, TypedDict, Type
 from spark.core.wrappers import HookingMeta
 from functools import wraps
+from dataclasses import dataclass, fields, MISSING, asdict, field
 import spark.core.signature_parser as sig_parser
 import spark.core.validation as validation
 
@@ -83,34 +84,96 @@ class SparkMeta(nnx.module.ModuleMeta, HookingMeta):
 
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class SparkConfiguration:
+    """
+        Base class for module configuration.
+    """
+    __SCHEMA_VERSION__ = '1.0'
+    seed: int | None = field(default=None, metadata={})
+    dtype: DTypeLike = field(default=jnp.float16, metadata={})
+    dt: float = field(default=1.0, metadata={})
+
+    @classmethod
+    def create(cls: Type['SparkConfiguration'], partial: dict[str, Any] = None) -> 'SparkConfiguration':
+        """
+            Create config with partial overrides.
+        """
+        # Get default instance
+        instance = cls()
+        # Apply partial updates
+        if partial:
+            valid_fields = {f.name for f in fields(cls)}
+            for key, value in partial.items():
+                if key in valid_fields:
+                    setattr(instance, key, value)
+                else:
+                    raise ValueError(f"Invalid config key: {key}")
+        return instance
+
+    def merge(self, partial: dict[str, Any]) -> None:
+        """
+            Update config with partial overrides.
+        """
+        valid_fields = {f.name for f in fields(self)}
+        for key, value in partial.items():
+            if key in valid_fields:
+                setattr(self, value)
+            else:
+                raise ValueError(f"Invalid config key: {key}")
+
+    def diff(self, other: 'SparkConfiguration') -> dict[str, Any]:
+        """
+            Return differences from another config.
+        """
+        return {
+            field.name: getattr(self, field.name) for field in fields(self) if getattr(self, field.name) != getattr(other, field.name)
+        }
+
+    @classmethod
+    def from_dict(cls: Type['SparkConfiguration'], data: dict) -> 'SparkConfiguration':
+        """
+            Create config instance from dictionary
+        """
+        return cls(**data)
+    
+    def to_dict(self) -> dict:
+        """
+            Serialize config to dictionary
+        """
+        return asdict(self)
+
+    def validate(self,):
+        # Sanity checks.
+        if not isinstance(self.dt, float):
+            raise TypeError(f'Expected "dt" to be of type "float" but got "{type(self.dt).__name__}".')
+        elif not self.dt >= 0:
+            raise ValueError(f'Expected "dt" to be a positive "float" but got "{self.dt}."')
+        if not isinstance(jnp.dtype(self.dtype), jnp.dtype):
+            raise TypeError(f'Expected "dtype" to be of type "{DTypeLike}" but got "{type(self.dtype).__name__}".')
+        if self.seed and not isinstance(self.seed, int):
+            raise TypeError(f'Expected "seed" to be of type "int|None" but got "{type(self.seed).__name__}".')
+        
+    def __post_init__(self):
+        self.validate()
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
             
 # TODO: We need a reliable way to infer the shape/type for inputs and outputs.
 class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
     name: str = 'name'
+    default_config: object = SparkConfiguration
 
-    def __init__(self, 
-                 *,
-                 seed: int | None = None, 
-                 dtype: DTypeLike = jnp.float16, 
-                 dt: float = 1.0,
-                 **kwargs):
-        # Sanity checks.
-        if not isinstance(dt, float):
-            raise TypeError(f'Expected "dt" to be of type "float" but got "{type(dt).__name__}".')
-        elif not dt >= 0:
-            raise ValueError(f'Expected "dt" to be a positive "float" but got "{dt}."')
-        if not isinstance(jnp.dtype(dtype), jnp.dtype):
-            raise TypeError(f'Expected "dtype" to be of type "{DTypeLike}" but got "{type(dtype).__name__}".')
-        if seed and not isinstance(seed, int):
-            raise TypeError(f'Expected "seed" to be of type "int|None" but got "{type(seed).__name__}".')
+    def __init__(self, *, config: SparkConfiguration = None, **kwargs):
         # Initialize super.
         super().__init__()
         # Define default parameters.
-        self._dtype = dtype
-        self._dt = dt
+        self._dtype = config.dtype
+        self._dt = config.dt
         # Random engine key.
-        self._seed = int.from_bytes(os.urandom(4), 'little') if seed is None else seed
+        self._seed = int.from_bytes(os.urandom(4), 'little') if config.seed is None else config.seed
         self.rng = nnx.Variable(jax.random.PRNGKey(self._seed))
         #self.rng = nnx.Rngs(default=42)
         # Specs
@@ -121,7 +184,36 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         self.__allow_cycles__: bool = False
         self._default_payload_type = DummyArray
 
+    @property
+    @abc.abstractmethod
+    def default_config(self):
+        """
+            Returns the default configuration dataclass for this module.
+        """
+        pass
 
+    @classmethod
+    def get_default_config(cls,):
+        """
+            Returns the default configuration dict of the module.
+        """
+        return {}
+    
+    @classmethod
+    def get_config_spec(cls):
+        """
+            Expose safe-to-inspect configuration metadata.
+        """
+        if not hasattr(cls, 'config_cls'):
+            return {}
+        return {
+            field.name: {
+                'type': field.type.__name__,
+                'default': field.default if field.default is not MISSING else None,
+                'description': field.metadata.get('description', '')
+            }
+            for field in fields(cls.config_cls)
+        }
 
     def initialize(self, shape: Shape = None, dtype: DTypeLike = None, specs: dict[str, VarSpec] = None) -> None:
         # Skip if already compiled
@@ -418,9 +510,7 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
     @abc.abstractmethod
     def __call__(self, *args: SparkPayload, **kwargs) -> dict[str, SparkPayload]:
         pass
-
-
-
+    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

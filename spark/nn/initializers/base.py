@@ -7,38 +7,24 @@ from __future__ import annotations
 import jax
 import jax.numpy as jnp 
 from jax._src import dtypes
+from jax.typing import DTypeLike
+from typing import Protocol, runtime_checkable
 from spark.core.shape import bShape
 from spark.core.registry import register_initializer
-from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-@register_initializer
-def constant_delay_initializer(scale: int = 8, dtype: int = jnp.uint8) -> Initializer:
+@runtime_checkable
+class Initializer(Protocol):
     """
-        Builds an initializer that returns a constant positive integer array.
-    """
-
-    def init(key: jax.Array, shape: bShape, dtype: int = dtype) -> Initializer:
-        dtype = dtypes.canonicalize_dtype(dtype)
-        return scale * jnp.ones(shape, dtype=dtype)
-    return init
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-@register_initializer
-def uniform_delay_initializer(scale: int = 8, dtype: int = jnp.uint8) -> Initializer:
-    """
-        Builds an initializer that returns positive integers uniformly-distributed random arrays.
+        Base (abstract) class for all spark initializers.
     """
 
-    def init(key: jax.Array, shape: bShape, dtype: int = dtype) -> Initializer:
-        dtype = dtypes.canonicalize_dtype(dtype)
-        return jax.random.randint(key, shape, 1, scale-1, dtype=dtype)
-    return init
-
+    @staticmethod
+    def __call__(key: jax.Array, shape: bShape, dtype: DTypeLike = jnp.float16) -> jax.Array:
+        raise NotImplementedError
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

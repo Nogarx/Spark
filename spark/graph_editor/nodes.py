@@ -199,7 +199,6 @@ def module_to_nodegraph(entry: RegistryEntry) -> Type[SparkModuleNode]:
             'init_args': {},
         } 
     )
-    
     return nodegraph_class
 
 #################################################################################################################################################

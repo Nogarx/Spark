@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 import abc
 import jax.numpy as jnp
 from dataclasses import dataclass
-from typing import Type, Dict, List, Any, Optional
+from typing import Type, Dict, List, Any
 from spark.core.shape import bShape, normalize_shape
 from spark.core.payloads import SparkPayload
 
@@ -26,15 +26,15 @@ class PortSpecEditor:
         Mutable base specification for a port of an SparkModule.
     """
     payload_type: Type[SparkPayload]        
-    shape: Optional[bShape]                  
-    dtype: Optional[Any]                               
-    description: Optional[str]       
+    shape: bShape | None                  
+    dtype: Any | None                               
+    description: str | None       
 
     def __init__(self, 
                  payload_type: Type[SparkPayload],  
-                 shape: Optional[bShape] = None, 
-                 dtype: Optional[Any] = None,  
-                 description: Optional[str] = None):
+                 shape: bShape | None = None, 
+                 dtype: Any | None = None,  
+                 description: str | None = None):
         
         # Validate attributes
         if not issubclass(payload_type, SparkPayload):
@@ -71,8 +71,8 @@ class InputSpecEditor(PortSpecEditor):
                  shape: bShape, 
                  dtype: jnp.dtype, 
                  is_optional: bool, 
-                 port_maps: Optional[List[PortMap]] = [],
-                 description: Optional[str] = None):
+                 port_maps: List[PortMap] = [],
+                 description: str | None = None):
         super().__init__(payload_type=payload_type, shape=shape, dtype=dtype, description=description)
         if not isinstance(is_optional, bool):
             raise TypeError(f'Expected "is_optional" to be of type {bool.__name__} but got "{type(is_optional).__name__}".')
@@ -87,14 +87,13 @@ class InputSpecEditor(PortSpecEditor):
         self.port_maps = port_maps
 
     def add_port_map(self, port_map: PortMap):
-        print(self)
         self.port_maps.append(port_map)
 
     def remove_port_map(self, port_map: PortMap):
         self.port_maps.remove(port_map)
 
     @classmethod
-    def from_input_specs(cls, input_spec: InputSpec, port_maps: Optional[List[PortMap]] = []) -> InputSpecEditor:
+    def from_input_specs(cls, input_spec: InputSpec, port_maps: List[PortMap] = []) -> InputSpecEditor:
         return cls(payload_type=input_spec.payload_type,  
                    shape=input_spec.shape, 
                    dtype=input_spec.dtype,  
