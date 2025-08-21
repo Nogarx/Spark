@@ -7,6 +7,7 @@ from __future__ import annotations
 import abc
 import jax
 import jax.numpy as jnp
+import dataclasses
 from math import prod
 from typing import TypedDict, Dict, List
 from spark.core.specs import InputSpec, OutputSpec
@@ -14,9 +15,8 @@ from spark.core.variables import Constant
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.registry import register_module
 from spark.core.payloads import SparkPayload
-from spark.core.configuration import SparkConfig
+from spark.core.configuration import SparkConfig, PositiveValidator
 from spark.nn.interfaces.base import Interface
-from dataclasses import field
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -40,25 +40,16 @@ class ControlFlowInterface(Interface, abc.ABC):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class MergerConfig(SparkConfig):
-    num_inputs: int = field(
-        default=1, 
-        metadata={
-            'units': None,
-            'valid_types': int,
+    num_inputs: int = dataclasses.field(
+        metadata = {
             'validators': [
-                (lambda x: isinstance(x, int), lambda x: f'num_inputs must be of type int, got "{type(x)}".'),
-                (lambda x: x > 0, lambda x: f'num_inputs must be positive, got "{x}".'),
-            ]
+                PositiveValidator,
+            ],
+            'description': 'Dtype used for JAX dtype promotions.',
         })
-    payload_type: int = field(
-        default=1, 
-        metadata={
-            'units': None,
-            'valid_types': int,
-            'validators': [
-                (lambda x: isinstance(x, int), lambda x: f'num_inputs must be of type int, got "{type(x)}".'),
-                (lambda x: x > 0, lambda x: f'num_inputs must be positive, got "{x}".'),
-            ]
+    payload_type: SparkPayload = dataclasses.field(
+        metadata = {
+            'description': 'SparkPayload type promotions.',
         })
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -78,13 +69,14 @@ class Merger(ControlFlowInterface):
         Output:
             output: type[SparkPayload]
     """
+    config: MergerConfig
 
-    def __init__(self, num_inputs: int, payload_type: type[SparkPayload], **kwargs):
+    def __init__(self, config: MergerConfig = None, **kwargs):
 		# Initialize super.
-        super().__init__(**kwargs)
+        super().__init__(config=config, **kwargs)
         # Intialize variables.
-        self.num_inputs = num_inputs
-        self.set_fallback_payload_type(payload_type)
+        self.num_inputs = self.config.num_inputs
+        self.set_fallback_payload_type(self.config.payload_type)
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Validate payloads types.
@@ -104,6 +96,14 @@ class Merger(ControlFlowInterface):
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class MergerReshapeConfig(MergerConfig):
+    reshape: Shape = dataclasses.field(
+        metadata = {
+            'description': 'Target shape after the merge operation.',
+        })
+    
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @register_module
 class MergerReshape(ControlFlowInterface):
     """
@@ -120,14 +120,15 @@ class MergerReshape(ControlFlowInterface):
         Output:
             output: type[SparkPayload]
     """
+    config: MergerReshapeConfig
 
-    def __init__(self, num_inputs: int, reshape: Shape, payload_type: type[SparkPayload], **kwargs):
+    def __init__(self, config: MergerReshapeConfig = None, **kwargs):
 		# Initialize super.
-        super().__init__(**kwargs)
+        super().__init__(config=config, **kwargs)
         # Intialize variables.
-        self.reshape = normalize_shape(reshape)
-        self.num_inputs = num_inputs
-        self.set_fallback_payload_type(payload_type)
+        self.reshape = normalize_shape(self.config.reshape)
+        self.num_inputs = self.config.num_inputs
+        self.set_fallback_payload_type(self.config.payload_type)
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Validate payloads types.
@@ -152,6 +153,17 @@ class MergerReshape(ControlFlowInterface):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class SamplerConfig(SparkConfig):
+    sample_size: int = dataclasses.field(
+        metadata = {
+            'validators': [
+                PositiveValidator,
+            ],
+            'description': 'Sample size to drawn from the population. May be larger than the population.',
+        })
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @register_module
 class Sampler(ControlFlowInterface):
     """
@@ -167,12 +179,13 @@ class Sampler(ControlFlowInterface):
         Output:
             output: type[SparkPayload]
     """
+    config: SamplerConfig
 
-    def __init__(self, sample_size: int, **kwargs):
+    def __init__(self, config: SamplerConfig = None, **kwargs):
         # Initialize super.
         super().__init__(**kwargs)
         # Initialize variables
-        self.sample_size = sample_size
+        self.sample_size = self.config.sample_size
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Initialize shapes

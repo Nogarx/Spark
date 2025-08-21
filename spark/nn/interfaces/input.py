@@ -11,11 +11,13 @@ if TYPE_CHECKING:
 import abc
 import jax
 import jax.numpy as jnp
+import dataclasses
 from typing import TypedDict
 from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Variable, Constant
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.registry import register_module
+from spark.core.configuration import SparkConfig, PositiveValidator, ZeroOneValidator
 from spark.nn.interfaces.base import Interface
 
 #################################################################################################################################################
@@ -46,6 +48,19 @@ class InputInterface(Interface, abc.ABC):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class PoissonSpikerConfig(SparkConfig):
+    max_freq: float = dataclasses.field(
+        default = 50.0, 
+        metadata = {
+            'units': 'Hz',
+            'validators': [
+                PositiveValidator
+            ],
+            'description': 'Maximum firing frequency of the spiker.',
+        })
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @register_module
 class PoissonSpiker(InputInterface):
     """
@@ -61,12 +76,13 @@ class PoissonSpiker(InputInterface):
         Output:
             spikes: SpikeArray
     """
+    config: PoissonSpikerConfig
 
-    def __init__(self, max_freq: float = 50, **kwargs):
+    def __init__(self, config: PoissonSpikerConfig = None, **kwargs):
         # Initialize super
-        super().__init__(**kwargs)
+        super().__init__(config=config, **kwargs)
         # Initialize variables
-        self.max_freq = max_freq
+        self.max_freq = self.config.max_freq
         self._scale = self._dt * (self.max_freq / 1000)
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
@@ -89,6 +105,37 @@ class PoissonSpiker(InputInterface):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class LinearSpikerConfig(SparkConfig):
+    tau: float = dataclasses.field(
+        default = 100.0, 
+        metadata = {
+            'units': 'ms',
+            'validators': [
+                PositiveValidator
+            ],
+            'description': 'Decay time constant of the membrane potential of the units of the spiker.',
+        })
+    cd: float = dataclasses.field(
+        default = 2.0, 
+        metadata = {
+            'units': 'ms',
+            'validators': [
+                PositiveValidator
+            ],
+            'description': '(Cooldown) Refractory period of the units of the spiker.',
+        })
+    max_freq: float = dataclasses.field(
+        default = 50.0, 
+        metadata = {
+            'units': 'Hz',
+            'validators': [
+                PositiveValidator
+            ],
+            'description': 'Maximum firing frequency of the spiker.',
+        })
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @register_module
 class LinearSpiker(InputInterface):
     """
@@ -107,22 +154,16 @@ class LinearSpiker(InputInterface):
         Output:
             spikes: SpikeArray
     """
+    config: LinearSpikerConfig
 
-    def __init__(self, 
-                 tau: float = 100, 	 	# [ms]
-                 cd: float = 2.0,		# [ms]
-                 max_freq: float = 50, 	# [Hz]
-                 **kwargs):
+    def __init__(self, config: LinearSpikerConfig = None, **kwargs):
         # Initialize super
-        super().__init__(**kwargs)
-        # Sanity checks
-        if not isinstance(cd, float) and cd > 0:
-            raise ValueError(f'"cd" must be a positive float, got {cd}.')
+        super().__init__(config=config, **kwargs)
         # Initialize variables
-        self.tau = tau
-        self.cd = cd
-        self.max_freq = max_freq
-        exp_term = jnp.exp((1/tau) * ((1000-self.cd*self.max_freq) / self.max_freq)) # dt cancels out
+        self.tau = self.config.tau
+        self.cd = self.config.cd
+        self.max_freq = self.config.max_freq
+        exp_term = jnp.exp((1/self.tau) * ((1000-self.cd*self.max_freq) / self.max_freq)) # dt cancels out
         scale = ((1 / (exp_term - 1)) + 1)
         self._tau = Constant(self.tau, dtype=self._dtype)
         self._scale = Constant(scale, dtype=self._dtype)
@@ -169,6 +210,54 @@ class LinearSpiker(InputInterface):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class TopologicalSpikerConfig(SparkConfig):
+    glue: jax.Array = dataclasses.field(
+        default_factory = lambda: jnp.array(0), 
+        metadata = {
+            'validators': [
+                ZeroOneValidator,
+            ],
+            'description': 'Jax array indicating if the borders of the cube are glued together. \
+                            Entries must be either one or zero, indicating gluing and not gluing, respectively. \
+                            It may be either an array with a single element or \
+                            an array with the same dimensionality as the input vector.',
+        })
+    mins: jax.Array = dataclasses.field(
+        default_factory = lambda: jnp.array(0), 
+        metadata = {
+            'description': 'Minimum value for the rescaling factor. It may be either an array with a single element or \
+                            an array with the same dimensionality as the input vector.',
+        })
+    maxs: jax.Array = dataclasses.field(
+        default_factory = lambda: jnp.array(1), 
+        metadata = {
+            'description': 'Maximum value for the rescaling factor. It may be either an array with a single element or \
+                            an array with the same dimensionality as the input vector.',
+        })
+    resolution: int = dataclasses.field(
+        default = 64, 
+        metadata = {
+            'validators': [
+                PositiveValidator
+            ],
+            'description': 'Virtual units subdivision of the space per dimension.',
+        })
+    sigma: float = dataclasses.field(
+        default = 1/32, 
+        metadata = {
+            'validators': [
+                PositiveValidator
+            ],
+            'description': 'Spreed of the signal (standard deviation of a gaussian) in target manifold.',
+        })
+    
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TopologicalPoissonSpikerConfig(TopologicalSpikerConfig, PoissonSpikerConfig):
+    pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @register_module
 class TopologicalPoissonSpiker(InputInterface):
     """
@@ -190,25 +279,19 @@ class TopologicalPoissonSpiker(InputInterface):
         Output:
             spikes: SpikeArray
     """
+    config: TopologicalPoissonSpikerConfig
 
-    def __init__(self, 
-                 glue: jax.Array = jnp.array(0),
-                 mins: jax.Array = jnp.array(0),
-                 maxs: jax.Array = jnp.array(1),
-                 resolution: int = 64,              # Num units
-                 max_freq: float = 50, 	            # [Hz]
-                 sigma: float = 1/32,
-                 **kwargs):
+    def __init__(self, config: TopologicalPoissonSpikerConfig = None, **kwargs):
         # Initialize super
-        super().__init__(**kwargs)
+        super().__init__(config=config, **kwargs)
         # Initialize variables
-        self.resolution = resolution
-        self.max_freq = max_freq
-        self.sigma = sigma
-        self._scale = self._dt * (max_freq / 1000)
-        self._glue = Constant(glue, dtype=jnp.bool_)
-        self._mins = Constant(mins, dtype=self._dtype)
-        self._maxs = Constant(maxs, dtype=self._dtype)
+        self.resolution = self.config.resolution
+        self.max_freq = self.config.max_freq
+        self.sigma = self.config.sigma
+        self._scale = self._dt * (self.max_freq / 1000)
+        self._glue = Constant(self.config.glue, dtype=jnp.bool_)
+        self._mins = Constant(self.config.mins, dtype=self._dtype)
+        self._maxs = Constant(self.config.maxs, dtype=self._dtype)
         self._sigma = Constant(self.sigma, dtype=self._dtype)
 
 
@@ -238,7 +321,12 @@ class TopologicalPoissonSpiker(InputInterface):
         return {
             'spikes': SpikeArray(spikes)
         }
-    
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TopologicalLinearSpikerConfig(TopologicalSpikerConfig, LinearSpikerConfig):
+    pass
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
@@ -264,33 +352,25 @@ class TopologicalLinearSpiker(InputInterface):
         Output:
             spikes: SpikeArray
     """
+    config: TopologicalLinearSpikerConfig
 
-    def __init__(self, 
-                 glue: jax.Array = jnp.array(0),
-                 mins: jax.Array = jnp.array(0),
-                 maxs: jax.Array = jnp.array(1),
-                 resolution: int = 64,              # Num units
-                 tau: float = 100, 	 	            # [ms]
-                 cd: float = 2.0,		            # [ms]
-                 max_freq: float = 50, 	            # [Hz]
-                 sigma: float = 1/32,
-                 **kwargs):
+    def __init__(self, config: TopologicalLinearSpikerConfig = None, **kwargs):
         # Initialize super.
-        super().__init__(**kwargs)
+        super().__init__(config=config, **kwargs)
         # Initialize variables
-        self.resolution = resolution
-        self.tau = tau
-        self.cd = cd
-        self.max_freq = max_freq
-        self.sigma = sigma
-        self._glue = Constant(glue, dtype=jnp.bool_)
-        self._mins = Constant(mins, dtype=self._dtype)
-        self._maxs = Constant(maxs, dtype=self._dtype)
+        self.resolution = self.config.resolution
+        self.tau = self.config.tau
+        self.cd = self.config.cd
+        self.max_freq = self.config.max_freq
+        self.sigma = self.config.sigma
+        self._glue = Constant(self.config.glue, dtype=jnp.bool_)
+        self._mins = Constant(self.config.mins, dtype=self._dtype)
+        self._maxs = Constant(self.config.maxs, dtype=self._dtype)
         self._sigma = Constant(self.sigma, dtype=self._dtype)
-        exp_term = jnp.exp((1/tau) * ((1000-self.cd*self.max_freq) / self.max_freq)) # dt cancels out
+        exp_term = jnp.exp((1/self.tau) * ((1000-self.cd*self.max_freq) / self.max_freq)) # dt cancels out
         scale = ((1 / (exp_term - 1)) + 1)
         self._scale = Constant(scale, dtype=self._dtype)
-        self._tau = Constant(tau, dtype=self._dtype)
+        self._tau = Constant(self.tau, dtype=self._dtype)
         self._decay = Constant(jnp.exp(-self._dt / self._tau), dtype=self._dtype)
         self._gain = Constant(1 - self._decay, dtype=self._dtype)
 

@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 import abc
 import jax
 import jax.numpy as jnp
+import dataclasses
 from math import prod
 from typing import Dict, List, TypedDict
 from spark.nn.interfaces.base import Interface
@@ -19,6 +20,7 @@ from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Variable
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.registry import register_module
+from spark.core.configuration import SparkConfig, PositiveValidator
 from spark.nn.interfaces.base import Interface
 
 #################################################################################################################################################
@@ -49,6 +51,48 @@ class OutputInterface(Interface, abc.ABC):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class ExponentialIntegratorConfig(SparkConfig):
+    num_outputs: int = dataclasses.field(
+        default = 64, 
+        metadata = {
+            'validators': [
+                PositiveValidator,
+            ],
+            'description': 'Number of output signals. Input spikes are distributed equally among the output signals. \
+                            If num_outputs does not exactly divide the number of incomming spikes then an approximately \
+                            even assigment is used.',
+        })
+    saturation_freq: float = dataclasses.field(
+        default = 50.0, 
+        metadata = {
+            'units': 'Hz',
+            'validators': [
+                PositiveValidator,
+            ],
+            'description': 'Approximate average firing frequency at which the population needs to fire to sature the integrator.',
+        })
+    tau: float = dataclasses.field(
+        default = 20.0, 
+        metadata = {
+            'units': 'ms',
+            'validators': [
+                PositiveValidator,
+            ],
+            'description': 'Decay time constant of the membrane potential of the units of the spiker.',
+        })
+    shuffle: bool = dataclasses.field(
+        default = True, 
+        metadata = {
+            'description': 'Shuffles the input spikes, otherwise they are used sequentially to create the output signal.',
+        })
+    smooth_trace: bool = dataclasses.field(
+        default = True, 
+        metadata = {
+            'description': 'Smooths the output signal with an using a double exponential moving average instead of a single EMA.',
+        })
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @register_module
 class ExponentialIntegrator(OutputInterface):
     """
@@ -61,7 +105,7 @@ class ExponentialIntegrator(OutputInterface):
             saturation_freq: float [Hz]
             tau: float [ms]
             shuffle: bool
-            smooth_trace: boll
+            smooth_trace: bool
             
         Input:
             spikes: SpikeArray
@@ -69,22 +113,17 @@ class ExponentialIntegrator(OutputInterface):
         Output:
             signal: FloatArray
     """
+    config: ExponentialIntegratorConfig
 
-    def __init__(self, 
-                 num_outputs: int,
-                 saturation_freq: float = 50,   # [Hz]
-                 tau: float = 20,               # [ms]
-                 shuffle: bool = True,
-                 smooth_trace: bool = True,
-                 **kwargs):
+    def __init__(self, config: ExponentialIntegratorConfig = None, **kwargs):
         # Initialize super.
         super().__init__(**kwargs)
         # Initialize internal variables
-        self.num_outputs = num_outputs
-        self.saturation_freq = saturation_freq
-        self.tau = tau
-        self.shuffle = shuffle
-        self.smooth_trace = smooth_trace
+        self.num_outputs = self.config.num_outputs
+        self.saturation_freq = self.config.saturation_freq
+        self.tau = self.config.tau
+        self.shuffle = self.config.shuffle
+        self.smooth_trace = self.config.smooth_trace
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Output mapping.

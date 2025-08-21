@@ -5,23 +5,89 @@
 from __future__ import annotations
 
 import os
+import abc
+import numpy as np
 import jax.numpy as jnp
 import dataclasses
 from jax.typing import DTypeLike
-from typing import Any, Type, Callable
+from typing import Any, Callable
 from collections import OrderedDict
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+class ConfigurationValidator:
+
+    def __init__(self, field: dataclasses.Field):
+        self.field = field
+
+    @abc.abstractmethod
+    def validate(self,):
+        pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TypeValidator(ConfigurationValidator):
+
+    def validate(self, value: Any) -> None:
+        valid_types = self.field.metadata.get('valid_types')
+        if valid_types and not isinstance(value, valid_types):
+            raise TypeError(f'Attribute "{self.field.name}" expects types {valid_types}, but got type {type(value).__name__}.')
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class PositiveValidator(ConfigurationValidator):
+
+    def validate(self, value: Any) -> None:
+        if isinstance(value, (int, float)):
+            is_positive = value > 0
+        elif isinstance(value, jnp.ndarray):
+            is_positive = jnp.all(value > 0)
+        elif isinstance(value, np.ndarray):
+            is_positive = np.all(value > 0)
+        else:
+            raise TypeError(f'value is not a supported numeric object.')
+        if not is_positive:
+            raise ValueError(f'Attribute "{self.field.name}" must be positive, but got {value}.')
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class ZeroOneValidator(ConfigurationValidator):
+
+    def validate(self, value: Any) -> None:
+        if isinstance(value, (int, float)):
+            is_zero_one = value == 0 or value == 1
+        elif isinstance(value, jnp.ndarray):
+            is_zero_one = jnp.all(jnp.logical_or(value == 0, value == 1))
+        elif isinstance(value, np.ndarray):
+            is_zero_one = np.all(np.logical_or(value == 0, value == 1))
+        elif isinstance(value, bool):
+            is_zero_one = True
+        else:
+            raise TypeError(f'value is not a supported numeric object.')
+        if not is_zero_one:
+            raise ValueError(f'Attribute "{self.field.name}" must be composed entirely of zeros and ones, but got {value}.')
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+METADATA_TEMPLATE = {
+    'units': None, 
+    'valid_types': Any, 
+    'validators': [TypeValidator], 
+    'description': ''}
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 # Meta module to resolve metaclass conflicts
 class SparkMetaConfig(type):
     """
         Metaclass that promotes class attributes to dataclass fields
     """
-
-    def __new__(cls, name: str, bases: tuple[type, ...], attrs: dict[str, Any]) -> 'SparkMetaConfig':
+    
+    def __new__(cls, name: str, bases: tuple[type, ...], dct: dict[str, Any]) -> 'SparkMetaConfig':
 
         # NOTE: We need to manually intercept the init annotations since non-default arguments may follow 
         # default arguments when extending configuration classes. This is achieved by "flattening" the 
@@ -39,78 +105,60 @@ class SparkMetaConfig(type):
                 fields[field.name] = (field.type, field_info)
             # Gather methods and properties
             for attr_name, attr_value in base.__dict__.items():
-                if (isinstance(attr_value, Callable) or isinstance(attr_value, property)) \
-                    and attr_name not in attrs and not attr_name.startswith('__'):
-                    attrs[attr_name] = attr_value
+                if not attr_name.startswith('__') and (
+                        callable(attr_value) 
+                        or isinstance(attr_value, property)
+                        or isinstance(attr_value, classmethod)
+                        or isinstance(attr_value, staticmethod)):
+                    dct[attr_name] = attr_value
 
         # Gather fields from the current class. Prioritize child's attributes over parent's.
-        current_annotations = attrs.get('__annotations__', {})
+        current_annotations = dct.get('__annotations__', {})
         for field_name, field_type in current_annotations.items():
-            field_value = attrs.get(field_name, dataclasses.MISSING)
+            field_value = dct.get(field_name, dataclasses.MISSING)
             fields[field_name] = (field_type, field_value)
 
-        # --- Step 4: Process and standardize all fields with metadata ---
+        # Process and standardize all fields with metadata
         processed_fields = OrderedDict()
         for field_name, (field_type, field_info) in fields.items():
+            valid_types = {'valid_types': field_type}
             if isinstance(field_info, dataclasses.Field):
-                # It's already a Field object. Reconstruct it with merged metadata.
-                existing_metadata = field_info.metadata or {}
-                default_metadata = {'units': None, 'valid_types': field_type, 'validators': []}
-                final_metadata = {**default_metadata, **existing_metadata}
-                
-                # CORRECTED: Manually reconstruct the Field object instead of using replace().
-                field_args = {
-                    'default': field_info.default,
-                    'default_factory': field_info.default_factory,
-                    'init': field_info.init,
-                    'repr': field_info.repr,
-                    'hash': field_info.hash,
-                    'compare': field_info.compare,
-                    'metadata': final_metadata,
-                }
-                # kw_only is only available in Python 3.10+
-                if hasattr(field_info, 'kw_only'):
-                    field_args['kw_only'] = field_info.kw_only
-                
-                processed_field = dataclasses.field(**field_args)
-
+                # Merge metadata with template.
+                validators = {'validators': list(set(METADATA_TEMPLATE['validators'] + 
+                                                     field_info.metadata['validators']) if 'validators' in field_info.metadata else [])}
+                field_info.metadata = {**METADATA_TEMPLATE, **(field_info.metadata or {}), **valid_types, **validators}
+                field = field_info
             else:
-                # It's a simple type hint or has a direct default value.
-                # Create a new Field object from scratch.
-                default_metadata = {'units': None, 'valid_types': field_type, 'validators': []}
-                processed_field = dataclasses.field(
+                # Create a new Field object.
+                field = dataclasses.field(
                     default=field_info if field_info is not dataclasses.MISSING else dataclasses.MISSING,
-                    metadata=default_metadata
+                    metadata={**METADATA_TEMPLATE, **valid_types}
                 )
-            processed_fields[field_name] = (field_type, processed_field)
+            processed_fields[field_name] = (field_type, field)
 
-        # --- Step 5: Reorder the standardized fields ---
+        # Reorder the standardized fields
         non_default_fields = OrderedDict()
         default_fields = OrderedDict()
-
         for field_name, (field_type, field_obj) in processed_fields.items():
-            # Now we can reliably check the Field object for defaults.
             if field_obj.default is dataclasses.MISSING and \
                field_obj.default_factory is dataclasses.MISSING:
                 non_default_fields[field_name] = (field_type, field_obj)
             else:
                 default_fields[field_name] = (field_type, field_obj)
         
-        # --- Step 6: Rebuild attributes for the new class ---
-        final_annotations = OrderedDict()
-        
+        # Rebuild attributes for the new class
+        annotations = OrderedDict()
         for field_name, (field_type, field_obj) in non_default_fields.items():
-            final_annotations[field_name] = field_type
-            attrs[field_name] = field_obj
-
+            annotations[field_name] = field_type
+            dct[field_name] = field_obj
         for field_name, (field_type, field_obj) in default_fields.items():
-            final_annotations[field_name] = field_type
-            attrs[field_name] = field_obj
-
-        attrs['__annotations__'] = final_annotations
+            annotations[field_name] = field_type
+            dct[field_name] = field_obj
+        dct['__annotations__'] = annotations
         
-        # --- Step 7: Create the class and apply the decorator ---
-        new_class = super().__new__(cls, name, tuple([]), attrs)
+        # Create the dataclass
+        new_class = super().__new__(cls, name, tuple([]), dct)
+        new_class.__is_spark_config__ = True
         return dataclasses.dataclass(new_class)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -124,33 +172,33 @@ class SparkConfig(metaclass=SparkMetaConfig):
         default_factory=lambda: int.from_bytes(os.urandom(4), 'little'), 
         metadata={
             'units': None,
-            'valid_types': int,
             'validators': [
-                (lambda x: isinstance(x, int), lambda x: f'seed must be of type None or Int, got "{x}".')
-            ]
+                TypeValidator
+            ],
+            'description': 'Seed for internal random processes.',
         })
     dtype: DTypeLike = dataclasses.field(
         default=jnp.float16, 
         metadata={
             'units': None,
-            'valid_types': DTypeLike,
             'validators': [
-                (lambda x: isinstance(jnp.dtype(x), jnp.dtype), lambda x: f'dtype must be a valid JAX DTypeLike, got "{x}".')
-            ]
+                TypeValidator
+            ],
+            'description': 'Dtype used for JAX dtype promotions.',
         })
     dt: float = dataclasses.field(
         default=1.0, 
         metadata={
             'units': 'ms',
-            'valid_types': float,
             'validators': [
-                (lambda x: isinstance(x, float), lambda x: f'dt must be of type float, got "{type(x)}".'),
-                (lambda x: x > 0, lambda x: f'dt must be positive, got "{x}".'),
-            ]
+                TypeValidator,
+                PositiveValidator,
+            ],
+            'description': 'Deltatime integration constant.',
         })
 
     @classmethod
-    def create(cls: Type['SparkConfig'], partial: dict[str, Any] = None) -> 'SparkConfig':
+    def create(cls: type['SparkConfig'], partial: dict[str, Any] = None) -> 'SparkConfig':
         """
             Create config with partial overrides.
         """
@@ -188,27 +236,34 @@ class SparkConfig(metaclass=SparkMetaConfig):
         }
 
     @classmethod
-    def from_dict(cls: Type['SparkConfig'], data: dict) -> 'SparkConfig':
+    def from_dict(cls: type['SparkConfig'], data: dict[str, Any]) -> 'SparkConfig':
         """
             Create config instance from dictionary
         """
         return cls(**data)
     
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, dict[str, Any]]:
         """
             Serialize config to dictionary
         """
         return {
-            field.name: {'value': getattr(self, field.name),
-                     'metadata': field.metadata} for field in dataclasses.fields(self) 
+            field.name: {
+                'value': getattr(self, field.name),
+                'metadata': field.metadata} 
+            for field in dataclasses.fields(self) 
         }
 
-    # Validation using field metadata
-    def validate(self):
+    def validate(self) -> None:
         for field in dataclasses.fields(self):
-            for (validator, msg) in field.metadata.get('validators', []):
-                if not validator(getattr(self, field.name)):
-                    raise ValueError(f'Validation failed for "{field.name}". {msg(getattr(self, field.name))}')
+            for validator in field.metadata.get('validators', []):
+                validator_instance = validator(field)
+                validator_instance.validate(getattr(self, field.name))
+
+    def get_metadata(self) -> dict[str, Any]:
+        metadata = {}
+        for field in dataclasses.fields(self):
+            metadata[field.name] = dict(field.metadata)
+        return metadata
 
     def __post_init__(self):
         self.validate()

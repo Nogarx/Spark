@@ -33,7 +33,7 @@ class Brain(SparkModule, metaclass=BrainMeta):
 		Abstract brain model.
 		This is more a convenience class used to synchronize data more easily.
 	"""
-	default_config: object = SparkConfig
+	config: SparkConfig
 
 	# Typing annotations.
 	_modules_list: List[str]

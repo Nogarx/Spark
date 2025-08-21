@@ -17,6 +17,7 @@ from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.payloads import SpikeArray, CurrentArray, PotentialArray
 from spark.core.variables import Variable, Constant, ConfigDict
 from spark.core.registry import register_module
+from spark.core.configuration import SparkConfig
 from spark.nn.components.base import Component
 
 #################################################################################################################################################
@@ -112,6 +113,19 @@ class Soma(Component):
             'spikes': self._compute_spikes(), 
             'potentials': self.potential,
         }
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class ALIFSomaConfig(SparkConfig):
+    max_freq: float = dataclasses.field(
+        default = 50.0, 
+        metadata = {
+            'units': 'Hz',
+            'validators': [
+                PositiveValidator
+            ],
+            'description': 'Maximum firing frequency of the spiker.',
+        })
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

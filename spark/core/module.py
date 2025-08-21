@@ -18,7 +18,7 @@ import jax.numpy as jnp
 import flax.nnx as nnx
 import inspect
 from jax.typing import DTypeLike
-from typing import Any, TypedDict, Type
+from typing import Any, TypedDict, Type, get_type_hints
 from spark.core.wrappers import HookingMeta
 from functools import wraps
 from dataclasses import dataclass, fields, MISSING, asdict, field
@@ -82,14 +82,32 @@ class SparkMeta(nnx.module.ModuleMeta, HookingMeta):
         setattr(cls, '__call__', wrapped_call)
 
         return cls
-
+            
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
             
 # TODO: We need a reliable way to infer the shape/type for inputs and outputs.
 class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
     name: str = 'name'
+    config: SparkConfig
     default_config: type[SparkConfig] = SparkConfig
+
+    # NOTE: This is a workaround to require all childs of SparkModule to define a, 
+    # default_config while at the same time allow for a lazy definition of the property. 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        print(cls.__name__)
+        # Special cases and abstract classes dont need config but yet they are still SparkModules ¯\_(ツ)_/¯
+        is_abc = inspect.isabstract(cls) and len(getattr(cls, '__abstractmethods__', set())) == 0
+        if cls.__name__ in ['Brain'] or is_abc:
+            cls.default_config = None
+            return
+        # Check if defines config
+        resolved_hints = get_type_hints(cls)
+        config_type = resolved_hints.get('config')
+        if not config_type and not getattr(config_type, '__is_spark_config__', None):
+            raise AttributeError('SparkModules must define a valid config: type[SparkConfig] attribute.')
+        cls.default_config = config_type
 
     def __init__(self, *, config: SparkConfig = None, **kwargs):
         # Initialize super.
@@ -124,7 +142,7 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         """
             Expose safe-to-inspect configuration metadata.
         """
-        if not hasattr(cls, 'config_cls'):
+        if not hasattr(cls, 'config'):
             return {}
         return {
             field.name: {
@@ -132,7 +150,7 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
                 'default': field.default if field.default is not MISSING else None,
                 'description': field.metadata.get('description', '')
             }
-            for field in fields(cls.config_cls)
+            for field in fields(cls.config)
         }
 
     def initialize(self, shape: Shape = None, dtype: DTypeLike = None, specs: dict[str, VarSpec] = None) -> None:
