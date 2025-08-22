@@ -6,11 +6,9 @@ from __future__ import annotations
 
 import jax
 import jax.numpy as jnp 
-from jax._src import dtypes
 from jax.typing import DTypeLike
 from typing import Protocol, runtime_checkable
 from spark.core.shape import bShape
-from spark.core.registry import register_initializer
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

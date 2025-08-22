@@ -9,46 +9,20 @@ if TYPE_CHECKING:
 
 import abc
 import jax.numpy as jnp
+import dataclasses
 from math import prod
 from typing import TypedDict, Dict, List
-from dataclasses import dataclass
 from spark.core.tracers import Tracer
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.payloads import SpikeArray, CurrentArray, PotentialArray
 from spark.core.variables import Variable, Constant, ConfigDict
 from spark.core.registry import register_module
-from spark.core.configuration import SparkConfig
+from spark.core.configuration import SparkConfig, PositiveValidator
 from spark.nn.components.base import Component
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
-
-@dataclass
-class ALIFConfigurations:
-    DEFAULT = {
-        'potential_rest':-60.0,     # [mV]
-        'potential_reset':-50.0,    # [mV]  
-        'potential_tau':20.0,       # [ms]
-        'conductance':10.0,         # [nS] <-> [1/GΩ]
-        'threshold':-40.0,          # [mV]
-        'threshold_tau':100.0,      # [ms]
-        'threshold_delta':100.0,    # [mV]
-        'cooldown':2.0,             # [ms]
-    }
-    LIF = {
-        'potential_rest':-60.0,     # [mV]
-        'potential_reset':-50.0,    # [mV]  
-        'potential_tau':20.0,       # [ms]
-        'conductance':10.0,         # [nS] <-> [1/GΩ]
-        'threshold':-40.0,          # [mV]
-        'threshold_tau':1.0,        # [ms]
-        'threshold_delta':0.0,      # [mV]
-        'cooldown':2.0,             # [ms]
-    }
-ALIF_cfgs = ALIFConfigurations()
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 # Generic Soma output contract.
 class SomaOutput(TypedDict):
@@ -62,13 +36,9 @@ class Soma(Component):
         Abstract soma model.
     """
 
-    def __init__(self, 
-                 params: Dict = {},
-                 **kwargs):
+    def __init__(self, **kwargs):
         # Initialize super.
         super().__init__(**kwargs)
-        # Initialize variables
-        self.params = ConfigDict(params)
 
     @property
     def potential(self,) -> PotentialArray:
@@ -117,14 +87,75 @@ class Soma(Component):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class ALIFSomaConfig(SparkConfig):
-    max_freq: float = dataclasses.field(
-        default = 50.0, 
+    potential_rest: float = dataclasses.field(
+        default = -60.0, 
         metadata = {
-            'units': 'Hz',
+            'units': 'mV',
+            'description': 'Membrane rest potential.',
+        })
+    potential_reset: float = dataclasses.field(
+        default = -50.0, 
+        metadata = {
+            'units': 'mV',
+            'description': 'Membrane after spike reset potential.',
+        })
+    potential_tau: float = dataclasses.field(
+        default = 20.0, 
+        metadata = {
+            'units': 'ms',
             'validators': [
-                PositiveValidator
+                PositiveValidator,
             ],
-            'description': 'Maximum firing frequency of the spiker.',
+            'description': 'Membrane potential decay constant.',
+        })
+    conductance: float = dataclasses.field(
+        default = 10.0, 
+        metadata = {
+            'units': 'nS', # [1/GΩ]
+            'description': 'Membrane conductance.',
+        })
+    threshold: float = dataclasses.field(
+        default = -40.0, 
+        metadata = {
+            'units': 'mV',
+            'description': 'Adaptive action potential threshold base value.',
+        })
+    threshold_tau: float = dataclasses.field(
+        default = 100.0, 
+        metadata = {
+            'units': 'ms',
+            'validators': [
+                PositiveValidator,
+            ],
+            'description': 'Adaptive action potential threshold decay constant.',
+        })
+    threshold_delta: float = dataclasses.field(
+        default = 100.0, 
+        metadata = {
+            'units': 'mV',
+            'description': 'Adaptive action potential threshold after spike increment.',
+        })
+    cooldown: float = dataclasses.field(
+        default = 2.0, 
+        metadata = {
+            'units': 'ms',
+            'description': 'Soma refractory period.',
+        })
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class LIFSomaConfig(ALIFSomaConfig):
+    threshold_tau: float = dataclasses.field(
+        default = 1.0, 
+        metadata = {
+            'units': 'ms',
+            'description': 'Adaptive action potential threshold decay constant.',
+        })
+    threshold_delta: float = dataclasses.field(
+        default = 0.0, 
+        metadata = {
+            'units': 'mV',
+            'description': 'Adaptive action potential threshold after spike increment.',
         })
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -132,34 +163,30 @@ class ALIFSomaConfig(SparkConfig):
 @register_module
 class ALIFSoma(Soma):
     """
-        LIF soma model.
+        ALIF soma model.
     """
+    config: ALIFSomaConfig
 
-    def __init__(self, 
-                 params: Dict = {},
-                 **kwargs):
+    def __init__(self, config: ALIFSomaConfig = None, **kwargs):
         # Initialize super.
-        super().__init__(params=params, **kwargs)
-        # Set missing parameters to default values.
-        for k in ALIF_cfgs.DEFAULT:
-            self.params.setdefault(k,  ALIF_cfgs.DEFAULT[k])
+        super().__init__(config=config, **kwargs)
 
     def build(self, input_specs: dict[str, InputSpec]):
         super().build(input_specs)
         # Initialize variables.
         # Membrane. Substract potential_rest to potential related terms to rebase potential at zero.
-        self._potential_reset = Constant(self.params['potential_reset'] - self.params['potential_rest'], dtype=self._dtype)
-        self._potential_scale = Constant(self._dt / self.params['potential_tau'], dtype=self._dtype)
+        self._potential_reset = Constant(self.config.potential_reset - self.config.potential_rest, dtype=self._dtype)
+        self._potential_scale = Constant(self._dt / self.config.potential_tau, dtype=self._dtype)
         # Conductance.
-        self._conductance = Constant(1/self.params['conductance'], dtype=self._dtype)
+        self._conductance = Constant(1/self.config.conductance, dtype=self._dtype)
         # Threshold.
         self._threshold = Tracer(self._shape,
-                                 tau=self.params['threshold_tau'], 
-                                 base=(self.params['threshold'] - self.params['potential_rest']), 
-                                 scale=self.params['threshold_delta'], 
+                                 tau=self.config.threshold_tau, 
+                                 base=(self.config.threshold - self.config.potential_rest), 
+                                 scale=self.config.threshold_delta, 
                                  dt=self._dt, dtype=self._dtype)
         # Refractory period.
-        self.cooldown = Constant(self.params['cooldown'], dtype=self._dtype)
+        self.cooldown = Constant(self.config.cooldown, dtype=self._dtype)
         self.refractory = Variable(jnp.array(self.cooldown), dtype=self._dtype)
 
     def reset(self) -> None:

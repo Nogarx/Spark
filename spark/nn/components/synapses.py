@@ -9,41 +9,21 @@ if TYPE_CHECKING:
 
 import abc
 import jax.numpy as jnp
+import dataclasses
 from math import prod
-from typing import TypedDict, Dict, List
-from dataclasses import dataclass
+from typing import TypedDict, Callable
 from spark.nn.components.base import Component
 from spark.core.tracers import Tracer, DoubleTracer
 from spark.core.shape import bShape, Shape, normalize_shape
-from spark.core.payloads import SpikeArray, CurrentArray, FloatArray, BooleanMask
-from spark.core.variables import Variable, ConfigDict
-from spark.core.registry import register_module
-from spark.nn.initializers.base import Initializer
-from spark.nn.initializers.kernel import sparse_uniform_kernel_initializer
+from spark.core.payloads import SpikeArray, CurrentArray, FloatArray
+from spark.core.variables import Variable
+from spark.core.registry import register_module, REGISTRY
+from spark.core.configuration import SparkConfig, PositiveValidator
+from spark.nn.initializers.kernel import KernelInitializerConfig, SparseUniformKernelInitializerConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
-
-@dataclass
-class SimpleConfigurations:
-    TRACED = {
-        'tau': 5.0,         # [ms]
-        'scale': 1.0,
-    }
-    DOUBLE_TRACED = {
-        'tau_1': 5.0,       # [ms]
-        'tau_2': 5.0,       # [ms]
-        'scale_1': 1.0,
-        'scale_2': 1.0,            
-    }
-    KERNEL_INIT = {
-        'kernel_density': 0.2,
-        'kernel_scale': 1,
-    }
-Simple_cfgs = SimpleConfigurations()
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 # Generic Soma output contract.
 class SynanpsesOutput(TypedDict):
@@ -90,6 +70,20 @@ class Synanpses(Component):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class SimpleSynapsesConfig(SparkConfig):
+    target_units_shape: Shape = dataclasses.field(
+        metadata = {
+            'description': 'Shape after the merge operation.',
+        })
+    async_spikes: bool = dataclasses.field(
+        metadata = {
+            'description': 'Use asynchronous spikes. This parameter should be True if the incomming spikes are \
+                            intercepted by a delay component and False otherwise.',
+    })
+    kernel_initializer: KernelInitializerConfig = dataclasses.field(default_factory = SparseUniformKernelInitializerConfig)
+    
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @register_module
 class SimpleSynapses(Synanpses):
     """
@@ -97,12 +91,9 @@ class SimpleSynapses(Synanpses):
         Output currents are computed as the dot product of the kernel with the input spikes.
 
         Init:
-            output_shape: Shape
+            target_units_shape: Shape
             async_spikes: bool
-            params: Dict
-                -> kernel_density: float
-                -> kernel_scale: float
-            kernel_initializer: Initializer
+            kernel_initializer: KernelInitializerConfig
 
         Input:
             spikes: SpikeArray
@@ -110,25 +101,15 @@ class SimpleSynapses(Synanpses):
         Output:
             currents: CurrentArray
     """
+    config: SimpleSynapsesConfig
 
-    def __init__(self, 
-                 output_shape: Shape,
-                 async_spikes: bool, 
-                 params: Dict = {},
-                 kernel_initializer: Initializer =
-                    lambda density, dtype, scale: sparse_uniform_kernel_initializer(prob=density, scale=scale, dtype=dtype),
-                 **kwargs):
+    def __init__(self, config: SimpleSynapses = None, **kwargs):
         # Initialize super.
-        super().__init__(**kwargs)
+        super().__init__(config=config, **kwargs)
         # Initialize shapes
-        self._output_shape = normalize_shape(output_shape)
+        self._output_shape = normalize_shape(self.config.target_units_shape)
         # Initialize varibles
-        self.async_spikes = async_spikes
-        self.kernel_initializer = kernel_initializer
-        # Set missing parameters to default values.
-        for k in Simple_cfgs.KERNEL_INIT:
-            params.setdefault(k, Simple_cfgs.KERNEL_INIT[k])
-        self.params = ConfigDict(params)
+        self.async_spikes = self.config.async_spikes
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
@@ -136,8 +117,8 @@ class SimpleSynapses(Synanpses):
         self._real_input_shape = self._input_shape[len(self._output_shape):] if self.async_spikes else self._input_shape
         self._sum_axes = tuple(range(len(self._output_shape), len(self._output_shape)+len(self._real_input_shape)))
         # Initialize varibles
-        init = self.kernel_initializer(density=self.params['kernel_density'], scale=self.params['kernel_scale'], dtype=self._dtype)
-        kernel = init(key=self.get_rng_keys(1), input_shape=self._real_input_shape, output_shape=self._output_shape)
+        initializer: Callable = REGISTRY.INITIALIZERS[self.config.kernel_initializer.name].class_ref(self.config.kernel_initializer)
+        kernel = initializer(key=self.get_rng_keys(1), input_shape=self._real_input_shape, output_shape=self._output_shape)
         self.kernel = Variable(kernel, dtype=self._dtype)
         # Inhibitory mask
         #self._inhibition_mask = Constant(inhibition_mask if inhibition_mask else jnp.zeros(self._input_shape), dtype=jnp.bool_)
@@ -159,6 +140,27 @@ class SimpleSynapses(Synanpses):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class TracedSynapsesConfig(SimpleSynapsesConfig):
+    tau: float = dataclasses.field(
+        default = 5.0, 
+        metadata = {
+            'units': 'ms',
+            'validators': [
+                PositiveValidator,
+            ],
+            'description': 'Tracer decay constant.',
+    })
+    scale: float = dataclasses.field(
+        default = 1.0, 
+        metadata = {
+            'validators': [
+                PositiveValidator,
+            ],
+            'description': 'Tracer spike scaling.',
+    })
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @register_module
 class TracedSynapses(SimpleSynapses):
     """
@@ -166,13 +168,11 @@ class TracedSynapses(SimpleSynapses):
         Output currents are computed as the trace of the dot product of the kernel with the input spikes.
 
         Init:
-            output_shape: Shape
+            target_units_shape: Shape
             async_spikes: bool
-            double_traced: bool
-            params: Dict
-                -> kernel_density: float
-                -> kernel_scale: float
-            kernel_initializer: Initializer
+            kernel_initializer: KernelInitializerConfig
+            tau: float
+            scale: float
 
         Input:
             spikes: SpikeArray
@@ -180,41 +180,23 @@ class TracedSynapses(SimpleSynapses):
         Output:
             currents: CurrentArray
     """
+    config: TracedSynapsesConfig
 
-    def __init__(self, 
-                 output_shape: Shape,
-                 async_spikes: bool, 
-                 double_traced: bool = False,
-                 params: Dict = {},
-                 kernel_initializer: Initializer =
-                    lambda density, dtype, scale: sparse_uniform_kernel_initializer(prob=density, scale=scale, dtype=dtype),
-                 **kwargs):
+    def __init__(self, config: TracedSynapsesConfig = None, **kwargs):
         # Initialize super.
-        super().__init__(output_shape, async_spikes, params, kernel_initializer, **kwargs)
-        # Internal variables.
-        self._double_traced = double_traced
-        # Set missing parameters to default values.
-        for k in Simple_cfgs.DOUBLE_TRACED if self._double_traced else Simple_cfgs.TRACED:
-            self.params.setdefault(k, Simple_cfgs.DOUBLE_TRACED[k] if self._double_traced else Simple_cfgs.TRACED[k])
+        super().__init__(config=config, **kwargs)
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
         super().build(input_specs)
         # Internal variables.
-        if self._double_traced:
-            self.current_tracer = DoubleTracer(shape=self.kernel.value.shape,
-                                               tau_1=self.params['tau_1'],
-                                               tau_2=self.params['tau_2'],
-                                               scale_1=self.params['scale_1']/self.params['tau_1'],
-                                               scale_2=self.params['scale_2']/self.params['tau_2'],
-                                               dt=self._dt,
-                                               dtype=self._dtype)
-        else:
-            self.current_tracer = Tracer(shape=self.kernel.value.shape,
-                                         tau=self.params['tau'],
-                                         scale=self.params['scale']/self.params['tau'],
-                                         dt=self._dt,
-                                         dtype=self._dtype)
+        self.current_tracer = Tracer(
+            shape=self.kernel.value.shape,
+            tau=self.config.tau,
+            scale=self.config.scale/self.config.tau,
+            dt=self.config.dt,
+            dtype=self.config.dtype
+        )
 
     def reset(self,) -> None:
         """
@@ -225,6 +207,87 @@ class TracedSynapses(SimpleSynapses):
     def _dot(self, spikes: SpikeArray) -> CurrentArray:
         trace = self.current_tracer(self.kernel.value * spikes.value)
         return CurrentArray(jnp.sum(trace, axis=self._sum_axes))
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class DoubleTracedSynapsesConfig(SimpleSynapsesConfig):
+    tau_1: float = dataclasses.field(
+        default = 5.0, 
+        metadata = {
+            'units': 'ms',
+            'validators': [
+                PositiveValidator,
+            ],
+            'description': 'First tracer decay constant.',
+    })
+    scale_1: float = dataclasses.field(
+        default = 1.0, 
+        metadata = {
+            'validators': [
+                PositiveValidator,
+            ],
+            'description': 'First tracer spike scaling.',
+    })
+    tau_2: float = dataclasses.field(
+        default = 5.0, 
+        metadata = {
+            'units': 'ms',
+            'validators': [
+                PositiveValidator,
+            ],
+            'description': 'Second tracer decay constant.',
+    })
+    scale_2: float = dataclasses.field(
+        default = 1.0, 
+        metadata = {
+            'validators': [
+                PositiveValidator,
+            ],
+            'description': 'Second tracer spike scaling.',
+    })
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_module
+class DoubleTracedSynapses(TracedSynapses):
+    """
+        Traced synaptic model. 
+        Output currents are computed as the trace of the dot product of the kernel with the input spikes.
+
+        Init:
+            target_units_shape: Shape
+            async_spikes: bool
+            kernel_initializer: KernelInitializerConfig
+            tau_1: float
+            scale_1: float
+            tau_2: float
+            scale_2: float
+
+        Input:
+            spikes: SpikeArray
+            
+        Output:
+            currents: CurrentArray
+    """
+    config: DoubleTracedSynapsesConfig
+
+    def __init__(self, config: DoubleTracedSynapsesConfig = None, **kwargs):
+        # Initialize super.
+        super().__init__(config=config, **kwargs)
+
+    def build(self, input_specs: dict[str, InputSpec]):
+        # Initialize shapes
+        super().build(input_specs)
+        # Internal variables.
+        self.current_tracer = DoubleTracer(
+            shape=self.kernel.value.shape,
+            tau_1=self.config.tau_1,
+            tau_2=self.config.tau_2,
+            scale_1=self.config.scale_1/self.config.tau_1,
+            scale_2=self.config.scale_2/self.config.tau_2,
+            dt=self.config.dt,
+            dtype=self.config.dtype
+        )
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

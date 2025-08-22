@@ -53,7 +53,7 @@ class PositiveValidator(ConfigurationValidator):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class ZeroOneValidator(ConfigurationValidator):
+class BinaryValidator(ConfigurationValidator):
 
     def validate(self, value: Any) -> None:
         if isinstance(value, (int, float)):
@@ -65,19 +65,39 @@ class ZeroOneValidator(ConfigurationValidator):
         elif isinstance(value, bool):
             is_zero_one = True
         else:
+            raise TypeError(f'value is not a supported binary numeric object.')
+        if not is_zero_one:
+            raise ValueError(f'Attribute "{self.field.name}" values must be binary (0/1 values), but got {value}.')
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class ZeroOneValidator(ConfigurationValidator):
+
+    def validate(self, value: Any) -> None:
+        if isinstance(value, (int, float)):
+            is_zero_one = value >= 0 and value <= 1
+        elif isinstance(value, jnp.ndarray):
+            is_zero_one = jnp.all(jnp.logical_and(value >= 0, value <= 1))
+        elif isinstance(value, np.ndarray):
+            is_zero_one = np.all(np.logical_and(value >= 0, value <= 1))
+        else:
             raise TypeError(f'value is not a supported numeric object.')
         if not is_zero_one:
-            raise ValueError(f'Attribute "{self.field.name}" must be composed entirely of zeros and ones, but got {value}.')
+            raise ValueError(f'Attribute "{self.field.name}" values must be in the range [0,1], but got {value}.')
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+# TODO: Add some logic to the metadata for auto-inference of certain parameters when using GUI.
+# For example, some Shapes can be infered from the next/prev component in the graph.
+
 METADATA_TEMPLATE = {
     'units': None, 
     'valid_types': Any, 
     'validators': [TypeValidator], 
-    'description': ''}
+    'description': '',
+    }
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -163,39 +183,11 @@ class SparkMetaConfig(type):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class SparkConfig(metaclass=SparkMetaConfig):
+class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
     """
         Base class for module configuration.
     """
     __SCHEMA_VERSION__ = '1.0'
-    seed: int = dataclasses.field(
-        default_factory=lambda: int.from_bytes(os.urandom(4), 'little'), 
-        metadata={
-            'units': None,
-            'validators': [
-                TypeValidator
-            ],
-            'description': 'Seed for internal random processes.',
-        })
-    dtype: DTypeLike = dataclasses.field(
-        default=jnp.float16, 
-        metadata={
-            'units': None,
-            'validators': [
-                TypeValidator
-            ],
-            'description': 'Dtype used for JAX dtype promotions.',
-        })
-    dt: float = dataclasses.field(
-        default=1.0, 
-        metadata={
-            'units': 'ms',
-            'validators': [
-                TypeValidator,
-                PositiveValidator,
-            ],
-            'description': 'Deltatime integration constant.',
-        })
 
     @classmethod
     def create(cls: type['SparkConfig'], partial: dict[str, Any] = None) -> 'SparkConfig':
@@ -268,6 +260,32 @@ class SparkConfig(metaclass=SparkMetaConfig):
     def __post_init__(self):
         self.validate()
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class SparkConfig(BaseSparkConfig):
+    """
+        Default class for module configuration.
+    """
+    seed: int = dataclasses.field(
+        default_factory=lambda: int.from_bytes(os.urandom(4), 'little'), 
+        metadata={
+            'description': 'Seed for internal random processes.',
+        })
+    dtype: DTypeLike = dataclasses.field(
+        default=jnp.float16, 
+        metadata={
+            'description': 'Dtype used for JAX dtype promotions.',
+        })
+    dt: float = dataclasses.field(
+        default=1.0, 
+        metadata={
+            'units': 'ms',
+            'validators': [
+                PositiveValidator,
+            ],
+            'description': 'Deltatime integration constant.',
+        })
+    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

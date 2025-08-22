@@ -10,12 +10,14 @@ if TYPE_CHECKING:
 import abc
 import jax
 import jax.numpy as jnp
+import dataclasses
 from typing import TypedDict
 from math import prod
 from spark.core.payloads import SpikeArray
 from spark.core.variables import Variable, Constant
 from spark.core.shape import Shape, normalize_shape
 from spark.core.registry import register_module
+from spark.core.configuration import SparkConfig
 from spark.nn.components.base import Component
 from spark.nn.initializers.base import Initializer
 from spark.nn.initializers.delay import uniform_delay_initializer
@@ -60,6 +62,22 @@ class Delays(Component):
             Resets component state.
         """
         pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class DummyDelays(SparkConfig):
+    threshold_tau: float = dataclasses.field(
+        default = 1.0, 
+        metadata = {
+            'units': 'ms',
+            'description': 'Adaptive action potential threshold decay constant.',
+        })
+    threshold_delta: float = dataclasses.field(
+        default = 0.0, 
+        metadata = {
+            'units': 'mV',
+            'description': 'Adaptive action potential threshold after spike increment.',
+        })
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

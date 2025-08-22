@@ -17,7 +17,7 @@ from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Variable, Constant
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.registry import register_module
-from spark.core.configuration import SparkConfig, PositiveValidator, ZeroOneValidator
+from spark.core.configuration import SparkConfig, PositiveValidator, BinaryValidator
 from spark.nn.interfaces.base import Interface
 
 #################################################################################################################################################
@@ -215,7 +215,7 @@ class TopologicalSpikerConfig(SparkConfig):
         default_factory = lambda: jnp.array(0), 
         metadata = {
             'validators': [
-                ZeroOneValidator,
+                BinaryValidator,
             ],
             'description': 'Jax array indicating if the borders of the cube are glued together. \
                             Entries must be either one or zero, indicating gluing and not gluing, respectively. \
