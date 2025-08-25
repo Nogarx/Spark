@@ -21,11 +21,6 @@ from spark.nn.initializers.base import Initializer
 
 class DelayInitializerConfig(BaseSparkConfig):
     name: str
-    scale: int = dataclasses.field(
-        default = 8, 
-        metadata = {
-            'description': 'Maximum number of delay timesteps.',
-        })
     dtype: DTypeLike = dataclasses.field(
         default=jnp.uint8, 
         metadata={
@@ -45,8 +40,8 @@ def constant_delay_initializer(config: ConstantDelayInitializerConfig) -> Initia
         Builds an initializer that returns a constant positive integer array.
     """
 
-    def init(key: jax.Array, shape: bShape) -> Initializer:
-        return config.scale * jnp.ones(shape, dtype=dtypes.canonicalize_dtype(config.dtype))
+    def init(key: jax.Array, shape: bShape, buffer_size: int) -> Initializer:
+        return buffer_size * jnp.ones(shape, dtype=dtypes.canonicalize_dtype(config.dtype))
     return init
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -62,8 +57,8 @@ def uniform_delay_initializer(config: UniformDelayInitializerConfig) -> Initiali
         Builds an initializer that returns positive integers uniformly-distributed random arrays.
     """
 
-    def init(key: jax.Array, shape: bShape) -> Initializer:
-        return jax.random.randint(key, shape, 1, config.scale-1, dtype=dtypes.canonicalize_dtype(config.dtype))
+    def init(key: jax.Array, shape: bShape, buffer_size: int) -> Initializer:
+        return jax.random.randint(key, shape, 1, buffer_size, dtype=dtypes.canonicalize_dtype(config.dtype))
     return init
 
 

@@ -13,45 +13,96 @@ if TYPE_CHECKING:
 
 import jax
 import jax.numpy as jnp
+import dataclasses
 from spark.nn.neurons import Neuron, NeuronOutput
 from spark.core.payloads import SpikeArray
 from spark.core.variables import Constant
-from spark.nn.components import ALIFSoma, SimpleSynapses, N2NDelays, HebbianRule, DummyDelays
-from spark.core.shape import bShape
+from spark.core.shape import bShape, Shape
 from spark.core.registry import register_module
+from spark.core.configuration import SparkConfig, PositiveValidator, ZeroOneValidator
+from spark.nn.components import (ALIFSoma, ALIFSomaConfig, 
+                                 SimpleSynapses, SimpleSynapsesConfig,
+                                 N2NDelays, N2NDelaysConfig,
+                                 HebbianRule, HebbianLearningConfig,
+                                 DummyDelays)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
+
+class ALIFNeuronConfig(SparkConfig):
+    units: Shape = dataclasses.field(
+        metadata = {
+            'description': 'Shape of the pool of neurons.',
+        })
+    max_delay: float = dataclasses.field(
+        default = 0.2, 
+        metadata = {
+            'units': 'ms',
+            'validators': [
+                PositiveValidator,
+            ],
+            'description': '',
+        })
+    inhibitory_rate: float = dataclasses.field(
+        default = 0.2, 
+        metadata = {
+            'units': 'ms',
+            'validators': [
+                ZeroOneValidator,
+            ],
+            'description': '',
+        })
+    async_spikes: bool = dataclasses.field(
+        metadata = {
+            'description': 'Use asynchronous spikes. This parameter should be True if the incomming spikes are \
+                            intercepted by a delay component and False otherwise.',
+        })
+    soma_config: ALIFSomaConfig = dataclasses.field(
+        default_factory = ALIFSomaConfig,
+        metadata = {
+            'description': 'Soma configuration.',
+        }),
+    synapses_config: SimpleSynapsesConfig = dataclasses.field(
+        init=False,
+        metadata = {
+            'description': 'Soma configuration.',
+        }),
+    delays_config: N2NDelaysConfig = dataclasses.field(
+        init=False,
+        metadata = {
+            'description': 'Soma configuration.',
+        }),
+    learning_rule_config: HebbianLearningConfig = dataclasses.field(
+        init=False,
+        metadata = {
+            'description': 'Soma configuration.',
+        }),
+
+    def __post_init__(self):
+        field_map = {f.name: f for f in dataclasses.fields(self)}
+
+        self.synapses_config = field_map['synapses_config'].type()
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
 class ALIFNeuron(Neuron):
     """
         Leaky integrate and fire neuronal model.
     """
-
+    config: ALIFNeuronConfig
     soma: Soma
     delays: Delays
     synapses: Synanpses
     learning_rule: LearningRule
 
-    def __init__(self, 
-                 units: bShape,
-                 max_delay: int = 16,
-                 inhibitory_rate: float = 0.2,
-                 async_spikes = True,
-                 soma_params: dict = {},
-                 synapses_params: dict = {},
-                 learning_rule_params: dict = {},
-                 **kwargs):
-        super().__init__(units, **kwargs)
-        # Sanity checks
-        if not isinstance(inhibitory_rate, float) and inhibitory_rate >= 0 and inhibitory_rate <= 1.0:
-            raise ValueError(f'"inhibitory_rate" must be a float in the range [0,1], got {inhibitory_rate}.')
+    def __init__(self, config: ALIFNeuronConfig = None, **kwargs):
+        super().__init__(config=config, **kwargs)
         # Main attributes
-        self.max_delay = max_delay
-        self.inhibitory_rate = inhibitory_rate
-        self.async_spikes = async_spikes
+        self.max_delay = self.config.max_delay
+        self.inhibitory_rate = self.config.inhibitory_rate
+        self.async_spikes = self.config.async_spikes
         # Temporary storage
         self._soma_params = soma_params
         self._synapses_params = synapses_params

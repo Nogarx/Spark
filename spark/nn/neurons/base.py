@@ -29,13 +29,11 @@ class Neuron(SparkModule, abc.ABC):
         Can be thought as the equivalent of Sequential in standard ML frameworks.
     """
 
-    def __init__(self, 
-                 units: bShape,
-                 **kwargs):
+    def __init__(self, **kwargs):
         # Initialize super.
         super().__init__(**kwargs)
         # Initialize shapes
-        self.units = normalize_shape(units)
+        self.units = normalize_shape(self.config.units)
         self._units = prod(self.units)
         self._component_names: list[SparkModule] = None
 

@@ -11,16 +11,16 @@ import abc
 import jax
 import jax.numpy as jnp
 import dataclasses
-from typing import TypedDict
-from math import prod
+from typing import TypedDict, Callable
+from math import prod, ceil
 from spark.core.payloads import SpikeArray
 from spark.core.variables import Variable, Constant
 from spark.core.shape import Shape, normalize_shape
-from spark.core.registry import register_module
-from spark.core.configuration import SparkConfig
+from spark.core.registry import register_module, REGISTRY
+from spark.core.configuration import SparkConfig, PositiveValidator
 from spark.nn.components.base import Component
 from spark.nn.initializers.base import Initializer
-from spark.nn.initializers.delay import uniform_delay_initializer
+from spark.nn.initializers.delay import DelayInitializerConfig, UniformDelayInitializerConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -65,19 +65,8 @@ class Delays(Component):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class DummyDelays(SparkConfig):
-    threshold_tau: float = dataclasses.field(
-        default = 1.0, 
-        metadata = {
-            'units': 'ms',
-            'description': 'Adaptive action potential threshold decay constant.',
-        })
-    threshold_delta: float = dataclasses.field(
-        default = 0.0, 
-        metadata = {
-            'units': 'mV',
-            'description': 'Adaptive action potential threshold after spike increment.',
-        })
+class DummyDelaysConfig(SparkConfig):
+    pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -96,11 +85,11 @@ class DummyDelays(Delays):
         Output:
             out_spikes: SpikeArray
     """
+    config: DummyDelaysConfig
 
-    def __init__(self, 
-                 **kwargs):
+    def __init__(self, config: DummyDelaysConfig = None, **kwargs):
         # Initialize super.
-        super().__init__(**kwargs)
+        super().__init__(config=config, **kwargs)
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
@@ -135,6 +124,24 @@ class DummyDelays(Delays):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class NDelaysConfig(SparkConfig):
+    max_delay: float = dataclasses.field(
+        default = 8.0, 
+        metadata = {
+            'units': 'ms',
+            'validators': [
+                PositiveValidator,
+            ],
+            'description': 'Maximum synaptic delay. Note: Final max delay is computed as ⌈max/dt⌉.',
+        })
+    delay_initializer: DelayInitializerConfig = dataclasses.field(
+        default_factory = UniformDelayInitializerConfig,
+        metadata = {
+            'description': 'Synaptic delays initializer method.',
+        })
+    
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @register_module
 class NDelays(Delays):
     """
@@ -145,7 +152,7 @@ class NDelays(Delays):
 
         Init:
             max_delay: int
-            delay_kernel_initializer: Initializer
+            delay_initializer: DelayInitializerConfig
 
         Input:
             in_spikes: SpikeArray
@@ -153,32 +160,26 @@ class NDelays(Delays):
         Output:
             out_spikes: SpikeArray
     """
+    config: NDelaysConfig
 
-    def __init__(self, 
-                 max_delay: int, 
-                 delay_kernel_initializer: Initializer = uniform_delay_initializer, 
-                 **kwargs):
+    def __init__(self, config: NDelaysConfig = None, **kwargs):
         # Initialize super.
-        super().__init__(**kwargs)
-        # Sanity checks
-        if not isinstance(max_delay, int) and max_delay > 0:
-            raise ValueError(f'"max_delay" must be a positive integer, got {max_delay}.')
-        # Initialize varibles
-        self.max_delay = max_delay
-        self.delay_kernel_initializer = delay_kernel_initializer
+        super().__init__(config=config, **kwargs)
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
         self._shape = normalize_shape(input_specs['in_spikes'].shape)
         self._units = prod(self._shape)
         # Initialize varibles
-        self._buffer_size = self.max_delay
+        self.max_delay = self.config.max_delay
+        self._buffer_size = int(ceil(self.max_delay / self._dt))
         num_bytes = (self._units + 7) // 8
         self._padding = (0, num_bytes * 8 - self._units)
         self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
         self._current_idx = Variable(0, dtype=jnp.int32)
         # Initialize delay kernel
-        delay_kernel = self.delay_kernel_initializer(scale=self._buffer_size)(self.get_rng_keys(1), self._units)
+        initializer: Callable = REGISTRY.INITIALIZERS[self.config.delay_initializer.name].class_ref(self.config.delay_initializer)
+        delay_kernel = initializer(self.get_rng_keys(1), (self._units,), self._buffer_size)
         self.delay_kernel = Constant(delay_kernel, dtype=jnp.uint8)
 
     def reset(self) -> None:
@@ -232,6 +233,14 @@ class NDelays(Delays):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class N2NDelaysConfig(NDelaysConfig):
+    target_units_shape: Shape = dataclasses.field(
+        metadata = {
+            'description': 'Shape of the postsynaptic pool of neurons.',
+        })
+    
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @register_module
 class N2NDelays(Delays):
     """
@@ -241,8 +250,8 @@ class N2NDelays(Delays):
                  neuron C recieves A's spikes J timesteps later and neuron D recieves A's spikes K timesteps later.
 
         Init:
+            target_units_shape: Shape
             max_delay: int
-            output_shape: Shape
             delay_kernel_initializer: Initializer
 
         Input:
@@ -251,35 +260,28 @@ class N2NDelays(Delays):
         Output:
             out_spikes: SpikeArray
     """
+    config: N2NDelaysConfig
 
-    def __init__(self, 
-                 max_delay: int, 
-                 output_shape: Shape, 
-                 delay_kernel_initializer: Initializer = uniform_delay_initializer, 
-                 **kwargs):
-        # Sanity checks
-        if not isinstance(max_delay, int) and max_delay > 0:
-            raise ValueError(f'"max_delay" must be a positive integer, got {max_delay}.')
+    def __init__(self, config: N2NDelaysConfig = None, **kwargs):
         # Initialize super.
-        super().__init__(**kwargs)
-        # Initialize varibles
-        self.max_delay = max_delay
-        self.output_shape = normalize_shape(output_shape)
-        self.delay_kernel_initializer = delay_kernel_initializer
+        super().__init__(config=config, **kwargs)
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
         self._in_shape = normalize_shape(input_specs['in_spikes'].shape)
+        self.output_shape = normalize_shape(self.config.target_units_shape)
         self._kernel_shape = normalize_shape((prod(self.output_shape), prod(self._in_shape)))
         self._units = prod(self._in_shape)
         # Initialize varibles
-        self._buffer_size = self.max_delay
+        self.max_delay = self.config.max_delay
+        self._buffer_size = int(ceil(self.max_delay / self._dt))
         num_bytes = (self._units + 7) // 8
         self._padding = (0, num_bytes * 8 - self._units)
         self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
         self._current_idx = Variable(0, dtype=jnp.int32)
         # Initialize kernel
-        delay_kernel = self.delay_kernel_initializer(scale=self._buffer_size)(self.get_rng_keys(1), self._kernel_shape)
+        initializer: Callable = REGISTRY.INITIALIZERS[self.config.delay_initializer.name].class_ref(self.config.delay_initializer)
+        delay_kernel = initializer(self.get_rng_keys(1), self._kernel_shape, self._buffer_size)
         self.delay_kernel = Constant(delay_kernel, dtype=jnp.uint8)
 
     def reset(self) -> None:

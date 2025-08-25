@@ -188,9 +188,11 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         Base class for module configuration.
     """
     __SCHEMA_VERSION__ = '1.0'
+    __CONFIG_DELIMITER__ = '__'
+    __SHARED_CONFIG_DELIMITER__ = 'S__'
 
     @classmethod
-    def create(cls: type['SparkConfig'], partial: dict[str, Any] = None) -> 'SparkConfig':
+    def create(cls: type['BaseSparkConfig'], partial: dict[str, Any] = None) -> 'BaseSparkConfig':
         """
             Create config with partial overrides.
         """
@@ -198,24 +200,52 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         instance = cls()
         # Apply partial updates
         if partial:
-            valid_fields = {field.name for field in dataclasses.fields(cls)}
-            for key, value in partial.items():
-                if key in valid_fields:
-                    setattr(instance, key, value)
-                else:
-                    raise ValueError(f'Invalid config key: {key}')
+
+            # Fold partial to pass child config attributes.
+            partial = cls._fold_partial(partial)
+            # Get current fields and pass attributes.
+            cls._set_partial_attributes(cls, partial)
+
         return instance
 
     def merge(self, partial: dict[str, Any]) -> None:
         """
             Update config with partial overrides.
         """
-        valid_fields = {field.name for field in dataclasses.fields(self) }
+        # Fold partial to pass child config attributes.
+        partial = self._fold_partial(partial)
+        # Get current fields and pass attributes.
+        self._set_partial_attributes(self, partial)
+
+    @staticmethod
+    def _fold_partial(obj: BaseSparkConfig, partial: dict[str, Any]) -> dict[str, Any]:
+        fold_partial = {}
+        for key, value in partial.items():
+            if obj.__CONFIG_DELIMITER__ in key:
+                child_key, nested_key = key.split('__', maxsplit=1)
+                if child_key not in fold_partial:
+                    fold_partial[child_key] = {}
+                fold_partial[child_key][nested_key] = value
+            else:
+                fold_partial[key] = value
+        return 
+    
+    @staticmethod
+    def _set_partial_attributes(obj: BaseSparkConfig, partial: dict[str, Any]) -> None:
+        valid_fields = {field.name: field for field in dataclasses.fields(obj) }
         for key, value in partial.items():
             if key in valid_fields:
-                setattr(self, key, value)
+                field_type = valid_fields[key].type
+                # Field is another SparkConfig.
+                if issubclass(field_type, BaseSparkConfig):
+                    child_config = field_type.create(value)
+                    setattr(obj, key, child_config)
+                # Field is a plain value.
+                else:
+                    setattr(obj, key, value)
             else:
                 raise ValueError(f'Invalid config key: {key}')
+
 
     def diff(self, other: 'SparkConfig') -> dict[str, Any]:
         """

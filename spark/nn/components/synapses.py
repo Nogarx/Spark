@@ -73,14 +73,18 @@ class Synanpses(Component):
 class SimpleSynapsesConfig(SparkConfig):
     target_units_shape: Shape = dataclasses.field(
         metadata = {
-            'description': 'Shape after the merge operation.',
+            'description': 'Shape of the postsynaptic pool of neurons.',
         })
     async_spikes: bool = dataclasses.field(
         metadata = {
             'description': 'Use asynchronous spikes. This parameter should be True if the incomming spikes are \
                             intercepted by a delay component and False otherwise.',
-    })
-    kernel_initializer: KernelInitializerConfig = dataclasses.field(default_factory = SparseUniformKernelInitializerConfig)
+        })
+    kernel_initializer: KernelInitializerConfig = dataclasses.field(
+        default_factory = SparseUniformKernelInitializerConfig,
+        metadata = {
+            'description': 'Synaptic weights initializer method.',
+        })
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
