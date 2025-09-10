@@ -64,19 +64,19 @@ class ALIFNeuronConfig(SparkConfig):
             'description': 'Soma configuration.',
         }),
     synapses_config: SimpleSynapsesConfig = dataclasses.field(
-        init=False,
+        default_factory = SimpleSynapsesConfig,
         metadata = {
-            'description': 'Soma configuration.',
+            'description': 'Synapses configuration.',
         }),
     delays_config: N2NDelaysConfig = dataclasses.field(
-        init=False,
+        default_factory = N2NDelaysConfig,
         metadata = {
-            'description': 'Soma configuration.',
+            'description': 'Delays configuration.',
         }),
     learning_rule_config: HebbianLearningConfig = dataclasses.field(
-        init=False,
+        default_factory = HebbianLearningConfig,
         metadata = {
-            'description': 'Soma configuration.',
+            'description': 'Learning configuration.',
         }),
 
     def __post_init__(self):
@@ -92,10 +92,12 @@ class ALIFNeuron(Neuron):
         Leaky integrate and fire neuronal model.
     """
     config: ALIFNeuronConfig
-    soma: Soma
-    delays: Delays
-    synapses: Synanpses
-    learning_rule: LearningRule
+
+    # Auxiliary type hints
+    soma: ALIFSoma
+    delays: N2NDelays
+    synapses: SimpleSynapses
+    learning_rule: HebbianRule
 
     def __init__(self, config: ALIFNeuronConfig = None, **kwargs):
         super().__init__(config=config, **kwargs)
@@ -103,10 +105,6 @@ class ALIFNeuron(Neuron):
         self.max_delay = self.config.max_delay
         self.inhibitory_rate = self.config.inhibitory_rate
         self.async_spikes = self.config.async_spikes
-        # Temporary storage
-        self._soma_params = soma_params
-        self._synapses_params = synapses_params
-        self._learning_rule_params = learning_rule_params
         # Set output shapes earlier to allow cycles.
         self.set_output_shapes(self.units)
 
@@ -118,24 +116,13 @@ class ALIFNeuron(Neuron):
         inhibition_mask = inhibition_mask.at[indices].set(-1).reshape(self.units)
         self._inhibition_mask = Constant(inhibition_mask, dtype=jnp.float16)
         # Soma model.
-        self.soma = ALIFSoma(params=self._soma_params)
-        del self._soma_params
+        self.soma = ALIFSoma(config=self.config.soma_config)
         # Delays model.
-        if self.async_spikes:
-            self.delays = N2NDelays(output_shape=self.units, 
-                                    max_delay=self.max_delay)
-        else:
-            self.delays = DummyDelays()
+        self.delays = N2NDelays(config=self.config.delays_config) if self.async_spikes else DummyDelays()
         # Synaptic model.
-        self.synapses = SimpleSynapses(output_shape=self.units, 
-                                    params=self._synapses_params, 
-                                    async_spikes=True)
-        del self._synapses_params
+        self.synapses = SimpleSynapses(config=self.config.synapses_config)
         # Learning rule model.
-        self.learning_rule = HebbianRule(output_shape=self.units, 
-                                         params=self._learning_rule_params,
-                                         async_spikes=True)
-        del self._learning_rule_params
+        self.learning_rule = HebbianRule(config=self.config.learning_rule_config)
 
     def __call__(self, in_spikes: SpikeArray) -> NeuronOutput:
         """

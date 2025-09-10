@@ -1,2 +1,2 @@
 from .base import Neuron, NeuronOutput
-from .alif import ALIFNeuron
+from .alif import (ALIFNeuron, ALIFNeuronConfig)

@@ -96,7 +96,6 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
     # default_config while at the same time allow for a lazy definition of the property. 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        print(cls.__name__)
         # Special cases and abstract classes dont need config but yet they are still SparkModules ¯\_(ツ)_/¯
         is_abc = inspect.isabstract(cls) and len(getattr(cls, '__abstractmethods__', set())) == 0
         if cls.__name__ in ['Brain'] or is_abc:

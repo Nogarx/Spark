@@ -44,7 +44,7 @@ class KernelInitializerConfig(BaseSparkConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class UniformKernelInitializerConfig(KernelInitializerConfig):
-    name = tp.Literal['uniform_kernel_initializer'] = 'uniform_kernel_initializer'
+    name: tp.Literal['uniform_kernel_initializer'] = 'uniform_kernel_initializer'
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -72,7 +72,7 @@ def uniform_kernel_initializer(config: UniformKernelInitializerConfig) -> Initia
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class SparseUniformKernelInitializerConfig(KernelInitializerConfig):
-    name = tp.Literal['sparse_uniform_kernel_initializer'] = 'sparse_uniform_kernel_initializer'
+    name: tp.Literal['sparse_uniform_kernel_initializer'] = 'sparse_uniform_kernel_initializer'
     density: float = dataclasses.field(
         default = 0.2, 
         metadata = {

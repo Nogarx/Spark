@@ -6,12 +6,15 @@ from __future__ import annotations
 
 import os
 import abc
+import jax
 import numpy as np
 import jax.numpy as jnp
 import dataclasses
+import typing as tp
 from jax.typing import DTypeLike
 from typing import Any, Callable
 from collections import OrderedDict
+from spark.core.registry import REGISTRY
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -28,12 +31,57 @@ class ConfigurationValidator:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+# TODO: TypeValidator is very convoluted and brittle due to valid_types string format.
+# It is likely that there is a better way to implement this logic method.
+# TODO: There is some room to relax type checking in some contexts. 
+# Some castings will drastically improve user experience. Currently allowing int to float. 
 class TypeValidator(ConfigurationValidator):
 
     def validate(self, value: Any) -> None:
+        # Get and parse valid types.
         valid_types = self.field.metadata.get('valid_types')
-        if valid_types and not isinstance(value, valid_types):
+        valid_types = self._str_to_types(valid_types)
+        print(self.field.name, value, valid_types)
+        # Compare against valid types.
+        if len(valid_types) > 0 and not isinstance(value, valid_types):
             raise TypeError(f'Attribute "{self.field.name}" expects types {valid_types}, but got type {type(value).__name__}.')
+
+    @staticmethod    
+    def _str_to_types(str_types: str):
+        str_list = str_types.replace(' ', '').split('|')
+        types_list = []
+        for st in str_list:
+            t = None
+            # Check built-in classes
+            if not t:
+                t = globals()['__builtins__'].get(st)
+                if t:
+                    types_list.append(t)
+                    # Manual int to float promotion
+                    if t == float:
+                        types_list.append(int)
+            # Check if DTypeLike
+            if not t:
+                if st == 'DTypeLike':
+                    t = np.dtype
+                    types_list.append(str)
+                    types_list.append(np.dtype)
+                    types_list.append(jnp.dtype)
+                    types_list.append(jax._src.typing.SupportsDType)
+            # Check if it is a spark class
+            if not t:
+                t = REGISTRY.MODULES.get(st)
+                if t:
+                    types_list.append(t)
+            if not t:
+                t = REGISTRY.PAYLOADS.get(st)
+                if t:
+                    types_list.append(t)
+            if not t:
+                t = REGISTRY.INITIALIZERS.get(st)
+                if t:
+                    types_list.append(t)
+        return tuple(types_list)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -102,7 +150,7 @@ METADATA_TEMPLATE = {
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 # Meta module to resolve metaclass conflicts
-class SparkMetaConfig(type):
+class SparkMetaConfig(abc.ABCMeta):
     """
         Metaclass that promotes class attributes to dataclass fields
     """
@@ -112,13 +160,16 @@ class SparkMetaConfig(type):
         # NOTE: We need to manually intercept the init annotations since non-default arguments may follow 
         # default arguments when extending configuration classes. This is achieved by "flattening" the 
         # inheritance hierarchy, leaving the leaf dataclass as the only element in the MRO, not ideal
-        # but no a real problem.
+        # but no a real problem for the time being.
 
         # NOTE: Every non field is promoted to field to simplify the logic of configuration objects.
 
         # Flatten attributes
         fields = OrderedDict()
         for base in bases:
+            # Skip abc.
+            if base is abc.ABC:
+                continue
             # Gather fields
             for field in dataclasses.fields(base):
                 field_info = base.__dataclass_fields__[field.name]
@@ -141,7 +192,18 @@ class SparkMetaConfig(type):
         # Process and standardize all fields with metadata
         processed_fields = OrderedDict()
         for field_name, (field_type, field_info) in fields.items():
-            valid_types = {'valid_types': field_type}
+            if isinstance(field_type, str):
+                valid_types = {'valid_types': field_type}
+            elif tp.get_origin(field_type):
+                field_types = list(tp.get_args(field_type))
+                try:
+                    field_types.remove(type(None))
+                except:
+                    pass
+                field_types = '|'.join([ft.__name__ for ft in field_types])
+                valid_types = {'valid_types': field_types}
+            else:
+                valid_types = {'valid_types': field_type.__name__}
             if isinstance(field_info, dataclasses.Field):
                 # Merge metadata with template.
                 validators = {'validators': list(set(METADATA_TEMPLATE['validators'] + 
@@ -175,11 +237,18 @@ class SparkMetaConfig(type):
             annotations[field_name] = field_type
             dct[field_name] = field_obj
         dct['__annotations__'] = annotations
-        
+
+        # TODO: Some of the methods get lost in construction. This needs to be handle with more care.
+        # For the moment we manually pass underscore properties and post_init.
+        for attr_name, attr_value in bases[-1].__dict__.items():
+            if attr_name in ['__schema_version__', '__config_delimiter__', '__shared_config_delimiter__']:
+                dct[attr_name] = attr_value
+        dct['__post_init__'] = lambda self: self.validate()
+
         # Create the dataclass
         new_class = super().__new__(cls, name, tuple([]), dct)
-        new_class.__is_spark_config__ = True
-        return dataclasses.dataclass(new_class)
+        new_dataclass = dataclasses.dataclass(new_class)
+        return new_dataclass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -187,9 +256,10 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
     """
         Base class for module configuration.
     """
-    __SCHEMA_VERSION__ = '1.0'
-    __CONFIG_DELIMITER__ = '__'
-    __SHARED_CONFIG_DELIMITER__ = 'S__'
+    __schema_version__ = '1.0'
+    __config_delimiter__ = '__'
+    __shared_config_delimiter__ = 'S__'
+    __is_spark_config__ = True
 
     @classmethod
     def create(cls: type['BaseSparkConfig'], partial: dict[str, Any] = None) -> 'BaseSparkConfig':
@@ -200,12 +270,12 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         instance = cls()
         # Apply partial updates
         if partial:
-
             # Fold partial to pass child config attributes.
-            partial = cls._fold_partial(partial)
+            partial = cls._fold_partial(instance, partial)
             # Get current fields and pass attributes.
-            cls._set_partial_attributes(cls, partial)
-
+            instance._set_partial_attributes(instance, partial)
+        # Validate
+        instance.validate()
         return instance
 
     def merge(self, partial: dict[str, Any]) -> None:
@@ -213,31 +283,33 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             Update config with partial overrides.
         """
         # Fold partial to pass child config attributes.
-        partial = self._fold_partial(partial)
+        partial = self._fold_partial(self, partial)
         # Get current fields and pass attributes.
         self._set_partial_attributes(self, partial)
+        # Validate
+        self.validate()
 
     @staticmethod
-    def _fold_partial(obj: BaseSparkConfig, partial: dict[str, Any]) -> dict[str, Any]:
+    def _fold_partial(obj: 'BaseSparkConfig', partial: dict[str, Any]) -> dict[str, Any]:
         fold_partial = {}
         for key, value in partial.items():
-            if obj.__CONFIG_DELIMITER__ in key:
-                child_key, nested_key = key.split('__', maxsplit=1)
+            if obj.__config_delimiter__ in key:
+                child_key, nested_key = key.split(obj.__config_delimiter__, maxsplit=1)
                 if child_key not in fold_partial:
                     fold_partial[child_key] = {}
                 fold_partial[child_key][nested_key] = value
             else:
                 fold_partial[key] = value
-        return 
+        return fold_partial
     
     @staticmethod
-    def _set_partial_attributes(obj: BaseSparkConfig, partial: dict[str, Any]) -> None:
+    def _set_partial_attributes(obj: 'BaseSparkConfig', partial: dict[str, Any]) -> None:
         valid_fields = {field.name: field for field in dataclasses.fields(obj) }
         for key, value in partial.items():
             if key in valid_fields:
                 field_type = valid_fields[key].type
                 # Field is another SparkConfig.
-                if issubclass(field_type, BaseSparkConfig):
+                if getattr(field_type, '__is_spark_config__', None):
                     child_config = field_type.create(value)
                     setattr(obj, key, child_config)
                 # Field is a plain value.
@@ -275,7 +347,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             for field in dataclasses.fields(self) 
         }
 
-    def validate(self) -> None:
+    def validate(self,) -> None:
         for field in dataclasses.fields(self):
             for validator in field.metadata.get('validators', []):
                 validator_instance = validator(field)
@@ -286,8 +358,8 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         for field in dataclasses.fields(self):
             metadata[field.name] = dict(field.metadata)
         return metadata
-
-    def __post_init__(self):
+    
+    def __post_init__(self,):
         self.validate()
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

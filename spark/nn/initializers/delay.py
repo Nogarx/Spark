@@ -30,7 +30,7 @@ class DelayInitializerConfig(BaseSparkConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class ConstantDelayInitializerConfig(DelayInitializerConfig):
-    name = tp.Literal['constant_delay_initializer'] = 'constant_delay_initializer'
+    name: tp.Literal['constant_delay_initializer'] = 'constant_delay_initializer'
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -47,7 +47,7 @@ def constant_delay_initializer(config: ConstantDelayInitializerConfig) -> Initia
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class UniformDelayInitializerConfig(DelayInitializerConfig):
-    name = tp.Literal['uniform_delay_initializer'] = 'uniform_delay_initializer'
+    name: tp.Literal['uniform_delay_initializer'] = 'uniform_delay_initializer'
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
