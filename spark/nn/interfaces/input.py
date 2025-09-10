@@ -17,7 +17,8 @@ from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Variable, Constant
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.registry import register_module
-from spark.core.configuration import SparkConfig, PositiveValidator, BinaryValidator
+from spark.core.config import SparkConfig
+from spark.core.config_validation import TypeValidator, PositiveValidator, BinaryValidator
 from spark.nn.interfaces.base import Interface
 
 #################################################################################################################################################
@@ -54,7 +55,8 @@ class PoissonSpikerConfig(SparkConfig):
         metadata = {
             'units': 'Hz',
             'validators': [
-                PositiveValidator
+                TypeValidator,
+                PositiveValidator,
             ],
             'description': 'Maximum firing frequency of the spiker.',
         })
@@ -111,7 +113,8 @@ class LinearSpikerConfig(SparkConfig):
         metadata = {
             'units': 'ms',
             'validators': [
-                PositiveValidator
+                TypeValidator,
+                PositiveValidator,
             ],
             'description': 'Decay time constant of the membrane potential of the units of the spiker.',
         })
@@ -120,7 +123,8 @@ class LinearSpikerConfig(SparkConfig):
         metadata = {
             'units': 'ms',
             'validators': [
-                PositiveValidator
+                TypeValidator,
+                PositiveValidator,
             ],
             'description': '(Cooldown) Refractory period of the units of the spiker.',
         })
@@ -129,7 +133,8 @@ class LinearSpikerConfig(SparkConfig):
         metadata = {
             'units': 'Hz',
             'validators': [
-                PositiveValidator
+                TypeValidator,
+                PositiveValidator,
             ],
             'description': 'Maximum firing frequency of the spiker.',
         })
@@ -215,6 +220,7 @@ class TopologicalSpikerConfig(SparkConfig):
         default_factory = lambda: jnp.array(0), 
         metadata = {
             'validators': [
+                TypeValidator,
                 BinaryValidator,
             ],
             'description': 'Jax array indicating if the borders of the cube are glued together. \
@@ -225,12 +231,18 @@ class TopologicalSpikerConfig(SparkConfig):
     mins: jax.Array = dataclasses.field(
         default_factory = lambda: jnp.array(0), 
         metadata = {
+            'validators': [
+                TypeValidator,
+            ],
             'description': 'Minimum value for the rescaling factor. It may be either an array with a single element or \
                             an array with the same dimensionality as the input vector.',
         })
     maxs: jax.Array = dataclasses.field(
         default_factory = lambda: jnp.array(1), 
         metadata = {
+            'validators': [
+                TypeValidator,
+            ],
             'description': 'Maximum value for the rescaling factor. It may be either an array with a single element or \
                             an array with the same dimensionality as the input vector.',
         })
@@ -238,7 +250,8 @@ class TopologicalSpikerConfig(SparkConfig):
         default = 64, 
         metadata = {
             'validators': [
-                PositiveValidator
+                TypeValidator,
+                PositiveValidator,
             ],
             'description': 'Virtual units subdivision of the space per dimension.',
         })
@@ -246,7 +259,8 @@ class TopologicalSpikerConfig(SparkConfig):
         default = 1/32, 
         metadata = {
             'validators': [
-                PositiveValidator
+                TypeValidator,
+                PositiveValidator,
             ],
             'description': 'Spreed of the signal (standard deviation of a gaussian) in target manifold.',
         })

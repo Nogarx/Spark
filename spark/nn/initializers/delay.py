@@ -12,7 +12,8 @@ from jax.typing import DTypeLike
 from jax._src import dtypes
 from spark.core.shape import bShape
 from spark.core.registry import register_initializer
-from spark.core.configuration import BaseSparkConfig
+from spark.core.config import BaseSparkConfig
+from spark.core.config_validation import TypeValidator
 from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
@@ -24,6 +25,9 @@ class DelayInitializerConfig(BaseSparkConfig):
     dtype: DTypeLike = dataclasses.field(
         default=jnp.uint8, 
         metadata={
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Dtype used for JAX dtype promotions.',
         })
     

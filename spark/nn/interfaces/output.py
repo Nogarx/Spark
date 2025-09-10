@@ -20,7 +20,8 @@ from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Variable
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.registry import register_module
-from spark.core.configuration import SparkConfig, PositiveValidator
+from spark.core.config import SparkConfig
+from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.interfaces.base import Interface
 
 #################################################################################################################################################
@@ -56,6 +57,7 @@ class ExponentialIntegratorConfig(SparkConfig):
         default = 64, 
         metadata = {
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': 'Number of output signals. Input spikes are distributed equally among the output signals. \
@@ -67,6 +69,7 @@ class ExponentialIntegratorConfig(SparkConfig):
         metadata = {
             'units': 'Hz',
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': 'Approximate average firing frequency at which the population needs to fire to sature the integrator.',
@@ -76,6 +79,7 @@ class ExponentialIntegratorConfig(SparkConfig):
         metadata = {
             'units': 'ms',
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': 'Decay time constant of the membrane potential of the units of the spiker.',
@@ -83,11 +87,17 @@ class ExponentialIntegratorConfig(SparkConfig):
     shuffle: bool = dataclasses.field(
         default = True, 
         metadata = {
+            'validators': [
+                TypeValidator,
+            ],
             'description': 'Shuffles the input spikes, otherwise they are used sequentially to create the output signal.',
         })
     smooth_trace: bool = dataclasses.field(
         default = True, 
         metadata = {
+            'validators': [
+                TypeValidator,
+            ],
             'description': 'Smooths the output signal with an using a double exponential moving average instead of a single EMA.',
         })
 

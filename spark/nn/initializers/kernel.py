@@ -13,7 +13,8 @@ from jax.typing import DTypeLike
 from spark.core.shape import Shape
 from math import prod
 from spark.core.registry import register_initializer
-from spark.core.configuration import BaseSparkConfig, ZeroOneValidator
+from spark.core.config import BaseSparkConfig
+from spark.core.config_validation import TypeValidator, ZeroOneValidator
 from spark.nn.initializers.base import Initializer
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -33,11 +34,17 @@ class KernelInitializerConfig(BaseSparkConfig):
     scale: float = dataclasses.field(
         default = 1.0, 
         metadata = {
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Kernel scale factor.',
         })
     dtype: DTypeLike = dataclasses.field(
         default=jnp.float16, 
         metadata={
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Dtype used for JAX dtype promotions.',
         })
     
@@ -77,7 +84,8 @@ class SparseUniformKernelInitializerConfig(KernelInitializerConfig):
         default = 0.2, 
         metadata = {
             'validators': [
-                ZeroOneValidator
+                TypeValidator,
+                ZeroOneValidator,
             ],
             'description': 'Expected ratio of non-zero entries in the kernel.',
         })

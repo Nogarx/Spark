@@ -15,7 +15,8 @@ from spark.core.variables import Constant
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.registry import register_module
 from spark.core.payloads import SparkPayload
-from spark.core.configuration import SparkConfig, PositiveValidator
+from spark.core.config import SparkConfig
+from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.interfaces.base import Interface
 
 #################################################################################################################################################
@@ -43,12 +44,16 @@ class MergerConfig(SparkConfig):
     num_inputs: int = dataclasses.field(
         metadata = {
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': 'Dtype used for JAX dtype promotions.',
         })
     payload_type: SparkPayload = dataclasses.field(
         metadata = {
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'SparkPayload type promotions.',
         })
     
@@ -99,6 +104,9 @@ class Merger(ControlFlowInterface):
 class MergerReshapeConfig(MergerConfig):
     reshape: Shape = dataclasses.field(
         metadata = {
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Target shape after the merge operation.',
         })
     
@@ -157,6 +165,7 @@ class SamplerConfig(SparkConfig):
     sample_size: int = dataclasses.field(
         metadata = {
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': 'Sample size to drawn from the population. May be larger than the population.',

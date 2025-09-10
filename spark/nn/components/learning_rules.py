@@ -17,7 +17,8 @@ from spark.core.variables import ConfigDict, Constant
 from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.registry import register_module
 from spark.core.utils import get_einsum_labels
-from spark.core.configuration import SparkConfig, PositiveValidator
+from spark.core.config import SparkConfig
+from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.base import Component
 
 # Oja rule
@@ -47,6 +48,9 @@ class LearningRule(Component):
 class HebbianLearningConfig(SparkConfig):
     async_spikes: bool = dataclasses.field(
         metadata = {
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Use asynchronous spikes. This parameter should be True if the incomming spikes are \
                             intercepted by a delay component and False otherwise.',
         })
@@ -55,6 +59,7 @@ class HebbianLearningConfig(SparkConfig):
         metadata = {
             'units': 'ms',
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': '',
@@ -64,6 +69,7 @@ class HebbianLearningConfig(SparkConfig):
         metadata = {
             'units': 'ms',
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': '',
@@ -73,6 +79,7 @@ class HebbianLearningConfig(SparkConfig):
         metadata = {
             'units': 'ms',
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': '',
@@ -82,6 +89,7 @@ class HebbianLearningConfig(SparkConfig):
         metadata = {
             'units': 'ms',
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': '',
@@ -89,31 +97,49 @@ class HebbianLearningConfig(SparkConfig):
     a: float = dataclasses.field(
         default = 1.0, 
         metadata = {
+            'validators': [
+                TypeValidator,
+            ], 
             'description': '',
         })
     b: float = dataclasses.field(
         default = -1.0, 
         metadata = {
+            'validators': [
+                TypeValidator,
+            ], 
             'description': '',
         })
     c: float = dataclasses.field(
         default = -1.0, 
         metadata = {
+            'validators': [
+                TypeValidator,
+            ], 
             'description': '',
         })
     d: float = dataclasses.field(
         default = 1.0, 
         metadata = {
+            'validators': [
+                TypeValidator,
+            ], 
             'description': '',
         })
     p: float = dataclasses.field(
         default = 20.0, 
         metadata = {
+            'validators': [
+                TypeValidator,
+            ], 
             'description': '',
         })
     gamma: float = dataclasses.field(
         default = 0.1, 
         metadata = {
+            'validators': [
+                TypeValidator,
+            ], 
             'description': '',
         })
 

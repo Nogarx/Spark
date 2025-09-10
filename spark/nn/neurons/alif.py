@@ -19,7 +19,8 @@ from spark.core.payloads import SpikeArray
 from spark.core.variables import Constant
 from spark.core.shape import bShape, Shape
 from spark.core.registry import register_module
-from spark.core.configuration import SparkConfig, PositiveValidator, ZeroOneValidator
+from spark.core.config import SparkConfig
+from spark.core.config_validation import TypeValidator, PositiveValidator, ZeroOneValidator
 from spark.nn.components import (ALIFSoma, ALIFSomaConfig, 
                                  SimpleSynapses, SimpleSynapsesConfig,
                                  N2NDelays, N2NDelaysConfig,
@@ -33,6 +34,9 @@ from spark.nn.components import (ALIFSoma, ALIFSomaConfig,
 class ALIFNeuronConfig(SparkConfig):
     units: Shape = dataclasses.field(
         metadata = {
+            'validators': [
+                TypeValidator,
+            ],
             'description': 'Shape of the pool of neurons.',
         })
     max_delay: float = dataclasses.field(
@@ -40,6 +44,7 @@ class ALIFNeuronConfig(SparkConfig):
         metadata = {
             'units': 'ms',
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': '',
@@ -49,40 +54,37 @@ class ALIFNeuronConfig(SparkConfig):
         metadata = {
             'units': 'ms',
             'validators': [
+                TypeValidator,
                 ZeroOneValidator,
             ],
             'description': '',
         })
     async_spikes: bool = dataclasses.field(
         metadata = {
+            'validators': [
+                TypeValidator,
+            ],
             'description': 'Use asynchronous spikes. This parameter should be True if the incomming spikes are \
                             intercepted by a delay component and False otherwise.',
         })
     soma_config: ALIFSomaConfig = dataclasses.field(
         default_factory = ALIFSomaConfig,
         metadata = {
+            'validators': [
+            ],
             'description': 'Soma configuration.',
-        }),
+        })
     synapses_config: SimpleSynapsesConfig = dataclasses.field(
         default_factory = SimpleSynapsesConfig,
         metadata = {
+            'validators': [
+            ],
             'description': 'Synapses configuration.',
-        }),
-    delays_config: N2NDelaysConfig = dataclasses.field(
-        default_factory = N2NDelaysConfig,
-        metadata = {
-            'description': 'Delays configuration.',
-        }),
-    learning_rule_config: HebbianLearningConfig = dataclasses.field(
-        default_factory = HebbianLearningConfig,
-        metadata = {
-            'description': 'Learning configuration.',
-        }),
-
-    def __post_init__(self):
-        field_map = {f.name: f for f in dataclasses.fields(self)}
-
-        self.synapses_config = field_map['synapses_config'].type()
+        })
+    
+    #def __post_init__(self):
+    #    field_map = {f.name: f for f in dataclasses.fields(self)}
+    #    self.synapses_config = field_map['synapses_config'].type()
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

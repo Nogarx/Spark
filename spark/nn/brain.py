@@ -17,7 +17,7 @@ from spark.core.shape import Shape, normalize_shape
 from spark.core.payloads import SparkPayload, FloatArray
 from spark.core.operations import concatenate_payloads
 from spark.core.registry import REGISTRY
-from spark.core.configuration import SparkConfig
+from spark.core.config import SparkConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

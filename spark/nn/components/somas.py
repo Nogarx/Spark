@@ -17,7 +17,8 @@ from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.payloads import SpikeArray, CurrentArray, PotentialArray
 from spark.core.variables import Variable, Constant, ConfigDict
 from spark.core.registry import register_module
-from spark.core.configuration import SparkConfig, PositiveValidator
+from spark.core.config import SparkConfig
+from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.base import Component
 
 #################################################################################################################################################
@@ -91,12 +92,18 @@ class ALIFSomaConfig(SparkConfig):
         default = -60.0, 
         metadata = {
             'units': 'mV',
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Membrane rest potential.',
         })
     potential_reset: float = dataclasses.field(
         default = -50.0, 
         metadata = {
             'units': 'mV',
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Membrane after spike reset potential.',
         })
     potential_tau: float = dataclasses.field(
@@ -104,6 +111,7 @@ class ALIFSomaConfig(SparkConfig):
         metadata = {
             'units': 'ms',
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': 'Membrane potential decay constant.',
@@ -112,12 +120,18 @@ class ALIFSomaConfig(SparkConfig):
         default = 10.0, 
         metadata = {
             'units': 'nS', # [1/GΩ]
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Membrane conductance.',
         })
     threshold: float = dataclasses.field(
         default = -40.0, 
         metadata = {
             'units': 'mV',
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Adaptive action potential threshold base value.',
         })
     threshold_tau: float = dataclasses.field(
@@ -125,6 +139,7 @@ class ALIFSomaConfig(SparkConfig):
         metadata = {
             'units': 'ms',
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': 'Adaptive action potential threshold decay constant.',
@@ -133,12 +148,18 @@ class ALIFSomaConfig(SparkConfig):
         default = 100.0, 
         metadata = {
             'units': 'mV',
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Adaptive action potential threshold after spike increment.',
         })
     cooldown: float = dataclasses.field(
         default = 2.0, 
         metadata = {
             'units': 'ms',
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Soma refractory period.',
         })
 
@@ -149,12 +170,18 @@ class LIFSomaConfig(ALIFSomaConfig):
         default = 1.0, 
         metadata = {
             'units': 'ms',
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Adaptive action potential threshold decay constant.',
         })
     threshold_delta: float = dataclasses.field(
         default = 0.0, 
         metadata = {
             'units': 'mV',
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Adaptive action potential threshold after spike increment.',
         })
 

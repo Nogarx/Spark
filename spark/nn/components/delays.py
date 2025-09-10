@@ -17,7 +17,8 @@ from spark.core.payloads import SpikeArray
 from spark.core.variables import Variable, Constant
 from spark.core.shape import Shape, normalize_shape
 from spark.core.registry import register_module, REGISTRY
-from spark.core.configuration import SparkConfig, PositiveValidator
+from spark.core.config import SparkConfig
+from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.base import Component
 from spark.nn.initializers.base import Initializer
 from spark.nn.initializers.delay import DelayInitializerConfig, UniformDelayInitializerConfig
@@ -130,6 +131,7 @@ class NDelaysConfig(SparkConfig):
         metadata = {
             'units': 'ms',
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': 'Maximum synaptic delay. Note: Final max delay is computed as ⌈max/dt⌉.',
@@ -137,6 +139,9 @@ class NDelaysConfig(SparkConfig):
     delay_initializer: DelayInitializerConfig = dataclasses.field(
         default_factory = UniformDelayInitializerConfig,
         metadata = {
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Synaptic delays initializer method.',
         })
     
@@ -236,6 +241,9 @@ class NDelays(Delays):
 class N2NDelaysConfig(NDelaysConfig):
     target_units_shape: Shape = dataclasses.field(
         metadata = {
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Shape of the postsynaptic pool of neurons.',
         })
     

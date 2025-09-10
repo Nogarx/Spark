@@ -24,7 +24,7 @@ from functools import wraps
 from dataclasses import dataclass, fields, MISSING, asdict, field
 import spark.core.signature_parser as sig_parser
 import spark.core.validation as validation
-from spark.core.configuration import SparkConfig
+from spark.core.config import SparkConfig
 
 # TODO: Support for list[SparkPayloads] was implemented in a wacky manner and 
 # may have damage several parts of the module. This needs to be further validated. 

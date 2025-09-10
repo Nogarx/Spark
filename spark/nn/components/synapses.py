@@ -18,7 +18,8 @@ from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.payloads import SpikeArray, CurrentArray, FloatArray
 from spark.core.variables import Variable
 from spark.core.registry import register_module, REGISTRY
-from spark.core.configuration import SparkConfig, PositiveValidator
+from spark.core.config import SparkConfig
+from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.initializers.kernel import KernelInitializerConfig, SparseUniformKernelInitializerConfig
 
 #################################################################################################################################################
@@ -73,16 +74,25 @@ class Synanpses(Component):
 class SimpleSynapsesConfig(SparkConfig):
     target_units_shape: Shape = dataclasses.field(
         metadata = {
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Shape of the postsynaptic pool of neurons.',
         })
     async_spikes: bool = dataclasses.field(
         metadata = {
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Use asynchronous spikes. This parameter should be True if the incomming spikes are \
                             intercepted by a delay component and False otherwise.',
         })
     kernel_initializer: KernelInitializerConfig = dataclasses.field(
         default_factory = SparseUniformKernelInitializerConfig,
         metadata = {
+            'validators': [
+                TypeValidator,
+            ], 
             'description': 'Synaptic weights initializer method.',
         })
     
@@ -150,6 +160,7 @@ class TracedSynapsesConfig(SimpleSynapsesConfig):
         metadata = {
             'units': 'ms',
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': 'Tracer decay constant.',
@@ -158,6 +169,7 @@ class TracedSynapsesConfig(SimpleSynapsesConfig):
         default = 1.0, 
         metadata = {
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': 'Tracer spike scaling.',
@@ -220,6 +232,7 @@ class DoubleTracedSynapsesConfig(SimpleSynapsesConfig):
         metadata = {
             'units': 'ms',
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': 'First tracer decay constant.',
@@ -228,6 +241,7 @@ class DoubleTracedSynapsesConfig(SimpleSynapsesConfig):
         default = 1.0, 
         metadata = {
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': 'First tracer spike scaling.',
@@ -237,6 +251,7 @@ class DoubleTracedSynapsesConfig(SimpleSynapsesConfig):
         metadata = {
             'units': 'ms',
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': 'Second tracer decay constant.',
@@ -245,6 +260,7 @@ class DoubleTracedSynapsesConfig(SimpleSynapsesConfig):
         default = 1.0, 
         metadata = {
             'validators': [
+                TypeValidator,
                 PositiveValidator,
             ],
             'description': 'Second tracer spike scaling.',
