@@ -104,7 +104,7 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         # Check if defines config
         resolved_hints = get_type_hints(cls)
         config_type = resolved_hints.get('config')
-        if not config_type and not getattr(config_type, '__is_spark_config__', None):
+        if not config_type and not issubclass(config_type, SparkConfig):
             raise AttributeError('SparkModules must define a valid config: type[SparkConfig] attribute.')
         cls.default_config = config_type
 
@@ -258,6 +258,8 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         # Contruct output sepcs.
         self._construct_output_specs(abc_output)
 
+        # Replace config with a dict version of itself to prevent errors with JIT.
+        self.config = self.config._freeze()
 
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:

@@ -68,20 +68,21 @@ class ALIFNeuronConfig(SparkConfig):
                             intercepted by a delay component and False otherwise.',
         })
     soma_config: ALIFSomaConfig = dataclasses.field(
-        default_factory = ALIFSomaConfig,
         metadata = {
-            'validators': [
-            ],
             'description': 'Soma configuration.',
         })
     synapses_config: SimpleSynapsesConfig = dataclasses.field(
-        default_factory = SimpleSynapsesConfig,
         metadata = {
-            'validators': [
-            ],
             'description': 'Synapses configuration.',
         })
-    
+    delays_config: N2NDelaysConfig = dataclasses.field(
+        metadata = {
+            'description': 'Delays configuration.',
+        })
+    learning_rule_config: HebbianLearningConfig = dataclasses.field(
+        metadata = {
+            'description': 'Learning configuration.',
+        })
     #def __post_init__(self):
     #    field_map = {f.name: f for f in dataclasses.fields(self)}
     #    self.synapses_config = field_map['synapses_config'].type()

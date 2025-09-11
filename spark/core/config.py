@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import os
 import abc
+import jax
 import jax.numpy as jnp
 import dataclasses
 import typing as tp
@@ -26,11 +27,6 @@ METADATA_TEMPLATE = {
     'validators': [], 
     'description': '',
     }
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-class ConfigurationError(BaseException):
-    pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -79,17 +75,41 @@ class SparkMetaConfig(abc.ABCMeta):
                     metadata={**METADATA_TEMPLATE, **valid_types}
                 )
 
-            # If is config, ...
-            if getattr(getattr(attr_value, 'default_factory', False), '__is_spark_config__', False):
-                print(field.default_factory.__annotations__)
-
             # Update dct
             dct[attr_name] = field
 
         # Create the dataclass
         new_class = super().__new__(cls, name, bases, dct)
-        new_dataclass = dataclasses.dataclass(new_class, kw_only=True)
+        new_dataclass = dataclasses.dataclass(new_class, kw_only=True, init=False)
         return new_dataclass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@jax.tree_util.register_static
+@dataclasses.dataclass(init=False, frozen=True, kw_only=True)
+class FrozenSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
+    """
+        Frozen class for module configuration compatible with JIT.
+    """
+
+    def __init__(self, spark_config: SparkConfig):
+        if not issubclass(type(spark_config), BaseSparkConfig):
+            raise TypeError(f'"spark_config" must be of a subclass of "BaseSparkConfig", got "{type(spark_config).__name__}"')
+        
+        # Get type hints
+        type_hints = tp.get_type_hints(spark_config.__class__)
+        for key in type_hints.keys():
+            if tp.get_origin(type_hints[key]): 
+                hints = list(tp.get_args(type_hints[key]))
+                type_hints[key] = (h for h in hints if h is not type(None))
+
+        for field in dataclasses.fields(spark_config):
+            if isinstance(type_hints[field.name], type) and issubclass(type_hints[field.name], BaseSparkConfig):
+                # Freeze configs recursively
+                object.__setattr__(self, f'{field.name}', FrozenSparkConfig(getattr(spark_config, f'{field.name}')))
+            else:
+                # Plain attribute
+                object.__setattr__(self, f'{field.name}', getattr(spark_config, f'{field.name}'))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -99,8 +119,51 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
     """
     __schema_version__ = '1.0'
     __config_delimiter__ = '__'
-    __shared_config_delimiter__ = 'S__'
-    __is_spark_config__ = True
+    __shared_config_delimiter__ = '_s_'
+
+    def __init__(self, **kwargs):
+
+        # Get type hints
+        type_hints = tp.get_type_hints(self.__class__)
+        for key in type_hints.keys():
+            if tp.get_origin(type_hints[key]): 
+                hints = list(tp.get_args(type_hints[key]))
+                type_hints[key] = (h for h in hints if h is not type(None))
+
+        # Fold kwargs
+        kwargs_fold, shared_partial = self._fold_partial(self, kwargs)
+
+        # Set attributes programatically
+        for field in dataclasses.fields(self.__class__):
+
+            # Parse field name, remove __shared_config_delimiter__ if present
+            if self.__shared_config_delimiter__ == field.name[:len(self.__shared_config_delimiter__)]:
+                field_name = key[len(self.__shared_config_delimiter__):]
+            else:
+                field_name = field.name
+
+            # Nested config need to be treated differently, propagating kwargs if necessary
+            if isinstance(type_hints[field_name], type) and issubclass(type_hints[field_name], BaseSparkConfig):
+                # Attribute is another SparkConfig
+                init_args = kwargs_fold.get(field_name, shared_partial)
+                if field.default_factory is not dataclasses.MISSING:
+                    # Use default factory if provided
+                    setattr(self, field_name, field.default_factory(**init_args))
+                else:
+                    # Use type class otherwise
+                    setattr(self, field_name, type_hints[field_name](**init_args))
+            elif field_name in kwargs_fold:
+                # Use kwargs attribute if provided
+                setattr(self, field_name, kwargs_fold[field_name])
+            elif field.default_factory is not dataclasses.MISSING:
+                # Fallback to default factory.
+                setattr(self, field_name, field.default_factory())
+            elif field.default is not dataclasses.MISSING:
+                # Fallback to default.
+                setattr(self, field_name, field.default)
+            else:
+                # TODO: Throw a better error than the default dataclass error.
+                pass
 
     @classmethod
     def create(cls: type['BaseSparkConfig'], partial: dict[str, Any] = None) -> 'BaseSparkConfig':
@@ -131,30 +194,62 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         self.validate()
 
     @staticmethod
-    def _fold_partial(obj: 'BaseSparkConfig', partial: dict[str, Any]) -> dict[str, Any]:
+    def _fold_partial(obj: 'BaseSparkConfig', partial: dict[str, Any]) -> tuple(dict[str, Any], dict[str, Any]):
         fold_partial = {}
+        shared_partial = {}
         for key, value in partial.items():
+
+            # Check for specific subconfig attributes
             if obj.__config_delimiter__ in key:
+                # Split key into child and nested_key
                 child_key, nested_key = key.split(obj.__config_delimiter__, maxsplit=1)
+                # Add nested key to child dict
                 if child_key not in fold_partial:
                     fold_partial[child_key] = {}
                 fold_partial[child_key][nested_key] = value
+
+            # Check for shared attributes
+            elif obj.__shared_config_delimiter__ == key[:len(obj.__shared_config_delimiter__)]:
+                shared_key = key[len(obj.__shared_config_delimiter__):]
+                shared_partial[shared_key] = value
+
+            # Attribute is part of the current level
             else:
                 fold_partial[key] = value
-        return fold_partial
+
+            # Add shared keys to current level and all its childs
+            for s_key, value in shared_partial.items():
+                fold_partial[s_key] = value
+            for key in fold_partial.keys():
+                if isinstance(fold_partial[key], dict):
+                    for s_key, value in shared_partial.items():
+                        # Add __shared_config_delimiter__ to allow for further propagation of the parameter
+                        fold_partial[key][obj.__shared_config_delimiter__ + s_key] = value
+        
+        return fold_partial, shared_partial
     
     @staticmethod
     def _set_partial_attributes(obj: 'BaseSparkConfig', partial: dict[str, Any]) -> None:
+
+        # Get type hints
+        type_hints = tp.get_type_hints(obj.__class__)
+        for key in type_hints.keys():
+            if tp.get_origin(type_hints[key]): 
+                hints = list(tp.get_args(type_hints[key]))
+                type_hints[key] = (h for h in hints if h is not type(None))
+
+        # Get object fields
         valid_fields = {field.name: field for field in dataclasses.fields(obj) }
+
+        # Replace field values if present in partial
         for key, value in partial.items():
             if key in valid_fields:
-                field_type = valid_fields[key].type
-                # Field is another SparkConfig.
-                if getattr(field_type, '__is_spark_config__', None):
-                    child_config = field_type.create(value)
+                if isinstance(type_hints[key], type) and issubclass(type_hints[key], BaseSparkConfig):
+                    # Field is another SparkConfig.
+                    child_config = type_hints[key].create(value)
                     setattr(obj, key, child_config)
-                # Field is a plain value.
                 else:
+                    # Field is a plain value.
                     setattr(obj, key, value)
             else:
                 raise ValueError(f'Invalid config key: {key}')
@@ -181,12 +276,37 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         """
             Serialize config to dictionary
         """
-        return {
-            field.name: {
-                'value': getattr(self, field.name),
-                'metadata': field.metadata} 
-            for field in dataclasses.fields(self) 
-        }
+        # Get type hints
+        type_hints = tp.get_type_hints(self.__class__)
+        for key in type_hints.keys():
+            if tp.get_origin(type_hints[key]): 
+                hints = list(tp.get_args(type_hints[key]))
+                type_hints[key] = (h for h in hints if h is not type(None))
+
+        # Collect all fields and map into a dict
+        dataclass_dict = {}
+        for field in dataclasses.fields(self):
+            
+            # Nested config need to be treated differently, propagating kwargs if necessary
+            if isinstance(type_hints[field.name], type) and issubclass(type_hints[field.name], BaseSparkConfig):
+                dataclass_dict[field.name] = {
+                    'value': getattr(self, field.name).to_dict(),
+                    'metadata': field.metadata
+                }
+            else:
+                dataclass_dict[field.name] = {
+                    'value': getattr(self, field.name),
+                    'metadata': field.metadata
+                }
+
+        return dataclass_dict
+
+    def _freeze(self,) -> FrozenSparkConfig:
+        """
+            Returns a frozen version of the config instance. 
+            Use to make the SparkConfig compatible with JIT.
+        """
+        return FrozenSparkConfig(self)
 
     def validate(self,) -> None:
         for field in dataclasses.fields(self):
