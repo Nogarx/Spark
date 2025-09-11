@@ -3,17 +3,26 @@
 #################################################################################################################################################
 
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from spark.core.config import BaseSparkConfig
 
+import dataclasses
+import typing as tp
 import jax.numpy as jnp
 from functools import partial
 from typing import Dict, Any, Type
 from Qt import QtCore, QtWidgets, QtGui
 from spark.core.specs import InputArgSpec
 from spark.core.shape import Shape
-from spark.graph_editor.nodes import AbstractNode, SinkNode, SourceNode
+from spark.graph_editor.nodes import AbstractNode, SinkNode, SourceNode, SparkModuleNode
 from spark.graph_editor.utils import _normalize_section_header, _to_human_readable
-from spark.graph_editor.widgets import IntLineEdit, FloatLineEdit, ShapeWidget, KeyValueEditor, StrLineEdit, NotImplementedWidget, DtypeWidget
-
+from spark.graph_editor.widgets.dict import QDict
+from spark.graph_editor.widgets.dtype import QDtype
+from spark.graph_editor.widgets.shape import QShape
+from spark.graph_editor.widgets.missing import QMissing
+from spark.graph_editor.widgets.collapsible import QCollapsible
+from spark.graph_editor.widgets.line_edits import QIntLineEdit, QFloatLineEdit, QString
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -81,9 +90,9 @@ class NodeInspectorWidget(QtWidgets.QWidget):
         self._build_main_section()
 
         # Add other sections as needed.
-        self._build_dict_editors()
+        #self._build_dict_editors()
         
-        self._main_layout.addStretch()
+        #self._main_layout.addStretch()
 
     def _build_idle_menu(self):
         """Constructs the UI shown when no node (multiple nodes) is (are) selected."""
@@ -140,7 +149,7 @@ class NodeInspectorWidget(QtWidgets.QWidget):
         form_layout = self._add_section('Shapes')
         for name, spec in self._target_node.input_specs.items():
             is_static = not isinstance(self._target_node, SourceNode)
-            widget = ShapeWidget(initial_shape=spec.shape, is_static=is_static)
+            widget = QShape(initial_shape=spec.shape, is_static=is_static)
             prefixed_name = f'input_port.{name}'
             widget.editingFinished.connect(partial(self._handle_widget_update, prefixed_name))
             form_layout.addRow(QtWidgets.QLabel(_to_human_readable(name)), widget)
@@ -148,7 +157,7 @@ class NodeInspectorWidget(QtWidgets.QWidget):
 
         for name, spec in self._target_node.output_specs.items():
             is_static = True#not isinstance(self._target_node, SinkNode)
-            widget = ShapeWidget(initial_shape=spec.shape, is_static=is_static)
+            widget = QShape(initial_shape=spec.shape, is_static=is_static)
             prefixed_name = f'output_port.{name}'
             widget.editingFinished.connect(partial(self._handle_widget_update, prefixed_name))
             form_layout.addRow(QtWidgets.QLabel(_to_human_readable(name)), widget)
@@ -162,13 +171,42 @@ class NodeInspectorWidget(QtWidgets.QWidget):
         form_layout = self._add_section('Main')
         # Add name
         self._add_arg_widget_to_layout(form_layout, 'name', str, self._target_node.NODE_NAME)
+        # Add shape widgets to source/sink nodes.
+        if isinstance(self._target_node, (SinkNode, SourceNode)):
+            pass
         # Main init_args
-        for key, arg_spec in self._target_node.init_args_specs.items():
-            if arg_spec.arg_type is Dict:
+        elif isinstance(self._target_node, SparkModuleNode):
+            print(self._target_node)
+            print(self._target_node.node_config)
+            self._add_widgets_from_spark_config(self._main_layout, self._target_node.node_config)
+        else:
+            # Unknown node type raise error.
+            raise TypeError(f'Support for node of type \"{self._target_node.__class__.__name__}\" is not implemented.')
+
+    def _add_widgets_from_spark_config(self, config: BaseSparkConfig, name=None):
+
+        # Get nested config's names
+        nested_configs = config._get_nested_configs_names()
+
+        # Create a collapsable window
+        section = self._add_section(name)
+
+        # Iterate over fields, add simple attributes
+        for field in dataclasses.fields(config):
+            # Skip non-configs
+            if field.name in nested_configs:
                 continue
-            elif key in ['input_shape', 'input_shapes', 'output_shape', 'output_shapes']:
+            # Add widget to collapsible
+            self._add_arg_widget_to_layout(section.layout(), field.name, field.type, getattr(config, field.name))
+
+        # Iterate over fields, add nested configs as new collapsibles
+        for field in dataclasses.fields(config):
+            # Skip configs
+            if field.name not in nested_configs:
                 continue
-            self._add_arg_widget_to_layout(form_layout, key, arg_spec.arg_type, self._target_node.init_args.get(key))
+            # Add collapsible recursively
+            self._add_widgets_from_spark_config(getattr(config, field.name), name=field.name)
+
 
     def _add_arg_widget_to_layout(self, layout: QtWidgets.QFormLayout, arg_name: str, arg_type: Type, value: Any | None = None):
         """
@@ -176,7 +214,7 @@ class NodeInspectorWidget(QtWidgets.QWidget):
         """
         # Get appropiate widget
         widget_class = self._get_widget_class_for_type(arg_type)
-        if widget_class == NotImplementedWidget:
+        if widget_class == QMissing:
             widget = widget_class()
             layout.addRow(QtWidgets.QLabel(_to_human_readable(arg_name)), widget)
             self._widgets_map[arg_name] = None
@@ -197,39 +235,17 @@ class NodeInspectorWidget(QtWidgets.QWidget):
         for key, arg_spec in self._target_node.init_args_specs.items():
             if arg_spec.arg_type is Dict:
                 form_layout = self._add_section(key)
-                widget = KeyValueEditor()
+                widget = QDict()
                 self._widgets_map[key] = widget
                 form_layout.addRow(widget)
 
-    def _add_section(self, name: str) -> QtWidgets.QFormLayout:
+    def _add_section(self, name: str) -> QtWidgets.QWidget:
         """
-            Adds a new section with a header and a form layout.
+            Adds a new collapsible section with a header and a form layout.
         """
-        self._main_layout.addSpacing(15)
-        self._add_line()
-        self._main_layout.addSpacing(5)
-
-        icon_label = QtWidgets.QLabel()
-        icon = self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_CommandLink)
-        icon_label.setPixmap(icon.pixmap(16, 16))
-        
-        header_label = QtWidgets.QLabel(_normalize_section_header(name))
-        font = header_label.font()
-        font.setPointSize(13)
-        font.setBold(True)
-        header_label.setFont(font)
-        
-        row_layout = QtWidgets.QHBoxLayout()
-        row_layout.addWidget(icon_label)
-        row_layout.addWidget(header_label)
-        row_layout.addStretch()
-
-        self._main_layout.addLayout(row_layout)
-        self._main_layout.addSpacing(5)
-        
-        form_layout = QtWidgets.QFormLayout()
-        self._main_layout.addLayout(form_layout)
-        return form_layout
+        collapsible = QCollapsible(_to_human_readable(name))
+        self._main_layout.addWidget(collapsible)
+        return collapsible
 
     def _add_line(self):
         """
@@ -245,14 +261,14 @@ class NodeInspectorWidget(QtWidgets.QWidget):
             Maps an argument type to a corresponding widget class.
         """
         WIDGET_TYPE_MAP = {
-            int: IntLineEdit,
-            float: FloatLineEdit,
-            str: StrLineEdit,
-            Shape: ShapeWidget,
-            jnp.dtype: DtypeWidget,
-            dict: KeyValueEditor,
+            int: QIntLineEdit,
+            float: QFloatLineEdit,
+            str: QString,
+            Shape: QShape,
+            jnp.dtype: QDtype,
+            dict: QDict,
         }
-        return WIDGET_TYPE_MAP.get(arg_type, NotImplementedWidget)
+        return WIDGET_TYPE_MAP.get(arg_type, QMissing)
 
     def _clear_layout(self):
         """
@@ -300,11 +316,11 @@ class NodeInspectorWidget(QtWidgets.QWidget):
             return
 
         # Get values of the widget
-        if isinstance(widget, KeyValueEditor):
-            new_value = widget.to_dict() # Assuming KeyValueEditor has this method
-        elif isinstance(widget, (IntLineEdit, FloatLineEdit, QtWidgets.QLineEdit)):
+        if isinstance(widget, QDict):
+            new_value = widget.to_dict() # Assuming QDict has this method
+        elif isinstance(widget, (QIntLineEdit, QFloatLineEdit, QtWidgets.QLineEdit)):
             new_value = widget.text()
-        elif isinstance(widget, ShapeWidget):
+        elif isinstance(widget, QShape):
             new_value = widget.shape()
         else:
             raise RuntimeError(f'Widget associated to {attr_name} does not implement a map back to its node attributes.')

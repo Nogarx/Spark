@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from spark.core.module import SparkModule
     from spark.core.payloads import SparkPayload
     from spark.nn.initializers.base import Initializer
+    from spark.core.config_validation import ConfigurationValidator
 
 import logging
 from dataclasses import dataclass
@@ -166,11 +167,13 @@ class Registry():
         self.MODULES = SubRegistry(registry_base_type=validation.DEFAULT_SPARKMODULE_PATH)
         self.PAYLOADS = SubRegistry(registry_base_type=validation.DEFAULT_PAYLOAD_PATH)
         self.INITIALIZERS = SubRegistry(registry_base_type=validation.DEFAULT_INITIALIZER_PATH)
+        self.CFG_VALIDATORS = SubRegistry(registry_base_type=validation.DEFAULT_CFG_VALIDATOR_PATH)
 
     def _build(self,):
         self.MODULES._build()
         self.PAYLOADS._build()
         self.INITIALIZERS._build()
+        self.CFG_VALIDATORS._build()
 
 # Default Instance
 REGISTRY = Registry()
@@ -220,6 +223,21 @@ def register_initializer(arg: Initializer | str | None = None):
         # Decorator was used as "('somename')" or "()", in this case, 'arg' is the name (or None).
         return decorator
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+# Decorator method for configuration validators.
+def register_cfg_validator(arg: ConfigurationValidator | str | None = None):
+    def decorator(cls):
+        name = arg if isinstance(arg, str) else cls.__name__
+        REGISTRY.CFG_VALIDATORS.register(cls=cls, name=name)
+        return cls
+    if callable(arg):
+        # Decorator was used as "", arg is the class itself. 
+        return decorator(arg)
+    else:
+        # Decorator was used as "('somename')" or "()", in this case, 'arg' is the name (or None).
+        return decorator
+    
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 # Alias map for pretty paths. 

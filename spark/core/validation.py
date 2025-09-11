@@ -20,6 +20,7 @@ from typing import Any
 DEFAULT_SPARKMODULE_PATH = 'spark.core.module.SparkModule'
 DEFAULT_PAYLOAD_PATH = 'spark.core.payloads.SparkPayload'
 DEFAULT_INITIALIZER_PATH = 'spark.nn.initializers'
+DEFAULT_CFG_VALIDATOR_PATH = 'spark.core.config_validation.ConfigurationValidator'
 
 def _is_spark_type(obj: Any, type_name: str) -> bool:
     """

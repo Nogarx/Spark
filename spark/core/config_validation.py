@@ -11,6 +11,7 @@ import jax.numpy as jnp
 import dataclasses
 import typing as tp
 from spark.core.registry import REGISTRY
+from spark.core.registry import register_cfg_validator
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -32,6 +33,7 @@ class ConfigurationValidator:
 # TODO: There is some room to relax type checking in some contexts. 
 # Some castings will drastically improve user experience. Currently allowing int to float. 
 # TODO: Add support for sensible numpy and jax.numpy validation.
+@register_cfg_validator
 class TypeValidator(ConfigurationValidator):
 
     def validate(self, value: tp.Any) -> None:
@@ -85,6 +87,7 @@ class TypeValidator(ConfigurationValidator):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@register_cfg_validator
 class PositiveValidator(ConfigurationValidator):
 
     def validate(self, value: tp.Any) -> None:
@@ -101,6 +104,7 @@ class PositiveValidator(ConfigurationValidator):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@register_cfg_validator
 class BinaryValidator(ConfigurationValidator):
 
     def validate(self, value: tp.Any) -> None:
@@ -119,6 +123,7 @@ class BinaryValidator(ConfigurationValidator):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@register_cfg_validator
 class ZeroOneValidator(ConfigurationValidator):
 
     def validate(self, value: tp.Any) -> None:

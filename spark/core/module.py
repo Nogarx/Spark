@@ -14,17 +14,17 @@ from spark.core.payloads import DummyArray
 import os
 import abc
 import jax
+import inspect
 import jax.numpy as jnp
 import flax.nnx as nnx
-import inspect
+import typing as tp
 from jax.typing import DTypeLike
-from typing import Any, TypedDict, Type, get_type_hints
 from spark.core.wrappers import HookingMeta
 from functools import wraps
 from dataclasses import dataclass, fields, MISSING, asdict, field
 import spark.core.signature_parser as sig_parser
 import spark.core.validation as validation
-from spark.core.config import SparkConfig
+from spark.core.config import BaseSparkConfig
 
 # TODO: Support for list[SparkPayloads] was implemented in a wacky manner and 
 # may have damage several parts of the module. This needs to be further validated. 
@@ -89,26 +89,26 @@ class SparkMeta(nnx.module.ModuleMeta, HookingMeta):
 class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
     name: str = 'name'
-    config: SparkConfig
-    default_config: type[SparkConfig] = SparkConfig
+    config: BaseSparkConfig
+    default_config: type[BaseSparkConfig] = BaseSparkConfig
 
     # NOTE: This is a workaround to require all childs of SparkModule to define a, 
     # default_config while at the same time allow for a lazy definition of the property. 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        # Special cases and abstract classes dont need config but yet they are still SparkModules ¯\_(ツ)_/¯
+        # Special cases and abstract classes dont need config yet they are still SparkModules ¯\_(ツ)_/¯
         is_abc = inspect.isabstract(cls) and len(getattr(cls, '__abstractmethods__', set())) == 0
         if cls.__name__ in ['Brain'] or is_abc:
             cls.default_config = None
             return
         # Check if defines config
-        resolved_hints = get_type_hints(cls)
+        resolved_hints = tp.get_type_hints(cls)
         config_type = resolved_hints.get('config')
-        if not config_type and not issubclass(config_type, SparkConfig):
+        if not config_type and not issubclass(config_type, BaseSparkConfig):
             raise AttributeError('SparkModules must define a valid config: type[SparkConfig] attribute.')
         cls.default_config = config_type
 
-    def __init__(self, *, config: SparkConfig = None, **kwargs):
+    def __init__(self, *, config: BaseSparkConfig = None, **kwargs):
         # Initialize super.
         super().__init__()
         # Override config if provided
@@ -130,11 +130,16 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
     @property
     @abc.abstractmethod
-    def default_config(self) -> type[SparkConfig]:
+    def default_config(self) -> type[BaseSparkConfig]:
         """
             Returns the default configuration dataclass for this module.
         """
         pass
+
+    @classmethod 
+    def get_default_config_class(cls) -> type[BaseSparkConfig]:
+        type_hints = tp.get_type_hints(cls)
+        return type_hints['config']
     
     @classmethod
     def get_config_spec(cls):

@@ -143,7 +143,8 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 field_name = field.name
 
             # Nested config need to be treated differently, propagating kwargs if necessary
-            if isinstance(type_hints[field_name], type) and issubclass(type_hints[field_name], BaseSparkConfig):
+            field_type = type_hints[field.name]
+            if isinstance(type_hints[field_name], type) and issubclass(field_type, BaseSparkConfig):
                 # Attribute is another SparkConfig
                 init_args = kwargs_fold.get(field_name, shared_partial)
                 if field.default_factory is not dataclasses.MISSING:
@@ -151,7 +152,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     setattr(self, field_name, field.default_factory(**init_args))
                 else:
                     # Use type class otherwise
-                    setattr(self, field_name, type_hints[field_name](**init_args))
+                    setattr(self, field_name, field_type(**init_args))
             elif field_name in kwargs_fold:
                 # Use kwargs attribute if provided
                 setattr(self, field_name, kwargs_fold[field_name])
@@ -165,6 +166,40 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 # TODO: Throw a better error than the default dataclass error.
                 pass
 
+    @classmethod
+    def _create_partial(cls):
+        """
+            Create an incomplete config for the SparkGraphEditor.
+        """
+        # Manually create an instance
+        instance = cls.__new__(cls)
+
+        # Get type hints
+        type_hints = tp.get_type_hints(instance.__class__)
+        for key in type_hints.keys():
+            if tp.get_origin(type_hints[key]): 
+                hints = list(tp.get_args(type_hints[key]))
+                type_hints[key] = (h for h in hints if h is not type(None))
+
+        # Set attributes programatically
+        for field in dataclasses.fields(instance):
+
+            # Nested config need to be treated differently, propagating kwargs if necessary
+            field_type = type_hints[field.name]
+            if isinstance(type_hints[field.name], type) and issubclass(field_type, BaseSparkConfig):
+                # Field is another SparkConfig use create partial recursively.
+                setattr(instance, field.name, field_type._create_partial())
+            elif field.default_factory is not dataclasses.MISSING:
+                # Fallback to default factory.
+                setattr(instance, field.name, field.default_factory())
+            elif field.default is not dataclasses.MISSING:
+                # Fallback to default.
+                setattr(instance, field.name, field.default)
+            else:
+                setattr(instance, field.name, None)
+                
+        return instance
+            
     @classmethod
     def create(cls: type['BaseSparkConfig'], partial: dict[str, Any] = None) -> 'BaseSparkConfig':
         """
@@ -286,20 +321,33 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         # Collect all fields and map into a dict
         dataclass_dict = {}
         for field in dataclasses.fields(self):
-            
             # Nested config need to be treated differently, propagating kwargs if necessary
             if isinstance(type_hints[field.name], type) and issubclass(type_hints[field.name], BaseSparkConfig):
-                dataclass_dict[field.name] = {
-                    'value': getattr(self, field.name).to_dict(),
-                    'metadata': field.metadata
-                }
+                dataclass_dict[field.name] = getattr(self, field.name).to_dict()
             else:
-                dataclass_dict[field.name] = {
-                    'value': getattr(self, field.name),
-                    'metadata': field.metadata
-                }
+                dataclass_dict[field.name] = getattr(self, field.name)
 
         return dataclass_dict
+
+    def _get_nested_configs_names(self,):
+        """
+            Returns a list containing all nested SparkConfigs' names.
+        """
+        # Get type hints
+        type_hints = tp.get_type_hints(self.__class__)
+        for key in type_hints.keys():
+            if tp.get_origin(type_hints[key]): 
+                hints = list(tp.get_args(type_hints[key]))
+                type_hints[key] = (h for h in hints if h is not type(None))
+
+        # Collect all fields and map into a dict
+        nested_configs = []
+        for field in dataclasses.fields(self):
+            # Check if field is another SparkConfig
+            if isinstance(type_hints[field.name], type) and issubclass(type_hints[field.name], BaseSparkConfig):
+                nested_configs.append(field.name)
+
+        return nested_configs
 
     def _freeze(self,) -> FrozenSparkConfig:
         """

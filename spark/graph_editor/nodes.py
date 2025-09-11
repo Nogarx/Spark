@@ -7,22 +7,19 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.module import SparkModule
     from spark.graph_editor.graph import SparkNodeGraph
-    from spark.core.specs import InputSpec, OutputSpec, InputArgSpec, PortMap
-from spark.core.specs import InputArgSpec
-
+    from spark.core.config import BaseSparkConfig
 
 import abc
 import logging
 import jax.numpy as jnp
-from Qt import QtCore
-from NodeGraphQt import BaseNode, Port
-from typing import Dict, Type, Any, List
+import typing as tp
+from NodeGraphQt import BaseNode
+from spark.core.registry import REGISTRY
 from spark.core.payloads import FloatArray
 from spark.graph_editor.painter import DEFAULT_PALLETE
-from spark.graph_editor.specs import InputSpecEditor, OutputSpecEditor, PortMap
+from spark.graph_editor.specs import InputSpecEditor, OutputSpecEditor
 from spark.core.registry import RegistryEntry
 from spark.core.shape import normalize_shape
-
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -35,26 +32,16 @@ class AbstractNode(BaseNode, abc.ABC):
 
     __identifier__ = 'spark'
     NODE_NAME = 'Abstract Node'
-    input_specs: Dict[str, InputSpecEditor] = {}
-    output_specs: Dict[str, OutputSpecEditor] = {}
-    init_args_specs: Dict[str, InputArgSpec] = {}
-    init_args: Dict[str, Dict[str, Any]] = {}
+    input_specs: dict[str, InputSpecEditor] = {}
+    output_specs: dict[str, OutputSpecEditor] = {}
     graph: SparkNodeGraph
 
     def __init__(self,):
         super().__init__()
-        # Add input ports.
-        if isinstance(self.input_specs, dict):
-            for key, port_spec in self.input_specs.items():
-                self.add_input(name=key, multi_input=True, painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__))
-        # Add output ports.
-        if isinstance(self.output_specs, dict):
-            for key, port_spec in self.output_specs.items():
-                self.add_output(name=key, multi_output=True, painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__))
         # Name edition is handle through the inspector
         self._view._text_item.set_locked(True)
 
-    def update_attribute(self, attr_name: str, value: Any):
+    def update_attribute(self, attr_name: str, value: tp.Any):
         """
         Updates a node attribute based on a key and value.
 
@@ -115,7 +102,7 @@ class AbstractNode(BaseNode, abc.ABC):
             logging.info(f'Updated init arg "{attr_name}" of node "{self.id}" to "{validated_value}".')
             self.graph.property_changed.emit(self, attr_name, value)
             return
-            
+        
         logging.warning(f"Attempted to update unknown or unhandled attribute '{attr_name}' on node {self.id}.")
 
 
@@ -169,20 +156,42 @@ class SparkModuleNode(AbstractNode, abc.ABC):
 
     NODE_NAME = 'SparkModule'
     cls_name: str
+    node_config: BaseSparkConfig
 
     def __init__(self,):
+        # Init super
         super().__init__()
+        # Get node_cls
+        node_cls: type[SparkModule] = REGISTRY.MODULES.get(self.cls_name).class_ref
+        print(node_cls)
+        # Add input ports.
+        self.input_specs = {
+            key: InputSpecEditor.from_input_specs(value, []) for key, value in node_cls._get_input_specs().items()
+        }
+        if isinstance(self.input_specs, dict):
+            for key, port_spec in self.input_specs.items():
+                self.add_input(name=key, multi_input=True, painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__))
+        # Add output ports.
+        self.output_specs = {
+            key: OutputSpecEditor.from_output_specs(value) for key, value in node_cls._get_output_specs().items()
+        }
+        if isinstance(self.output_specs, dict):
+            for key, port_spec in self.output_specs.items():
+                self.add_output(name=key, multi_output=True, painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__))
+        # Create partial configuration
+        node_config_type = node_cls.get_default_config_class()
+        self.node_config = node_config_type._create_partial()
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def module_to_nodegraph(entry: RegistryEntry) -> Type[SparkModuleNode]:
+def module_to_nodegraph(entry: RegistryEntry) -> type[SparkModuleNode]:
     """
         Factory function that creates a new NodeGraphQt node class from an Spark module class.
     """
     # TODO: Manually passing base SparkModule __init__ signature to init_args could lead to errors in the futre.  
 
     # Create the new class on the fly.
-    module_cls: Type[SparkModule] = entry.class_ref
+    module_cls: type[SparkModule] = entry.class_ref
     nodegraph_class = type(
         f'_NG_{module_cls.__name__}',
         (SparkModuleNode,),
@@ -190,13 +199,6 @@ def module_to_nodegraph(entry: RegistryEntry) -> Type[SparkModuleNode]:
             '__identifier__': f'spark',
             'NODE_NAME': module_cls.__name__,
             'cls_name': entry.name,
-            'input_specs': {key: InputSpecEditor.from_input_specs(value, []) for key, value in module_cls._get_input_specs().items()},
-            'output_specs': {key: OutputSpecEditor.from_output_specs(value) for key, value in module_cls._get_output_specs().items()},
-            'init_args_specs': {**module_cls._get_init_signature(), 
-                                **{'dtype': InputArgSpec(arg_type=jnp.dtype, is_optional=True),
-                                    'seed': InputArgSpec(arg_type=int, is_optional=True),
-                                    'dt': InputArgSpec(arg_type=float, is_optional=True)}},
-            'init_args': {},
         } 
     )
     return nodegraph_class

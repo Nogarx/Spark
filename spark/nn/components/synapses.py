@@ -72,7 +72,7 @@ class Synanpses(Component):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class SimpleSynapsesConfig(SparkConfig):
-    target_units_shape: Shape = dataclasses.field(
+    target_units: Shape = dataclasses.field(
         metadata = {
             'validators': [
                 TypeValidator,
@@ -105,7 +105,7 @@ class SimpleSynapses(Synanpses):
         Output currents are computed as the dot product of the kernel with the input spikes.
 
         Init:
-            target_units_shape: Shape
+            target_units: Shape
             async_spikes: bool
             kernel_initializer: KernelInitializerConfig
 
@@ -121,7 +121,7 @@ class SimpleSynapses(Synanpses):
         # Initialize super.
         super().__init__(config=config, **kwargs)
         # Initialize shapes
-        self._output_shape = normalize_shape(self.config.target_units_shape)
+        self._output_shape = normalize_shape(self.config.target_units)
         # Initialize varibles
         self.async_spikes = self.config.async_spikes
 
@@ -184,7 +184,7 @@ class TracedSynapses(SimpleSynapses):
         Output currents are computed as the trace of the dot product of the kernel with the input spikes.
 
         Init:
-            target_units_shape: Shape
+            target_units: Shape
             async_spikes: bool
             kernel_initializer: KernelInitializerConfig
             tau: float
@@ -275,7 +275,7 @@ class DoubleTracedSynapses(TracedSynapses):
         Output currents are computed as the trace of the dot product of the kernel with the input spikes.
 
         Init:
-            target_units_shape: Shape
+            target_units: Shape
             async_spikes: bool
             kernel_initializer: KernelInitializerConfig
             tau_1: float

@@ -239,7 +239,7 @@ class NDelays(Delays):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class N2NDelaysConfig(NDelaysConfig):
-    target_units_shape: Shape = dataclasses.field(
+    target_units: Shape = dataclasses.field(
         metadata = {
             'validators': [
                 TypeValidator,
@@ -258,7 +258,7 @@ class N2NDelays(Delays):
                  neuron C recieves A's spikes J timesteps later and neuron D recieves A's spikes K timesteps later.
 
         Init:
-            target_units_shape: Shape
+            target_units: Shape
             max_delay: int
             delay_kernel_initializer: Initializer
 
@@ -277,7 +277,7 @@ class N2NDelays(Delays):
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
         self._in_shape = normalize_shape(input_specs['in_spikes'].shape)
-        self.output_shape = normalize_shape(self.config.target_units_shape)
+        self.output_shape = normalize_shape(self.config.target_units)
         self._kernel_shape = normalize_shape((prod(self.output_shape), prod(self._in_shape)))
         self._units = prod(self._in_shape)
         # Initialize varibles
