@@ -6,12 +6,14 @@ from __future__ import annotations
 
 from Qt import QtCore, QtWidgets, QtGui
 from spark.graph_editor.widgets.line_edits import QIntLineEdit
+from spark.graph_editor.widgets.base import SparkQWidget
+from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class QShape(QtWidgets.QWidget):
+class QShapeEdit(QtWidgets.QWidget):
     """
         A widget for inputting or displaying a shape with a dynamic number of dimensions.
     """
@@ -66,9 +68,11 @@ class QShape(QtWidgets.QWidget):
         if len(self._dimension_edits) >= self.max_dims:
             return
 
-        line_edit = QIntLineEdit(initial_value=value, bottom_value=1)
+        line_edit = QIntLineEdit(initial_value=value, bottom_value=1, placeholder='')
+        # Style
         line_edit.setSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed)
         line_edit.setAlignment(QtCore.Qt.AlignCenter)
+
         if self.is_static:
             line_edit.setReadOnly(True)
             # Insert before the stretch
@@ -88,6 +92,8 @@ class QShape(QtWidgets.QWidget):
         if not self.is_static:
             self._update_buttons()
         self._on_shape_changed()
+
+
 
     def _remove_last_dimension(self):
         """
@@ -124,7 +130,7 @@ class QShape(QtWidgets.QWidget):
     def _on_shape_changed(self):
         self.editingFinished.emit()
 
-    def shape(self) -> tuple[int, ...]:
+    def get_shape(self) -> tuple[int, ...]:
         return tuple(int(edit.text()) for edit in self._dimension_edits if edit.text())
 
     def setShape(self, new_shape: tuple[int, ...]):
@@ -144,6 +150,41 @@ class QShape(QtWidgets.QWidget):
         text_width = font_metrics.horizontalAdvance(editor.text()) + 15
         min_width = 30
         editor.setFixedWidth(max(text_width, min_width))
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class QShape(SparkQWidget):
+    """
+        Custom QWidget used for integer fields in the SparkGraphEditor's Inspector.
+    """
+
+    def __init__(self,
+                 label: str,
+                 initial_shape: tuple[int, ...] = (1,),
+                 min_dims: int = 1,
+                 max_dims: int = 8,
+                 max_shape: int = 1E9,
+                 is_static: bool = False,
+                 parent: QtWidgets.QWidget = None):
+        super().__init__(parent=parent)
+
+        # Add layout
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        # Add label
+        self._label = QtWidgets.QLabel(label, minimumWidth=GRAPH_EDITOR_CONFIG.min_attr_label_size, parent=self)
+        self._label.setContentsMargins(GRAPH_EDITOR_CONFIG.label_field_margin)
+        layout.addWidget(self._label)
+        # Add QShapeEdit
+        self._shape_edit = QShapeEdit(initial_shape, min_dims, max_dims, max_shape, is_static, self)
+        # Update callback
+        self._shape_edit.editingFinished.connect(self._on_update)
+        # Finalize
+        layout.addWidget(self._shape_edit)
+        self.setLayout(layout)
+
+    def get_value(self):
+        return self._shape_edit.get_shape()
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

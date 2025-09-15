@@ -5,18 +5,45 @@
 from __future__ import annotations
 
 import abc
-from Qt import QtWidgets
+import typing as tp
+from Qt import QtWidgets, QtCore
+from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class SparkQWidget(QtWidgets.QWidget, abc.ABC):
+class SparkQWidgetMeta(type(QtWidgets.QWidget), abc.ABCMeta):
+    pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class SparkQWidget(QtWidgets.QFrame, abc.ABC, metaclass=SparkQWidgetMeta):
+    """
+        Base QWidget class for the graph editor attributes.
+    """
+
+    on_update = QtCore.Signal()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Style
+        self.setContentsMargins(GRAPH_EDITOR_CONFIG.field_margin)
+        self.setStyleSheet(f'background-color: {GRAPH_EDITOR_CONFIG.field_bg_color};\
+                             border-radius: {GRAPH_EDITOR_CONFIG.field_border_radius}px;')
 
     @abc.abstractmethod
-    def get_value(self,):
+    def get_value(self,) -> tp.Any:
+        """
+            Returns the widget value.
+        """
         pass
+
+    def _on_update(self):
+        self.on_update.emit()
+
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
+

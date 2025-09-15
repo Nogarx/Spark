@@ -4,31 +4,28 @@
 
 from __future__ import annotations
 
-from Qt import QtCore, QtWidgets, QtGui
-from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
+import dataclasses
+from Qt import QtCore
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class QMissing(QtWidgets.QWidget):
-    """
-        A missing widget template to handle some error cases more gracefully.
-    """
-    def __init__(self, label: str, parent: QtWidgets.QWidget = None, **kwargs):
-        super().__init__(parent=parent)
+@dataclasses.dataclass
+class GraphEditorConfig:
+    min_attr_label_size: int = 150
+    input_field_bg_color: str = '#2A2A2A'
+    input_field_border_radius: int = 4
+    input_field_margin: QtCore.QMargins = dataclasses.field(default_factory = lambda: QtCore.QMargins(4, 4, 4, 4))
+    label_field_margin: QtCore.QMargins = dataclasses.field(default_factory = lambda: QtCore.QMargins(4, 0, 0, 0))
+    field_bg_color: str = '#3A3A3A'
+    field_border_radius: int = 4
+    field_margin: QtCore.QMargins = dataclasses.field(default_factory = lambda: QtCore.QMargins(4,4,4,4))
+    section_bg_color: str = '#3A3A3A'
+    section_border_radius: int = 4
+    section_margin: QtCore.QMargins = dataclasses.field(default_factory = lambda: QtCore.QMargins(4,4,4,4))
 
-        # Add layout
-        layout = QtWidgets.QHBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        # Add label
-        self._label = QtWidgets.QLabel(label, minimumWidth=GRAPH_EDITOR_CONFIG.min_attr_label_size, parent=self)
-        layout.addWidget(self._label)
-        # Add QLineEdit
-        self._msg = QtWidgets.QLabel('🏗️ Widget not implemented.', parent=self)
-        # Finalize
-        layout.addWidget(self._msg)
-        self.setLayout(layout)
+GRAPH_EDITOR_CONFIG = GraphEditorConfig()
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

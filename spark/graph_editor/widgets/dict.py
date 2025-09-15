@@ -7,6 +7,8 @@ from __future__ import annotations
 import jax.numpy as jnp
 import typing as tp
 from Qt import QtCore, QtWidgets, QtGui
+from spark.graph_editor.widgets.base import SparkQWidget
+from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -53,17 +55,19 @@ class QKeyValueRow(QtWidgets.QWidget):
     def on_update(self,):
         self.editingFinished.emit()
 
+    def get_pair(self):
+        return {self.key_edit.text(): self.value_edit.text()}
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class QDict(QtWidgets.QWidget):
+class QDict(SparkQWidget):
     """
         A dynamical list of key-value pairs.
     """
-    editingFinished = QtCore.Signal()
 
     def __init__(self, initial_dict: dict = None, parent: QtWidgets.QWidget = None):
         super().__init__(parent)
-        self.rows = []
+        self.rows: list[QKeyValueRow] = []
 
         main_layout = QtWidgets.QVBoxLayout(self)
         main_layout.setContentsMargins(2, 2, 2, 2)
@@ -83,12 +87,10 @@ class QDict(QtWidgets.QWidget):
         else:
             self.add_row(None, None)
 
-
-
     def add_row(self, key: tp.Any, value: tp.Any):
         """Creates a new QKeyValueRow and adds it to the layout."""
         row = QKeyValueRow(key, value, self.remove_row)
-        row.editingFinished.connect(self.on_update)
+        row.editingFinished.connect(self._on_update)
         self.rows.append(row)
         self.rows_layout.addWidget(row)
 
@@ -108,8 +110,11 @@ class QDict(QtWidgets.QWidget):
                 result[key] = value
         return result
 
-    def on_update(self,):
-        self.editingFinished.emit()
+    def get_value(self) -> dict[str, str]:
+        value = {}
+        for row in self.rows:
+            value = {**value, **row.get_value()}
+        return value
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

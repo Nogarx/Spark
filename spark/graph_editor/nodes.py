@@ -94,9 +94,9 @@ class AbstractNode(BaseNode, abc.ABC):
             spec = self.init_args_specs[attr_name]
             try:
                 # Attempt to cast the value to the expected type
-                validated_value = spec.arg_type(value)
+                validated_value = spec.attr_type(value)
             except (ValueError, TypeError):
-                raise TypeError(f"Invalid type for '{attr_name}'. Expected {spec.arg_type.__name__}.")
+                raise TypeError(f"Invalid type for '{attr_name}'. Expected {spec.attr_type.__name__}.")
 
             self.init_args[attr_name] = validated_value
             logging.info(f'Updated init arg "{attr_name}" of node "{self.id}" to "{validated_value}".')

@@ -147,11 +147,11 @@ def get_method_signature(method: Callable) -> dict[str, InputArgSpec]:
             is_optional = True
             input_annotation = next(a for a in args if a is not type(None))
 
-        # Simplify arg_type
-        arg_type = normalize_type(input_annotation)
+        # Simplify attr_type
+        attr_type = normalize_type(input_annotation)
 
         # Add the spec to collection.
-        args_specs[name] = InputArgSpec(arg_type=arg_type, is_optional=is_optional)
+        args_specs[name] = InputArgSpec(attr_type=attr_type, is_optional=is_optional)
 
     return args_specs
 

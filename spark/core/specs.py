@@ -192,7 +192,7 @@ class ModuleSpecs:
 @dataclass
 class InputArgSpec:
     
-    arg_type: type
+    attr_type: type
     is_optional: bool
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

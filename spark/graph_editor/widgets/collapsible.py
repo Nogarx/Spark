@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from Qt import QtCore, QtWidgets, QtGui
+from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -53,11 +54,6 @@ class QCollapsible(QtWidgets.QFrame):
         layout = QtWidgets.QVBoxLayout(self)
         layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
         layout.setContentsMargins(0, 0, 0, 0)
-
-        line = QtWidgets.QFrame()
-        line.setFrameShape(QtWidgets.QFrame.Shape.HLine)
-        line.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
-        layout.addWidget(line)
         layout.addWidget(self._toggle_btn)
         
         # Create animators
@@ -72,8 +68,31 @@ class QCollapsible(QtWidgets.QFrame):
         _content = QtWidgets.QWidget()
         _content.setLayout(QtWidgets.QVBoxLayout())
         _content.setMaximumHeight(0)
-        _content.layout().setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
+        #_content.layout().setContentsMargins(QtCore.QMargins(12, 12, 12, 12))
         self.setContent(_content)
+
+        #line = QtWidgets.QFrame()
+        #line.setFrameShape(QtWidgets.QFrame.Shape.HLine)
+        #line.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
+        #line.setStyleSheet('background-color: #2A2A2A;')
+        #self.addWidget(line)
+
+        # Shadow
+        #_content.setStyleSheet("background-color: #3A3A3A; border-radius: 4px;")
+        shadow = QtWidgets.QGraphicsDropShadowEffect()
+        shadow.setOffset(0,0)
+        shadow.setBlurRadius(15)
+        _content.setGraphicsEffect(shadow)
+
+        # Style
+        self.setContentsMargins(GRAPH_EDITOR_CONFIG.section_margin)
+        self.setStyleSheet(f'background-color: {GRAPH_EDITOR_CONFIG.section_bg_color};\
+                             border-radius: {GRAPH_EDITOR_CONFIG.section_border_radius}px;')
+
+
+        # Default to expanded
+        #self._expand_collapse(QtCore.QPropertyAnimation.Direction.Forward, False)
+        #print(self.isExpanded())
 
     def toggleButton(self) -> QtWidgets.QPushButton:
         """
