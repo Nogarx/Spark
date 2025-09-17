@@ -28,6 +28,10 @@ class DelayInitializerConfig(BaseSparkConfig):
             'validators': [
                 TypeValidator,
             ], 
+            'value_options': [
+                jnp.uint8,
+                jnp.uint16,
+            ],
             'description': 'Dtype used for JAX dtype promotions.',
         })
     

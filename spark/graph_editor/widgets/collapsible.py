@@ -3,7 +3,6 @@
 #################################################################################################################################################
 
 # Code taken and adapted from https://github.com/pyapp-kit/superqt
-# Original documentation is available at: https://pyapp-kit.github.io/superqt/
 
 from __future__ import annotations
 
@@ -14,25 +13,30 @@ from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+# TODO: This code requires a revision, particularly for the case of nested QCollapsible.
+# Current implementation works by the grace of god.
+
 class QCollapsible(QtWidgets.QFrame):
     """
         A collapsible widget to hide and unhide child widgets.
         A signal is emitted when the widget is expanded (True) or collapsed (False).
-        Based on https://stackoverflow.com/a/68141638
     """
 
     toggled = QtCore.Signal(bool)
+    animationDone = QtCore.Signal()
 
     def __init__(
         self,
-        title: str = "",
+        title: str = '',
         parent: QtWidgets.QWidget | None = None,
         expandedIcon: QtGui.QIcon | str | None = QtWidgets.QStyle.StandardPixmap.SP_ArrowDown,
         collapsedIcon: QtGui.QIcon | str | None = QtWidgets.QStyle.StandardPixmap.SP_ArrowRight,
     ):
         super().__init__(parent)
         self._locked = False
+        self._expanded = False
         self._is_animating = False
+        self._title = title
 
         self._toggle_btn = QtWidgets.QPushButton(title)
         self._toggle_btn.setCheckable(True)
@@ -68,31 +72,13 @@ class QCollapsible(QtWidgets.QFrame):
         _content = QtWidgets.QWidget()
         _content.setLayout(QtWidgets.QVBoxLayout())
         _content.setMaximumHeight(0)
-        #_content.layout().setContentsMargins(QtCore.QMargins(12, 12, 12, 12))
         self.setContent(_content)
-
-        #line = QtWidgets.QFrame()
-        #line.setFrameShape(QtWidgets.QFrame.Shape.HLine)
-        #line.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
-        #line.setStyleSheet('background-color: #2A2A2A;')
-        #self.addWidget(line)
-
-        # Shadow
-        #_content.setStyleSheet("background-color: #3A3A3A; border-radius: 4px;")
-        shadow = QtWidgets.QGraphicsDropShadowEffect()
-        shadow.setOffset(0,0)
-        shadow.setBlurRadius(15)
-        _content.setGraphicsEffect(shadow)
 
         # Style
         self.setContentsMargins(GRAPH_EDITOR_CONFIG.section_margin)
         self.setStyleSheet(f'background-color: {GRAPH_EDITOR_CONFIG.section_bg_color};\
                              border-radius: {GRAPH_EDITOR_CONFIG.section_border_radius}px;')
-
-
-        # Default to expanded
-        #self._expand_collapse(QtCore.QPropertyAnimation.Direction.Forward, False)
-        #print(self.isExpanded())
+        #self.expand()
 
     def toggleButton(self) -> QtWidgets.QPushButton:
         """
@@ -155,7 +141,7 @@ class QCollapsible(QtWidgets.QFrame):
         elif icon and isinstance(icon, str):
             self._expanded_icon = self._convert_string_to_icon(icon)
 
-        if self.isExpanded():
+        if self._expanded:
             self._toggle_btn.setIcon(self._expanded_icon)
 
     def collapsedIcon(self) -> QtGui.QIcon:
@@ -173,7 +159,7 @@ class QCollapsible(QtWidgets.QFrame):
         elif icon and isinstance(icon, str):
             self._collapsed_icon = self._convert_string_to_icon(icon)
 
-        if not self.isExpanded():
+        if not self._expanded:
             self._toggle_btn.setIcon(self._collapsed_icon)
 
     def setDuration(self, msecs: int) -> None:
@@ -192,33 +178,41 @@ class QCollapsible(QtWidgets.QFrame):
         """
             Add a widget to the central content widget's layout.
         """
-        widget.installEventFilter(self)
         self._content.layout().addWidget(widget)
+        if isinstance(widget, QCollapsible):
+            widget.animationDone.connect(self._resize_widget)
+        else:
+            widget.installEventFilter(self)
 
     def removeWidget(self, widget: QtWidgets.QWidget) -> None:
         """
             Remove widget from the central content widget's layout.
         """
         self._content.layout().removeWidget(widget)
-        widget.removeEventFilter(self)
+        if isinstance(widget, QCollapsible):
+            widget.animationDone.disconnect(self._resize_widget)
+        else:
+            widget.removeEventFilter(self)
 
-    def expand(self, animate: bool = True) -> None:
+    def expand(self, animate: bool = False) -> None:
         """
             Expand (show) the collapsible section.
         """
+        self._expanded = True
         self._expand_collapse(QtCore.QPropertyAnimation.Direction.Forward, animate)
 
-    def collapse(self, animate: bool = True) -> None:
+    def collapse(self, animate: bool = False) -> None:
         """
             Collapse (hide) the collapsible section.
         """
+        self._expanded = False
         self._expand_collapse(QtCore.QPropertyAnimation.Direction.Backward, animate)
 
     def isExpanded(self) -> bool:
         """
             Return whether the collapsible section is visible.
         """
-        return self._toggle_btn.isChecked()
+        return self._expanded
 
     def setLocked(self, locked: bool = True) -> None:
         """
@@ -232,11 +226,25 @@ class QCollapsible(QtWidgets.QFrame):
             Return True if collapse/expand is disabled.
         """
         return self._locked
-        
+
+    def _resize_widget(
+        self,
+    ) -> None:
+        """
+            Set values for the widget based on whether it is expanding or collapsing.
+
+            An emit flag is included so that the toggle signal is only called once (it
+            was being emitted a few times via eventFilter when the widget was expanding
+            previously).
+        """
+        _content_height = self._content.sizeHint().height() #+ 10
+        self._content.setMaximumHeight(_content_height if self._expanded else 0)
+        self._on_animation_done()  
+
     def _expand_collapse(
         self,
         direction: QtCore.QPropertyAnimation.Direction,
-        animate: bool = True,
+        animate: bool = False,
         emit: bool = True,
     ) -> None:
         """
@@ -252,7 +260,6 @@ class QCollapsible(QtWidgets.QFrame):
         forward = direction == QtCore.QPropertyAnimation.Direction.Forward
         icon = self._expanded_icon if forward else self._collapsed_icon
         self._toggle_btn.setIcon(icon)
-        self._toggle_btn.setChecked(forward)
 
         _content_height = self._content.sizeHint().height() #+ 10
         if animate:
@@ -261,12 +268,13 @@ class QCollapsible(QtWidgets.QFrame):
             self._is_animating = True
             self._animation.start()
         else:
-            self._content.setMaximumHeight(_content_height if forward else 0)
+            self._content.setMaximumHeight(_content_height if self._expanded else 0)
+            self._on_animation_done()
         if emit:
             self.toggled.emit(direction == QtCore.QPropertyAnimation.Direction.Forward)
 
     def _toggle(self) -> None:
-        self.expand() if self.isExpanded() else self.collapse()
+        self.expand() if not self._expanded else self.collapse()
 
     def eventFilter(self, a0: QtCore.QObject, a1: QtCore.QEvent) -> bool:
         """
@@ -274,7 +282,7 @@ class QCollapsible(QtWidgets.QFrame):
         """
         if (
             a1.type() == QtCore.QEvent.Type.Resize
-            and self.isExpanded()
+            and self._expanded
             and not self._is_animating
         ):
             self._expand_collapse(
@@ -284,6 +292,10 @@ class QCollapsible(QtWidgets.QFrame):
 
     def _on_animation_done(self) -> None:
         self._is_animating = False
+        _content_height = self._content.sizeHint().height()
+        self._content.setMaximumHeight(_content_height if self._expanded else 0)
+        self.updateGeometry()
+        self.animationDone.emit()
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

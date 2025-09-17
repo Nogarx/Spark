@@ -21,6 +21,8 @@ class GraphEditorConfig:
     field_bg_color: str = '#3A3A3A'
     field_border_radius: int = 4
     field_margin: QtCore.QMargins = dataclasses.field(default_factory = lambda: QtCore.QMargins(4,4,4,4))
+    button_bg_color: str = '#2A2A2A' 
+    button_border_radius: int = 4
     section_bg_color: str = '#3A3A3A'
     section_border_radius: int = 4
     section_margin: QtCore.QMargins = dataclasses.field(default_factory = lambda: QtCore.QMargins(4,4,4,4))

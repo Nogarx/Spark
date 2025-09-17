@@ -45,6 +45,11 @@ class KernelInitializerConfig(BaseSparkConfig):
             'validators': [
                 TypeValidator,
             ], 
+            'value_options': [
+                jnp.float16,
+                jnp.float32,
+                jnp.float64,
+            ],
             'description': 'Dtype used for JAX dtype promotions.',
         })
     

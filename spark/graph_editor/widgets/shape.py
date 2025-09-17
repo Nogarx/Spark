@@ -13,6 +13,25 @@ from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+class QPushButtonSquare(QtWidgets.QPushButton):
+    """
+        A square QPushButton
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, 
+            QtWidgets.QSizePolicy.Policy.Expanding
+        )
+
+    def hasHeightForWidth(self) -> bool:
+        return True
+
+    def heightForWidth(self, width: int) -> int:
+        return width
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class QShapeEdit(QtWidgets.QWidget):
     """
         A widget for inputting or displaying a shape with a dynamic number of dimensions.
@@ -42,14 +61,18 @@ class QShapeEdit(QtWidgets.QWidget):
 
         # --- Create Control Buttons ---
         if not self.is_static:
-            self.removeButton = QtWidgets.QPushButton("-")
+            self.removeButton = QPushButtonSquare("-")
             self.removeButton.setFixedSize(20, 20)
             self.removeButton.clicked.connect(self._remove_last_dimension)
+            self.removeButton.setStyleSheet(f'background-color: {GRAPH_EDITOR_CONFIG.button_bg_color};\
+                                              border-radius: {GRAPH_EDITOR_CONFIG.button_border_radius}px;')
             self._layout.addWidget(self.removeButton)
 
-            self.addButton = QtWidgets.QPushButton("+")
+            self.addButton = QPushButtonSquare("+")
             self.addButton.setFixedSize(20, 20)
             self.addButton.clicked.connect(lambda: self._add_dimension())
+            self.addButton.setStyleSheet(f'background-color: {GRAPH_EDITOR_CONFIG.button_bg_color};\
+                                           border-radius: {GRAPH_EDITOR_CONFIG.button_border_radius}px;')
             self._layout.addWidget(self.addButton)
 
         # Initialize with the provided shape
@@ -92,8 +115,6 @@ class QShapeEdit(QtWidgets.QWidget):
         if not self.is_static:
             self._update_buttons()
         self._on_shape_changed()
-
-
 
     def _remove_last_dimension(self):
         """

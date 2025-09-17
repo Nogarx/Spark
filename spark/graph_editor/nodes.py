@@ -163,7 +163,6 @@ class SparkModuleNode(AbstractNode, abc.ABC):
         super().__init__()
         # Get node_cls
         node_cls: type[SparkModule] = REGISTRY.MODULES.get(self.cls_name).class_ref
-        print(node_cls)
         # Add input ports.
         self.input_specs = {
             key: InputSpecEditor.from_input_specs(value, []) for key, value in node_cls._get_input_specs().items()

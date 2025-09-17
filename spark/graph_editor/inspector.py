@@ -6,8 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.config import BaseSparkConfig
-    from spark.graph_editor.widgets.base import SparkQWidget
-
+    
 import dataclasses
 import typing as tp
 import jax.numpy as jnp
@@ -19,11 +18,12 @@ from spark.core.shape import Shape
 from spark.graph_editor.nodes import AbstractNode, SinkNode, SourceNode, SparkModuleNode
 from spark.graph_editor.utils import _normalize_section_header, _to_human_readable
 from spark.graph_editor.widgets.dict import QDict
-from spark.graph_editor.widgets.dtype import QDtype
+from spark.graph_editor.widgets.combobox import QDtype, QBool
 from spark.graph_editor.widgets.shape import QShape
 from spark.graph_editor.widgets.missing import QMissing
 from spark.graph_editor.widgets.collapsible import QCollapsible
 from spark.graph_editor.widgets.line_edits import QInt, QFloat, QString
+from spark.graph_editor.widgets.base import SparkQWidget
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 
 #################################################################################################################################################
@@ -162,7 +162,10 @@ class NodeInspectorWidget(QtWidgets.QWidget):
             widget.on_update.connect(partial(self._on_widget_update, prefixed_name))
             shapes_section.addWidget(widget)
             self._widgets_map[prefixed_name] = widget
-            
+        # Open and lock section
+        shapes_section.expand()
+        shapes_section.setLocked(True)
+
     def _build_main_section(self):
         """Builds the main section with node name and simple arguments."""
         if not self._target_node:
@@ -180,6 +183,10 @@ class NodeInspectorWidget(QtWidgets.QWidget):
         else:
             # Unknown node type raise error.
             raise TypeError(f'Support for node of type \"{self._target_node.__class__.__name__}\" is not implemented.')
+        
+        # Open and lock section
+        main_section.expand()
+        main_section.setLocked(True)
 
     def _add_widgets_from_spark_config(self, section: QCollapsible, config: BaseSparkConfig):
 
@@ -192,7 +199,13 @@ class NodeInspectorWidget(QtWidgets.QWidget):
             if field.name in nested_configs:
                 continue
             # Add widget to collapsible
-            self._add_attr_widget_to_layout(section, field.name, field.type, getattr(config, field.name))
+            self._add_attr_widget_to_layout(
+                section, 
+                field.name, 
+                field.type, 
+                getattr(config, field.name), 
+                metadata=field.metadata,
+            )
 
         # Iterate over fields, add nested configs as new collapsibles
         for field in dataclasses.fields(config):
@@ -201,30 +214,38 @@ class NodeInspectorWidget(QtWidgets.QWidget):
                 continue
             # Create a collapsable window
             if not field.name in self._sections:
-                self._add_section(field.name)
-            section = self._get_section(field.name)
+                self._add_section(field.name, section)
+            subsection = self._get_section(field.name)
             # Add collapsible recursively
-            self._add_widgets_from_spark_config(section, getattr(config, field.name))
+            self._add_widgets_from_spark_config(subsection, getattr(config, field.name))
 
 
-    def _add_attr_widget_to_layout(self, section: QCollapsible, attr_name: str, attr_type: Type, value: Any | None = None):
+    def _add_attr_widget_to_layout(self, 
+            section: QCollapsible, 
+            attr_name: str, 
+            attr_type: Type, 
+            value: Any | None = None, 
+            metadata: dict[str, tp.Any] = None):
         """
             Creates and adds an appropriate widget for a given argument specification.
         """
         # Get appropiate widget
         widget_class = self._get_widget_class_for_type(attr_type)
         if widget_class == QMissing:
-            widget: SparkQWidget = widget_class(_to_human_readable(attr_name))
+            widget: QMissing = widget_class(_to_human_readable(attr_name))
             section.addWidget(widget)
             self._widgets_map[attr_name] = None
             return
         # Initialize widget
-        widget = widget_class(_to_human_readable(attr_name), str(value) if value is not None else '')
+        if widget_class == QDtype:
+            widget: QDtype = widget_class(_to_human_readable(attr_name), value, values_options=metadata['value_options'])
+        else:
+            widget = widget_class(_to_human_readable(attr_name), str(value) if value is not None else '')
         widget.on_update.connect(partial(self._on_widget_update, attr_name))
         section.addWidget(widget)
         self._widgets_map[attr_name] = widget
 
-    def _add_section(self, name: str) -> QCollapsible:
+    def _add_section(self, name: str, parent_section: QCollapsible = None) -> QCollapsible:
         """
             Adds a new collapsible section with a header and a form layout.
         """
@@ -233,7 +254,10 @@ class NodeInspectorWidget(QtWidgets.QWidget):
             raise ValueError(f'Name \"{name}\" is already in use by another section.')
         # Create new collapsible
         new_section = QCollapsible(_to_human_readable(name))
-        self._main_layout.addWidget(new_section)
+        if parent_section:
+            parent_section.addWidget(new_section)
+        else:
+            self._main_layout.addWidget(new_section)
         # Add section reference
         self._sections[name] = new_section
         return new_section
@@ -246,6 +270,7 @@ class NodeInspectorWidget(QtWidgets.QWidget):
             Maps an argument type to a corresponding widget class.
         """
         WIDGET_TYPE_MAP = {
+            'bool': QBool,
             'int': QInt,
             'float': QFloat,
             'str': QString,
@@ -273,6 +298,8 @@ class NodeInspectorWidget(QtWidgets.QWidget):
                 layout = item.layout()
                 if layout:
                     self._recursive_clear_layout(layout)
+
+        self._sections.clear()
 
     def _recursive_clear_layout(self, layout: QtWidgets.QLayout):
         """
@@ -306,23 +333,25 @@ class NodeInspectorWidget(QtWidgets.QWidget):
         else:
             raise RuntimeError(f'Widget associated to {attr_name} does not implement a map back to its node attributes.')
         
-        # Try to update node
-        try:
-            # Call the node's universal update method
-            self._target_node.update_attribute(attr_name, new_value)
-        except (ValueError, TypeError) as e:
+        print('Bip Bop Bup I am an Update')
+        if False:
+            # Try to update node
+            try:
+                # Call the node's universal update method
+                self._target_node.update_attribute(attr_name, new_value)
+            except (AttributeError, ValueError, TypeError) as e:
 
-            # Ignore next Click. Flag will be consumed when user interacts with the warning box.
-            self._target_node.graph.ignore_next_click_event()
+                # Ignore next Click. Flag will be consumed when user interacts with the warning box.
+                self._target_node.graph.ignore_next_click_event()
 
-            # If the node rejects the change, show an error and revert the widget.
-            QtWidgets.QMessageBox.warning(self._target_node.graph.viewer(), 'Error', e)
+                # If the node rejects the change, show an error and revert the widget.
+                QtWidgets.QMessageBox.warning(self._target_node.graph.viewer(), 'Error', e)
 
-            # Revert the widget to the correct value from the node
-            if attr_name == 'name':
-                widget.setText(self._target_node.name())
-            elif attr_name in self._target_node.init_args:
-                widget.setText(str(self._target_node.init_args[attr_name]))
+                # Revert the widget to the correct value from the node
+                if attr_name == 'name':
+                    widget.setText(self._target_node.name())
+                elif attr_name in self._target_node.init_args:
+                    widget.setText(str(self._target_node.init_args[attr_name]))
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
