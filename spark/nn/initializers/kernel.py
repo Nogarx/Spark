@@ -52,12 +52,17 @@ class KernelInitializerConfig(BaseSparkConfig):
             ],
             'description': 'Dtype used for JAX dtype promotions.',
         })
-    
+
+# NOTE: This is a simple registry needed for the GUI. 
+# A more complex implementation would be an overkill for what this is needed.
+_KERNEL_CONFIG_REGISTRY = {}
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class UniformKernelInitializerConfig(KernelInitializerConfig):
     name: tp.Literal['uniform_kernel_initializer'] = 'uniform_kernel_initializer'
-    
+_KERNEL_CONFIG_REGISTRY['uniform_kernel_initializer'] = KernelInitializerConfig
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_initializer
@@ -94,7 +99,8 @@ class SparseUniformKernelInitializerConfig(KernelInitializerConfig):
             ],
             'description': 'Expected ratio of non-zero entries in the kernel.',
         })
-    
+_KERNEL_CONFIG_REGISTRY['sparse_uniform_kernel_initializer'] = sparse_uniform_kernel_initializer
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_initializer

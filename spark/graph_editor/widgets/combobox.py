@@ -17,20 +17,23 @@ from spark.graph_editor.utils import _to_human_readable
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class QDtypeEdit(QtWidgets.QComboBox):
+class QComboBoxEdit(QtWidgets.QComboBox):
     """
-    A QComboBox widget for selecting a dtype from a predefined list.
+        A QComboBox widget for selecting a dtype from a predefined list.
     """
-    editingFinished = QtCore.Signal()
 
-    def __init__(self, initial_value: jnp.dtype, supported_dtypes: list[jnp.dtype], parent: QtWidgets.QWidget = None):
+    def __init__(self, initial_value: jnp.dtype, options_list: list[tuple[str, tp.Any]], parent: QtWidgets.QWidget = None):
         super().__init__(parent)
-        if not len(supported_dtypes) > 0:
-            raise ValueError(f'supported_dtypes cannot be an empty list.')
-        self.supported_dtypes = supported_dtypes
-        for dtype in self.supported_dtypes:
-            self.addItem(_to_human_readable(jnp.dtype(dtype).name), userData=dtype)
-        self.set_dtype(initial_value)
+
+        # Populate ComboBox
+        if not len(options_list) > 0:
+            raise ValueError(f'options_list cannot be an empty list.')
+        self.options_list = options_list
+        for (option_name, option_data) in self.options_list:
+            self.addItem(option_name, userData=option_data)
+        self.set_value(initial_value)
+
+        # Set style
         self.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
             QtWidgets.QSizePolicy.Policy.Expanding
@@ -43,18 +46,17 @@ class QDtypeEdit(QtWidgets.QComboBox):
                              padding-right: {GRAPH_EDITOR_CONFIG.input_field_margin.right()}px;\
                              padding-bottom: {GRAPH_EDITOR_CONFIG.input_field_margin.bottom()}px;')
 
-    def set_dtype(self, dtype_to_set: jnp.dtype) -> None:
+    def set_value(self, value: tp.Any) -> None:
         """
-            Sets the current selection based on a dtype object.
+            Sets the current object selection.
         """
-        index = self.findData(dtype_to_set)
+        index = self.findData(value)
         if index != -1:
             self.setCurrentIndex(index)
-        self.editingFinished.emit()
 
-    def get_dtype(self) -> jnp.dtype:
+    def get_value(self) -> tp.Any:
         """
-            Returns the currently selected dtype object.
+            Returns the currently selected object.
         """
         return self.currentData()
 
@@ -62,7 +64,7 @@ class QDtypeEdit(QtWidgets.QComboBox):
 
 class QDtype(SparkQWidget):
     """
-        Custom QWidget used for integer fields in the SparkGraphEditor's Inspector.
+        Custom QWidget used for dtypes fields in the SparkGraphEditor's Inspector.
     """
 
     def __init__(self,
@@ -71,8 +73,6 @@ class QDtype(SparkQWidget):
                  values_options: list[jnp.dtype],
                  parent: QtWidgets.QWidget = None):
         super().__init__(parent=parent)
-        if not len(values_options) > 0:
-            raise ValueError(f'supported_dtypes cannot be an empty list.')
         # Add layout
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -81,61 +81,22 @@ class QDtype(SparkQWidget):
         self._label.setContentsMargins(GRAPH_EDITOR_CONFIG.label_field_margin)
         layout.addWidget(self._label)
         # Add QShapeEdit
-        self._dtype_edit = QDtypeEdit(initial_value, values_options, self)
+        options_list = [(_to_human_readable(dtype.__name__), dtype) for dtype in values_options]
+        self._dtype_edit = QComboBoxEdit(initial_value, options_list, self)
         # Update callback
-        self._dtype_edit.editingFinished.connect(self._on_update)
+        self._dtype_edit.currentIndexChanged.connect(self._on_update)
         # Finalize
         layout.addWidget(self._dtype_edit)
         self.setLayout(layout)
 
     def get_value(self):
-        return self._dtype_edit.get_dtype()
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-class QBoolEdit(QtWidgets.QComboBox):
-    """
-    A QComboBox widget for selecting a dtype from a predefined list.
-    """
-    editingFinished = QtCore.Signal()
-
-    def __init__(self, initial_value: bool, parent: QtWidgets.QWidget = None):
-        super().__init__(parent)
-        self.addItem('True', userData=True)
-        self.addItem('False', userData=False)
-        self.set_value(initial_value)
-        self.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Expanding,
-            QtWidgets.QSizePolicy.Policy.Expanding
-        )
-        # NOTE: Left padding seems to be missing 4px to match standard QLineEdit style.
-        self.setStyleSheet(f'background-color: {GRAPH_EDITOR_CONFIG.input_field_bg_color};\
-                             border-radius: {GRAPH_EDITOR_CONFIG.input_field_border_radius}px;\
-                             padding-left: {GRAPH_EDITOR_CONFIG.input_field_margin.left()+4}px;\
-                             padding-top: {GRAPH_EDITOR_CONFIG.input_field_margin.top()}px;\
-                             padding-right: {GRAPH_EDITOR_CONFIG.input_field_margin.right()}px;\
-                             padding-bottom: {GRAPH_EDITOR_CONFIG.input_field_margin.bottom()}px;')
-
-    def set_value(self, value: bool) -> None:
-        """
-            Sets the current selection based on a dtype object.
-        """
-        index = self.findData(value)
-        if index != -1:
-            self.setCurrentIndex(index)
-        self.editingFinished.emit()
-
-    def get_value(self) -> bool:
-        """
-            Returns the currently selected dtype object.
-        """
-        return self.currentData()
+        return self._dtype_edit.get_value()
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class QBool(SparkQWidget):
     """
-        Custom QWidget used for integer fields in the SparkGraphEditor's Inspector.
+        Custom QWidget used for bool fields in the SparkGraphEditor's Inspector.
     """
 
     def __init__(self,
@@ -151,16 +112,48 @@ class QBool(SparkQWidget):
         self._label.setContentsMargins(GRAPH_EDITOR_CONFIG.label_field_margin)
         layout.addWidget(self._label)
         # Add QShapeEdit
-        self._dtype_edit = QBoolEdit(initial_value, self)
+        self._bool_edit = QComboBoxEdit(initial_value, [('True', True), ('False', False)], self)
         # Update callback
-        self._dtype_edit.editingFinished.connect(self._on_update)
+        self._bool_edit.currentIndexChanged.connect(self._on_update)
         # Finalize
-        layout.addWidget(self._dtype_edit)
+        layout.addWidget(self._bool_edit)
         self.setLayout(layout)
 
     def get_value(self):
-        return self._dtype_edit.get_value()
+        return self._bool_edit.get_value()
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class QInitializer(SparkQWidget):
+    """
+        Custom QWidget used for initializer fields in the SparkGraphEditor's Inspector.
+    """
+
+    def __init__(self,
+                 label: str,
+                 initial_value: str,
+                 values_options: list[str],
+                 parent: QtWidgets.QWidget = None):
+        super().__init__(parent=parent)
+        # Add layout
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        # Add label
+        self._label = QtWidgets.QLabel(label, minimumWidth=GRAPH_EDITOR_CONFIG.min_attr_label_size, parent=self)
+        self._label.setContentsMargins(GRAPH_EDITOR_CONFIG.label_field_margin)
+        layout.addWidget(self._label)
+        # Add QShapeEdit
+        options_list = [(_to_human_readable(initializer), initializer) for initializer in values_options]
+        self._initializer_edit = QComboBoxEdit(initial_value, options_list, self)
+        # Update callback
+        self._initializer_edit.currentIndexChanged.connect(self._on_update)
+        # Finalize
+        layout.addWidget(self._initializer_edit)
+        self.setLayout(layout)
+
+    def get_value(self):
+        return self._initializer_edit.get_value()
+    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

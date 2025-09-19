@@ -23,7 +23,7 @@ class SparkQWidget(QtWidgets.QFrame, abc.ABC, metaclass=SparkQWidgetMeta):
         Base QWidget class for the graph editor attributes.
     """
 
-    on_update = QtCore.Signal()
+    on_update = QtCore.Signal(tp.Any)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -40,7 +40,7 @@ class SparkQWidget(QtWidgets.QFrame, abc.ABC, metaclass=SparkQWidgetMeta):
         pass
 
     def _on_update(self):
-        self.on_update.emit()
+        self.on_update.emit(self.get_value())
 
 
 #################################################################################################################################################

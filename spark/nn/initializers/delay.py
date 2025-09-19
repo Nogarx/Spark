@@ -21,7 +21,18 @@ from spark.nn.initializers.base import Initializer
 #################################################################################################################################################
 
 class DelayInitializerConfig(BaseSparkConfig):
-    name: str
+    name: str = dataclasses.field(
+        default=None, 
+        metadata={
+            'validators': [
+                TypeValidator,
+            ], 
+            'value_options': [
+                'constant_delay_initializer',
+                'uniform_delay_initializer',
+            ],
+            'description': 'Delay initializer protocol.',
+        })
     dtype: DTypeLike = dataclasses.field(
         default=jnp.uint8, 
         metadata={
@@ -35,11 +46,16 @@ class DelayInitializerConfig(BaseSparkConfig):
             'description': 'Dtype used for JAX dtype promotions.',
         })
     
+# NOTE: This is a simple registry needed for the GUI. 
+# A more complex implementation would be an overkill for what this is needed.
+_DELAY_CONFIG_REGISTRY = {}
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class ConstantDelayInitializerConfig(DelayInitializerConfig):
     name: tp.Literal['constant_delay_initializer'] = 'constant_delay_initializer'
-    
+_DELAY_CONFIG_REGISTRY['constant_delay_initializer'] = ConstantDelayInitializerConfig
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_initializer
@@ -56,6 +72,7 @@ def constant_delay_initializer(config: ConstantDelayInitializerConfig) -> Initia
 
 class UniformDelayInitializerConfig(DelayInitializerConfig):
     name: tp.Literal['uniform_delay_initializer'] = 'uniform_delay_initializer'
+_DELAY_CONFIG_REGISTRY['uniform_delay_initializer'] = UniformDelayInitializerConfig
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

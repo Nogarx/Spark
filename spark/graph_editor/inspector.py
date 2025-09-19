@@ -13,8 +13,8 @@ import jax.numpy as jnp
 from functools import partial
 from typing import Dict, Any, Type
 from Qt import QtCore, QtWidgets, QtGui
-from spark.core.specs import InputArgSpec
-from spark.core.shape import Shape
+from spark.nn.initializers.delay import DelayInitializerConfig, _DELAY_CONFIG_REGISTRY
+from spark.nn.initializers.kernel import KernelInitializerConfig, _KERNEL_CONFIG_REGISTRY
 from spark.graph_editor.nodes import AbstractNode, SinkNode, SourceNode, SparkModuleNode
 from spark.graph_editor.utils import _normalize_section_header, _to_human_readable
 from spark.graph_editor.widgets.dict import QDict
@@ -150,18 +150,16 @@ class NodeInspectorWidget(QtWidgets.QWidget):
         for name, spec in self._target_node.input_specs.items():
             is_static = not isinstance(self._target_node, SourceNode)
             widget = QShape(_to_human_readable(name), initial_shape=spec.shape, is_static=is_static)
-            prefixed_name = f'input_port.{name}'
-            widget.on_update.connect(partial(self._on_widget_update, prefixed_name))
+            widget.on_update.connect(partial(self._target_node.update_input_shape, name))
             shapes_section.addWidget(widget)
-            self._widgets_map[prefixed_name] = widget
+            self._widgets_map[f'input_port.{name}'] = widget
 
         for name, spec in self._target_node.output_specs.items():
-            is_static = True#not isinstance(self._target_node, SinkNode)
+            is_static = not isinstance(self._target_node, SinkNode)
             widget = QShape(_to_human_readable(name), initial_shape=spec.shape, is_static=is_static)
-            prefixed_name = f'output_port.{name}'
-            widget.on_update.connect(partial(self._on_widget_update, prefixed_name))
+            widget.on_update.connect(partial(self._target_node.update_input_shape, name))
             shapes_section.addWidget(widget)
-            self._widgets_map[prefixed_name] = widget
+            self._widgets_map[f'output_port.{name}'] = widget
         # Open and lock section
         shapes_section.expand()
         shapes_section.setLocked(True)
@@ -173,7 +171,13 @@ class NodeInspectorWidget(QtWidgets.QWidget):
         
         main_section = self._add_section('Main')
         # Add name
-        self._add_attr_widget_to_layout(main_section, 'name', 'str', self._target_node.NODE_NAME)
+        self._add_attr_widget_to_layout(
+            main_section, 
+            'name', 
+            'str', 
+            lambda name: self._target_node.set_name(name), 
+            self._target_node.NODE_NAME
+        )
         # Add shape widgets to source/sink nodes.
         if isinstance(self._target_node, (SinkNode, SourceNode)):
             pass
@@ -199,10 +203,12 @@ class NodeInspectorWidget(QtWidgets.QWidget):
             if field.name in nested_configs:
                 continue
             # Add widget to collapsible
+            #if field.name == 'kernel_initializer':
             self._add_attr_widget_to_layout(
                 section, 
                 field.name, 
                 field.type, 
+                partial(lambda config_var, name_var, value: setattr(config_var, name_var, value), config, field.name),
                 getattr(config, field.name), 
                 metadata=field.metadata,
             )
@@ -217,15 +223,19 @@ class NodeInspectorWidget(QtWidgets.QWidget):
                 self._add_section(field.name, section)
             subsection = self._get_section(field.name)
             # Add collapsible recursively
-            self._add_widgets_from_spark_config(subsection, getattr(config, field.name))
-
+            type_hints = tp.get_type_hints(config.__class__)
+            if issubclass(type_hints[field.name], (KernelInitializerConfig, DelayInitializerConfig)):
+                self._add_widgets_from_spark_initializer(subsection, getattr(config, field.name))
+            else:
+                self._add_widgets_from_spark_config(subsection, getattr(config, field.name))
 
     def _add_attr_widget_to_layout(self, 
             section: QCollapsible, 
             attr_name: str, 
             attr_type: Type, 
+            attr_update_method: tp.Callable,
             value: Any | None = None, 
-            metadata: dict[str, tp.Any] = None):
+            metadata: dict[str, tp.Any] = None) -> SparkQWidget:
         """
             Creates and adds an appropriate widget for a given argument specification.
         """
@@ -240,10 +250,11 @@ class NodeInspectorWidget(QtWidgets.QWidget):
         if widget_class == QDtype:
             widget: QDtype = widget_class(_to_human_readable(attr_name), value, values_options=metadata['value_options'])
         else:
-            widget = widget_class(_to_human_readable(attr_name), str(value) if value is not None else '')
-        widget.on_update.connect(partial(self._on_widget_update, attr_name))
+            widget = widget_class(_to_human_readable(attr_name), value)
+        widget.on_update.connect(attr_update_method)
         section.addWidget(widget)
         self._widgets_map[attr_name] = widget
+        return widget
 
     def _add_section(self, name: str, parent_section: QCollapsible = None) -> QCollapsible:
         """
@@ -314,44 +325,6 @@ class NodeInspectorWidget(QtWidgets.QWidget):
                 nested_layout = item.layout()
                 if nested_layout:
                     self._recursive_clear_layout(nested_layout)
-
-    def _on_widget_update(self, attr_name: str):
-        """
-            A generic handler that links a widget's update to the node's update method.
-        """
-
-        if not self._target_node:
-            return
-
-        widget = self._widgets_map.get(attr_name)
-        if not widget:
-            return
-
-        # Get values of the widget
-        if isinstance(widget, SparkQWidget):
-            new_value = widget.get_value()
-        else:
-            raise RuntimeError(f'Widget associated to {attr_name} does not implement a map back to its node attributes.')
-        
-        print('Bip Bop Bup I am an Update')
-        if False:
-            # Try to update node
-            try:
-                # Call the node's universal update method
-                self._target_node.update_attribute(attr_name, new_value)
-            except (AttributeError, ValueError, TypeError) as e:
-
-                # Ignore next Click. Flag will be consumed when user interacts with the warning box.
-                self._target_node.graph.ignore_next_click_event()
-
-                # If the node rejects the change, show an error and revert the widget.
-                QtWidgets.QMessageBox.warning(self._target_node.graph.viewer(), 'Error', e)
-
-                # Revert the widget to the correct value from the node
-                if attr_name == 'name':
-                    widget.setText(self._target_node.name())
-                elif attr_name in self._target_node.init_args:
-                    widget.setText(str(self._target_node.init_args[attr_name]))
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

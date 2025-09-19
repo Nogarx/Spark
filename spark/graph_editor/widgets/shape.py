@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from Qt import QtCore, QtWidgets, QtGui
+from spark.core.shape import normalize_shape
 from spark.graph_editor.widgets.line_edits import QIntLineEdit
 from spark.graph_editor.widgets.base import SparkQWidget
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
@@ -40,7 +41,7 @@ class QShapeEdit(QtWidgets.QWidget):
 
     def __init__(
         self,
-        initial_shape: tuple[int, ...] = (1,),
+        initial_shape: tuple[int, ...] = None,
         min_dims: int = 1,
         max_dims: int = 8,
         max_shape: int = 1E9,
@@ -76,7 +77,7 @@ class QShapeEdit(QtWidgets.QWidget):
             self._layout.addWidget(self.addButton)
 
         # Initialize with the provided shape
-        self.setShape(initial_shape if initial_shape is not None else (1,) * self.min_dims)
+        self.set_shape(initial_shape if initial_shape else (1,) * self.min_dims)
 
         self._layout.addStretch()
         self.setLayout(self._layout)
@@ -152,15 +153,16 @@ class QShapeEdit(QtWidgets.QWidget):
         self.editingFinished.emit()
 
     def get_shape(self) -> tuple[int, ...]:
-        return tuple(int(edit.text()) for edit in self._dimension_edits if edit.text())
+        shape_text = tuple(int(edit.text()) for edit in self._dimension_edits if edit.text())
+        shape = normalize_shape(shape_text)
+        return shape
 
-    def setShape(self, new_shape: tuple[int, ...]):
+    def set_shape(self, new_shape: tuple[int, ...]):
         """
             Clears existing dimensions and sets a new shape.
         """
         self._clear_dimensions()
-        shape_to_set = new_shape if new_shape else (1,) * self.min_dims
-        for value in shape_to_set:
+        for value in new_shape:
             self._add_dimension(value)
 
     def _adjust_editor_width(self, editor: QtWidgets.QLineEdit):

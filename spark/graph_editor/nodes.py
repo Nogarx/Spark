@@ -5,9 +5,10 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
+    from spark.core.variables import Shape
     from spark.core.module import SparkModule
-    from spark.graph_editor.graph import SparkNodeGraph
     from spark.core.config import BaseSparkConfig
+    from spark.graph_editor.graph import SparkNodeGraph
 
 import abc
 import logging
@@ -41,70 +42,42 @@ class AbstractNode(BaseNode, abc.ABC):
         # Name edition is handle through the inspector
         self._view._text_item.set_locked(True)
 
-    def update_attribute(self, attr_name: str, value: tp.Any):
+
+    def update_input_shape(self, port_name: str, value: Shape):
         """
-        Updates a node attribute based on a key and value.
+            Updates the shape of an input port and broadcast the update.
 
-        Args:
-            attr_name (str): The name of the attribute to update (e.g., 'learning_rate').
-            value (Any): The new value for the attribute.
-
-        Raises:
-            ValueError: If the provided value is invalid (e.g., a duplicate name).
-            TypeError: If the value has an incompatible type for an init argument.
+            Args:
+                port_name (str): The name of the port.
+                value (Any): The new value for the attribute.
         """
+        # Sanity checks
+        if not port_name in self.input_specs:
+            raise ValueError(f'Input specs does not define an input port named "{port_name}"')
+        # Update port
+        value = normalize_shape(value)
+        self.input_specs[port_name].shape = value
+        # Broadcast
+        logging.info(f'Updated input port "{port_name}" of node "{self.id}" to "{value}".')
+        self.graph.property_changed.emit(self, f'{self.id}.input_port.{port_name}', value)
 
-        # Handle node name updates
-        if attr_name == 'name':
-            current_name = self.name()
-            if value == current_name:
-                return # No change
-                
-            # Use the graph instance attached to the node to check for duplicates
-            if self.graph and self.graph.name_exist(value):
-                raise ValueError(f'The name "{value}" is already in use.')
-            if not value:
-                raise ValueError('The name cannot be empty.')
+    def update_output_shape(self, port_name: str, value: Shape):
+        """
+            Updates the shape of an input port and broadcast the update.
 
-            self.graph.update_node_name(self.id, value)
-            logging.info(f'Updated name of node "{self.id}" to "{value}".')
-            self.graph.property_changed.emit(self, attr_name, value)
-            return
-
-        # NOTE: Only shape updates are expected. All the other arguments are handle by the graph or are set in stone.
-        # Handle input specs updates
-        if 'input_port.' in attr_name:
-            port_name = attr_name.split('.')[1]
-            self.input_specs[port_name].shape = normalize_shape(value)
-            logging.info(f'Updated init arg "{attr_name}" of node "{self.id}" to "{validated_value}".')
-            self.graph.property_changed.emit(self, attr_name, value)
-            return
-        # Handle output specs update
-        if 'output_port.' in attr_name:
-            port_name = attr_name.split('.')[1]
-            self.output_specs[port_name].shape = normalize_shape(value)
-            # TODO: Ideally this should be an event
-            self.graph._on_output_shape_update(self.get_output(port_name))
-            logging.info(f'Updated init arg "{attr_name}" of node "{self.id}" to "{validated_value}".')
-            self.graph.property_changed.emit(self, attr_name, value)
-            return
-        
-        # Handle init args updates
-        if attr_name in self.init_args_specs:
-            spec = self.init_args_specs[attr_name]
-            try:
-                # Attempt to cast the value to the expected type
-                validated_value = spec.attr_type(value)
-            except (ValueError, TypeError):
-                raise TypeError(f"Invalid type for '{attr_name}'. Expected {spec.attr_type.__name__}.")
-
-            self.init_args[attr_name] = validated_value
-            logging.info(f'Updated init arg "{attr_name}" of node "{self.id}" to "{validated_value}".')
-            self.graph.property_changed.emit(self, attr_name, value)
-            return
-        
-        logging.warning(f"Attempted to update unknown or unhandled attribute '{attr_name}' on node {self.id}.")
-
+            Args:
+                port_name (str): The name of the port.
+                value (Any): The new value for the attribute.
+        """
+        # Sanity checks
+        if not port_name in self.input_specs:
+            raise ValueError(f'Output specs does not define an input port named "{port_name}"')
+        # Update port
+        value = normalize_shape(value)
+        self.output_specs[port_name].shape = value
+        # Broadcast
+        logging.info(f'Updated output port "{port_name}" of node "{self.id}" to "{value}".')
+        self.graph.property_changed.emit(self, f'{self.id}.output_port.{port_name}', value)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
