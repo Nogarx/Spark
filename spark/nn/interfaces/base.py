@@ -6,6 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.payloads import SparkPayload
+    from spark.core.config import SparkConfig
 
 import abc
 from spark.core.module import SparkModule
@@ -19,10 +20,9 @@ class Interface(SparkModule, abc.ABC):
         Abstract interface model.
     """
 
-    def __init__(self, 
-                 **kwargs):
+    def __init__(self, config: SparkConfig = None, **kwargs):
         # Main attributes
-        super().__init__(**kwargs)
+        super().__init__(config = config, **kwargs)
 
     @abc.abstractmethod
     def __call__(self, *args: SparkPayload, **kwargs) -> dict[str, SparkPayload]:

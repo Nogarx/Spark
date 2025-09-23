@@ -7,10 +7,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.module import SparkModule
     from spark.core.payloads import SparkPayload
+    from spark.core.config import BaseSparkConfig
 
 import jax
 import jax.numpy as jnp
-from typing import Any
+import typing as tp
 from jax.typing import DTypeLike
 from dataclasses import dataclass
 
@@ -143,9 +144,9 @@ class ModuleSpecs:
     name: str
     module_cls: type[SparkModule]        
     inputs: dict[str, list[PortMap]]               
-    init_args: dict[str, Any]                      
+    config: BaseSparkConfig
 
-    def __init__(self, name: str, module_cls: type, inputs: dict[str, list[PortMap]], init_args: dict[str, Any]):
+    def __init__(self, name: str, module_cls: type, inputs: dict[str, list[PortMap]], config: BaseSparkConfig):
         # TODO: Refactor code to remove lazy imports.
         from spark.core.registry import REGISTRY
         # Validate module_cls
@@ -165,35 +166,25 @@ class ModuleSpecs:
                 if not isinstance(element, PortMap):
                     raise TypeError(f'Expected PortMap at value {key} of "inputs", but found value "{inputs[key]}" of type {type(inputs[key]).__name__}.')
         
-        # Validate init_args
-        if not isinstance(init_args, dict):
-            raise TypeError(f'"init_args" must be of type "dict" but got "{type(init_args).__name__}".')
-        for key in init_args.keys():
-            if not isinstance(key, str):
-                raise TypeError(f'All keys in "init_args" must be strings, but found key "{key}" of type {type(key).__name__}.')
+        # Validate model_config
+        type_hints = tp.get_type_hints(module_cls)
+        if not isinstance(config, type_hints['config']):
+            raise TypeError(f'"config" must be of type "{type_hints['config'].__name__}" but got "{type(config).__name__}".')
 
         object.__setattr__(self, 'name', name)
         object.__setattr__(self, 'module_cls', module_cls)
         object.__setattr__(self, 'inputs', inputs)
-        object.__setattr__(self, 'init_args', init_args)
+        object.__setattr__(self, 'config', config)
 
     def tree_flatten(self):
-        children = (self.name, self.module_cls, self.inputs, self.init_args)
+        children = (self.name, self.module_cls, self.inputs, self.config)
         aux_data = ()
         return children, aux_data
 
     @classmethod
     def tree_unflatten(cls, aux_data, children):
-        (name, module_cls, inputs, init_args) = children
-        return cls(name=name, module_cls=module_cls, inputs=inputs, init_args=init_args,)
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-@dataclass
-class InputArgSpec:
-    
-    attr_type: type
-    is_optional: bool
+        (name, module_cls, inputs, config) = children
+        return cls(name=name, module_cls=module_cls, inputs=inputs, config=config,)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

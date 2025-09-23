@@ -240,7 +240,8 @@ def register_cfg_validator(arg: ConfigurationValidator | str | None = None):
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# Alias map for pretty paths. 
+# NOTE: This aliases are used by the Graph Editor to create pretty context menus.
+
 MRO_PATH_ALIAS_MAP = {
     # Aliases
     'Interface': 'Interfaces',

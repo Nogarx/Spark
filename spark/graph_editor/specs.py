@@ -8,33 +8,55 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.specs import OutputSpec, InputSpec
+    from spark.core.config import BaseSparkConfig
 
 import abc
 import jax.numpy as jnp
-from dataclasses import dataclass
-from typing import Type, Dict, List, Any
+import typing as tp
+import dataclasses
 from spark.core.shape import bShape, normalize_shape
 from spark.core.payloads import SparkPayload
+from spark.core.registry import REGISTRY
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-@dataclass(init=False)
-class PortSpecEditor:
+@dataclasses.dataclass(init=False)
+class BaseSpecEditor(abc.ABC):
+
+    def to_dict(self,) -> dict[str, tp.Any]:
+        """
+            Returns a JSON serializable version of the spec.
+        """
+        return dataclasses.asdict(self)
+    
+    @classmethod
+    def from_dict(cls, **kwargs) -> BaseSpecEditor:
+        """
+            Instantiates the spec from a valid JSON serializable of the spec.
+        """
+        return cls(**kwargs)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@dataclasses.dataclass(init=False)
+class PortSpecEditor(BaseSpecEditor):
     """
         Mutable base specification for a port of an SparkModule.
     """
-    payload_type: Type[SparkPayload]        
+    payload_type: type[SparkPayload]        
     shape: bShape | None                  
-    dtype: Any | None                               
+    dtype: tp.Any | None                               
     description: str | None       
 
-    def __init__(self, 
-                 payload_type: Type[SparkPayload],  
-                 shape: bShape | None = None, 
-                 dtype: Any | None = None,  
-                 description: str | None = None):
+    def __init__(
+            self, 
+            payload_type: type[SparkPayload],  
+            shape: bShape | None = None, 
+            dtype: tp.Any | None = None,  
+            description: str | None = None
+        ):
         
         # Validate attributes
         if not issubclass(payload_type, SparkPayload):
@@ -58,22 +80,28 @@ class PortSpecEditor:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@dataclass(init=False)
+@dataclasses.dataclass(init=False)
 class InputSpecEditor(PortSpecEditor):
     """
         Specification for an input port of an SparkModule.
     """
     is_optional: bool                       
-    port_maps: List[PortMap]
+    port_maps: list[PortMap]
 
-    def __init__(self, 
-                 payload_type: Type[SparkPayload], 
-                 shape: bShape, 
-                 dtype: jnp.dtype, 
-                 is_optional: bool, 
-                 port_maps: List[PortMap] = [],
-                 description: str | None = None):
-        super().__init__(payload_type=payload_type, shape=shape, dtype=dtype, description=description)
+    def __init__(
+            self, 
+            payload_type: type[SparkPayload], 
+            shape: bShape, 
+            dtype: jnp.dtype, 
+            is_optional: bool, 
+            port_maps: list[PortMap] = [],
+            description: str | None = None
+        ):
+        super().__init__(
+            payload_type=payload_type, 
+            shape=shape, dtype=dtype, 
+            description=description
+        )
         if not isinstance(is_optional, bool):
             raise TypeError(f'Expected "is_optional" to be of type {bool.__name__} but got "{type(is_optional).__name__}".')
         if not isinstance(port_maps, list):
@@ -93,17 +121,18 @@ class InputSpecEditor(PortSpecEditor):
         self.port_maps.remove(port_map)
 
     @classmethod
-    def from_input_specs(cls, input_spec: InputSpec, port_maps: List[PortMap] = []) -> InputSpecEditor:
+    def from_input_specs(cls, input_spec: InputSpec, port_maps: list[PortMap] = []) -> InputSpecEditor:
         return cls(payload_type=input_spec.payload_type,  
                    shape=input_spec.shape, 
                    dtype=input_spec.dtype,  
                    is_optional=input_spec.is_optional,
                    port_maps=port_maps,
-                   description=input_spec.description)
+                   description=input_spec.description
+        )
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@dataclass(init=False)
+@dataclasses.dataclass(init=False)
 class OutputSpecEditor(PortSpecEditor):
     """
         Specification for an output port of an SparkModule.
@@ -112,14 +141,16 @@ class OutputSpecEditor(PortSpecEditor):
 
     @classmethod
     def from_output_specs(cls, output_spec: OutputSpec) -> OutputSpecEditor:
-        return cls(payload_type=output_spec.payload_type,  
-                   shape=output_spec.shape, 
-                   dtype=output_spec.dtype,  
-                   description=output_spec.description)
+        return cls(
+            payload_type=output_spec.payload_type,  
+            shape=output_spec.shape, 
+            dtype=output_spec.dtype,  
+            description=output_spec.description
+        )
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@dataclass(init=False)
+@dataclasses.dataclass(init=False)
 class PortMap:
     """
         Specification for a connection between SparkModules within the SparkGraphEditor.
@@ -141,24 +172,30 @@ class PortMap:
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@dataclass(init=False)
-class ModuleSpecsEditor:
+@dataclasses.dataclass(init=False)
+class ModuleSpecsEditor(BaseSpecEditor):
     """
         Specification for SparkModule automatic constructor within the SparkGraphEditor.
     """
 
     name: str
     module_cls: str         
-    inputs: Dict[str, List[PortMap]]
-    init_args: Dict[str, Any]                      
+    inputs: dict[str, list[PortMap]]
+    config: BaseSparkConfig                   
 
-    def __init__(self, name: str, module_cls: str, inputs: Dict[str, List[PortMap]], init_args: Dict[str, Any]):
+    def __init__(
+            self, 
+            name: str, 
+            module_cls: str, 
+            inputs: dict[str, list[PortMap]], 
+            config: BaseSparkConfig
+        ):
         
         # Validate module_cls
         if not isinstance(module_cls, str):
             raise TypeError(f'Expected "module_cls" to be of type "str" but got type {type(module_cls).__name__}.')
-        #if REGISTRY.MODULES.get(module_cls) is None:  
-        #    raise ValueError(f'Module "{module_cls}" does not exists in the registry.')
+        if REGISTRY.MODULES.get(module_cls) is None:  
+            raise ValueError(f'Module "{module_cls}" does not exists in the registry.')
         # Validate inputs
         if not isinstance(inputs, dict):
             raise TypeError(f'"inputs" must be of type "{dict.__name__}" but got "{type(init_args).__name__}".')
@@ -171,17 +208,15 @@ class ModuleSpecsEditor:
                 if not isinstance(port_map, PortMap):
                     raise TypeError(f'All values in "inputs" must be a list of PortMap, but found value "{inputs[key]}" of type {type(inputs[key]).__name__}.')
         # Validate init_args
-        if not isinstance(init_args, dict):
-            raise TypeError(f'"init_args" must be of type "{dict.__name__}" but got "{type(init_args).__name__}".')
-        for key in init_args.keys():
-            if not isinstance(key, str):
-                raise TypeError(f'All keys in "init_args" must be strings, but found key "{key}" of type {type(key).__name__}.')
+        type_hints = tp.get_type_hints(REGISTRY.MODULES.get(module_cls).class_ref)
+        if not isinstance(config, type_hints['config']):
+            raise TypeError(f'"config" must be of type "{type_hints['config'].__name__}" but got "{type(config).__name__}".')
         
         # Update attributes
         self.name = name
         self.module_cls = module_cls
         self.inputs = inputs
-        self.init_args = init_args
+        self.config = config
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

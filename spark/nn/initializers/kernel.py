@@ -14,12 +14,12 @@ from spark.core.shape import Shape
 from math import prod
 from spark.core.registry import register_initializer
 from spark.core.config import BaseSparkConfig
-from spark.core.config_validation import TypeValidator, ZeroOneValidator
+from spark.core.config_validation import TypeValidator, ZeroOneValidator, PositiveValidator
 from spark.nn.initializers.base import Initializer
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-BASE_SCALE = 3E3
+BASE_SCALE = 3 #3E3
 
 # NOTE: Normalization and rescale is useful to prevent quiescent neurons by construction.
 # Base scale is roughly the minimum sparse current a LIF neuron needs to fire at an input spike sparsity of 90%. 
@@ -30,18 +30,31 @@ BASE_SCALE = 3E3
 #################################################################################################################################################
 
 class KernelInitializerConfig(BaseSparkConfig):
-    name: str
+    name: str = dataclasses.field(
+        default = 'sparse_uniform_kernel_initializer', 
+        metadata = {
+            'validators': [
+                TypeValidator,
+            ], 
+            'value_options': [
+                'uniform_kernel_initializer',
+                'sparse_uniform_kernel_initializer',
+            ],
+            'description': 'Delay initializer protocol.',
+        })
     scale: float = dataclasses.field(
         default = 1.0, 
         metadata = {
             'validators': [
                 TypeValidator,
+                PositiveValidator,
             ], 
-            'description': 'Kernel scale factor.',
+            'description': 'Float value to scale the kernel array.',
         })
+
     dtype: DTypeLike = dataclasses.field(
-        default=jnp.float16, 
-        metadata={
+        default = jnp.float16, 
+        metadata = {
             'validators': [
                 TypeValidator,
             ], 
@@ -55,13 +68,13 @@ class KernelInitializerConfig(BaseSparkConfig):
 
 # NOTE: This is a simple registry needed for the GUI. 
 # A more complex implementation would be an overkill for what this is needed.
-_KERNEL_CONFIG_REGISTRY = {}
+_KERNEL_CONFIG_REGISTRY: dict[str, type[KernelInitializerConfig]] = {}
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class UniformKernelInitializerConfig(KernelInitializerConfig):
     name: tp.Literal['uniform_kernel_initializer'] = 'uniform_kernel_initializer'
-_KERNEL_CONFIG_REGISTRY['uniform_kernel_initializer'] = KernelInitializerConfig
+_KERNEL_CONFIG_REGISTRY['uniform_kernel_initializer'] = UniformKernelInitializerConfig
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -99,7 +112,7 @@ class SparseUniformKernelInitializerConfig(KernelInitializerConfig):
             ],
             'description': 'Expected ratio of non-zero entries in the kernel.',
         })
-_KERNEL_CONFIG_REGISTRY['sparse_uniform_kernel_initializer'] = sparse_uniform_kernel_initializer
+_KERNEL_CONFIG_REGISTRY['sparse_uniform_kernel_initializer'] = SparseUniformKernelInitializerConfig
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

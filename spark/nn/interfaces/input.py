@@ -36,9 +36,9 @@ class InputInterface(Interface, abc.ABC):
         Abstract input interface model.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, config: SparkConfig = None, **kwargs):
         # Main attributes
-        super().__init__(**kwargs)
+        super().__init__(config = config, **kwargs)
 
     @abc.abstractmethod
     def __call__(self, *args: SparkPayload, **kwargs) -> dict[str, SparkPayload]:

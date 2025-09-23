@@ -7,85 +7,19 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.specs import InputSpec
 
-import abc
 import jax.numpy as jnp
 import dataclasses
-from math import prod
-from typing import TypedDict, Dict, List
 from spark.core.tracers import Tracer
-from spark.core.shape import bShape, Shape, normalize_shape
-from spark.core.payloads import SpikeArray, CurrentArray, PotentialArray
-from spark.core.variables import Variable, Constant, ConfigDict
+from spark.core.payloads import SpikeArray, CurrentArray
+from spark.core.variables import Variable, Constant
 from spark.core.registry import register_module
 from spark.core.config import SparkConfig
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.nn.components.base import Component
+from .base import Soma
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
-
-# Generic Soma output contract.
-class SomaOutput(TypedDict):
-    spikes: SpikeArray
-    potentials: PotentialArray
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-class Soma(Component):
-    """
-        Abstract soma model.
-    """
-
-    def __init__(self, **kwargs):
-        # Initialize super.
-        super().__init__(**kwargs)
-
-    @property
-    def potential(self,) -> PotentialArray:
-        """
-            Returns the current soma potential.
-        """
-        return PotentialArray(self._potential.value)
-    
-    def build(self, input_specs: dict[str, InputSpec]):
-        # Initialize shapes
-        self._shape = normalize_shape(input_specs['current'].shape)
-        # Initialize variables
-        self._potential = Variable(jnp.zeros(self._shape, dtype=self._dtype), dtype=self._dtype)
-
-    @abc.abstractmethod
-    def reset(self):
-        """
-            Resets neuron states to their initial values.
-        """
-        pass
-
-    @abc.abstractmethod
-    def _update_states(self, current: CurrentArray) -> None:
-        """
-            Update neuron's states variables.
-        """
-        pass
-
-    @abc.abstractmethod
-    def _compute_spikes(self,) -> SpikeArray:
-        """
-            Compute neuron's spikes.
-        """
-        pass
-
-    def __call__(self, current: CurrentArray) -> SomaOutput:
-        """
-            Update neuron's states and compute spikes.
-        """
-        self._update_states(current)
-        return {
-            'spikes': self._compute_spikes(), 
-            'potentials': self.potential,
-        }
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class ALIFSomaConfig(SparkConfig):
     potential_rest: float = dataclasses.field(
@@ -116,14 +50,14 @@ class ALIFSomaConfig(SparkConfig):
             ],
             'description': 'Membrane potential decay constant.',
         })
-    conductance: float = dataclasses.field(
-        default = 10.0, 
+    resistance: float = dataclasses.field(
+        default = 100.0,
         metadata = {
-            'units': 'nS', # [1/GΩ]
+            'units': 'MΩ', # [1/µS]
             'validators': [
                 TypeValidator,
             ], 
-            'description': 'Membrane conductance.',
+            'description': 'Membrane resistance.',
         })
     threshold: float = dataclasses.field(
         default = -40.0, 
@@ -205,7 +139,7 @@ class ALIFSoma(Soma):
         self._potential_reset = Constant(self.config.potential_reset - self.config.potential_rest, dtype=self._dtype)
         self._potential_scale = Constant(self._dt / self.config.potential_tau, dtype=self._dtype)
         # Conductance.
-        self._conductance = Constant(1/self.config.conductance, dtype=self._dtype)
+        self._resistance = Constant(self.config.resistance / 1000.0, dtype=self._dtype) # Current is in pA for stability
         # Threshold.
         self._threshold = Tracer(self._shape,
                                  tau=self.config.threshold_tau, 
@@ -229,7 +163,7 @@ class ALIFSoma(Soma):
             Update neuron's soma states variables.
         """
         is_ready = jnp.greater(self.refractory.value, self.cooldown).astype(self._dtype)
-        self._potential.value += self._potential_scale * (-self._potential.value + is_ready * self._conductance * I.value)
+        self._potential.value += self._potential_scale * (-self._potential.value + is_ready * self._resistance * I.value)
 
     def _compute_spikes(self,) -> SpikeArray:
         """

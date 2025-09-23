@@ -5,7 +5,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.specs import OutputSpec, InputSpec, InputArgSpec, VarSpec
+    from spark.core.specs import OutputSpec, InputSpec, VarSpec
     from spark.core.payloads import SparkPayload
     from spark.core.shape import Shape
 from spark.core.specs import InputSpec, VarSpec
@@ -18,13 +18,12 @@ import inspect
 import jax.numpy as jnp
 import flax.nnx as nnx
 import typing as tp
+import dataclasses
 from jax.typing import DTypeLike
-from spark.core.wrappers import HookingMeta
 from functools import wraps
-from dataclasses import dataclass, fields, MISSING, asdict, field
 import spark.core.signature_parser as sig_parser
 import spark.core.validation as validation
-from spark.core.config import BaseSparkConfig
+from spark.core.config import SparkConfig
 
 # TODO: Support for list[SparkPayloads] was implemented in a wacky manner and 
 # may have damage several parts of the module. This needs to be further validated. 
@@ -34,8 +33,7 @@ from spark.core.config import BaseSparkConfig
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# Meta module to resolve metaclass conflicts
-class SparkMeta(nnx.module.ModuleMeta, HookingMeta):
+class SparkMeta(nnx.module.ModuleMeta):
 
     def __new__(mcs, name, bases, dct):
         # Instantiate object
@@ -51,7 +49,6 @@ class SparkMeta(nnx.module.ModuleMeta, HookingMeta):
             if not is_base_model:
                  raise TypeError(f'Class "{name}" must implement or inherit a __call__ method to be used with {mcs.__name__}.')
             return cls
-
 
         # We check for a marker on the function to avoid wrapping it again.
         if getattr(original_call, '__is_wrapped__', False):
@@ -89,14 +86,14 @@ class SparkMeta(nnx.module.ModuleMeta, HookingMeta):
 class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
     name: str = 'name'
-    config: BaseSparkConfig
-    default_config: type[BaseSparkConfig] = BaseSparkConfig
+    config: SparkConfig
+    default_config: type[SparkConfig] = SparkConfig
 
     # NOTE: This is a workaround to require all childs of SparkModule to define a, 
     # default_config while at the same time allow for a lazy definition of the property. 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        # Special cases and abstract classes dont need config yet they are still SparkModules ¯\_(ツ)_/¯
+        # Special cases and abstract classes dont need config yet they are SparkModules ¯\_(ツ)_/¯
         is_abc = inspect.isabstract(cls) and len(getattr(cls, '__abstractmethods__', set())) == 0
         if cls.__name__ in ['Brain'] or is_abc:
             cls.default_config = None
@@ -104,15 +101,23 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         # Check if defines config
         resolved_hints = tp.get_type_hints(cls)
         config_type = resolved_hints.get('config')
-        if not config_type and not issubclass(config_type, BaseSparkConfig):
+        if not config_type and not issubclass(config_type, SparkConfig):
             raise AttributeError('SparkModules must define a valid config: type[SparkConfig] attribute.')
         cls.default_config = config_type
 
-    def __init__(self, *, config: BaseSparkConfig = None, **kwargs):
+
+
+    def __init__(self, *, config: SparkConfig = None, **kwargs):
         # Initialize super.
         super().__init__()
         # Override config if provided
-        self.config = self.default_config.create(**kwargs) if config is None else config.merge(**kwargs)
+        
+        if config is None:
+            self.config = self.default_config.create(partial=kwargs)
+        else:
+            import copy
+            self.config = copy.deepcopy(config)
+            self.config.merge(partial=kwargs)
         # Define default parameters.
         self._dtype = self.config.dtype
         self._dt = self.config.dt
@@ -128,21 +133,27 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         self.__allow_cycles__: bool = False
         self._default_payload_type = DummyArray
 
+
+
     @property
     @abc.abstractmethod
-    def default_config(self) -> type[BaseSparkConfig]:
+    def default_config(self) -> type[SparkConfig]:
         """
             Returns the default configuration dataclass for this module.
         """
         pass
 
+
+
     @classmethod 
-    def get_default_config_class(cls) -> type[BaseSparkConfig]:
+    def get_default_config_class(cls) -> type[SparkConfig]:
         type_hints = tp.get_type_hints(cls)
         return type_hints['config']
     
+
+
     @classmethod
-    def get_config_spec(cls):
+    def get_config_spec(cls) -> dict[str, dict[str, tp.Any]]:
         """
             Expose safe-to-inspect configuration metadata.
         """
@@ -151,12 +162,15 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         return {
             field.name: {
                 'type': field.type.__name__,
-                'default': field.default if field.default is not MISSING else None,
+                'default': field.default if field.default is not dataclasses.MISSING else None,
                 'description': field.metadata.get('description', '')
             }
-            for field in fields(cls.config)
+            for field in dataclasses.fields(cls.config)
         }
 
+
+
+    # TODO: It seems that this methods can be deprecated
     def initialize(self, shape: Shape = None, dtype: DTypeLike = None, specs: dict[str, VarSpec] = None) -> None:
         # Skip if already compiled
         if self.__built__:
@@ -220,7 +234,6 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         """
             Triggers the shape inference and parameter initialization cascade.
         """
-
         # Bind arguments to avoid parameter mixing.
         call_signature = inspect.signature(self.__call__)
         try:
@@ -265,6 +278,7 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
         # Replace config with a dict version of itself to prevent errors with JIT.
         self.config = self.config._freeze()
+
 
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
@@ -320,7 +334,6 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
 
     def _construct_input_specs(self, abc_args: dict[str, SparkPayload | list[SparkPayload]]) -> dict[str, InputSpec]:
-
         # Get default spec from signature. Default specs helps validate the user didn't make a mistake.
         self._input_specs = sig_parser.get_input_specs(type(self))
 
@@ -431,15 +444,6 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
             Returns a dictionary of the SparkModule's input port specifications.
         """
         return sig_parser.get_output_specs(cls)
-
-
-
-    @classmethod
-    def _get_init_signature(cls) -> dict[str, InputArgSpec]:
-        """
-            Returns a dictionary mapping logical output port names to their OutputSpec.
-        """
-        return sig_parser.get_method_signature(cls.__init__)  
 
 
 

@@ -70,7 +70,7 @@ class AbstractNode(BaseNode, abc.ABC):
                 value (Any): The new value for the attribute.
         """
         # Sanity checks
-        if not port_name in self.input_specs:
+        if not port_name in self.output_specs:
             raise ValueError(f'Output specs does not define an input port named "{port_name}"')
         # Update port
         value = normalize_shape(value)
@@ -91,13 +91,22 @@ class SourceNode(AbstractNode):
     def __init__(self,):
         super().__init__()
         # Delay specs definition for better control.
-        self.output_specs = {'value': OutputSpecEditor(payload_type=FloatArray,
-                                                         shape=None,
-                                                         dtype=jnp.float16,
-                                                         description='Model input port.')}
+        self.output_specs = {
+            'value': OutputSpecEditor(
+                payload_type=FloatArray,
+                shape=None,
+                dtype=jnp.float16,
+                description='Model input port.'
+                )
+            }
         # Define output port.
         for key, port_spec in self.output_specs.items():
-            self.add_output(name=key, multi_output=True, display_name=False, painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__))
+            self.add_output(
+                name=key, 
+                multi_output=True, 
+                display_name=False, 
+                painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__)
+            )
         
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -111,14 +120,23 @@ class SinkNode(AbstractNode):
     def __init__(self,):
         super().__init__()
         # Delay specs definition for better control.
-        self.input_specs = {'value': InputSpecEditor(payload_type=FloatArray,
-                                                       shape=None,
-                                                       dtype=jnp.float16,
-                                                       is_optional=False,
-                                                       description='Model output port.')}
+        self.input_specs = {
+            'value': InputSpecEditor(
+                payload_type=FloatArray,
+                shape=None,
+                dtype=jnp.float16,
+                is_optional=False,
+                description='Model output port.'
+            )
+        }
         # Define input port. Note that Sinks only accept one source.
         for key, port_spec in self.input_specs.items():
-            self.add_input(name=key, multi_input=False, display_name=False, painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__))
+            self.add_input(
+                name=key, 
+                multi_input=False, 
+                display_name=False, 
+                painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__)
+            )
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -142,14 +160,22 @@ class SparkModuleNode(AbstractNode, abc.ABC):
         }
         if isinstance(self.input_specs, dict):
             for key, port_spec in self.input_specs.items():
-                self.add_input(name=key, multi_input=True, painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__))
+                self.add_input(
+                    name=key, 
+                    multi_input=True, 
+                    painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__)
+                )
         # Add output ports.
         self.output_specs = {
             key: OutputSpecEditor.from_output_specs(value) for key, value in node_cls._get_output_specs().items()
         }
         if isinstance(self.output_specs, dict):
             for key, port_spec in self.output_specs.items():
-                self.add_output(name=key, multi_output=True, painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__))
+                self.add_output(
+                    name=key, 
+                    multi_output=True, 
+                    painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__)
+                )
         # Create partial configuration
         node_config_type = node_cls.get_default_config_class()
         self.node_config = node_config_type._create_partial()

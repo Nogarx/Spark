@@ -34,9 +34,9 @@ class ControlFlowInterface(Interface, abc.ABC):
         Abstract control flow model.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, config: SparkConfig = None, **kwargs):
         # Initialize super.
-        super().__init__(**kwargs)
+        super().__init__(config = config, **kwargs)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

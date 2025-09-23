@@ -22,8 +22,8 @@ from spark.nn.initializers.base import Initializer
 
 class DelayInitializerConfig(BaseSparkConfig):
     name: str = dataclasses.field(
-        default=None, 
-        metadata={
+        default = 'uniform_delay_initializer', 
+        metadata = {
             'validators': [
                 TypeValidator,
             ], 
@@ -34,8 +34,8 @@ class DelayInitializerConfig(BaseSparkConfig):
             'description': 'Delay initializer protocol.',
         })
     dtype: DTypeLike = dataclasses.field(
-        default=jnp.uint8, 
-        metadata={
+        default = jnp.uint8, 
+        metadata = {
             'validators': [
                 TypeValidator,
             ], 
@@ -48,7 +48,7 @@ class DelayInitializerConfig(BaseSparkConfig):
     
 # NOTE: This is a simple registry needed for the GUI. 
 # A more complex implementation would be an overkill for what this is needed.
-_DELAY_CONFIG_REGISTRY = {}
+_DELAY_CONFIG_REGISTRY: dict[str, type[DelayInitializerConfig]] = {}
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

@@ -39,9 +39,9 @@ class OutputInterface(Interface, abc.ABC):
         Abstract output interface model.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, config: SparkConfig = None, **kwargs):
         # Main attributes
-        super().__init__(**kwargs)
+        super().__init__(config = config, **kwargs)
 
     @abc.abstractmethod
     def __call__(self, *args: SpikeArray, **kwargs) -> Dict[str, SparkPayload]:
@@ -54,7 +54,6 @@ class OutputInterface(Interface, abc.ABC):
 
 class ExponentialIntegratorConfig(SparkConfig):
     num_outputs: int = dataclasses.field(
-        default = 64, 
         metadata = {
             'validators': [
                 TypeValidator,
@@ -127,7 +126,7 @@ class ExponentialIntegrator(OutputInterface):
 
     def __init__(self, config: ExponentialIntegratorConfig = None, **kwargs):
         # Initialize super.
-        super().__init__(**kwargs)
+        super().__init__(config=config, **kwargs)
         # Initialize internal variables
         self.num_outputs = self.config.num_outputs
         self.saturation_freq = self.config.saturation_freq

@@ -20,12 +20,14 @@ from spark.core.variables import Variable, Constant
 class BaseTracer(nnx.Module, abc.ABC):
 	name: str
 
-	def __init__(self, 
-				shape: bShape, 
-				seed: int | None = None, 
-				dtype: Any | None = jnp.float16, 
-				dt: float | None = 1.0,
-				**kwargs):
+	def __init__(
+			self, 
+			shape: bShape, 
+			seed: int | None = None, 
+			dtype: Any | None = jnp.float16, 
+			dt: float | None = 1.0,
+			**kwargs
+		):
 		# Sanity checks
 		if not isinstance(dt, float) and dt >= 0:
 			raise ValueError(f'"dt" must be a positive float, got {dt}')
@@ -67,12 +69,14 @@ class Tracer(BaseTracer):
 		Multipurpose exponential tracer.
 	"""
 
-	def __init__(self, 
-				shape: bShape, 
-				tau: jax.Array, 
-				scale: jax.Array = 1, 
-				base: jax.Array = 0,
-				**kwargs):
+	def __init__(
+			self, 
+			shape: bShape, 
+			tau: jax.Array, 
+			scale: jax.Array = 1, 
+			base: jax.Array = 0,
+			**kwargs
+		):
 		# Initialize super.
 		super().__init__(shape, **kwargs)
 		# Main attributes
@@ -103,16 +107,18 @@ class DoubleTracer(BaseTracer):
 		Multipurpose double exponential tracer.
 	"""
 
-	def __init__(self, 
-				shape: bShape, 
-				tau_1: jax.Array, 
-				tau_2: jax.Array,
-				scale_1: jax.Array = 1, 
-				scale_2: jax.Array = 1, 
-				base_1: jax.Array = 0,
-				base_2: jax.Array = 0,
-				*args,
-				**kwargs):
+	def __init__(
+			self, 
+			shape: bShape, 
+			tau_1: jax.Array, 
+			tau_2: jax.Array,
+			scale_1: jax.Array = 1, 
+			scale_2: jax.Array = 1, 
+			base_1: jax.Array = 0,
+			base_2: jax.Array = 0,
+			*args,
+			**kwargs
+		):
 		# Initialize super.
 		super().__init__(shape, **kwargs)
 		# Main attributes
@@ -178,12 +184,14 @@ class RUTracer(BaseTracer):
 		Resource-Usage tracer for STP (Short Term Plasticity).
 	"""
 	
-	def __init__(self, 
-				shape: bShape, 
-				R_tau: jax.Array, 
-				U_tau: jax.Array, 
-				scale_U: jax.Array, 
-				**kwargs):
+	def __init__(
+			self, 
+			shape: bShape, 
+			R_tau: jax.Array, 
+			U_tau: jax.Array, 
+			scale_U: jax.Array, 
+			**kwargs
+		):
 		# Initialize super.
 		super().__init__(shape, **kwargs)
 		# Main attributes

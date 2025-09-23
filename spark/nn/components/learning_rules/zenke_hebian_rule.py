@@ -7,43 +7,20 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.specs import InputSpec
 
-import abc
-import jax.numpy as jnp
 import dataclasses
-from typing import TypedDict, Dict
+import jax.numpy as jnp
 from spark.core.tracers import Tracer
-from spark.core.payloads import SparkPayload, SpikeArray, FloatArray
-from spark.core.variables import ConfigDict, Constant
-from spark.core.shape import bShape, Shape, normalize_shape
+from spark.core.payloads import SpikeArray, FloatArray
+from spark.core.variables import Constant
 from spark.core.registry import register_module
 from spark.core.utils import get_einsum_labels
 from spark.core.config import SparkConfig
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.nn.components.base import Component
-
-# Oja rule
-#dK = gamma * (pre_trace * post_trace - current_kernel * (post_trace**2) )  
+from .base import LearningRule, LearningRuleOutput
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
-
-# Generic LearningRule output contract.
-class LearningRuleOutput(TypedDict):
-    kernel: FloatArray
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-class LearningRule(Component):
-    """
-        Abstract learning rule model.
-    """
-
-    def __init__(self, **kwargs):
-        # Initialize super.
-        super().__init__(**kwargs)
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class HebbianLearningConfig(SparkConfig):
     async_spikes: bool = dataclasses.field(

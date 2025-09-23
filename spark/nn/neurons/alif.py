@@ -6,10 +6,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.specs import InputSpec
-    from spark.nn.components.somas import Soma
-    from spark.nn.components.delays import Delays
-    from spark.nn.components.synapses import Synanpses
-    from spark.nn.components.learning_rules import LearningRule
 
 import jax
 import jax.numpy as jnp
@@ -17,15 +13,16 @@ import dataclasses
 from spark.nn.neurons import Neuron, NeuronOutput
 from spark.core.payloads import SpikeArray
 from spark.core.variables import Constant
-from spark.core.shape import bShape, Shape
+from spark.core.shape import Shape
 from spark.core.registry import register_module
 from spark.core.config import SparkConfig
 from spark.core.config_validation import TypeValidator, PositiveValidator, ZeroOneValidator
-from spark.nn.components import (ALIFSoma, ALIFSomaConfig, 
-                                 SimpleSynapses, SimpleSynapsesConfig,
-                                 N2NDelays, N2NDelaysConfig,
-                                 HebbianRule, HebbianLearningConfig,
-                                 DummyDelays)
+
+from spark.nn.components.delays.dummy import DummyDelays
+from spark.nn.components.somas.alif import ALIFSoma, ALIFSomaConfig
+from spark.nn.components.delays.n2n_delays import N2NDelays, N2NDelaysConfig
+from spark.nn.components.synapses.simple import SimpleSynapses, SimpleSynapsesConfig
+from spark.nn.components.learning_rules.zenke_hebian_rule import HebbianRule, HebbianLearningConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

@@ -5,17 +5,15 @@
 from __future__ import annotations
     
 import jax.numpy as jnp
-import inspect
+import typing as tp
+import dataclasses
 from math import prod
-from typing import Dict, List
-
 from spark.core.cache import Cache
 from spark.core.module import SparkModule, SparkMeta
 from spark.core.specs import PortSpecs, PortMap, OutputSpec, InputSpec, ModuleSpecs, VarSpec
 from spark.core.variables import Variable
-from spark.core.shape import Shape, normalize_shape
+from spark.core.shape import normalize_shape
 from spark.core.payloads import SparkPayload, FloatArray
-from spark.core.operations import concatenate_payloads
 from spark.core.registry import REGISTRY
 from spark.core.config import SparkConfig
 
@@ -28,35 +26,45 @@ class BrainMeta(SparkMeta):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class BrainConfig(SparkConfig):
+	input_map: dict[str, PortSpecs] = dataclasses.field(
+        metadata = {
+            'description': 'Input map configuration.',
+        })
+	output_map: dict[str, dict[str, PortSpecs]] = dataclasses.field(
+        metadata = {
+            'description': 'Output map configuration.',
+        })
+	modules_map: dict[str, ModuleSpecs] = dataclasses.field(
+        metadata = {
+            'description': 'Modules map configuration.',
+        })
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class Brain(SparkModule, metaclass=BrainMeta):
 	"""
 		Abstract brain model.
 		This is more a convenience class used to synchronize data more easily.
 	"""
-	config: SparkConfig
+	config: BrainConfig
 
 	# Typing annotations.
-	_modules_list: List[str]
-	_cache: Dict[str, Dict[str, Cache]]
-	_modules_input_map: Dict[str, Dict[str, List[PortMap]]]
-	_modules_input_specs: Dict[str, Dict[str, InputSpec]]
-	_modules_output_specs: Dict[str, Dict[str, OutputSpec]]
+	_modules_list: list[str]
+	_cache: dict[str, dict[str, Cache]]
+	_modules_input_map: dict[str, dict[str, list[PortMap]]]
+	_modules_input_specs: dict[str, dict[str, InputSpec]]
+	_modules_output_specs: dict[str, dict[str, OutputSpec]]
 
-	def __init__(self, 
-			     input_map: Dict[str, PortSpecs], 
-				 output_map: Dict[str, Dict[str, PortSpecs]], 
-				 modules_map: Dict[str, ModuleSpecs], 
-				 **kwargs):
+	def __init__(self, config: BrainConfig = None, **kwargs):
 		# Initialize super.
-		super().__init__(**kwargs)
-		# Save maps.
-		self.input_map = input_map
-		self.output_map = output_map
-		self.modules_map = modules_map
+		super().__init__(config=config, **kwargs)
 		# Validate maps.
 		self._validate_maps()
 		# Build modules
 		self._build_modules()
+
+
 
 	def initialize(self, input_specs: dict[str, VarSpec]):
 	#def build(self, input_specs: dict[str, InputSpec]):
@@ -73,7 +81,7 @@ class Brain(SparkModule, metaclass=BrainMeta):
 				if module_name == '__call__':
 					continue
 				# Collect module initialization specs
-				inputs = self.modules_map[module_name].inputs
+				inputs = self.config.modules_map[module_name].inputs
 				init_specs = {}
 				for port_name, port_map_list in inputs.items():
 					shapes = []
@@ -105,24 +113,24 @@ class Brain(SparkModule, metaclass=BrainMeta):
 		# Set built flag
 		self.__built__ = True
 
-
-
 		# Validate modules connections.
 		self._validate_connections()
 
+
+
 	def _validate_maps(self,):
 		# Basic Type Validation
-		if not isinstance(self.input_map, dict):
-			raise TypeError(f'"input_map" must be a dictionary, but got {type(self.input_map).__name__}.')
-		for key in self.input_map.keys():
+		if not isinstance(self.config.input_map, dict):
+			raise TypeError(f'"input_map" must be a dictionary, but got {type(self.config.input_map).__name__}.')
+		for key in self.config.input_map.keys():
 			if not isinstance(key, str):
 				raise TypeError(f'All keys in "input_map" must be strings, but found key "{key}" of type {type(key).__name__}.')
-			if not isinstance(self.input_map[key], PortSpecs):
-				raise TypeError(f'All values in "input_map" must be PortSpecs, but found value "{self.input_map[key]}" of type {type(self.input_map[key]).__name__}.')
+			if not isinstance(self.config.input_map[key], PortSpecs):
+				raise TypeError(f'All values in "input_map" must be PortSpecs, but found value "{self.config.input_map[key]}" of type {type(self.config.input_map[key]).__name__}.')
 			
-		if not isinstance(self.output_map, dict):
-			raise TypeError(f'"output_map" must be a dictionary, but got {type(self.output_map).__name__}.')
-		for module_name, module_output_details in self.output_map.items():
+		if not isinstance(self.config.output_map, dict):
+			raise TypeError(f'"output_map" must be a dictionary, but got {type(self.config.output_map).__name__}.')
+		for module_name, module_output_details in self.config.output_map.items():
 			if not isinstance(module_name, str):
 				raise TypeError(f'All keys in "output_map" must be strings, but found key "{module_name}" of type {type(module_name).__name__}.')
 			if not isinstance(module_output_details, dict):
@@ -133,36 +141,40 @@ class Brain(SparkModule, metaclass=BrainMeta):
 				if not isinstance(port_spec, PortSpecs):
 					raise TypeError(f'All values in "output_map["module"]" must be PortSpecs, but found value "{port_spec}" of type {type(port_spec).__name__}.')
 
-		if not isinstance(self.modules_map, dict):
-			raise TypeError(f'"modules_map" must be a dictionary, but got {type(self.modules_map).__name__}.')
-		for key in self.modules_map.keys():
+		if not isinstance(self.config.modules_map, dict):
+			raise TypeError(f'"modules_map" must be a dictionary, but got {type(self.config.modules_map).__name__}.')
+		for key in self.config.modules_map.keys():
 			if not isinstance(key, str):
 				raise TypeError(f'All keys in "modules_map" must be strings, but found key "{key}" of type {type(key).__name__}.')
-			if not isinstance(self.modules_map[key], ModuleSpecs):
-				raise TypeError(f'All values in "modules_map" must be ModuleSpecs, but found value "{self.modules_map[key]}" of type {type(self.modules_map[key]).__name__}.')
+			if not isinstance(self.config.modules_map[key], ModuleSpecs):
+				raise TypeError(f'All values in "modules_map" must be ModuleSpecs, but found value "{self.config.modules_map[key]}" of type {type(self.config.modules_map[key]).__name__}.')
 			
 		# Get all valid sources.
-		valid_sources = set(self.input_map.keys()) | set(self.modules_map.keys())
+		valid_sources = set(self.config.input_map.keys()) | set(self.config.modules_map.keys())
 
 		# Does the origin exist in the set of valid sources?
-		for module_name, module_specs in self.modules_map.items():
+		for module_name, module_specs in self.config.modules_map.items():
 			for port_name, connections in module_specs.inputs.items():
 				for port_map in connections:
 					if port_map.origin not in valid_sources and port_map.origin != '__call__':
 						raise ValueError(f'In module "{module_name}", connection for port "{port_name}" refers to an unknown origin: "{port_map.origin}".'
 					   					 f'Valid sources are: {valid_sources}')
-			
+
+
+
 	def _build_modules(self,):
-		# Registry lazy import
-		from spark.core.registry import REGISTRY
 		# Construc all modules.
-		for module_name, module_specs in self.modules_map.items():
-			setattr(self, module_name, REGISTRY.MODULES.get(module_specs.module_cls.__name__).class_ref(**module_specs.init_args))
-		self._modules_list = list(self.modules_map.keys())
+		for module_name, module_specs in self.config.modules_map.items():
+			#print(module_name)
+			#print(module_specs.config)
+			setattr(self, module_name, REGISTRY.MODULES.get(module_specs.module_cls.__name__).class_ref(config=module_specs.config))
+		self._modules_list = list(self.config.modules_map.keys())
 		# Information flow map.
 		self._modules_input_map = {}
-		for module_name, module_specs in self.modules_map.items():
+		for module_name, module_specs in self.config.modules_map.items():
 			self._modules_input_map[module_name] = module_specs.inputs
+
+
 
 	def _validate_connections(self,):
 		# Collect all modules input/output specs.
@@ -177,18 +189,18 @@ class Brain(SparkModule, metaclass=BrainMeta):
 		for module_name in self._modules_list:
 			
 			# Validate that every non-optional input port exists
-			module_inputs: dict[str, List[PortMap]] = self.modules_map[module_name].inputs
+			module_inputs: dict[str, list[PortMap]] = self.config.modules_map[module_name].inputs
 			required_ports = set(self._modules_input_specs[module_name].keys()).difference(module_inputs.keys())
 			for port_name in required_ports:
 				if not self._modules_input_specs[module_name][port_name].is_optional:
-					class_error = REGISTRY.MODULES.get(self.modules_map[module_name].module_cls).class_ref
+					class_error = REGISTRY.MODULES.get(self.config.modules_map[module_name].module_cls).class_ref
 					raise ValueError(f'Port "{port_name}" for module "{module_name}" is not defined and is a mandatory input of "{class_error.__name__}".')
 			
 			# Validate that no extra input port were defined
 			extra_ports = set(module_inputs.keys()).difference(set(self._modules_input_specs[module_name].keys()))
 			if len(extra_ports) > 0:
 				raise ValueError(f'Port "{extra_ports[0]}" for module "{module_name}" is not part of the specifications of '
-					 			 f'"{self.modules_map[module_name].module_cls}".')
+					 			 f'"{self.config.modules_map[module_name].module_cls}".')
 			
 			# Validate the integrity of the ports 
 			for port_name, ports_list in module_inputs.items():
@@ -196,12 +208,12 @@ class Brain(SparkModule, metaclass=BrainMeta):
 				# Check input module defines the output port
 				for port_map in ports_list:
 					if port_map.origin == '__call__':
-						if not port_map.port in self.input_map:
+						if not port_map.port in self.config.input_map:
 							raise ValueError(f'Input port "{port_name}" for module "{module_name}" request port "{port_map.port}" from '
 											 f'"{port_map.origin}", but inputs_map does not define such port.')
 					elif not port_map.port in self._modules_output_specs[port_map.origin]:
 						raise ValueError(f'Input port "{port_name}" for module "{module_name}" request port "{port_map.port}" from '
-										 f'"{port_map.origin}", but "{self.modules_map[port_map.origin].module_cls}" does not define such port.')
+										 f'"{port_map.origin}", but "{self.config.modules_map[port_map.origin].module_cls}" does not define such port.')
 				
 				# Validate ports can be safely merged.
 				if len(ports_list) > 1:
@@ -218,14 +230,14 @@ class Brain(SparkModule, metaclass=BrainMeta):
 					# Many-to-one input-output. Inputs need to be merged, default merged behaviour is to flat everything.
 					for port_map in ports_list:
 						if port_map.origin == '__call__':
-							shape += prod(self.input_map[port_map.port].shape)
+							shape += prod(self.config.input_map[port_map.port].shape)
 						else:
 							output_specs: OutputSpec = getattr(self, port_map.origin).get_output_specs()[port_map.port]
 							shape += prod(output_specs.shape)
 				else:
 					# One-to-one input-output.
 					if port_map.origin == '__call__':
-						shape = self.input_map[port_map.port].shape
+						shape = self.config.input_map[port_map.port].shape
 					else:
 						output_specs: OutputSpec = getattr(self, port_map.origin).get_output_specs()[port_map.port]
 						shape = output_specs.shape
@@ -235,11 +247,13 @@ class Brain(SparkModule, metaclass=BrainMeta):
 				if expected_input_shape != shape:
 					raise ValueError(f'Input port "{port_name}" for module "{module_name}" expected input shape {expected_input_shape} but got shape "{shape}".') 
 
+
+
 	def resolve_initialization_order(self,):
 		import networkx as nx
 		# Create directed graph
 		graph = {}
-		for key, values in self.modules_map.items():
+		for key, values in self.config.modules_map.items():
 			dependencies = set()
 			for input_port in values.inputs.values():
 				for port in input_port:
@@ -253,11 +267,17 @@ class Brain(SparkModule, metaclass=BrainMeta):
 		order = [scc[i] for i in list(nx.topological_sort(condensation))[::-1]]
 		return order
 
-	def get_input_specs(self) -> Dict[str, PortSpecs]:
-		return self.input_map
 
-	def get_output_specs(self) -> Dict[str, PortSpecs]:
-		return self.output_map
+
+	def get_input_specs(self) -> dict[str, PortSpecs]:
+		return self.config.input_map
+
+
+
+	def get_output_specs(self) -> dict[str, PortSpecs]:
+		return self.config.output_map
+
+
 
 	def _build_neuron_list(self):
 		"""
@@ -280,6 +300,8 @@ class Brain(SparkModule, metaclass=BrainMeta):
 			except AttributeError:
 				continue
 
+
+
 	def reset(self):
 		"""
 			Resets neuron state to their initial values.
@@ -291,12 +313,20 @@ class Brain(SparkModule, metaclass=BrainMeta):
 		for name in self._neuron_names:
 			getattr(self, name).reset()
 
+
+
+	def _concatenate_payloads(self, args: list[SparkPayload]):
+		payload_type = type(args[0])
+		return payload_type(jnp.concatenate([x.value.reshape(-1) for x in args]))
+
+
+
 	def __call__(self, **inputs: SparkPayload) -> tuple[SparkPayload]:
 		"""
 			Update brain's states.
 		"""
 		# Put input into the cache.
-		for input_name in self.input_map.keys():
+		for input_name in self.config.input_map.keys():
 			self._cache['__call__'][input_name].value = inputs[input_name].value
 		# Update modules
 		outputs = {}
@@ -305,7 +335,7 @@ class Brain(SparkModule, metaclass=BrainMeta):
 			input_args = {}
 			for port_name, ports_list in self._modules_input_map[module_name].items():
 				# TODO: This does not support unflatten inputs.
-				input_args[port_name] = concatenate_payloads(
+				input_args[port_name] = self._concatenate_payloads(
 					[self._cache[port_map.origin][port_map.port].value for port_map in ports_list])
 			outputs[module_name] = getattr(self, module_name)(**input_args)
 		# Update cache
@@ -315,11 +345,13 @@ class Brain(SparkModule, metaclass=BrainMeta):
 		# Gather output
 		brain_output = {
 			f'{module_name}.{output_port}': outputs[module_name][output_port] 
-			for module_name, port_specs in self.output_map.items() 
+			for module_name, port_specs in self.config.output_map.items() 
 			for output_port in port_specs.keys()
 		}
 		return brain_output
-	
+
+
+
 	def get_spikes_from_cache(self):
 		brain_spikes = []
 		for module_name in self._modules_list:

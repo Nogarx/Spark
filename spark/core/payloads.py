@@ -9,6 +9,8 @@ import jax
 import numpy as np
 from dataclasses import dataclass
 
+# TODO: Several parts of this code need to be further validated. 
+
 # NOTE: Direct jax.Array subclassing is not supported. Currently the best approach is to define __jax_array__ 
 # (https://docs.jax.dev/en/latest/jep/28661-jax-array-protocol.html). However it is probable that such approach will be deprecated
 # in the future (https://github.com/jax-ml/jax/issues/26764#event-16480127978). This makes creating a full fledge section of variables
@@ -16,7 +18,8 @@ from dataclasses import dataclass
 # The best we can do right now is go for a Level 1 approach (polymorphic inputs) plus a manual override of relevant operations.
 # The goal eventually is get rid of all the .value and other things that may be annoying for the user in a more graceful and robust manner.
 
-# TODO: Several parts of this code need to be further validated. 
+# Payloads are incredibly useful to support a GUI and several other handshakes with the user 
+# at basically zero overhead cost to the framework since the default approach is to JIT compile the model.
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

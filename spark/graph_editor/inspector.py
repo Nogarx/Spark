@@ -11,7 +11,6 @@ import dataclasses
 import typing as tp
 import jax.numpy as jnp
 from functools import partial
-from typing import Dict, Any, Type
 from Qt import QtCore, QtWidgets, QtGui
 from spark.nn.initializers.delay import DelayInitializerConfig, _DELAY_CONFIG_REGISTRY
 from spark.nn.initializers.kernel import KernelInitializerConfig, _KERNEL_CONFIG_REGISTRY
@@ -23,6 +22,7 @@ from spark.graph_editor.widgets.shape import QShape
 from spark.graph_editor.widgets.missing import QMissing
 from spark.graph_editor.widgets.collapsible import QCollapsible
 from spark.graph_editor.widgets.line_edits import QInt, QFloat, QString
+from spark.graph_editor.widgets.initializer import QInitializer
 from spark.graph_editor.widgets.base import SparkQWidget
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 
@@ -33,12 +33,12 @@ from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 class NodeInspectorWidget(QtWidgets.QWidget):
     """A widget to inspect and edit the properties of a node in a graph."""
 
-    onWidgetUpdate = QtCore.Signal(str, Any)
+    onWidgetUpdate = QtCore.Signal(str, tp.Any)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._target_node: AbstractNode | None = None
-        self._widgets_map: Dict[str, QtWidgets.QWidget] = {}
+        self._widgets_map: dict[str, QtWidgets.QWidget] = {}
         self._main_layout: QtWidgets.QVBoxLayout | None = None
         self._sections: dict[str, QCollapsible] = {}
         self._setup_ui()
@@ -83,7 +83,7 @@ class NodeInspectorWidget(QtWidgets.QWidget):
         self.setMaximumWidth(800)
 
     def _build_node_menu(self):
-        """Constructs the inspector UI for the currently selected node."""
+        """Constructs the inspectype_hints['config']tor UI for the currently selected node."""
         if not self._target_node:
             return
         self._build_header()
@@ -143,21 +143,33 @@ class NodeInspectorWidget(QtWidgets.QWidget):
 
     def _build_shape_editors(self):
         """Builds editors for the node's input and output shapes."""
-        if not self._target_node or not self._target_node.input_specs:
+        if not self._target_node:
             return
 
         shapes_section = self._add_section('Shapes')
         for name, spec in self._target_node.input_specs.items():
-            is_static = not isinstance(self._target_node, SourceNode)
-            widget = QShape(_to_human_readable(name), initial_shape=spec.shape, is_static=is_static)
-            widget.on_update.connect(partial(self._target_node.update_input_shape, name))
+            is_static = True #not isinstance(self._target_node, SinkNode)
+            widget = QShape(
+                _to_human_readable(name), 
+                initial_shape=spec.shape, 
+                is_static=is_static
+            )
+            widget.on_update.connect(
+                partial(lambda var_name, value: self._target_node.update_input_shape(var_name, value), name)
+            )
             shapes_section.addWidget(widget)
             self._widgets_map[f'input_port.{name}'] = widget
 
         for name, spec in self._target_node.output_specs.items():
-            is_static = not isinstance(self._target_node, SinkNode)
-            widget = QShape(_to_human_readable(name), initial_shape=spec.shape, is_static=is_static)
-            widget.on_update.connect(partial(self._target_node.update_input_shape, name))
+            is_static = not isinstance(self._target_node, SourceNode)
+            widget = QShape(
+                _to_human_readable(name), 
+                initial_shape=spec.shape, 
+                is_static=is_static
+            )
+            widget.on_update.connect(
+                partial(lambda var_name, value: self._target_node.update_output_shape(var_name, value), name)
+            )
             shapes_section.addWidget(widget)
             self._widgets_map[f'output_port.{name}'] = widget
         # Open and lock section
@@ -225,16 +237,32 @@ class NodeInspectorWidget(QtWidgets.QWidget):
             # Add collapsible recursively
             type_hints = tp.get_type_hints(config.__class__)
             if issubclass(type_hints[field.name], (KernelInitializerConfig, DelayInitializerConfig)):
-                self._add_widgets_from_spark_initializer(subsection, getattr(config, field.name))
+                # Initialize an initializer config if none is provided
+                class_type = getattr(config, field.name).__class__
+                if class_type in [KernelInitializerConfig, DelayInitializerConfig, type(None)]:
+                    name_field = {f.name: f for f in dataclasses.fields(type_hints[field.name])}['name']
+                    default_initializer = name_field.default if name_field.default else name_field.metadata['value_options'][0]
+                    if issubclass(type_hints[field.name], KernelInitializerConfig):
+                        default_config = _KERNEL_CONFIG_REGISTRY[default_initializer]()
+                    else: 
+                        default_config = _DELAY_CONFIG_REGISTRY[default_initializer]()
+                    setattr(config, field.name, default_config)
+                initializer_config = getattr(config, field.name)
+                # Add widget to inspector
+                widget = QInitializer(initializer_config, subsection)
+                attr_update_method = partial(lambda config_var, name_var, value: setattr(config_var, name_var, value), config, field.name)
+                widget.on_update.connect(attr_update_method)
+                subsection.addWidget(widget)
+                self._widgets_map[field.name] = widget
             else:
                 self._add_widgets_from_spark_config(subsection, getattr(config, field.name))
 
     def _add_attr_widget_to_layout(self, 
             section: QCollapsible, 
             attr_name: str, 
-            attr_type: Type, 
+            attr_type: type, 
             attr_update_method: tp.Callable,
-            value: Any | None = None, 
+            value: tp.Any | None = None, 
             metadata: dict[str, tp.Any] = None) -> SparkQWidget:
         """
             Creates and adds an appropriate widget for a given argument specification.
@@ -245,7 +273,7 @@ class NodeInspectorWidget(QtWidgets.QWidget):
             widget: QMissing = widget_class(_to_human_readable(attr_name))
             section.addWidget(widget)
             self._widgets_map[attr_name] = None
-            return
+            return widget
         # Initialize widget
         if widget_class == QDtype:
             widget: QDtype = widget_class(_to_human_readable(attr_name), value, values_options=metadata['value_options'])
@@ -276,7 +304,7 @@ class NodeInspectorWidget(QtWidgets.QWidget):
     def _get_section(self, name: str) -> QCollapsible:
         return self._sections[name]
 
-    def _get_widget_class_for_type(self, attr_type: Type) -> Type[QtWidgets.QWidget]:
+    def _get_widget_class_for_type(self, attr_type: type) -> type[QtWidgets.QWidget]:
         """
             Maps an argument type to a corresponding widget class.
         """

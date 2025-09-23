@@ -121,18 +121,18 @@ class QBool(SparkQWidget):
 
     def get_value(self):
         return self._bool_edit.get_value()
-
+    
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class QInitializer(SparkQWidget):
+class QGenericComboBox(SparkQWidget):
     """
-        Custom QWidget used for initializer fields in the SparkGraphEditor's Inspector.
+        Custom QWidget used for arbitrary selectable fields fields in the SparkGraphEditor's Inspector.
     """
 
     def __init__(self,
                  label: str,
                  initial_value: str,
-                 values_options: list[str],
+                 values_options: dict[str, tp.Any],
                  parent: QtWidgets.QWidget = None):
         super().__init__(parent=parent)
         # Add layout
@@ -143,16 +143,16 @@ class QInitializer(SparkQWidget):
         self._label.setContentsMargins(GRAPH_EDITOR_CONFIG.label_field_margin)
         layout.addWidget(self._label)
         # Add QShapeEdit
-        options_list = [(_to_human_readable(initializer), initializer) for initializer in values_options]
-        self._initializer_edit = QComboBoxEdit(initial_value, options_list, self)
+        options_list = [(key, value) for key, value in values_options.items()]
+        self._value_edit = QComboBoxEdit(initial_value, options_list, self)
         # Update callback
-        self._initializer_edit.currentIndexChanged.connect(self._on_update)
+        self._value_edit.currentIndexChanged.connect(self._on_update)
         # Finalize
-        layout.addWidget(self._initializer_edit)
+        layout.addWidget(self._value_edit)
         self.setLayout(layout)
 
     def get_value(self):
-        return self._initializer_edit.get_value()
+        return self._value_edit.get_value()
     
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

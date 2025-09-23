@@ -3,9 +3,11 @@
 #################################################################################################################################################
 
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from spark.core.config import SparkConfig
 
 import abc
-from typing import Dict
 from spark.core.module import SparkModule
 
 #################################################################################################################################################
@@ -17,10 +19,9 @@ class Component(SparkModule, abc.ABC):
         Abstract neruonal component.
     """
 
-    def __init__(self, 
-                 **kwargs):
+    def __init__(self, config: SparkConfig = None, **kwargs):
         # Initialize super.
-        super().__init__(**kwargs)
+        super().__init__(config = config, **kwargs)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
