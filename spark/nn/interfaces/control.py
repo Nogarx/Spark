@@ -8,8 +8,8 @@ import abc
 import jax
 import jax.numpy as jnp
 import dataclasses
+import typing as tp
 from math import prod
-from typing import TypedDict, Dict, List
 from spark.core.specs import InputSpec, OutputSpec
 from spark.core.variables import Constant
 from spark.core.shape import bShape, Shape, normalize_shape
@@ -24,7 +24,7 @@ from spark.nn.interfaces.base import Interface
 #################################################################################################################################################
 
 # Generic OutputInterface output contract.
-class ControlInterfaceOutput(TypedDict):
+class ControlInterfaceOutput(tp.TypedDict):
     output: SparkPayload
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

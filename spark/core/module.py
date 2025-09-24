@@ -35,7 +35,7 @@ from spark.core.config import SparkConfig
 
 class SparkMeta(nnx.module.ModuleMeta):
 
-    def __new__(mcs, name, bases, dct):
+    def __new__(mcs, name, bases, dct,**kwargs):
         # Instantiate object
         cls = super().__new__(mcs, name, bases, dct)
 
@@ -132,16 +132,6 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         self.__built__: bool = False
         self.__allow_cycles__: bool = False
         self._default_payload_type = DummyArray
-
-
-
-    @property
-    @abc.abstractmethod
-    def default_config(self) -> type[SparkConfig]:
-        """
-            Returns the default configuration dataclass for this module.
-        """
-        pass
 
 
 

@@ -12,7 +12,7 @@ import abc
 import jax
 import jax.numpy as jnp
 import dataclasses
-from typing import TypedDict
+import typing as tp
 from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Variable, Constant
 from spark.core.shape import bShape, Shape, normalize_shape
@@ -26,7 +26,7 @@ from spark.nn.interfaces.base import Interface
 #################################################################################################################################################
 
 # Generic InputInterface output contract.
-class InputInterfaceOutput(TypedDict):
+class InputInterfaceOutput(tp.TypedDict):
     spikes: SpikeArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

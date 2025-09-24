@@ -12,8 +12,8 @@ import abc
 import jax
 import jax.numpy as jnp
 import dataclasses
+import typing as tp
 from math import prod
-from typing import Dict, List, TypedDict
 from spark.nn.interfaces.base import Interface
 from spark.core.tracers import SaturableTracer, SaturableDoubleTracer
 from spark.core.payloads import SpikeArray, FloatArray
@@ -29,7 +29,7 @@ from spark.nn.interfaces.base import Interface
 #################################################################################################################################################
 
 # Generic OutputInterface output contract.
-class OutputInterfaceOutput(TypedDict):
+class OutputInterfaceOutput(tp.TypedDict):
     signal: FloatArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -44,7 +44,7 @@ class OutputInterface(Interface, abc.ABC):
         super().__init__(config = config, **kwargs)
 
     @abc.abstractmethod
-    def __call__(self, *args: SpikeArray, **kwargs) -> Dict[str, SparkPayload]:
+    def __call__(self, *args: SpikeArray, **kwargs) -> dict[str, SparkPayload]:
         """
             Transform incomming spikes into a output signal.
         """
