@@ -336,12 +336,12 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
     def _construct_input_specs(self, abc_args: dict[str, SparkPayload | list[SparkPayload]]) -> dict[str, InputSpec]:
         # Get default spec from signature. Default specs helps validate the user didn't make a mistake.
         self._input_specs = sig_parser.get_input_specs(type(self))
-
+        
         # Validate specs and abc_args match
         if len(self._input_specs) != len(abc_args):
             raise ValueError(f'Default Input Specs encounter {len(self._input_specs)} variables ' 
                              f'but only {len(abc_args)} were passed to the compiler.')
-        
+
         # Finish specs
         for key in self._input_specs.keys():
 
@@ -362,13 +362,14 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
                 # I am looking at you Merger (╯°□°）╯︵ ┻━┻.
                 object.__setattr__(self._input_specs[key], 'payload_type', self._default_payload_type)
             shape, dtype = None, None
+
             if abc_paylaod:
                 shape = abc_paylaod.shape if not isinstance(abc_paylaod, list) else [p.shape for p in abc_paylaod]
                 dtype = abc_paylaod.dtype if not isinstance(abc_paylaod, list) else abc_paylaod[0].dtype
             object.__setattr__(self._input_specs[key], 'shape', shape)
             object.__setattr__(self._input_specs[key], 'dtype', dtype)
             object.__setattr__(self._input_specs[key], 'description', 
-                               f'Auto-generated input spec for input "{key}" of module "{self.name}".')
+                               f'Auto-generated input spec for input \"{key}\" of module \"{self.name}\".')
 
         return self._input_specs
 

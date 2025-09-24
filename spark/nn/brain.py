@@ -66,58 +66,6 @@ class Brain(SparkModule, metaclass=BrainMeta):
 
 
 
-	def initialize(self, input_specs: dict[str, VarSpec]):
-	#def build(self, input_specs: dict[str, InputSpec]):
-		# Get build order.
-		order = self.resolve_initialization_order()
-		# Build cache. Cache needs to be computed a step at a time. 
-		self._cache = {'__call__': {
-			name: Cache(Variable(jnp.zeros(spec.shape), dtype=spec.dtype), FloatArray) for name, spec in input_specs.items()}
-		}
-		# Build cache. Cache needs to be computed a step at a time. 
-		for group in order:
-			for module_name in group:
-				# Skip __call__
-				if module_name == '__call__':
-					continue
-				# Collect module initialization specs
-				inputs = self.config.modules_map[module_name].inputs
-				init_specs = {}
-				for port_name, port_map_list in inputs.items():
-					shapes = []
-					for port_map in port_map_list:
-						# If origin module is in cache it was already been built; use it shape.
-						if port_map.origin in self._cache:
-							shapes.append(self._cache[port_map.origin][port_map.port].shape)
-							dtype = self._cache[port_map.origin][port_map.port].dtype
-						# If origin is in group it must predefine its output shape in order to be part of a cyclic dependency.
-						elif port_map.origin in group:
-							origin_module: SparkModule = getattr(self, port_map.origin)
-							output_specs = origin_module.get_output_specs()
-							shapes.append(output_specs[port_map.port].shape)
-							dtype = output_specs[port_map.port].dtype
-						# Something weird happend. System is trying to get something from a module that should have been called later.
-						else:
-							raise RuntimeError(f'Trying to get port from module "{port_map.origin}" for "{module_name}"... '
-											   f'418 I\'m a teapot.')
-					dtype = dtype if dtype else self._dtype
-					init_specs[port_name] = VarSpec(normalize_shape(sum([prod(s) for s in shapes])), dtype=dtype)
-				# Initialize module
-				module: SparkModule = getattr(self, module_name)
-				module.initialize(specs=init_specs)
-				# Update cache
-				out_specs = module.get_output_specs()
-				self._cache[module_name] = {
-					name: Cache(Variable(jnp.zeros(spec.shape), dtype=spec.dtype), spec.payload_type) for name, spec in out_specs.items()
-				}
-		# Set built flag
-		self.__built__ = True
-
-		# Validate modules connections.
-		self._validate_connections()
-
-
-
 	def _validate_maps(self,):
 		# Basic Type Validation
 		if not isinstance(self.config.input_map, dict):
@@ -165,8 +113,6 @@ class Brain(SparkModule, metaclass=BrainMeta):
 	def _build_modules(self,):
 		# Construc all modules.
 		for module_name, module_specs in self.config.modules_map.items():
-			#print(module_name)
-			#print(module_specs.config)
 			setattr(self, module_name, REGISTRY.MODULES.get(module_specs.module_cls.__name__).class_ref(config=module_specs.config))
 		self._modules_list = list(self.config.modules_map.keys())
 		# Information flow map.
@@ -266,6 +212,85 @@ class Brain(SparkModule, metaclass=BrainMeta):
 		condensation = nx.condensation(nx_graph, scc=scc)
 		order = [scc[i] for i in list(nx.topological_sort(condensation))[::-1]]
 		return order
+
+
+
+	def build(self, input_specs: dict[str, InputSpec]):
+		# Get build order.
+		order = self.resolve_initialization_order()
+		# Build cache. Cache needs to be computed a step at a time. 
+		self._cache = {'__call__': {
+			name: Cache(Variable(jnp.zeros(spec.shape), dtype=spec.dtype), FloatArray) for name, spec in input_specs.items()}
+		}
+		# Build cache. Cache needs to be computed a step at a time. 
+		for group in order:
+			for module_name in group:
+				# Skip __call__
+				if module_name == '__call__':
+					continue
+				# Collect module initialization specs
+				inputs = self.config.modules_map[module_name].inputs
+				init_specs = {}
+				for port_name, port_map_list in inputs.items():
+					shapes = []
+					for port_map in port_map_list:
+						# If origin module is in cache it was already been built; use it shape.
+						if port_map.origin in self._cache:
+							shapes.append(self._cache[port_map.origin][port_map.port].shape)
+							dtype = self._cache[port_map.origin][port_map.port].dtype
+						# If origin is in group it must predefine its output shape in order to be part of a cyclic dependency.
+						elif port_map.origin in group:
+							origin_module: SparkModule = getattr(self, port_map.origin)
+							output_specs = origin_module.get_output_specs()
+							shapes.append(output_specs[port_map.port].shape)
+							dtype = output_specs[port_map.port].dtype
+						# Something weird happend. System is trying to get something from a module that should have been called later.
+						else:
+							raise RuntimeError(f'Trying to get port from module "{port_map.origin}" for "{module_name}"... '
+											   f'418 I\'m a teapot.')
+					dtype = dtype if dtype else self._dtype
+					init_specs[port_name] = VarSpec(normalize_shape(sum([prod(s) for s in shapes])), dtype=dtype)
+				# Initialize module
+				module: SparkModule = getattr(self, module_name)
+				#module.initialize(specs=init_specs)
+				# Update cache
+				out_specs = module.get_output_specs()
+				self._cache[module_name] = {
+					name: Cache(Variable(jnp.zeros(spec.shape), dtype=spec.dtype), spec.payload_type) for name, spec in out_specs.items()
+				}
+		# Set built flag
+		self.__built__ = True
+
+		# Validate modules connections.
+		self._validate_connections()
+
+
+
+	# NOTE: We need to override _construct_input_specs since sig_parser.get_input_specs will lead to an incorrect 
+	# signature because Brain can have an arbitrary number of inputs all under the key "inputs".
+	def _construct_input_specs(self, abc_args: dict[str,dict[str, SparkPayload | list[SparkPayload]]]) -> dict[str, InputSpec]:
+		# Get default spec from signature. Default specs helps validate the user didn't make a mistake.
+		from spark.core.specs import InputSpec
+		self._input_specs = {}
+		
+		# Finish specs
+		for key, value in abc_args['inputs'].items():
+
+			# Sanity check
+			if not isinstance(value, SparkPayload):
+				raise TypeError(f'Expected non-optional input payload "{key}" of module "{self.name}" to be '
+								f'of type "{SparkPayload.__name__}" but got type {type(value)}')
+			
+			# Set default spec
+			self._input_specs[key] = InputSpec(
+				payload_type=type(value),
+				shape=value.value.shape,
+				dtype=value.value.dtype,
+				is_optional=False,
+				description=f'Auto-generated input spec for input \"{key}\" of module \"{self.name}\".',
+			)
+
+		return self._input_specs
 
 
 
