@@ -111,9 +111,8 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         # Initialize super.
         super().__init__()
         # Override config if provided
-        
         if config is None:
-            self.config = self.default_config.create(partial=kwargs)
+            self.config = self.default_config(**kwargs)
         else:
             import copy
             self.config = copy.deepcopy(config)

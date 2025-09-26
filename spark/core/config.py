@@ -10,8 +10,8 @@ import jax
 import jax.numpy as jnp
 import dataclasses
 import typing as tp
+import copy
 from jax.typing import DTypeLike
-from typing import Any
 from spark.core.config_validation import TypeValidator, PositiveValidator
 
 #################################################################################################################################################
@@ -22,7 +22,7 @@ from spark.core.config_validation import TypeValidator, PositiveValidator
 # For example, some Shapes can be infered from the next/prev component in the graph.
 METADATA_TEMPLATE = {
     'units': None, 
-    'valid_types': Any, 
+    'valid_types': tp.Any, 
     'validators': [], 
     'description': '',
 }
@@ -34,12 +34,12 @@ class SparkMetaConfig(abc.ABCMeta):
         Metaclass that promotes class attributes to dataclass fields
     """
     
-    def __new__(cls, name: str, bases: tuple[type, ...], dct: dict[str, Any]) -> 'SparkMetaConfig':
+    def __new__(cls, name: str, bases: tuple[type, ...], dct: dict[str, tp.Any]) -> 'SparkMetaConfig':
 
         # NOTE: Every non field is promoted to field to simplify the logic of configuration objects and add metadata.
         
         # Iterate over annotations.
-        annotations: dict[str, Any] = dct.get('__annotations__', {})
+        annotations: dict[str, tp.Any] = dct.get('__annotations__', {})
         for attr_name, attr_type in annotations.items():
             # Parse valid types.
             if isinstance(attr_type, str):
@@ -136,7 +136,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         kwargs_fold, shared_partial = self._fold_partial(self, kwargs)
         # Set attributes programatically
         self._set_partial_attributes(kwargs_fold, shared_partial)
-
+        self.validate()
 
 
     @classmethod
@@ -175,26 +175,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    @classmethod
-    def create(cls, partial: dict[str, Any] = None) -> 'BaseSparkConfig':
-        """
-            Create config with partial overrides.
-        """
-        # Get default instance
-        instance = cls()
-        # Apply partial updates
-        if partial:
-            # Fold partial to pass child config attributes.
-            kwargs_fold, shared_partial = cls._fold_partial(instance, partial)
-            # Get current fields and pass attributes.
-            instance._set_partial_attributes(kwargs_fold, shared_partial)
-        # Validate
-        instance.validate()
-        return instance
-
-
-
-    def merge(self, partial: dict[str, Any] = {}) -> None:
+    def merge(self, partial: dict[str, tp.Any] = {}) -> None:
         """
             Update config with partial overrides.
         """
@@ -208,7 +189,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
     @staticmethod
-    def _fold_partial(obj: 'BaseSparkConfig', partial: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    def _fold_partial(obj: 'BaseSparkConfig', partial: dict[str, tp.Any]) -> tuple[dict[str, tp.Any], dict[str, tp.Any]]:
         fold_partial = {}
         shared_partial = {}
         for key, value in partial.items():
@@ -244,8 +225,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def _set_partial_attributes(self, kwargs_fold: dict[str, Any], shared_partial: dict[str, Any]) -> None:
-
+    def _set_partial_attributes(self, kwargs_fold: dict[str, tp.Any], shared_partial: dict[str, tp.Any]) -> None:
         # Get type hints
         type_hints = tp.get_type_hints(self.__class__)
         for key in type_hints.keys():
@@ -273,6 +253,11 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     # Use current config 
                     field_value.merge(partial={**subconfig, **prefixed_shared_partial})
                     setattr(self, field_name, field_value)
+                elif isinstance(subconfig, BaseSparkConfig):
+                    # Argument is a config. Copy subconfig to avoid weird overwrittings.
+                    field_config = copy.deepcopy(subconfig)
+                    field_config.merge(partial={**prefixed_shared_partial})
+                    setattr(self, field_name, field_config)
                 elif field.default_factory is not dataclasses.MISSING:
                     # Use default factory if provided
                     setattr(self, field_name, field.default_factory(**{**subconfig, **prefixed_shared_partial}))
@@ -294,7 +279,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def diff(self, other: 'SparkConfig') -> dict[str, Any]:
+    def diff(self, other: 'SparkConfig') -> dict[str, tp.Any]:
         """
             Return differences from another config.
         """
@@ -307,7 +292,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
     @classmethod
-    def from_dict(cls: type['SparkConfig'], data: dict[str, Any]) -> 'SparkConfig':
+    def from_dict(cls: type['SparkConfig'], data: dict[str, tp.Any]) -> 'SparkConfig':
         """
             Create config instance from dictionary
         """
@@ -315,7 +300,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def to_dict(self) -> dict[str, dict[str, Any]]:
+    def to_dict(self) -> dict[str, dict[str, tp.Any]]:
         """
             Serialize config to dictionary
         """
@@ -378,7 +363,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def get_metadata(self) -> dict[str, Any]:
+    def get_metadata(self) -> dict[str, tp.Any]:
         metadata = {}
         for field in dataclasses.fields(self):
             metadata[field.name] = dict(field.metadata)
