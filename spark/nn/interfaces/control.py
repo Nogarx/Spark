@@ -40,7 +40,7 @@ class ControlFlowInterface(Interface, abc.ABC):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class MergerConfig(SparkConfig):
+class ConcatConfig(SparkConfig):
     num_inputs: int = dataclasses.field(
         metadata = {
             'validators': [
@@ -49,18 +49,11 @@ class MergerConfig(SparkConfig):
             ],
             'description': 'Dtype used for JAX dtype promotions.',
         })
-    payload_type: SparkPayload = dataclasses.field(
-        metadata = {
-            'validators': [
-                TypeValidator,
-            ], 
-            'description': 'SparkPayload type promotions.',
-        })
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class Merger(ControlFlowInterface):
+class Concat(ControlFlowInterface):
     """
         Combines several streams of inputs of the same type into a single stream.
 
@@ -74,21 +67,25 @@ class Merger(ControlFlowInterface):
         Output:
             output: type[SparkPayload]
     """
-    config: MergerConfig
+    config: ConcatConfig
 
-    def __init__(self, config: MergerConfig = None, **kwargs):
+    def __init__(self, config: ConcatConfig = None, **kwargs):
 		# Initialize super.
         super().__init__(config=config, **kwargs)
         # Intialize variables.
         self.num_inputs = self.config.num_inputs
-        self.set_fallback_payload_type(self.config.payload_type)
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Validate payloads types.
+        payload_type = None
         for key, value in input_specs.items():
-            if self._default_payload_type != value.payload_type:
-                raise TypeError(f'Expected "payload" to be of same type "{self._default_payload_type}" '
-                                f'but input spec "{key}" is of type "{value.payload_type}".')
+            payload_type = value.payload_type if payload_type is None else payload_type
+            if payload_type != value.payload_type:
+                raise TypeError(
+                    f'Expected all payload types to be of same type \"{payload_type}\" '
+                    f'but input spec \"{key}\" is of type "{value.payload_type}".'
+                )
+        self.payload_type = payload_type
 
     def __call__(self, input: list[SparkPayload]) -> ControlInterfaceOutput:
         """
@@ -96,12 +93,12 @@ class Merger(ControlFlowInterface):
         """
         # Control flow operation
         return {
-            'output': self._default_payload_type(jnp.concatenate([x.value.reshape(-1) for x in input]))
+            'output': self.payload_type(jnp.concatenate([x.value.reshape(-1) for x in input]))
         }
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class MergerReshapeConfig(MergerConfig):
+class ConcatReshapeConfig(ConcatConfig):
     reshape: Shape = dataclasses.field(
         metadata = {
             'validators': [
@@ -113,7 +110,7 @@ class MergerReshapeConfig(MergerConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class MergerReshape(ControlFlowInterface):
+class ConcatReshape(ControlFlowInterface):
     """
         Combines several streams of inputs of the same type into a single stream.
 
@@ -128,22 +125,27 @@ class MergerReshape(ControlFlowInterface):
         Output:
             output: type[SparkPayload]
     """
-    config: MergerReshapeConfig
+    config: ConcatReshapeConfig
 
-    def __init__(self, config: MergerReshapeConfig = None, **kwargs):
+    def __init__(self, config: ConcatReshapeConfig = None, **kwargs):
 		# Initialize super.
         super().__init__(config=config, **kwargs)
         # Intialize variables.
         self.reshape = normalize_shape(self.config.reshape)
         self.num_inputs = self.config.num_inputs
-        self.set_fallback_payload_type(self.config.payload_type)
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Validate payloads types.
-        if self._default_payload_type != input_specs['inputs'].payload_type:
-            raise TypeError(f'Expected "payload" to be of same type "{self._default_payload_type}" '
-                            f'but input spec "inputs" is of type "{input_specs['inputs'].payload_type}".')
-        # Validate can reshape.
+        payload_type = None
+        for key, value in input_specs.items():
+            payload_type = value.payload_type if payload_type is None else payload_type
+            if payload_type != value.payload_type:
+                raise TypeError(
+                    f'Expected all payload types to be of same type \"{payload_type}\" '
+                    f'but input spec \"{key}\" is of type "{value.payload_type}".'
+                )
+        self.payload_type = payload_type
+        # Validate final shape.
         try:
             jnp.concatenate([jnp.zeros(s).reshape(-1) for s in input_specs['inputs'].shape]).reshape(self.reshape)
         except:
@@ -156,7 +158,7 @@ class MergerReshape(ControlFlowInterface):
         """
         # Control flow operation
         return {
-            'output': self._default_payload_type(jnp.concatenate([x.value.reshape(-1) for x in inputs]).reshape(self.reshape))
+            'output': self.payload_type(jnp.concatenate([x.value.reshape(-1) for x in inputs]).reshape(self.reshape))
         }
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -192,7 +194,7 @@ class Sampler(ControlFlowInterface):
 
     def __init__(self, config: SamplerConfig = None, **kwargs):
         # Initialize super.
-        super().__init__(**kwargs)
+        super().__init__(config=config, **kwargs)
         # Initialize variables
         self.sample_size = self.config.sample_size
 

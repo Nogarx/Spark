@@ -186,23 +186,6 @@ class ModuleSpecs:
         (name, module_cls, inputs, config) = children
         return cls(name=name, module_cls=module_cls, inputs=inputs, config=config,)
 
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-@dataclass(init=False)
-class VarSpec:
-    
-    shape: Shape
-    dtype: DTypeLike
-
-    def __init__(self, shape: Shape, dtype: DTypeLike):
-        #if shape and not validation.is_shape(shape):
-        #    raise TypeError(f'Expected "shape" to be of type "Shape" but got "{shape}".')
-        #if dtype and not isinstance(jnp.dtype(dtype), jnp.dtype):
-        #    raise TypeError(f'Expected "dtype" to be of type "{DTypeLike}" but got "{type(dtype).__name__}".')
-        self.shape = shape
-        self.dtype = dtype
-        
-
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

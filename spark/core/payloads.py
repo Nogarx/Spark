@@ -96,17 +96,6 @@ from spark.core.registry import register_payload
 @jax.tree_util.register_pytree_node_class
 @dataclass(frozen=True)
 @register_payload
-class DummyArray(ValueSparkPayload):
-    """
-        Dummy array for internal collections.
-    """
-    pass
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-@jax.tree_util.register_pytree_node_class
-@dataclass(frozen=True)
-@register_payload
 class SpikeArray(ValueSparkPayload):
     """
         Representation of a collection of spike events.

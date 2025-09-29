@@ -8,8 +8,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.module import SparkModule
 
-import typing
+
 import inspect
+import typing as tp
 from spark.core.specs import InputSpec, OutputSpec
 from spark.core.shape import bShape, Shape
 import spark.core.validation as validation
@@ -31,10 +32,11 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, InputSpec]:
 
     # Get input signature.
     signature = inspect.signature(module.__call__)
-    signature_type_hints = typing.get_type_hints(module.__call__)
+    signature_type_hints = tp.get_type_hints(module.__call__)
     
+    
+    # Create signatures.
     input_specs = {}
-    # Create signatures. 
     for parameter in signature.parameters.values():
 
         # Skip unimportant parameters.
@@ -43,19 +45,21 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, InputSpec]:
 
         # Scrap parameter.
         is_optional = parameter.default is not inspect.Parameter.empty
-        if typing.get_origin(signature_type_hints[parameter.name]) is list:
-            payload_type = typing.get_args(signature_type_hints[parameter.name])[0]
+        if tp.get_origin(signature_type_hints[parameter.name]) is list:
+            payload_type = tp.get_args(signature_type_hints[parameter.name])[0]
         else:
             payload_type = signature_type_hints[parameter.name]
 
         # Check if the payload_type is a valid class and a subclass of SparkPayload
         if not validation._is_payload_type(payload_type):
             # Raise error, payload is not fully compatible with the framework.
-            raise TypeError(f'Error: Input parameter "{parameter.name}" has type {type(payload_type).__name__}, ' \
-                            f'which is not a valid SparkPayload, None or sequence of SparkPayload.' \
-                            f'If you intended to pass a union (e.g. tuple, list, etc.) consider passing each entry ' \
-                            f'in the union directly as SparkPayload type to the __call__ method. ' \
-                            f'Alternatively, consider defining a custom SparkPayload dataclass as a wrapper for your input.')
+            raise TypeError(
+                f'Error: Input parameter "{parameter.name}" has type {type(payload_type).__name__}, ' 
+                f'which is not a valid SparkPayload, None or sequence of SparkPayload.' 
+                f'If you intended to pass a union (e.g. tuple, list, etc.) consider passing each entry ' 
+                f'in the union directly as SparkPayload type to the __call__ method. ' 
+                f'Alternatively, consider defining a custom SparkPayload dataclass as a wrapper for your input.'
+            )
         
         # Add the spec to collection.
         input_specs[parameter.name] = InputSpec(
@@ -82,7 +86,7 @@ def get_output_specs(module: type[SparkModule]) -> dict[str, OutputSpec]:
 
     # Get output signature.
     signature = inspect.signature(module.__call__)
-    signature_type_hints = typing.get_type_hints(module.__call__)
+    signature_type_hints = tp.get_type_hints(module.__call__)
 
     output_specs = {}
 
@@ -93,14 +97,14 @@ def get_output_specs(module: type[SparkModule]) -> dict[str, OutputSpec]:
         )
 
     # Check if the annotation is a TypedDict
-    if not typing.is_typeddict(signature_type_hints['return']):
+    if not tp.is_typeddict(signature_type_hints['return']):
         raise TypeError(
-            f'Module "{type(module).__name__}" does not have a type return annotation of type typing.TypedDict ' \
+            f'Module "{type(module).__name__}" does not have a type return annotation of type tp.TypedDict '
             f'and cannot auto-infer output ports specs. Consider adding a TypedDict annotation to the __call__ method.'
         )
     
     # get_type_hints is required once more since __future__ delays the evaluation of typedict
-    annotations = typing.get_type_hints(signature_type_hints['return'])
+    annotations = tp.get_type_hints(signature_type_hints['return'])
 
     # Build output specs
     for name, payload_type in annotations.items():
@@ -109,7 +113,7 @@ def get_output_specs(module: type[SparkModule]) -> dict[str, OutputSpec]:
         if not validation._is_payload_type(payload_type):
             # Raise error, payload is not fully compatible with the framework.
             raise TypeError(
-                f'Error: Output parameter "{name}" has type {type(payload_type).__name__}, ' \
+                f'Error: Output parameter "{name}" has type {type(payload_type).__name__}, '
                 f'which is not a valid SparkPayload, None or sequence of SparkPayload.'
             )
 

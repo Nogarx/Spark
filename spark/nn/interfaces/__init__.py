@@ -15,8 +15,8 @@ from .output import (
 
 from .control import (
     ControlFlowInterface,
-    Merger, MergerConfig,
-    MergerReshape, MergerReshapeConfig,
+    Concat, ConcatConfig,
+    ConcatReshape, ConcatReshapeConfig,
     Sampler, SamplerConfig,
 )
 
@@ -33,7 +33,7 @@ __all__ = [
     'ExponentialIntegrator', 'ExponentialIntegratorConfig',
     # Control
     'ControlFlowInterface',
-    'Merger', 'MergerConfig',
-    'MergerReshape', 'MergerReshapeConfig',
+    'Concat', 'ConcatConfig',
+    'ConcatReshape', 'ConcatReshapeConfig',
     'Sampler', 'SamplerConfig',
 ]

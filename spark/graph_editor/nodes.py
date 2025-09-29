@@ -177,7 +177,7 @@ class SparkModuleNode(AbstractNode, abc.ABC):
                     painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__)
                 )
         # Create partial configuration
-        node_config_type = node_cls.get_default_config_class()
+        node_config_type = node_cls.get_config_spec()
         self.node_config = node_config_type._create_partial()
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

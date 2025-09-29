@@ -106,7 +106,7 @@ class ALIFNeuron(Neuron):
         self.inhibitory_rate = self.config.inhibitory_rate
         self.async_spikes = self.config.async_spikes
         # Set output shapes earlier to allow cycles.
-        self.set_output_shapes(self.units)
+        self.set_recurrent_shape_contract(shape=self.units)
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize inhibitory mask.
