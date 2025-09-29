@@ -13,7 +13,7 @@ import jax
 import jax.numpy as jnp
 import typing as tp
 from jax.typing import DTypeLike
-from dataclasses import dataclass
+import dataclasses as dc
 
 from spark.core.shape import Shape
 import spark.core.validation as validation
@@ -23,7 +23,7 @@ import spark.core.validation as validation
 #################################################################################################################################################
 
 @jax.tree_util.register_pytree_node_class
-@dataclass(init=False, frozen=True)
+@dc.dataclass(init=False, frozen=True)
 class PortSpecs:
     """
         Base specification for a port of an SparkModule.
@@ -64,7 +64,7 @@ class PortSpecs:
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.tree_util.register_pytree_node_class
-@dataclass(init=False, frozen=True)
+@dc.dataclass(init=False, frozen=True)
 class InputSpec(PortSpecs):
     """
         Specification for an input port of an SparkModule.
@@ -95,7 +95,7 @@ class InputSpec(PortSpecs):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.tree_util.register_pytree_node_class
-@dataclass(frozen=True)
+@dc.dataclass(frozen=True)
 class OutputSpec(PortSpecs):
     """
         Specification for an output port of an SparkModule.
@@ -105,7 +105,7 @@ class OutputSpec(PortSpecs):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.tree_util.register_pytree_node_class
-@dataclass(init=False, frozen=True)
+@dc.dataclass(init=False, frozen=True)
 class PortMap:
     """
         Specification for an output port of an SparkModule.
@@ -135,7 +135,7 @@ class PortMap:
 
 # TODO: Inspect for missing mandatory fields.
 @jax.tree_util.register_pytree_node_class
-@dataclass(init=False, frozen=True)
+@dc.dataclass(init=False, frozen=True)
 class ModuleSpecs:
     """
         Specification for SparkModule automatic constructor.

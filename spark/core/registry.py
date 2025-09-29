@@ -11,8 +11,8 @@ if TYPE_CHECKING:
     from spark.core.config_validation import ConfigurationValidator
 
 import logging
-from dataclasses import dataclass
-from typing import Type, Union, Dict, Any, Iterator, List, Callable
+import dataclasses as dc
+import typing as tp
 from collections.abc import Mapping, ItemsView
 from spark.core.utils import normalize_name
 import spark.core.validation as validation
@@ -21,14 +21,14 @@ import spark.core.validation as validation
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-@dataclass
+@dc.dataclass
 class RegistryEntry:
     """
         Structured entry for the registry.
     """
     name: str
-    class_ref: Type
-    path: List[str]
+    class_ref: type
+    path: list[str]
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -38,8 +38,8 @@ class SubRegistry(Mapping):
     """
 
     def __init__(self, registry_base_type: str):
-        self._raw_registry: Dict[str, Type[object]] = {}
-        self._registry: Dict[str, RegistryEntry] = {}
+        self._raw_registry: dict[str, type[object]] = {}
+        self._registry: dict[str, RegistryEntry] = {}
         self._leaf_class = set()
         self.__built__ = False
         self._registry_base_type = registry_base_type
@@ -50,7 +50,7 @@ class SubRegistry(Mapping):
             raise RuntimeError('Registry is not build yet.')
         return self._registry[key]
 
-    def __iter__(self) -> Iterator[str]:
+    def __iter__(self) -> tp.Iterator[str]:
         if not self.__built__:
             raise RuntimeError('Registry is not build yet.')
         return iter(self._registry)
@@ -63,7 +63,7 @@ class SubRegistry(Mapping):
     def items(self) -> ItemsView[str, RegistryEntry]:
         return ItemsView(self)
 
-    def register(self, name: str, cls: Type[object], path: List[str] | None = None):
+    def register(self, name: str, cls: type[object], path: list[str] | None = None):
         """
             Register new registry_base_type.
         """
@@ -75,7 +75,7 @@ class SubRegistry(Mapping):
                 raise NameError(f'{self._registry_base_type} name "{name}" is already queued to be register.')
             self._raw_registry[name] = cls
 
-    def _register(self, name: str, cls: Type[object], path: List[str] | None = None):
+    def _register(self, name: str, cls: type[object], path: list[str] | None = None):
         """
             Validate and register new item.
         """
@@ -122,7 +122,7 @@ class SubRegistry(Mapping):
             Safely retrieves a component entry by name.
         """
         if self.__built__:
-            return self._registry.get(normalize_name(name))
+            return self._registry.get(normalize_name(name), None)
         else: 
             raise RuntimeError(f'Registry is not yet built. Registry must be built first before trying to access it.')
 
@@ -131,7 +131,7 @@ class SubRegistry(Mapping):
             return True
         return False
 
-    def _get_default_path(self, cls: Any):
+    def _get_default_path(self, cls: tp.Any):
         if self._registry_base_type == validation.DEFAULT_INITIALIZER_PATH:
             name = cls.__module__.split('.')[-1]
             name_map = INITIALIZERS_ALIAS_MAP.get(name, name)

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.config import BaseSparkConfig
     
-import dataclasses
+import dataclasses as dc
 import typing as tp
 import jax.numpy as jnp
 from functools import partial
@@ -210,7 +210,7 @@ class NodeInspectorWidget(QtWidgets.QWidget):
         nested_configs = config._get_nested_configs_names()
 
         # Iterate over fields, add simple attributes
-        for field in dataclasses.fields(config):
+        for field in dc.fields(config):
             # Skip non-configs
             if field.name in nested_configs:
                 continue
@@ -226,7 +226,7 @@ class NodeInspectorWidget(QtWidgets.QWidget):
             )
 
         # Iterate over fields, add nested configs as new collapsibles
-        for field in dataclasses.fields(config):
+        for field in dc.fields(config):
             # Skip configs
             if field.name not in nested_configs:
                 continue
@@ -240,7 +240,7 @@ class NodeInspectorWidget(QtWidgets.QWidget):
                 # Initialize an initializer config if none is provided
                 class_type = getattr(config, field.name).__class__
                 if class_type in [KernelInitializerConfig, DelayInitializerConfig, type(None)]:
-                    name_field = {f.name: f for f in dataclasses.fields(type_hints[field.name])}['name']
+                    name_field = {f.name: f for f in dc.fields(type_hints[field.name])}['name']
                     default_initializer = name_field.default if name_field.default else name_field.metadata['value_options'][0]
                     if issubclass(type_hints[field.name], KernelInitializerConfig):
                         default_config = _KERNEL_CONFIG_REGISTRY[default_initializer]()

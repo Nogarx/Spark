@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.specs import InputSpec
 
-import dataclasses
+import dataclasses as dc
 import jax.numpy as jnp
 from spark.core.tracers import Tracer
 from spark.core.payloads import SpikeArray, FloatArray
@@ -16,14 +16,14 @@ from spark.core.registry import register_module
 from spark.core.utils import get_einsum_labels
 from spark.core.config import SparkConfig
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from .base import LearningRule, LearningRuleOutput
+from spark.nn.components.learning_rules.base import LearningRule, LearningRuleConfig, LearningRuleOutput
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class HebbianLearningConfig(SparkConfig):
-    async_spikes: bool = dataclasses.field(
+class ZenkeRuleConfig(LearningRuleConfig):
+    async_spikes: bool = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,
@@ -31,7 +31,7 @@ class HebbianLearningConfig(SparkConfig):
             'description': 'Use asynchronous spikes. This parameter should be True if the incomming spikes are \
                             intercepted by a delay component and False otherwise.',
         })
-    pre_tau: float = dataclasses.field(
+    pre_tau: float = dc.field(
         default = 20.0, 
         metadata = {
             'units': 'ms',
@@ -41,7 +41,7 @@ class HebbianLearningConfig(SparkConfig):
             ],
             'description': '',
         })
-    post_tau: float = dataclasses.field(
+    post_tau: float = dc.field(
         default = 20.0, 
         metadata = {
             'units': 'ms',
@@ -51,7 +51,7 @@ class HebbianLearningConfig(SparkConfig):
             ],
             'description': '',
         })
-    post_slow_tau: float = dataclasses.field(
+    post_slow_tau: float = dc.field(
         default = 20.0, 
         metadata = {
             'units': 'ms',
@@ -61,7 +61,7 @@ class HebbianLearningConfig(SparkConfig):
             ],
             'description': '',
         })
-    target_tau: float = dataclasses.field(
+    target_tau: float = dc.field(
         default = 20000.0, 
         metadata = {
             'units': 'ms',
@@ -71,7 +71,7 @@ class HebbianLearningConfig(SparkConfig):
             ],
             'description': '',
         })
-    a: float = dataclasses.field(
+    a: float = dc.field(
         default = 1.0, 
         metadata = {
             'validators': [
@@ -79,7 +79,7 @@ class HebbianLearningConfig(SparkConfig):
             ], 
             'description': '',
         })
-    b: float = dataclasses.field(
+    b: float = dc.field(
         default = -1.0, 
         metadata = {
             'validators': [
@@ -87,7 +87,7 @@ class HebbianLearningConfig(SparkConfig):
             ], 
             'description': '',
         })
-    c: float = dataclasses.field(
+    c: float = dc.field(
         default = -1.0, 
         metadata = {
             'validators': [
@@ -95,7 +95,7 @@ class HebbianLearningConfig(SparkConfig):
             ], 
             'description': '',
         })
-    d: float = dataclasses.field(
+    d: float = dc.field(
         default = 1.0, 
         metadata = {
             'validators': [
@@ -103,7 +103,7 @@ class HebbianLearningConfig(SparkConfig):
             ], 
             'description': '',
         })
-    p: float = dataclasses.field(
+    p: float = dc.field(
         default = 20.0, 
         metadata = {
             'validators': [
@@ -111,7 +111,7 @@ class HebbianLearningConfig(SparkConfig):
             ], 
             'description': '',
         })
-    gamma: float = dataclasses.field(
+    gamma: float = dc.field(
         default = 0.1, 
         metadata = {
             'validators': [
@@ -123,7 +123,7 @@ class HebbianLearningConfig(SparkConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class HebbianRule(LearningRule):
+class ZenkeRule(LearningRule):
     """
         Hebbian plasticy rule model.
 
@@ -148,9 +148,9 @@ class HebbianRule(LearningRule):
         Output:
             kernel: FloatArray
     """
-    config: HebbianLearningConfig
+    config: ZenkeRuleConfig
 
-    def __init__(self, config: HebbianLearningConfig = None, **kwargs):
+    def __init__(self, config: ZenkeRuleConfig = None, **kwargs):
         # Initialize super.
         super().__init__(config=config, **kwargs)
         # Initialize varibles

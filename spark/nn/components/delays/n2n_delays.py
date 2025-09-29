@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 import jax
 import jax.numpy as jnp
-import dataclasses
+import dataclasses as dc
 import typing as tp
 from math import prod, ceil
 from spark.core.payloads import SpikeArray
@@ -25,7 +25,7 @@ from .n_delays import NDelaysConfig
 #################################################################################################################################################
 
 class N2NDelaysConfig(NDelaysConfig):
-    target_units: Shape = dataclasses.field(
+    target_units: Shape = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,

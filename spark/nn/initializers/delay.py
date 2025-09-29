@@ -7,21 +7,21 @@ from __future__ import annotations
 import jax
 import jax.numpy as jnp 
 import typing as tp
-import dataclasses
+import dataclasses as dc
 from jax.typing import DTypeLike
 from jax._src import dtypes
 from spark.core.shape import bShape
 from spark.core.registry import register_initializer
 from spark.core.config import BaseSparkConfig
 from spark.core.config_validation import TypeValidator
-from spark.nn.initializers.base import Initializer
+from spark.nn.initializers.base import Initializer, InitializerConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class DelayInitializerConfig(BaseSparkConfig):
-    name: str = dataclasses.field(
+class DelayInitializerConfig(InitializerConfig):
+    name: str = dc.field(
         default = 'uniform_delay_initializer', 
         metadata = {
             'validators': [
@@ -33,7 +33,7 @@ class DelayInitializerConfig(BaseSparkConfig):
             ],
             'description': 'Delay initializer protocol.',
         })
-    dtype: DTypeLike = dataclasses.field(
+    dtype: DTypeLike = dc.field(
         default = jnp.uint8, 
         metadata = {
             'validators': [

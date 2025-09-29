@@ -3,13 +3,10 @@
 #################################################################################################################################################
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from spark.core.config import SparkConfig
 
 import abc
 import typing as tp
-from spark.nn.components.base import Component
+from spark.nn.components.base import Component, ComponentConfig
 from spark.core.payloads import SpikeArray, CurrentArray, FloatArray
 
 #################################################################################################################################################
@@ -19,6 +16,11 @@ from spark.core.payloads import SpikeArray, CurrentArray, FloatArray
 # Generic Soma output contract.
 class SynanpsesOutput(tp.TypedDict):
     currents: CurrentArray
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class SynanpsesConfig(ComponentConfig):
+    pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -35,7 +37,7 @@ class Synanpses(Component):
             currents: CurrentArray
     """
 
-    def __init__(self, config: SparkConfig = None, **kwargs):
+    def __init__(self, config: SynanpsesConfig = None, **kwargs):
         # Initialize super.
         super().__init__(config = config, **kwargs)
 

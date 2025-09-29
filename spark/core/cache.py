@@ -10,8 +10,7 @@ if TYPE_CHECKING:
 import jax
 import jax.numpy as jnp
 from jax.typing import DTypeLike
-from dataclasses import dataclass
-
+import dataclasses as dc
 import spark.core.validation as validation
 from spark.core.variables import Variable
 from spark.core.shape import bShape, Shape, normalize_shape
@@ -21,7 +20,7 @@ from spark.core.shape import bShape, Shape, normalize_shape
 #################################################################################################################################################
 
 @jax.tree_util.register_pytree_node_class
-@dataclass(init=False)
+@dc.dataclass(init=False)
 class Cache:
     """
         Cache dataclass.

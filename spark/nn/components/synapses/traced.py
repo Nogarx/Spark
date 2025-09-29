@@ -8,19 +8,19 @@ if TYPE_CHECKING:
     from spark.core.specs import InputSpec
 
 import jax.numpy as jnp
-import dataclasses
+import dataclasses as dc
 from spark.core.tracers import Tracer, DoubleTracer
 from spark.core.payloads import SpikeArray, CurrentArray
 from spark.core.registry import register_module
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from .simple import SimpleSynapses, SimpleSynapsesConfig
+from spark.nn.components.synapses.linear import LineaSynapses, LineaSynapsesConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class TracedSynapsesConfig(SimpleSynapsesConfig):
-    tau: float = dataclasses.field(
+class TracedSynapsesConfig(LineaSynapsesConfig):
+    tau: float = dc.field(
         default = 5.0, 
         metadata = {
             'units': 'ms',
@@ -30,7 +30,7 @@ class TracedSynapsesConfig(SimpleSynapsesConfig):
             ],
             'description': 'Tracer decay constant.',
     })
-    scale: float = dataclasses.field(
+    scale: float = dc.field(
         default = 1.0, 
         metadata = {
             'validators': [
@@ -39,7 +39,7 @@ class TracedSynapsesConfig(SimpleSynapsesConfig):
             ],
             'description': 'Tracer spike scaling.',
     })
-    base: float = dataclasses.field(
+    base: float = dc.field(
         default = 0.0, 
         metadata = {
             'validators': [
@@ -51,7 +51,7 @@ class TracedSynapsesConfig(SimpleSynapsesConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class TracedSynapses(SimpleSynapses):
+class TracedSynapses(LineaSynapses):
     """
         Traced synaptic model. 
         Output currents are computed as the trace of the dot product of the kernel with the input spikes.
@@ -103,8 +103,8 @@ class TracedSynapses(SimpleSynapses):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class DoubleTracedSynapsesConfig(SimpleSynapsesConfig):
-    tau_1: float = dataclasses.field(
+class DoubleTracedSynapsesConfig(LineaSynapsesConfig):
+    tau_1: float = dc.field(
         default = 5.0, 
         metadata = {
             'units': 'ms',
@@ -114,7 +114,7 @@ class DoubleTracedSynapsesConfig(SimpleSynapsesConfig):
             ],
             'description': 'First tracer decay constant.',
     })
-    scale_1: float = dataclasses.field(
+    scale_1: float = dc.field(
         default = 1.0, 
         metadata = {
             'validators': [
@@ -123,7 +123,7 @@ class DoubleTracedSynapsesConfig(SimpleSynapsesConfig):
             ],
             'description': 'First tracer spike scaling.',
     })
-    base_1: float = dataclasses.field(
+    base_1: float = dc.field(
         default = 0.0, 
         metadata = {
             'validators': [
@@ -131,7 +131,7 @@ class DoubleTracedSynapsesConfig(SimpleSynapsesConfig):
             ],
             'description': 'First tracer rest value.',
     })
-    tau_2: float = dataclasses.field(
+    tau_2: float = dc.field(
         default = 5.0, 
         metadata = {
             'units': 'ms',
@@ -141,7 +141,7 @@ class DoubleTracedSynapsesConfig(SimpleSynapsesConfig):
             ],
             'description': 'Second tracer decay constant.',
     })
-    scale_2: float = dataclasses.field(
+    scale_2: float = dc.field(
         default = 1.0, 
         metadata = {
             'validators': [
@@ -150,7 +150,7 @@ class DoubleTracedSynapsesConfig(SimpleSynapsesConfig):
             ],
             'description': 'Second tracer spike scaling.',
     })
-    base_2: float = dataclasses.field(
+    base_2: float = dc.field(
         default = 0.0, 
         metadata = {
             'validators': [
@@ -162,7 +162,7 @@ class DoubleTracedSynapsesConfig(SimpleSynapsesConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class DoubleTracedSynapses(SimpleSynapses):
+class DoubleTracedSynapses(LineaSynapses):
     """
         Traced synaptic model. 
         Output currents are computed as the trace of the dot product of the kernel with the input spikes.

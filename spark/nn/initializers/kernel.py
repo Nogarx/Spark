@@ -6,16 +6,15 @@ from __future__ import annotations
 
 import jax
 import jax.numpy as jnp 
-import dataclasses
+import dataclasses as dc
 import typing as tp
 from jax._src import dtypes
 from jax.typing import DTypeLike
 from spark.core.shape import Shape
 from math import prod
 from spark.core.registry import register_initializer
-from spark.core.config import BaseSparkConfig
 from spark.core.config_validation import TypeValidator, ZeroOneValidator, PositiveValidator
-from spark.nn.initializers.base import Initializer
+from spark.nn.initializers.base import Initializer, InitializerConfig
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -29,8 +28,8 @@ BASE_SCALE = 3 #3E3
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class KernelInitializerConfig(BaseSparkConfig):
-    name: str = dataclasses.field(
+class KernelInitializerConfig(InitializerConfig):
+    name: str = dc.field(
         default = 'sparse_uniform_kernel_initializer', 
         metadata = {
             'validators': [
@@ -42,7 +41,7 @@ class KernelInitializerConfig(BaseSparkConfig):
             ],
             'description': 'Delay initializer protocol.',
         })
-    scale: float = dataclasses.field(
+    scale: float = dc.field(
         default = 1.0, 
         metadata = {
             'validators': [
@@ -52,7 +51,7 @@ class KernelInitializerConfig(BaseSparkConfig):
             'description': 'Float value to scale the kernel array.',
         })
 
-    dtype: DTypeLike = dataclasses.field(
+    dtype: DTypeLike = dc.field(
         default = jnp.float16, 
         metadata = {
             'validators': [
@@ -103,7 +102,7 @@ def uniform_kernel_initializer(config: UniformKernelInitializerConfig) -> Initia
 
 class SparseUniformKernelInitializerConfig(KernelInitializerConfig):
     name: tp.Literal['sparse_uniform_kernel_initializer'] = 'sparse_uniform_kernel_initializer'
-    density: float = dataclasses.field(
+    density: float = dc.field(
         default = 0.2, 
         metadata = {
             'validators': [

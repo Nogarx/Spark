@@ -11,9 +11,8 @@ import jax
 import numpy as np
 import jax.numpy as jnp
 import flax.nnx as nnx
-from dataclasses import dataclass
 from typing import Any
-from collections.abc import Iterable, ValuesView, KeysView, ItemsView
+from collections.abc import Iterable
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

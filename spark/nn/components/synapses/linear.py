@@ -8,31 +8,30 @@ if TYPE_CHECKING:
     from spark.core.specs import InputSpec
 
 import jax.numpy as jnp
-import dataclasses
+import dataclasses as dc
 from math import prod
 import typing as tp
 from spark.core.shape import Shape, normalize_shape
 from spark.core.payloads import SpikeArray, CurrentArray, FloatArray
 from spark.core.variables import Variable
 from spark.core.registry import register_module, REGISTRY
-from spark.core.config import SparkConfig
 from spark.core.config_validation import TypeValidator
 from spark.nn.initializers.kernel import KernelInitializerConfig, SparseUniformKernelInitializerConfig
-from .base import Synanpses
+from spark.nn.components.synapses.base import Synanpses, SynanpsesConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class SimpleSynapsesConfig(SparkConfig):
-    target_units: Shape = dataclasses.field(
+class LineaSynapsesConfig(SynanpsesConfig):
+    target_units: Shape = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,
             ], 
             'description': 'Shape of the postsynaptic pool of neurons.',
         })
-    async_spikes: bool = dataclasses.field(
+    async_spikes: bool = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,
@@ -40,7 +39,7 @@ class SimpleSynapsesConfig(SparkConfig):
             'description': 'Use asynchronous spikes. This parameter should be True if the incomming spikes are \
                             intercepted by a delay component and False otherwise.',
         })
-    kernel_initializer: KernelInitializerConfig = dataclasses.field(
+    kernel_initializer: KernelInitializerConfig = dc.field(
         default_factory = SparseUniformKernelInitializerConfig,
         metadata = {
             'validators': [
@@ -52,9 +51,9 @@ class SimpleSynapsesConfig(SparkConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class SimpleSynapses(Synanpses):
+class LineaSynapses(Synanpses):
     """
-        Simple synaptic model. 
+        Linea synaptic model. 
         Output currents are computed as the dot product of the kernel with the input spikes.
 
         Init:
@@ -68,9 +67,9 @@ class SimpleSynapses(Synanpses):
         Output:
             currents: CurrentArray
     """
-    config: SimpleSynapsesConfig
+    config: LineaSynapsesConfig
 
-    def __init__(self, config: SimpleSynapses = None, **kwargs):
+    def __init__(self, config: LineaSynapses = None, **kwargs):
         # Initialize super.
         super().__init__(config=config, **kwargs)
         # Initialize shapes

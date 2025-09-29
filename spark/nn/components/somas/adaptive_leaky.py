@@ -7,75 +7,78 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.specs import InputSpec
 
-import jax.numpy as jnp
-from math import prod
+import dataclasses as dc
+from spark.core.tracers import Tracer
 from spark.core.payloads import SpikeArray
-from spark.core.variables import Variable
-from spark.core.shape import normalize_shape
 from spark.core.registry import register_module
-from .base import Delays, DelaysOutput, DelaysConfig
+from spark.core.config_validation import TypeValidator, PositiveValidator
+from spark.nn.components.somas.leaky import LeakySoma, LeakySomaConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class DummyDelaysConfig(DelaysConfig):
-    pass
+class AdaptiveLeakySomaConfig(LeakySomaConfig):
+    threshold_tau: float = dc.field(
+        default = 100.0, 
+        metadata = {
+            'units': 'ms',
+            'validators': [
+                TypeValidator,
+                PositiveValidator,
+            ],
+            'description': 'Adaptive action potential threshold decay constant.',
+        })
+    threshold_delta: float = dc.field(
+        default = 100.0, 
+        metadata = {
+            'units': 'mV',
+            'validators': [
+                TypeValidator,
+            ], 
+            'description': 'Adaptive action potential threshold after spike increment.',
+        })
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class DummyDelays(Delays):
+class AdaptiveLeakySoma(LeakySoma):
     """
-        A dummy delay that is equivalent to no delay at all, it simply forwards its input.
-        This is a convinience module, that should be avoided whenever is possible and its 
-        only purpose is to simplify some scenarios.
-
-        Init:
-
-        Input:
-            in_spikes: SpikeArray
-            
-        Output:
-            out_spikes: SpikeArray
+        Adaptive leaky soma model.
     """
-    config: DummyDelaysConfig
+    config: AdaptiveLeakySomaConfig
 
-    def __init__(self, config: DummyDelaysConfig = None, **kwargs):
+    def __init__(self, config: AdaptiveLeakySomaConfig = None, **kwargs):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
+    # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
     def build(self, input_specs: dict[str, InputSpec]):
-        # Initialize shapes
-        self._shape = normalize_shape(input_specs['in_spikes'].shape)
-        self._units = prod(self._shape)
-        # Initialize varibles
-        self.spikes = Variable(jnp.zeros(self._shape, self._dtype), dtype=self._dtype)
+        super().build(input_specs)
+        # Overwrite constant threshold with a tracer.
+        self._threshold = Tracer(self._shape,
+                                 tau=self.config.threshold_tau, 
+                                 base=(self.config.threshold - self.config.potential_rest), 
+                                 scale=self.config.threshold_delta, 
+                                 dt=self._dt, dtype=self._dtype)
 
     def reset(self) -> None:
         """
             Resets component state.
         """
-        self.spikes.value = jnp.zeros(self._shape, self._dtype)
+        super().reset()
+        self._threshold.reset()
 
-    def _push(self, in_spikes: SpikeArray) -> None:
+    def _compute_spikes(self,) -> SpikeArray:
         """
-            Push operation.
+            Compute neuron's spikes.
         """
-        self.spikes.value = in_spikes.value
-
-    def _gather(self,) -> SpikeArray:
-        """
-            Gather operation.
-        """
-        return SpikeArray(self.spikes.value)
-
-    # Override call, no need to store anything. Push and Gather are defined just for the sake of completion.
-    def __call__(self, in_spikes: SpikeArray) -> DelaysOutput:
-        return {
-            'out_spikes': in_spikes,
-        }
-
+        # Compute spikes.
+        spikes = super()._compute_spikes()
+        # Update thresholds
+        self._threshold(spikes)
+        return spikes
+    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

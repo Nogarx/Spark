@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 import abc
 import jax.numpy as jnp
 import typing as tp
-import dataclasses
+import dataclasses as dc
 from spark.core.shape import bShape, normalize_shape
 from spark.core.payloads import SparkPayload
 from spark.core.registry import REGISTRY
@@ -22,14 +22,14 @@ from spark.core.registry import REGISTRY
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-@dataclasses.dataclass(init=False)
+@dc.dataclass(init=False)
 class BaseSpecEditor(abc.ABC):
 
     def to_dict(self,) -> dict[str, tp.Any]:
         """
             Returns a JSON serializable version of the spec.
         """
-        return dataclasses.asdict(self)
+        return dc.asdict(self)
     
     @classmethod
     def from_dict(cls, **kwargs) -> BaseSpecEditor:
@@ -40,7 +40,7 @@ class BaseSpecEditor(abc.ABC):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@dataclasses.dataclass(init=False)
+@dc.dataclass(init=False)
 class PortSpecEditor(BaseSpecEditor):
     """
         Mutable base specification for a port of an SparkModule.
@@ -80,7 +80,7 @@ class PortSpecEditor(BaseSpecEditor):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@dataclasses.dataclass(init=False)
+@dc.dataclass(init=False)
 class InputSpecEditor(PortSpecEditor):
     """
         Specification for an input port of an SparkModule.
@@ -132,7 +132,7 @@ class InputSpecEditor(PortSpecEditor):
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@dataclasses.dataclass(init=False)
+@dc.dataclass(init=False)
 class OutputSpecEditor(PortSpecEditor):
     """
         Specification for an output port of an SparkModule.
@@ -150,7 +150,7 @@ class OutputSpecEditor(PortSpecEditor):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@dataclasses.dataclass(init=False)
+@dc.dataclass(init=False)
 class PortMap:
     """
         Specification for a connection between SparkModules within the SparkGraphEditor.
@@ -172,7 +172,7 @@ class PortMap:
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@dataclasses.dataclass(init=False)
+@dc.dataclass(init=False)
 class ModuleSpecsEditor(BaseSpecEditor):
     """
         Specification for SparkModule automatic constructor within the SparkGraphEditor.

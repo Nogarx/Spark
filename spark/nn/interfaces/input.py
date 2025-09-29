@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 import abc
 import jax
 import jax.numpy as jnp
-import dataclasses
+import dataclasses as dc
 import typing as tp
 from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Variable, Constant
@@ -50,7 +50,7 @@ class InputInterface(Interface, abc.ABC):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class PoissonSpikerConfig(SparkConfig):
-    max_freq: float = dataclasses.field(
+    max_freq: float = dc.field(
         default = 50.0, 
         metadata = {
             'units': 'Hz',
@@ -108,7 +108,7 @@ class PoissonSpiker(InputInterface):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class LinearSpikerConfig(SparkConfig):
-    tau: float = dataclasses.field(
+    tau: float = dc.field(
         default = 100.0, 
         metadata = {
             'units': 'ms',
@@ -118,7 +118,7 @@ class LinearSpikerConfig(SparkConfig):
             ],
             'description': 'Decay time constant of the membrane potential of the units of the spiker.',
         })
-    cd: float = dataclasses.field(
+    cd: float = dc.field(
         default = 2.0, 
         metadata = {
             'units': 'ms',
@@ -128,7 +128,7 @@ class LinearSpikerConfig(SparkConfig):
             ],
             'description': '(Cooldown) Refractory period of the units of the spiker.',
         })
-    max_freq: float = dataclasses.field(
+    max_freq: float = dc.field(
         default = 50.0, 
         metadata = {
             'units': 'Hz',
@@ -216,7 +216,7 @@ class LinearSpiker(InputInterface):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class TopologicalSpikerConfig(SparkConfig):
-    glue: jax.Array = dataclasses.field(
+    glue: jax.Array = dc.field(
         default_factory = lambda: jnp.array(0), 
         metadata = {
             'validators': [
@@ -228,7 +228,7 @@ class TopologicalSpikerConfig(SparkConfig):
                             It may be either an array with a single element or \
                             an array with the same dimensionality as the input vector.',
         })
-    mins: jax.Array = dataclasses.field(
+    mins: jax.Array = dc.field(
         default_factory = lambda: jnp.array(0), 
         metadata = {
             'validators': [
@@ -237,7 +237,7 @@ class TopologicalSpikerConfig(SparkConfig):
             'description': 'Minimum value for the rescaling factor. It may be either an array with a single element or \
                             an array with the same dimensionality as the input vector.',
         })
-    maxs: jax.Array = dataclasses.field(
+    maxs: jax.Array = dc.field(
         default_factory = lambda: jnp.array(1), 
         metadata = {
             'validators': [
@@ -246,7 +246,7 @@ class TopologicalSpikerConfig(SparkConfig):
             'description': 'Maximum value for the rescaling factor. It may be either an array with a single element or \
                             an array with the same dimensionality as the input vector.',
         })
-    resolution: int = dataclasses.field(
+    resolution: int = dc.field(
         default = 64, 
         metadata = {
             'validators': [
@@ -255,7 +255,7 @@ class TopologicalSpikerConfig(SparkConfig):
             ],
             'description': 'Virtual units subdivision of the space per dimension.',
         })
-    sigma: float = dataclasses.field(
+    sigma: float = dc.field(
         default = 1/32, 
         metadata = {
             'validators': [

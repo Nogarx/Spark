@@ -8,6 +8,7 @@ from spark.core.specs import PortSpecs, InputSpec, OutputSpec, PortMap, ModuleSp
 from spark.core import config_validation as validation
 from spark.core.flax_imports import split, merge
 from spark.graph_editor.editor import SparkGraphEditor
+from spark.core.registry import register_module, register_initializer, register_payload, register_cfg_validator
 
 # Initialize registry.
 from spark.core.registry import REGISTRY

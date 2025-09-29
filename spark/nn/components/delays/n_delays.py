@@ -9,24 +9,23 @@ if TYPE_CHECKING:
 
 import jax
 import jax.numpy as jnp
-import dataclasses
+import dataclasses as dc
 import typing as tp
 from math import prod, ceil
 from spark.core.payloads import SpikeArray
 from spark.core.variables import Variable, Constant
 from spark.core.shape import normalize_shape
 from spark.core.registry import register_module, REGISTRY
-from spark.core.config import SparkConfig
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.initializers.delay import DelayInitializerConfig, UniformDelayInitializerConfig
-from .base import Delays, DelaysOutput
+from .base import Delays, DelaysOutput, DelaysConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class NDelaysConfig(SparkConfig):
-    max_delay: float = dataclasses.field(
+class NDelaysConfig(DelaysConfig):
+    max_delay: float = dc.field(
         default = 8.0, 
         metadata = {
             'units': 'ms',
@@ -36,7 +35,7 @@ class NDelaysConfig(SparkConfig):
             ],
             'description': 'Maximum synaptic delay. Note: Final max delay is computed as ⌈max/dt⌉.',
         })
-    delay_initializer: DelayInitializerConfig = dataclasses.field(
+    delay_initializer: DelayInitializerConfig = dc.field(
         default_factory = UniformDelayInitializerConfig,
         metadata = {
             'validators': [

@@ -3,13 +3,10 @@
 #################################################################################################################################################
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from spark.core.config import SparkConfig
 
 import typing as tp
-from spark.nn.components.base import Component
 from spark.core.payloads import FloatArray
+from spark.nn.components.base import Component, ComponentConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -21,12 +18,17 @@ class LearningRuleOutput(tp.TypedDict):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class LearningRuleConfig(ComponentConfig):
+    pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class LearningRule(Component):
     """
         Abstract learning rule model.
     """
 
-    def __init__(self, config: SparkConfig = None, **kwargs):
+    def __init__(self, config: ComponentConfig = None, **kwargs):
         # Initialize super.
         super().__init__(config = config, **kwargs)
 

@@ -15,7 +15,7 @@ import inspect
 import jax.numpy as jnp
 import flax.nnx as nnx
 import typing as tp
-import dataclasses
+import dataclasses as dc
 from jax.typing import DTypeLike
 from functools import wraps
 import spark.core.signature_parser as sig_parser

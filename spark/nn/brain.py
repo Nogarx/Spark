@@ -6,7 +6,7 @@ from __future__ import annotations
 	
 import jax.numpy as jnp
 import typing as tp
-import dataclasses
+import dataclasses as dc
 from math import prod
 from spark.core.cache import Cache
 from spark.core.module import SparkModule, SparkMeta
@@ -27,15 +27,15 @@ class BrainMeta(SparkMeta):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class BrainConfig(SparkConfig):
-	input_map: dict[str, InputSpec] = dataclasses.field(
+	input_map: dict[str, InputSpec] = dc.field(
 		metadata = {
 			'description': 'Input map configuration.',
 		})
-	output_map: dict[str, dict[str, OutputSpec]] = dataclasses.field(
+	output_map: dict[str, dict[str, OutputSpec]] = dc.field(
 		metadata = {
 			'description': 'Output map configuration.',
 		})
-	modules_map: dict[str, ModuleSpecs] = dataclasses.field(
+	modules_map: dict[str, ModuleSpecs] = dc.field(
 		metadata = {
 			'description': 'Modules map configuration.',
 		})

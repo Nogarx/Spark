@@ -8,7 +8,7 @@ import abc
 import jax
 import numpy as np
 import jax.numpy as jnp
-import dataclasses
+import dataclasses as dc
 import typing as tp
 from spark.core.registry import REGISTRY
 from spark.core.registry import register_cfg_validator
@@ -19,7 +19,7 @@ from spark.core.registry import register_cfg_validator
 
 class ConfigurationValidator:
 
-    def __init__(self, field: dataclasses.Field):
+    def __init__(self, field: dc.Field):
         self.field = field
 
     @abc.abstractmethod

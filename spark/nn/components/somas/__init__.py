@@ -1,7 +1,9 @@
 from spark.nn.components.somas.base import Soma, SomaOutput
-from spark.nn.components.somas.alif import ALIFSoma, ALIFSomaConfig, LIFSomaConfig
+from spark.nn.components.somas.leaky import LeakySoma, LeakySomaConfig
+from spark.nn.components.somas.adaptive_leaky import AdaptiveLeakySoma, AdaptiveLeakySomaConfig
 
 __all__ = [
     'Soma', 'SomaOutput',
-    'ALIFSoma', 'ALIFSomaConfig', 'LIFSomaConfig',
+    'LeakySoma', 'LeakySomaConfig',
+    'AdaptiveLeakySoma', 'AdaptiveLeakySomaConfig',
 ]

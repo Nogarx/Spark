@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 import abc
 import jax
 import jax.numpy as jnp
-import dataclasses
+import dataclasses as dc
 import typing as tp
 from math import prod
 from spark.nn.interfaces.base import Interface
@@ -53,7 +53,7 @@ class OutputInterface(Interface, abc.ABC):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class ExponentialIntegratorConfig(SparkConfig):
-    num_outputs: int = dataclasses.field(
+    num_outputs: int = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,
@@ -63,7 +63,7 @@ class ExponentialIntegratorConfig(SparkConfig):
                             If num_outputs does not exactly divide the number of incomming spikes then an approximately \
                             even assigment is used.',
         })
-    saturation_freq: float = dataclasses.field(
+    saturation_freq: float = dc.field(
         default = 50.0, 
         metadata = {
             'units': 'Hz',
@@ -73,7 +73,7 @@ class ExponentialIntegratorConfig(SparkConfig):
             ],
             'description': 'Approximate average firing frequency at which the population needs to fire to sature the integrator.',
         })
-    tau: float = dataclasses.field(
+    tau: float = dc.field(
         default = 20.0, 
         metadata = {
             'units': 'ms',
@@ -83,7 +83,7 @@ class ExponentialIntegratorConfig(SparkConfig):
             ],
             'description': 'Decay time constant of the membrane potential of the units of the spiker.',
         })
-    shuffle: bool = dataclasses.field(
+    shuffle: bool = dc.field(
         default = True, 
         metadata = {
             'validators': [
@@ -91,7 +91,7 @@ class ExponentialIntegratorConfig(SparkConfig):
             ],
             'description': 'Shuffles the input spikes, otherwise they are used sequentially to create the output signal.',
         })
-    smooth_trace: bool = dataclasses.field(
+    smooth_trace: bool = dc.field(
         default = True, 
         metadata = {
             'validators': [

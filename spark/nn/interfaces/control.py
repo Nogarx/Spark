@@ -7,7 +7,7 @@ from __future__ import annotations
 import abc
 import jax
 import jax.numpy as jnp
-import dataclasses
+import dataclasses as dc
 import typing as tp
 from math import prod
 from spark.core.specs import InputSpec, OutputSpec
@@ -41,7 +41,7 @@ class ControlFlowInterface(Interface, abc.ABC):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class ConcatConfig(SparkConfig):
-    num_inputs: int = dataclasses.field(
+    num_inputs: int = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,
@@ -99,7 +99,7 @@ class Concat(ControlFlowInterface):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class ConcatReshapeConfig(ConcatConfig):
-    reshape: Shape = dataclasses.field(
+    reshape: Shape = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,
@@ -164,7 +164,7 @@ class ConcatReshape(ControlFlowInterface):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class SamplerConfig(SparkConfig):
-    sample_size: int = dataclasses.field(
+    sample_size: int = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,

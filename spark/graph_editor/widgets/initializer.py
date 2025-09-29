@@ -7,7 +7,7 @@ from __future__ import annotations
 import time
 import jax.numpy as jnp
 import typing as tp
-import dataclasses
+import dataclasses as dc
 from functools import partial
 from Qt import QtCore, QtWidgets, QtGui
 from spark.nn.initializers.delay import DelayInitializerConfig, _DELAY_CONFIG_REGISTRY
@@ -74,7 +74,7 @@ class QInitializer(SparkQWidget):
         self._clear_layout()
         # Iterate over fields, add simple attributes. 
         # NOTE: We assume there are no more nested configs.
-        for field in dataclasses.fields(self._initializer_config):
+        for field in dc.fields(self._initializer_config):
             # Add widget to layout
             if field.name == 'name':
                 continue

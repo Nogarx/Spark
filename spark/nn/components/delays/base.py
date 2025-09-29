@@ -3,14 +3,11 @@
 #################################################################################################################################################
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from spark.core.config import SparkConfig
 
 import abc
 import typing as tp
 from spark.core.payloads import SpikeArray 
-from spark.nn.components.base import Component
+from spark.nn.components.base import Component, ComponentConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -22,12 +19,17 @@ class DelaysOutput(tp.TypedDict):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class DelaysConfig(ComponentConfig):
+    pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class Delays(Component):
     """
         Abstract synaptic delay model.
     """
 
-    def __init__(self, config: SparkConfig = None, **kwargs):
+    def __init__(self, config: DelaysConfig = None, **kwargs):
         # Initialize super.
         super().__init__(config = config, **kwargs)
     
