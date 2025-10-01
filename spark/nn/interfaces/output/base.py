@@ -3,34 +3,46 @@
 #################################################################################################################################################
 
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from spark.core.payloads import SparkPayload
 
-import jax
-import jax.numpy as jnp 
-import inspect
+import abc
 import typing as tp
-from jax.typing import DTypeLike
-from typing import Protocol, runtime_checkable
-from spark.core.shape import bShape
-from spark.core.config import BaseSparkConfig
+from spark.nn.interfaces.base import Interface
+from spark.core.payloads import SpikeArray, FloatArray
+from spark.nn.interfaces.base import Interface, InterfaceConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class InitializerConfig(BaseSparkConfig):
+# Generic OutputInterface output contract.
+class OutputInterfaceOutput(tp.TypedDict):
+    signal: FloatArray
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class OutputInterfaceConfig(InterfaceConfig):
     pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@runtime_checkable
-class Initializer(Protocol):
+class OutputInterface(Interface, abc.ABC):
     """
-        Base (abstract) class for all spark initializers.
+        Abstract output interface model.
     """
 
-    @staticmethod
-    def __call__(key: jax.Array, shape: bShape, dtype: DTypeLike = jnp.float16) -> jax.Array:
-        raise NotImplementedError
+    def __init__(self, config: OutputInterfaceConfig = None, **kwargs):
+        # Main attributes
+        super().__init__(config = config, **kwargs)
+
+    @abc.abstractmethod
+    def __call__(self, *args: SpikeArray, **kwargs) -> dict[str, SparkPayload]:
+        """
+            Transform incomming spikes into a output signal.
+        """
+        pass
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

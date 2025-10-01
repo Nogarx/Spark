@@ -15,8 +15,9 @@ import typing as tp
 from jax.typing import DTypeLike
 import dataclasses as dc
 
-from spark.core.shape import Shape
+from spark.core.shape import Shape, ShapeCollection
 import spark.core.validation as validation
+from spark.core.registry import REGISTRY
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -29,19 +30,26 @@ class PortSpecs:
         Base specification for a port of an SparkModule.
     """
     payload_type: type[SparkPayload] | None
-    shape: Shape | list[Shape] | None
+    shape: Shape | ShapeCollection | None
     dtype: DTypeLike | None
     description: str | None = None
 
-    def __init__(self, 
-                 payload_type: type[SparkPayload] | None,
-                 shape: Shape | None, 
-                 dtype: DTypeLike | None, 
-                 description: str | None = None ):
+    def __init__(
+            self, 
+            payload_type: type[SparkPayload] | None,
+            shape: Shape | None, 
+            dtype: DTypeLike | None, 
+            description: str | None = None 
+        ):
         if payload_type and not validation._is_payload_type(payload_type):
             raise TypeError(f'Expected "payload_type" to be of type "SparkPayload" but got "{type(payload_type).__name__}".')
-        if shape and not (validation.is_shape(shape) or validation.is_list_shape(shape)):
-            raise TypeError(f'Expected "shape" to be of type "Shape | list[Shape]" but got "{shape}".')
+        if shape:
+            try:
+                shape = Shape(shape)
+            except:
+                shape = ShapeCollection(shape)
+        #except:
+        #    raise TypeError(f'Expected "shape" to be broadcastable to "Shape | ShapeCollection" but "{shape}" is not broadcastable.')
         if dtype and not isinstance(jnp.dtype(dtype), jnp.dtype):
             raise TypeError(f'Expected "dtype" to be of type "{DTypeLike}" but got "{type(dtype).__name__}".')
         if description and not (isinstance(description, str) or description is None):
@@ -52,14 +60,44 @@ class PortSpecs:
         object.__setattr__(self, 'description', description)
 
     def tree_flatten(self):
-        children = (self.payload_type, self.shape, self.dtype, self.description)
+        children = (
+            self.payload_type, 
+            self.shape, 
+            self.dtype, 
+            self.description
+        )
         aux_data = ()
         return children, aux_data
 
     @classmethod
     def tree_unflatten(cls, aux_data, children):
         (payload_type, shape, dtype, description) = children
-        return cls(payload_type=payload_type, shape=shape, dtype=dtype, description=description,)
+        return cls(
+            payload_type=payload_type, 
+            shape=shape, 
+            dtype=dtype, 
+            description=description,
+        )
+
+    def to_dict(self) -> dict[str, dict[str, tp.Any]]:
+        """
+            Serialize PortSpecs to dictionary
+        """
+        return {
+            'payload_type': {
+                '__payload_type__': REGISTRY.PAYLOADS.get_by_cls(self.payload_type).name,
+            },
+            'shape': self.shape.to_dict(),
+            'dtype': self.dtype,
+            'description': self.description,
+        }
+    
+    @classmethod
+    def from_dict(cls, dct) -> dict[str, dict[str, tp.Any]]:
+        """
+            Deserialize dictionary to  PortSpecs
+        """
+        return cls(**dct)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -71,26 +109,61 @@ class InputSpec(PortSpecs):
     """
     is_optional: bool                 
 
-    def __init__(self, 
-                 payload_type: type[SparkPayload] | None, 
-                 shape: Shape | None, 
-                 dtype: DTypeLike | None, 
-                 is_optional: bool, 
-                 description: str | None = None):
+    def __init__(
+            self, 
+            payload_type: type[SparkPayload] | None, 
+            shape: Shape | None, 
+            dtype: DTypeLike | None, 
+            is_optional: bool, 
+            description: str | None = None
+        ):
         super().__init__(payload_type=payload_type, shape=shape, dtype=dtype, description=description)
         if not isinstance(is_optional, bool):
             raise ValueError(f'Expected "is_optional" to be of type "bool" but got "{type(is_optional).__name__}".')
         object.__setattr__(self, 'is_optional', is_optional)
 
     def tree_flatten(self):
-        children = (self.payload_type, self.shape, self.dtype, self.is_optional, self.description)
+        children = (
+            self.payload_type, 
+            self.shape, 
+            self.dtype, 
+            self.is_optional, 
+            self.description
+        )
         aux_data = ()
         return children, aux_data
 
     @classmethod
     def tree_unflatten(cls, aux_data, children):
         (payload_type, shape, dtype, is_optional, description) = children
-        return cls(payload_type=payload_type, shape=shape, dtype=dtype, is_optional=is_optional, description=description,)
+        return cls(
+            payload_type=payload_type, 
+            shape=shape, 
+            dtype=dtype, 
+            is_optional=is_optional, 
+            description=description,
+        )
+
+    def to_dict(self) -> dict[str, dict[str, tp.Any]]:
+        """
+            Serialize InputSpec to dictionary
+        """
+        return {
+            'payload_type': {
+                '__payload_type__': REGISTRY.PAYLOADS.get_by_cls(self.payload_type).name,
+            },
+            'shape': self.shape.to_dict(),
+            'dtype': self.dtype,
+            'description': self.description,
+            'is_optional': self.is_optional,
+        }
+
+    @classmethod
+    def from_dict(cls, dct) -> dict[str, dict[str, tp.Any]]:
+        """
+            Deserialize dictionary to  PortSpecs
+        """
+        return cls(**dct)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -100,7 +173,19 @@ class OutputSpec(PortSpecs):
     """
         Specification for an output port of an SparkModule.
     """
-    pass
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def to_dict(self) -> dict[str, dict[str, tp.Any]]:
+        return super().to_dict()
+
+    @classmethod
+    def from_dict(cls, dct) -> dict[str, dict[str, tp.Any]]:
+        """
+            Deserialize dictionary to  PortSpecs
+        """
+        return cls(**dct)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -122,14 +207,37 @@ class PortMap:
         object.__setattr__(self, 'port', port)
 
     def tree_flatten(self):
-        children = (self.origin, self.port)
+        children = (
+            self.origin, 
+            self.port
+        )
         aux_data = ()
         return children, aux_data
 
     @classmethod
     def tree_unflatten(cls, aux_data, children):
         (origin, port) = children
-        return cls(origin=origin, port=port)
+        return cls(
+            origin=origin, 
+            port=port
+        )
+
+    def to_dict(self) -> dict[str, dict[str, tp.Any]]:
+        """
+            Serialize PortMap to dictionary
+        """
+        return {
+            'origin': self.origin,
+            'port': self.port,
+        }
+    
+    @classmethod
+    def from_dict(cls, dct) -> dict[str, dict[str, tp.Any]]:
+        """
+            Deserialize dictionary to PortMap
+        """
+        return cls(**dct)
+
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -177,14 +285,50 @@ class ModuleSpecs:
         object.__setattr__(self, 'config', config)
 
     def tree_flatten(self):
-        children = (self.name, self.module_cls, self.inputs, self.config)
+        children = (
+            self.name, 
+            self.module_cls, 
+            self.inputs, 
+            self.config
+        )
         aux_data = ()
         return children, aux_data
 
     @classmethod
     def tree_unflatten(cls, aux_data, children):
         (name, module_cls, inputs, config) = children
-        return cls(name=name, module_cls=module_cls, inputs=inputs, config=config,)
+        return cls(
+            name=name, 
+            module_cls=module_cls, 
+            inputs=inputs, 
+            config=config,
+        )
+
+    def to_dict(self) -> dict[str, dict[str, tp.Any]]:
+        """
+            Serialize ModuleSpecs to dictionary
+        """
+        return {
+            'name': self.name,
+            'module_cls': {
+                '__module_type__': REGISTRY.MODULES.get_by_cls(self.module_cls).name,
+            },
+            'inputs': self.inputs,
+            'config': self.config._to_dict()
+        }
+    
+    @classmethod
+    def from_dict(cls, dct: dict) -> dict[str, dict[str, tp.Any]]:
+        """
+            Deserialize dictionary to ModuleSpecs
+        """
+        module_cls: type[SparkModule] = dct.get('module_cls')
+        return cls(
+            name=dct.get('name'), 
+            module_cls=module_cls,
+            inputs=dct.get('inputs'),
+            config=module_cls.get_config_spec()(**dct.get('config')),
+        )
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

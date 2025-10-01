@@ -12,9 +12,9 @@ from spark.core.cache import Cache
 from spark.core.module import SparkModule, SparkMeta
 from spark.core.specs import PortSpecs, PortMap, OutputSpec, InputSpec, ModuleSpecs
 from spark.core.variables import Variable
-from spark.core.shape import normalize_shape
+from spark.core.shape import Shape
 from spark.core.payloads import SparkPayload, FloatArray
-from spark.core.registry import REGISTRY
+from spark.core.registry import register_config, REGISTRY
 from spark.core.config import SparkConfig
 
 #################################################################################################################################################
@@ -26,6 +26,7 @@ class BrainMeta(SparkMeta):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@register_config
 class BrainConfig(SparkConfig):
 	input_map: dict[str, InputSpec] = dc.field(
 		metadata = {
@@ -238,7 +239,7 @@ class Brain(SparkModule, metaclass=BrainMeta):
 						output_specs: OutputSpec = getattr(self, port_map.origin).get_output_specs()[port_map.port]
 						shape = output_specs.shape
 				# Normalize and compare shapes.
-				shape = normalize_shape(shape)
+				shape = Shape(shape)
 				expected_input_shape = self._modules_input_specs[module_name][port_name].shape
 				if expected_input_shape != shape:
 					raise ValueError(

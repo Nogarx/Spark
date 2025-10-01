@@ -3,34 +3,45 @@
 #################################################################################################################################################
 
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from spark.core.payloads import SparkPayload
 
-import jax
-import jax.numpy as jnp 
-import inspect
+import abc
 import typing as tp
-from jax.typing import DTypeLike
-from typing import Protocol, runtime_checkable
-from spark.core.shape import bShape
-from spark.core.config import BaseSparkConfig
+from spark.core.payloads import SpikeArray
+from spark.nn.interfaces.base import Interface, InterfaceConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class InitializerConfig(BaseSparkConfig):
+# Generic InputInterface output contract.
+class InputInterfaceOutput(tp.TypedDict):
+    spikes: SpikeArray
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class InputInterfaceConfig(InterfaceConfig):
     pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@runtime_checkable
-class Initializer(Protocol):
+class InputInterface(Interface, abc.ABC):
     """
-        Base (abstract) class for all spark initializers.
+        Abstract input interface model.
     """
 
-    @staticmethod
-    def __call__(key: jax.Array, shape: bShape, dtype: DTypeLike = jnp.float16) -> jax.Array:
-        raise NotImplementedError
+    def __init__(self, config: InputInterfaceConfig = None, **kwargs):
+        # Main attributes
+        super().__init__(config = config, **kwargs)
+
+    @abc.abstractmethod
+    def __call__(self, *args: SparkPayload, **kwargs) -> InputInterfaceOutput:
+        """
+            Transform the input signal into an Spike signal.
+        """
+        pass
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

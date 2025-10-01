@@ -14,16 +14,17 @@ import typing as tp
 from math import prod, ceil
 from spark.core.payloads import SpikeArray
 from spark.core.variables import Variable, Constant
-from spark.core.shape import normalize_shape
-from spark.core.registry import register_module, REGISTRY
+from spark.core.shape import Shape
+from spark.core.registry import register_module, register_config, REGISTRY
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.initializers.delay import DelayInitializerConfig, UniformDelayInitializerConfig
-from .base import Delays, DelaysOutput, DelaysConfig
+from spark.nn.components.delays.base import Delays, DelaysOutput, DelaysConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+@register_config
 class NDelaysConfig(DelaysConfig):
     max_delay: float = dc.field(
         default = 8.0, 
@@ -72,7 +73,7 @@ class NDelays(Delays):
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
-        self._shape = normalize_shape(input_specs['in_spikes'].shape)
+        self._shape = Shape(input_specs['in_spikes'].shape)
         self._units = prod(self._shape)
         # Initialize varibles
         self.max_delay = self.config.max_delay

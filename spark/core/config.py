@@ -14,9 +14,16 @@ import jax.numpy as jnp
 import dataclasses as dc
 import typing as tp
 import copy
+import warnings
+import json
+import pathlib as pl
 from jax.typing import DTypeLike
+from spark.core.shape import Shape
+from spark.core.validation import _is_config_instance
+from spark.core.registry import REGISTRY, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.core.registry import REGISTRY
+
+
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -127,6 +134,10 @@ class FrozenSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+# TODO: For some reason SparkModule stopped recognizing config expected class, now the IDE don't 
+# want to show type hints for configs. This is not a critical error but is quite annoying.
+# The problem seems to be related to the class itself, since any other property is recognized.
+
 class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
     """
         Base class for module configuration.
@@ -134,49 +145,13 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
     __schema_version__: str = '1.0'
     __config_delimiter__: str = '__'
     __shared_config_delimiter__: str = '_s_'
-    __class_ref__: str = None
 
     def __init__(self, **kwargs):
         # Fold kwargs
         kwargs_fold, shared_partial = self._fold_partial(self, kwargs)
         # Set attributes programatically
         self._set_partial_attributes(kwargs_fold, shared_partial)
-        self.validate()
-        # Set default __class_ref__, i.e., remove config from name
-        if (not self.__class_ref__) and self.__class__.__name__[-6:].lower() == 'config':
-            self.__class_ref__ = self.__class__.__name__[:-6]
-
-
-
-    @property
-    def class_ref(obj: 'BaseSparkConfig') -> type:
-        # Check for class_ref otherwise try to set it up.
-        if getattr(obj, '__class_ref__', None) is None:
-            if obj.__class__.__name__[-6:].lower() == 'config':
-                obj.__class_ref__ = obj.__class__.__name__[:-6]
-            else:
-                # Config is not following convention, manual input of __class_ref__ is required.
-                raise AttributeError(f'Configuration \"{obj.__name__}\" does not define a __class_ref__.')
-        # Currently it can only be either a Module or a Initializer, so better check those two.
-        module_class_ref = REGISTRY.MODULES.get(obj.__class_ref__)
-        initializer_class_ref = REGISTRY.INITIALIZERS.get(obj.__class_ref__)
-        # Check we only got one coincidence, otherwise throw an error to avoid headaches.
-        if module_class_ref and initializer_class_ref:
-            raise AttributeError(
-                f'Configuration \"{obj.__name__}\" cannot resolve __class_ref__. '
-                f'A Module and an Initializer with the same reference were found. '
-                f'To prevent errors impute the class manually. Alternatively, update the name '
-                f'of one of the classes to avoid overlappings (not recommended).'
-            )
-        if not (module_class_ref or initializer_class_ref):
-            raise AttributeError(
-                f'Configuration \"{obj.__name__}\" cannot resolve __class_ref__. '
-                f'No Module nor Initializer with the same reference were found. '
-                f'Either rename the configuration object as \"Object.__name__ + Config\" or'
-                f'manually define __class_ref__ using the registry name of the object (default: Object.__name__).'
-            )
-        class_ref = module_class_ref.class_ref if module_class_ref else initializer_class_ref.class_ref
-        return class_ref
+        self.__post_init__()
 
 
 
@@ -320,7 +295,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def diff(self, other: 'SparkConfig') -> dict[str, tp.Any]:
+    def diff(self, other: 'BaseSparkConfig') -> dict[str, tp.Any]:
         """
             Return differences from another config.
         """
@@ -329,39 +304,6 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             for field in dc.fields(self) 
             if getattr(self, field.name) != getattr(other, field.name)
         }
-
-
-
-    @classmethod
-    def from_dict(cls: type['SparkConfig'], data: dict[str, tp.Any]) -> 'SparkConfig':
-        """
-            Create config instance from dictionary
-        """
-        return cls(**data)
-
-
-
-    def to_dict(self) -> dict[str, dict[str, tp.Any]]:
-        """
-            Serialize config to dictionary
-        """
-        # Get type hints
-        type_hints = tp.get_type_hints(self.__class__)
-        for key in type_hints.keys():
-            if tp.get_origin(type_hints[key]): 
-                hints = list(tp.get_args(type_hints[key]))
-                type_hints[key] = (h for h in hints if h is not type(None))
-
-        # Collect all fields and map into a dict
-        dataclass_dict = {}
-        for field in dc.fields(self):
-            # Nested config need to be treated differently, propagating kwargs if necessary
-            if isinstance(type_hints[field.name], type) and issubclass(type_hints[field.name], BaseSparkConfig):
-                dataclass_dict[field.name] = getattr(self, field.name).to_dict()
-            else:
-                dataclass_dict[field.name] = getattr(self, field.name)
-
-        return dataclass_dict
 
 
 
@@ -412,11 +354,147 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
+    @property
+    def class_ref(obj: 'BaseSparkConfig') -> type:
+        # Check for class_ref otherwise try to set it up.
+        if getattr(obj, '__class_ref__', None) is None:
+            if obj.__class__.__name__[-6:].lower() == 'config':
+                obj.__class_ref__ = obj.__class__.__name__[:-6]
+            else:
+                # Config is not following convention, manual input of __class_ref__ is required.
+                raise AttributeError(f'Configuration \"{obj.__name__}\" does not define a __class_ref__.')
+        # Currently it can only be either a Module or a Initializer, so better check those two.
+        module_class_ref = REGISTRY.MODULES.get(obj.__class_ref__)
+        initializer_class_ref = REGISTRY.INITIALIZERS.get(obj.__class_ref__)
+        # Check we only got one coincidence, otherwise throw an error to avoid headaches.
+        if module_class_ref and initializer_class_ref:
+            raise AttributeError(
+                f'Configuration \"{obj.__name__}\" cannot resolve __class_ref__. '
+                f'A Module and an Initializer with the same reference were found. '
+                f'To prevent errors impute the class manually. Alternatively, update the name '
+                f'of one of the classes to avoid overlappings (not recommended).'
+            )
+        if not (module_class_ref or initializer_class_ref):
+            raise AttributeError(
+                f'Configuration \"{obj.__name__}\" cannot resolve __class_ref__. '
+                f'No Module nor Initializer with the same reference were found. '
+                f'Either rename the configuration object as \"Object.__name__ + Config\" or'
+                f'manually define __class_ref__ using the registry name of the object (default: Object.__name__).'
+            )
+        class_ref = module_class_ref.class_ref if module_class_ref else initializer_class_ref.class_ref
+        return class_ref
+
+
+
     def __post_init__(self,):
         self.validate()
+        # Get type hints
+        type_hints = tp.get_type_hints(self.__class__)
+        for key in type_hints.keys():
+            if tp.get_origin(type_hints[key]): 
+                hints = list(tp.get_args(type_hints[key]))
+                type_hints[key] = (h for h in hints if h is not type(None))
+        # TODO: This is a dirty hack around broadcasting shapes to the internal class.
+        for key, value in type_hints.items():
+            if isinstance(value, type) and issubclass(value, Shape):
+                setattr(self, key, Shape(getattr(self, key)))
+
+
+
+    def to_dict(self) -> dict[str, dict[str, tp.Any]]:
+        """
+            Serialize config to dictionary
+        """
+        # Easy approach is to serialize.
+        from spark.core.serializer import SparkJSONEncoder
+        return json.dumps(self, cls=SparkJSONEncoder) 
+
+
+
+    def _to_dict(self) -> dict[str, dict[str, tp.Any]]:
+        """
+            Serialize config to dictionary
+        """
+        # Get type hints
+        type_hints = tp.get_type_hints(self.__class__)
+        for key in type_hints.keys():
+            if tp.get_origin(type_hints[key]): 
+                hints = list(tp.get_args(type_hints[key]))
+                type_hints[key] = (h for h in hints if h is not type(None))
+        # Collect all fields and map into a dict
+        dataclass_dict = {}
+        for field in dc.fields(self):
+            # Nested config need to be treated differently, propagating kwargs if necessary
+            if isinstance(type_hints[field.name], type) and issubclass(type_hints[field.name], BaseSparkConfig):
+                dataclass_dict[field.name] = getattr(self, field.name)._to_dict()
+            else:
+                dataclass_dict[field.name] = getattr(self, field.name)
+        return dataclass_dict
+
+
+
+    @classmethod
+    def from_dict(cls: type['BaseSparkConfig'], dct: dict) -> 'BaseSparkConfig':
+        """
+            Create config instance from dictionary.
+        """
+        # Easy approach is to deserialize.
+        from spark.core.serializer import SparkJSONDecoder
+        # Try to decode
+        try:
+            obj = json.loads(dct, cls=SparkJSONDecoder) 
+        except:
+            raise RuntimeError(
+                f'An unexpected error ocurred when trying to decode... '
+                f'418 I\'m a teapot.'
+            )
+        if not _is_config_instance(obj):
+            raise TypeError(
+                f'Expected final object to be of type \"BaseSparkConfig\" but after decoding the final object was of type \"{obj.__class__}\".'
+            )
+        return obj
+
+
+
+
+    def to_file(self, file_path: str) -> None:
+        try:
+            # Validate path
+            path = pl.Path(file_path)
+            # Add suffix to file to clarify is a spark config.
+            path = path.with_suffix('.scfg')
+            # Ensure the parent directory exists.
+            path.parent.mkdir(parents=True, exist_ok=True)
+            # Write to file.
+            with open(path, 'w', encoding='utf-8') as json_file:
+                json.dump(self.to_dict(), json_file, indent=4)
+            print(f'Successfully exported data to {path}')
+        except Exception as e:
+            raise Exception(
+                f'ERROR: Could not write file \"{path}\". Reason: {e}'
+            )
+
+
+
+    @classmethod
+    def from_file(cls: type['BaseSparkConfig'], file_path: str) -> None:
+        try:
+            path = pl.Path(file_path)
+            # Validate path
+            if not path.is_file():
+                raise FileNotFoundError(f'No file found at the specified path: \"{path}\".')
+            # Parse the file
+            with open(path, 'r', encoding='utf-8') as json_file:
+                data = json.load(json_file)
+            return cls.from_dict(data)
+        except Exception as e:
+            raise Exception(
+                f'ERROR: Could not read file \"{path}\". Reason: {e}'
+            )
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@register_config
 class SparkConfig(BaseSparkConfig):
     """
         Default class for module configuration.

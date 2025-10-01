@@ -15,11 +15,10 @@ import dataclasses as dc
 import typing as tp
 from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Variable, Constant
-from spark.core.shape import bShape, Shape, normalize_shape
-from spark.core.registry import register_module
-from spark.core.config import SparkConfig
+from spark.core.shape import Shape
+from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator, BinaryValidator
-from spark.nn.interfaces.base import Interface
+from spark.nn.interfaces.base import Interface, InterfaceConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -36,7 +35,7 @@ class InputInterface(Interface, abc.ABC):
         Abstract input interface model.
     """
 
-    def __init__(self, config: SparkConfig = None, **kwargs):
+    def __init__(self, config: InterfaceConfig = None, **kwargs):
         # Main attributes
         super().__init__(config = config, **kwargs)
 
@@ -49,7 +48,8 @@ class InputInterface(Interface, abc.ABC):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class PoissonSpikerConfig(SparkConfig):
+@register_config
+class PoissonSpikerConfig(InterfaceConfig):
     max_freq: float = dc.field(
         default = 50.0, 
         metadata = {
@@ -89,7 +89,7 @@ class PoissonSpiker(InputInterface):
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Initialize shapes
-        self._shape = normalize_shape(input_specs['signal'].shape)
+        self._shape = Shape(input_specs['signal'].shape)
 
     def __call__(self, signal: FloatArray) -> InputInterfaceOutput:
         """
@@ -107,7 +107,8 @@ class PoissonSpiker(InputInterface):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class LinearSpikerConfig(SparkConfig):
+@register_config
+class LinearSpikerConfig(InterfaceConfig):
     tau: float = dc.field(
         default = 100.0, 
         metadata = {
@@ -177,7 +178,7 @@ class LinearSpiker(InputInterface):
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Initialize shapes
-        self._shape = normalize_shape(input_specs['signal'].shape)
+        self._shape = Shape(input_specs['signal'].shape)
         # Initialize variables
         self._cooldown = Constant(self.cd * jnp.ones(shape=self._shape), dtype=self._dtype)
         self._refractory = Variable(self._cooldown, dtype=self._dtype)
@@ -215,7 +216,8 @@ class LinearSpiker(InputInterface):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class TopologicalSpikerConfig(SparkConfig):
+@register_config
+class TopologicalSpikerConfig(InterfaceConfig):
     glue: jax.Array = dc.field(
         default_factory = lambda: jnp.array(0), 
         metadata = {
@@ -267,6 +269,7 @@ class TopologicalSpikerConfig(SparkConfig):
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@register_config
 class TopologicalPoissonSpikerConfig(TopologicalSpikerConfig, PoissonSpikerConfig):
     pass
 
@@ -311,8 +314,8 @@ class TopologicalPoissonSpiker(InputInterface):
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Initialize shapes
-        input_shape = normalize_shape(input_specs['signal'].shape)
-        self._output_shape = normalize_shape(input_specs['signal'].shape + (self.resolution,))
+        input_shape = Shape(input_specs['signal'].shape)
+        self._output_shape = Shape(input_specs['signal'].shape + (self.resolution,))
         # Initialize variables
         self._space = Constant(jnp.linspace(jnp.zeros(input_shape), 
                                                  jnp.pi*jnp.ones(input_shape), 
@@ -338,6 +341,7 @@ class TopologicalPoissonSpiker(InputInterface):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@register_config
 class TopologicalLinearSpikerConfig(TopologicalSpikerConfig, LinearSpikerConfig):
     pass
 
@@ -390,8 +394,8 @@ class TopologicalLinearSpiker(InputInterface):
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Initialize shapes
-        input_shape = normalize_shape(input_specs['signal'].shape)
-        self._output_shape = normalize_shape(input_specs['signal'].shape + (self.resolution,))
+        input_shape = Shape(input_specs['signal'].shape)
+        self._output_shape = Shape(input_specs['signal'].shape + (self.resolution,))
         # Initialize variables
         self._space = Constant(jnp.linspace(jnp.zeros(input_shape), 
                                                  jnp.pi*jnp.ones(input_shape), 

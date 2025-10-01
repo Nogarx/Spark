@@ -14,7 +14,7 @@ import abc
 import jax.numpy as jnp
 import typing as tp
 import dataclasses as dc
-from spark.core.shape import bShape, normalize_shape
+from spark.core.shape import bShape, Shape
 from spark.core.payloads import SparkPayload
 from spark.core.registry import REGISTRY
 
@@ -63,7 +63,7 @@ class PortSpecEditor(BaseSpecEditor):
             raise ValueError(f'Expected "payload_type" of type "SparkPayload", got "{type(payload_type).__name__}".')
         try:
             if not shape is None:
-                shape = normalize_shape(shape)
+                shape = Shape(shape)
         except:
             raise ValueError(f'Expected "shape" of type {bShape.__name__}, got "{type(shape).__name__}".')
         if not isinstance(jnp.dtype(dtype), jnp.dtype):

@@ -3,85 +3,76 @@
 #################################################################################################################################################
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from spark.core.specs import InputSpec
 
+import jax.numpy as jnp
 import dataclasses as dc
-from spark.core.tracers import Tracer
-from spark.core.payloads import SpikeArray
+from spark.core.specs import InputSpec
 from spark.core.registry import register_module, register_config
+from spark.core.payloads import SparkPayload
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.nn.components.somas.leaky import LeakySoma, LeakySomaConfig
+from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceConfig, ControlInterfaceOutput
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
 @register_config
-class AdaptiveLeakySomaConfig(LeakySomaConfig):
-    threshold_tau: float = dc.field(
-        default = 20.0, 
+class ConcatConfig(ControlInterfaceConfig):
+    num_inputs: int = dc.field(
         metadata = {
-            'units': 'ms',
             'validators': [
                 TypeValidator,
                 PositiveValidator,
             ],
-            'description': 'Adaptive action potential threshold decay constant.',
+            'description': 'Dtype used for JAX dtype promotions.',
         })
-    threshold_delta: float = dc.field(
-        default = 100.0, 
-        metadata = {
-            'units': 'mV',
-            'validators': [
-                TypeValidator,
-            ], 
-            'description': 'Adaptive action potential threshold after spike increment.',
-        })
-
+    
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class AdaptiveLeakySoma(LeakySoma):
+class Concat(ControlInterface):
     """
-        Adaptive leaky soma model.
-    """
-    config: AdaptiveLeakySomaConfig
+        Combines several streams of inputs of the same type into a single stream.
 
-    def __init__(self, config: AdaptiveLeakySomaConfig = None, **kwargs):
-        # Initialize super.
+        Init:
+            num_inputs: int
+            payload_type: type[SparkPayload]
+            
+        Input:
+            input: type[SparkPayload]
+            
+        Output:
+            output: type[SparkPayload]
+    """
+    config: ConcatConfig
+
+    def __init__(self, config: ConcatConfig = None, **kwargs):
+		# Initialize super.
         super().__init__(config=config, **kwargs)
+        # Intialize variables.
+        self.num_inputs = self.config.num_inputs
 
-    # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, input_specs: dict[str, InputSpec]):
-        super().build(input_specs)
-        # Overwrite constant threshold with a tracer.
-        self.threshold = Tracer(
-            self._shape,
-            tau=self.config.threshold_tau, 
-            base=(self.config.threshold - self.config.potential_rest), 
-            scale=self.config.threshold_delta, 
-            dt=self._dt, dtype=self._dtype
-        )
+    def build(self, input_specs: dict[str, InputSpec]) -> None:
+        # Validate payloads types.
+        payload_type = None
+        for key, value in input_specs.items():
+            payload_type = value.payload_type if payload_type is None else payload_type
+            if payload_type != value.payload_type:
+                raise TypeError(
+                    f'Expected all payload types to be of same type \"{payload_type}\" '
+                    f'but input spec \"{key}\" is of type "{value.payload_type}".'
+                )
+        self.payload_type = payload_type
 
-    def reset(self) -> None:
+    def __call__(self, input: list[SparkPayload]) -> ControlInterfaceOutput:
         """
-            Resets component state.
+            Merge all input streams into a single data output stream.
         """
-        super().reset()
-        self.threshold.reset()
+        # Control flow operation
+        return {
+            'output': self.payload_type(jnp.concatenate([x.value.reshape(-1) for x in input]))
+        }
 
-    def _compute_spikes(self,) -> SpikeArray:
-        """
-            Compute neuron's spikes.
-        """
-        # Compute spikes.
-        spikes = super()._compute_spikes()
-        # Update thresholds
-        self.threshold(spikes.value)
-        return spikes
-    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

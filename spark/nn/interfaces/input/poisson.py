@@ -7,81 +7,75 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.specs import InputSpec
 
+import jax
 import dataclasses as dc
-from spark.core.tracers import Tracer
-from spark.core.payloads import SpikeArray
+from spark.core.payloads import SpikeArray, FloatArray
+from spark.core.shape import Shape
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.nn.components.somas.leaky import LeakySoma, LeakySomaConfig
+from spark.nn.interfaces.input.base import InputInterface, InputInterfaceConfig, InputInterfaceOutput
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
 @register_config
-class AdaptiveLeakySomaConfig(LeakySomaConfig):
-    threshold_tau: float = dc.field(
-        default = 20.0, 
+class PoissonSpikerConfig(InputInterfaceConfig):
+    max_freq: float = dc.field(
+        default = 50.0, 
         metadata = {
-            'units': 'ms',
+            'units': 'Hz',
             'validators': [
                 TypeValidator,
                 PositiveValidator,
             ],
-            'description': 'Adaptive action potential threshold decay constant.',
-        })
-    threshold_delta: float = dc.field(
-        default = 100.0, 
-        metadata = {
-            'units': 'mV',
-            'validators': [
-                TypeValidator,
-            ], 
-            'description': 'Adaptive action potential threshold after spike increment.',
+            'description': 'Maximum firing frequency of the spiker.',
         })
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class AdaptiveLeakySoma(LeakySoma):
+class PoissonSpiker(InputInterface):
     """
-        Adaptive leaky soma model.
-    """
-    config: AdaptiveLeakySomaConfig
+        Transforms a continuous signal to a spiking signal.
+        This transformation assumes a very simple poisson neuron model without any type of adaptation or plasticity.
 
-    def __init__(self, config: AdaptiveLeakySomaConfig = None, **kwargs):
-        # Initialize super.
+        Init:
+            max_freq: float [Hz]
+
+        Input:
+            signal: FloatArray
+
+        Output:
+            spikes: SpikeArray
+    """
+    config: PoissonSpikerConfig
+
+    def __init__(self, config: PoissonSpikerConfig = None, **kwargs):
+        # Initialize super
         super().__init__(config=config, **kwargs)
+        # Initialize variables
+        self.max_freq = self.config.max_freq
+        self._scale = self._dt * (self.max_freq / 1000)
 
-    # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, input_specs: dict[str, InputSpec]):
-        super().build(input_specs)
-        # Overwrite constant threshold with a tracer.
-        self.threshold = Tracer(
-            self._shape,
-            tau=self.config.threshold_tau, 
-            base=(self.config.threshold - self.config.potential_rest), 
-            scale=self.config.threshold_delta, 
-            dt=self._dt, dtype=self._dtype
-        )
+    def build(self, input_specs: dict[str, InputSpec]) -> None:
+        # Initialize shapes
+        self._shape = Shape(input_specs['signal'].shape)
 
-    def reset(self) -> None:
+    def __call__(self, signal: FloatArray) -> InputInterfaceOutput:
         """
-            Resets component state.
-        """
-        super().reset()
-        self.threshold.reset()
+            Input interface operation.
 
-    def _compute_spikes(self,) -> SpikeArray:
+            Input: 
+                A FloatArray of values in the range [0,1].
+            Output: 
+                A SpikeArray of the same shape as the input.
         """
-            Compute neuron's spikes.
-        """
-        # Compute spikes.
-        spikes = super()._compute_spikes()
-        # Update thresholds
-        self.threshold(spikes.value)
-        return spikes
-    
+        spikes = (jax.random.uniform(self.get_rng_keys(1), shape=self._shape) < self._scale * signal.value).astype(self._dtype)
+        return {
+            'spikes': SpikeArray(spikes)
+        }
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

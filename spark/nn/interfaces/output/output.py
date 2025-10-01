@@ -18,11 +18,9 @@ from spark.nn.interfaces.base import Interface
 from spark.core.tracers import SaturableTracer, SaturableDoubleTracer
 from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Variable
-from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.registry import register_module
-from spark.core.config import SparkConfig
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.nn.interfaces.base import Interface
+from spark.nn.interfaces.base import Interface, InterfaceConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -39,7 +37,7 @@ class OutputInterface(Interface, abc.ABC):
         Abstract output interface model.
     """
 
-    def __init__(self, config: SparkConfig = None, **kwargs):
+    def __init__(self, config: InterfaceConfig = None, **kwargs):
         # Main attributes
         super().__init__(config = config, **kwargs)
 
@@ -52,7 +50,7 @@ class OutputInterface(Interface, abc.ABC):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class ExponentialIntegratorConfig(SparkConfig):
+class ExponentialIntegratorConfig(InterfaceConfig):
     num_outputs: int = dc.field(
         metadata = {
             'validators': [

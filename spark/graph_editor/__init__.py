@@ -1,1 +1,1 @@
-from . import widgets
+from spark.graph_editor import widgets

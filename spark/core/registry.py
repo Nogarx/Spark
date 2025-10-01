@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from spark.core.module import SparkModule
     from spark.core.payloads import SparkPayload
     from spark.nn.initializers.base import Initializer
+    from spark.core.config import BaseSparkConfig
     from spark.core.config_validation import ConfigurationValidator
 
 import logging
@@ -126,6 +127,18 @@ class SubRegistry(Mapping):
         else: 
             raise RuntimeError(f'Registry is not yet built. Registry must be built first before trying to access it.')
 
+    def get_by_cls(self, cls: type) -> RegistryEntry | None:
+        """
+            Safely retrieves a component entry by name.
+        """
+        if self.__built__:
+            for value in self._registry.values():
+                if value.class_ref == cls:
+                    return value
+            return None
+        else: 
+            raise RuntimeError(f'Registry is not yet built. Registry must be built first before trying to access it.')
+
     def _exists(self, name):
         if name in self._registry:
             return True
@@ -167,12 +180,14 @@ class Registry():
         self.MODULES = SubRegistry(registry_base_type=validation.DEFAULT_SPARKMODULE_PATH)
         self.PAYLOADS = SubRegistry(registry_base_type=validation.DEFAULT_PAYLOAD_PATH)
         self.INITIALIZERS = SubRegistry(registry_base_type=validation.DEFAULT_INITIALIZER_PATH)
+        self.CONFIG = SubRegistry(registry_base_type=validation.DEFAULT_INITIALIZER_PATH)
         self.CFG_VALIDATORS = SubRegistry(registry_base_type=validation.DEFAULT_CFG_VALIDATOR_PATH)
 
     def _build(self,):
         self.MODULES._build()
         self.PAYLOADS._build()
         self.INITIALIZERS._build()
+        self.CONFIG._build()
         self.CFG_VALIDATORS._build()
 
 # Default Instance
@@ -215,6 +230,21 @@ def register_initializer(arg: Initializer | str | None = None):
     def decorator(cls):
         name = arg if isinstance(arg, str) else cls.__name__
         REGISTRY.INITIALIZERS.register(cls=cls, name=name)
+        return cls
+    if callable(arg):
+        # Decorator was used as "", arg is the class itself. 
+        return decorator(arg)
+    else:
+        # Decorator was used as "('somename')" or "()", in this case, 'arg' is the name (or None).
+        return decorator
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+# Decorator method for configuration validators.
+def register_config(arg: BaseSparkConfig | str | None = None):
+    def decorator(cls):
+        name = arg if isinstance(arg, str) else cls.__name__
+        REGISTRY.CONFIG.register(cls=cls, name=name)
         return cls
     if callable(arg):
         # Decorator was used as "", arg is the class itself. 

@@ -1,11 +1,9 @@
-from .base import Neuron, NeuronOutput
-
-from .alif import (
-    ALIFNeuron, ALIFNeuronConfig,
-)
+from spark.nn.neurons.base import Neuron, NeuronConfig, NeuronOutput
+from spark.nn.neurons.lif import LIFNeuron, LIFNeuronConfig
+from spark.nn.neurons.alif import ALIFNeuron, ALIFNeuronConfig
 
 __all__ = [
-    'Neuron', 'NeuronOutput', 
-    # ALIF
+    'Neuron', 'NeuronConfig', 'NeuronOutput', 
+    'LIFNeuron', 'LIFNeuronConfig',
     'ALIFNeuron', 'ALIFNeuronConfig',
 ]

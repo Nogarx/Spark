@@ -6,7 +6,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.payloads import SparkPayload
-    from spark.core.shape import Shape
 from spark.core.specs import OutputSpec, InputSpec
 
 import abc
@@ -20,6 +19,7 @@ from jax.typing import DTypeLike
 from functools import wraps
 import spark.core.signature_parser as sig_parser
 import spark.core.validation as validation
+from spark.core.shape import Shape
 from spark.core.config import SparkConfig
 
 # TODO: Support for list[SparkPayloads] was implemented in a wacky manner and 
@@ -73,7 +73,6 @@ class SparkMeta(nnx.module.ModuleMeta):
             
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
             
-# TODO: We need a reliable way to infer the shape/type for inputs and outputs.
 class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
     name: str = 'name'
@@ -223,31 +222,29 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
                     f'Expected: {list(output_specs.keys())}. '
                     f'Provided: {list(output_shapes.keys())},'
                 )
+            # Construct recurrent contract.
+            self._recurrent_shape_contract = {}
             for key, value in output_shapes.items():
-                # Check if is a Shape
-                if not validation.is_shape(value):
+                try:
+                    self._recurrent_shape_contract[key] = Shape(value)
+                except:
                     raise TypeError(
                         f'Arguemnt \"output_shapes[\"{key}\"]\" is not a valid shape.'
                     )
+        elif not shape is None:
             # Construct recurrent contract.
             self._recurrent_shape_contract = {}
-            for key, value in output_shapes.items():
-                self._recurrent_shape_contract[key] = value
-        elif not shape is None:
-            # Check if is a Shape
-            if not validation.is_shape(shape):
+            try:
+                for key in output_specs.keys():
+                    self._recurrent_shape_contract[key] = Shape(shape)
+            except:
                 raise TypeError(
                     f'Arguemnt \"shape\" is not a valid shape.'
                 )
-            # Construct recurrent contract.
-            self._recurrent_shape_contract = {}
-            for key in output_specs.keys():
-                self._recurrent_shape_contract[key] = shape
         else:
             raise ValueError(
                 f'Expected \"output_spec\" or \"shape\" to be provided but both are None.'
             )
-
         # Enable recurrence flag.
         self.__allow_cycles__ = True
         

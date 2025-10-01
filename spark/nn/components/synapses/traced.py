@@ -11,15 +11,16 @@ import jax.numpy as jnp
 import dataclasses as dc
 from spark.core.tracers import Tracer, DoubleTracer
 from spark.core.payloads import SpikeArray, CurrentArray
-from spark.core.registry import register_module
+from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.nn.components.synapses.linear import LineaSynapses, LineaSynapsesConfig
+from spark.nn.components.synapses.linear import LinearSynapses, LinearSynapsesConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class TracedSynapsesConfig(LineaSynapsesConfig):
+@register_config
+class TracedSynapsesConfig(LinearSynapsesConfig):
     tau: float = dc.field(
         default = 5.0, 
         metadata = {
@@ -51,13 +52,13 @@ class TracedSynapsesConfig(LineaSynapsesConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class TracedSynapses(LineaSynapses):
+class TracedSynapses(LinearSynapses):
     """
         Traced synaptic model. 
         Output currents are computed as the trace of the dot product of the kernel with the input spikes.
 
         Init:
-            target_units: Shape
+            units: Shape
             async_spikes: bool
             kernel_initializer: KernelInitializerConfig
             tau: float
@@ -103,7 +104,8 @@ class TracedSynapses(LineaSynapses):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class DoubleTracedSynapsesConfig(LineaSynapsesConfig):
+@register_config
+class DoubleTracedSynapsesConfig(LinearSynapsesConfig):
     tau_1: float = dc.field(
         default = 5.0, 
         metadata = {
@@ -162,13 +164,13 @@ class DoubleTracedSynapsesConfig(LineaSynapsesConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class DoubleTracedSynapses(LineaSynapses):
+class DoubleTracedSynapses(LinearSynapses):
     """
         Traced synaptic model. 
         Output currents are computed as the trace of the dot product of the kernel with the input spikes.
 
         Init:
-            target_units: Shape
+            units: Shape
             async_spikes: bool
             kernel_initializer: KernelInitializerConfig
             tau_1: float

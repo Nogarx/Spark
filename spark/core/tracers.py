@@ -10,7 +10,7 @@ import jax
 import jax.numpy as jnp
 import flax.nnx as nnx
 from typing import Any
-from spark.core.shape import bShape, normalize_shape
+from spark.core.shape import bShape, Shape
 from spark.core.variables import Variable, Constant
 
 #################################################################################################################################################
@@ -34,7 +34,7 @@ class BaseTracer(nnx.Module, abc.ABC):
 		# Initialize super.
 		super().__init__(**kwargs)
 		# Main attributes
-		self.shape = normalize_shape(shape)
+		self.shape = Shape(shape)
 		self._seed = int.from_bytes(os.urandom(4), 'little') if seed is None else seed
 		self.rng = Variable(jax.random.PRNGKey(self._seed))
 		self._dtype = dtype

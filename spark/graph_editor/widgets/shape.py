@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from Qt import QtCore, QtWidgets, QtGui
-from spark.core.shape import normalize_shape
+from spark.core.shape import Shape
 from spark.graph_editor.widgets.line_edits import QIntLineEdit
 from spark.graph_editor.widgets.base import SparkQWidget
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
@@ -154,7 +154,7 @@ class QShapeEdit(QtWidgets.QWidget):
 
     def get_shape(self) -> tuple[int, ...]:
         shape_text = tuple(int(edit.text()) for edit in self._dimension_edits if edit.text())
-        shape = normalize_shape(shape_text)
+        shape = Shape(shape_text)
         return shape
 
     def set_shape(self, new_shape: tuple[int, ...]):

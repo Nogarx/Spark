@@ -4,33 +4,41 @@
 
 from __future__ import annotations
 
-import jax
-import jax.numpy as jnp 
-import inspect
+import abc
 import typing as tp
-from jax.typing import DTypeLike
-from typing import Protocol, runtime_checkable
-from spark.core.shape import bShape
-from spark.core.config import BaseSparkConfig
+from spark.core.payloads import SparkPayload
+from spark.nn.interfaces.base import Interface, InterfaceConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class InitializerConfig(BaseSparkConfig):
+# Generic OutputInterface output contract.
+class ControlInterfaceOutput(tp.TypedDict):
+    output: SparkPayload
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class ControlInterfaceConfig(InterfaceConfig):
     pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@runtime_checkable
-class Initializer(Protocol):
+class ControlInterface(Interface, abc.ABC):
     """
-        Base (abstract) class for all spark initializers.
+        Abstract control flow model.
     """
 
-    @staticmethod
-    def __call__(key: jax.Array, shape: bShape, dtype: DTypeLike = jnp.float16) -> jax.Array:
-        raise NotImplementedError
+    def __init__(self, config: ControlInterfaceConfig = None, **kwargs):
+        # Initialize super.
+        super().__init__(config = config, **kwargs)
+
+    @abc.abstractmethod
+    def __call__(self, *args: SparkPayload, **kwargs) -> ControlInterfaceOutput:
+        """
+            Control operation.
+        """
+        pass
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

@@ -14,18 +14,19 @@ import typing as tp
 from math import prod, ceil
 from spark.core.payloads import SpikeArray
 from spark.core.variables import Variable, Constant
-from spark.core.shape import Shape, normalize_shape
-from spark.core.registry import register_module, REGISTRY
+from spark.core.shape import Shape, Shape
+from spark.core.registry import register_module, register_config, REGISTRY
 from spark.core.config_validation import TypeValidator
-from .base import Delays, DelaysOutput
-from .n_delays import NDelaysConfig
+from spark.nn.components.delays.base import Delays, DelaysOutput
+from spark.nn.components.delays.n_delays import NDelaysConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+@register_config
 class N2NDelaysConfig(NDelaysConfig):
-    target_units: Shape = dc.field(
+    units: Shape = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,
@@ -44,7 +45,7 @@ class N2NDelays(Delays):
                  neuron C recieves A's spikes J timesteps later and neuron D recieves A's spikes K timesteps later.
 
         Init:
-            target_units: Shape
+            units: Shape
             max_delay: int
             delay_kernel_initializer: Initializer
 
@@ -62,9 +63,9 @@ class N2NDelays(Delays):
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
-        self._in_shape = normalize_shape(input_specs['in_spikes'].shape)
-        self.output_shape = normalize_shape(self.config.target_units)
-        self._kernel_shape = normalize_shape((prod(self.output_shape), prod(self._in_shape)))
+        self._in_shape = Shape(input_specs['in_spikes'].shape)
+        self.output_shape = Shape(self.config.units)
+        self._kernel_shape = Shape((prod(self.output_shape), prod(self._in_shape)))
         self._units = prod(self._in_shape)
         # Initialize varibles
         self.max_delay = self.config.max_delay

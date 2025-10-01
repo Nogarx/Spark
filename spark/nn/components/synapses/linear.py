@@ -11,10 +11,10 @@ import jax.numpy as jnp
 import dataclasses as dc
 from math import prod
 import typing as tp
-from spark.core.shape import Shape, normalize_shape
+from spark.core.shape import Shape, Shape
 from spark.core.payloads import SpikeArray, CurrentArray, FloatArray
 from spark.core.variables import Variable
-from spark.core.registry import register_module, REGISTRY
+from spark.core.registry import register_module, register_config, REGISTRY
 from spark.core.config_validation import TypeValidator
 from spark.nn.initializers.kernel import KernelInitializerConfig, SparseUniformKernelInitializerConfig
 from spark.nn.components.synapses.base import Synanpses, SynanpsesConfig
@@ -23,8 +23,9 @@ from spark.nn.components.synapses.base import Synanpses, SynanpsesConfig
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class LineaSynapsesConfig(SynanpsesConfig):
-    target_units: Shape = dc.field(
+@register_config
+class LinearSynapsesConfig(SynanpsesConfig):
+    units: Shape = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,
@@ -51,13 +52,13 @@ class LineaSynapsesConfig(SynanpsesConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class LineaSynapses(Synanpses):
+class LinearSynapses(Synanpses):
     """
         Linea synaptic model. 
         Output currents are computed as the dot product of the kernel with the input spikes.
 
         Init:
-            target_units: Shape
+            units: Shape
             async_spikes: bool
             kernel_initializer: KernelInitializerConfig
 
@@ -67,20 +68,20 @@ class LineaSynapses(Synanpses):
         Output:
             currents: CurrentArray
     """
-    config: LineaSynapsesConfig
+    config: LinearSynapsesConfig
 
-    def __init__(self, config: LineaSynapses = None, **kwargs):
+    def __init__(self, config: LinearSynapses = None, **kwargs):
         # Initialize super.
         super().__init__(config=config, **kwargs)
         # Initialize shapes
-        self._output_shape = normalize_shape(self.config.target_units)
+        self._output_shape = Shape(self.config.units)
         # Initialize varibles
         self.async_spikes = self.config.async_spikes
         
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
-        self._input_shape = normalize_shape(input_specs['spikes'].shape)
+        self._input_shape = Shape(input_specs['spikes'].shape)
         self._real_input_shape = self._input_shape[len(self._output_shape):] if self.async_spikes else self._input_shape
         self._sum_axes = tuple(range(len(self._output_shape), len(self._output_shape)+len(self._real_input_shape)))
         # Initialize varibles

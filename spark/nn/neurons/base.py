@@ -3,16 +3,14 @@
 #################################################################################################################################################
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from spark.core.config import SparkConfig
 
 import abc
 import typing as tp
 from math import prod
 from spark.core.module import SparkModule
-from spark.core.shape import normalize_shape
+from spark.core.shape import Shape
 from spark.core.payloads import SpikeArray
+from spark.core.config import SparkConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -24,6 +22,11 @@ class NeuronOutput(tp.TypedDict):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class NeuronConfig(SparkConfig):
+    pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class Neuron(SparkModule, abc.ABC):
     """
         Abstract neuronal model.
@@ -32,11 +35,11 @@ class Neuron(SparkModule, abc.ABC):
         Can be thought as the equivalent of Sequential in standard ML frameworks.
     """
 
-    def __init__(self, config: SparkConfig = None, **kwargs):
+    def __init__(self, config: NeuronConfig = None, **kwargs):
         # Initialize super.
         super().__init__(config = config, **kwargs)
         # Initialize shapes
-        self.units = normalize_shape(self.config.units)
+        self.units = Shape(self.config.units)
         self._units = prod(self.units)
         self._component_names: list[SparkModule] = None
 

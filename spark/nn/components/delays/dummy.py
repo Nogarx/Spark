@@ -11,14 +11,15 @@ import jax.numpy as jnp
 from math import prod
 from spark.core.payloads import SpikeArray
 from spark.core.variables import Variable
-from spark.core.shape import normalize_shape
-from spark.core.registry import register_module
-from .base import Delays, DelaysOutput, DelaysConfig
+from spark.core.shape import Shape
+from spark.core.registry import register_module, register_config
+from spark.nn.components.delays.base import Delays, DelaysOutput, DelaysConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+@register_config
 class DummyDelaysConfig(DelaysConfig):
     pass
 
@@ -47,7 +48,7 @@ class DummyDelays(Delays):
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
-        self._shape = normalize_shape(input_specs['in_spikes'].shape)
+        self._shape = Shape(input_specs['in_spikes'].shape)
         self._units = prod(self._shape)
         # Initialize varibles
         self.spikes = Variable(jnp.zeros(self._shape, self._dtype), dtype=self._dtype)

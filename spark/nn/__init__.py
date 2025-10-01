@@ -11,6 +11,7 @@ import spark.nn.components.delays as delays
 import spark.nn.components.synapses as synapses
 import spark.nn.components.learning_rules as learning_rules
 
+
 __all__ = [
     'Module', 'Config', 'BaseConfig',
     'Brain', 'BrainConfig',

@@ -12,9 +12,8 @@ import jax.numpy as jnp
 from spark.core.tracers import Tracer
 from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Constant
-from spark.core.registry import register_module
+from spark.core.registry import register_module, register_config
 from spark.core.utils import get_einsum_labels
-from spark.core.config import SparkConfig
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.learning_rules.base import LearningRule, LearningRuleConfig, LearningRuleOutput
 
@@ -22,6 +21,7 @@ from spark.nn.components.learning_rules.base import LearningRule, LearningRuleCo
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+@register_config
 class ZenkeRuleConfig(LearningRuleConfig):
     async_spikes: bool = dc.field(
         metadata = {

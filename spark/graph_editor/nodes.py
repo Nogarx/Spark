@@ -20,7 +20,7 @@ from spark.core.payloads import FloatArray
 from spark.graph_editor.painter import DEFAULT_PALLETE
 from spark.graph_editor.specs import InputSpecEditor, OutputSpecEditor
 from spark.core.registry import RegistryEntry
-from spark.core.shape import normalize_shape
+from spark.core.shape import Shape
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -55,7 +55,7 @@ class AbstractNode(BaseNode, abc.ABC):
         if not port_name in self.input_specs:
             raise ValueError(f'Input specs does not define an input port named "{port_name}"')
         # Update port
-        value = normalize_shape(value)
+        value = Shape(value)
         self.input_specs[port_name].shape = value
         # Broadcast
         logging.info(f'Updated input port "{port_name}" of node "{self.id}" to "{value}".')
@@ -73,7 +73,7 @@ class AbstractNode(BaseNode, abc.ABC):
         if not port_name in self.output_specs:
             raise ValueError(f'Output specs does not define an input port named "{port_name}"')
         # Update port
-        value = normalize_shape(value)
+        value = Shape(value)
         self.output_specs[port_name].shape = value
         # Broadcast
         logging.info(f'Updated output port "{port_name}" of node "{self.id}" to "{value}".')

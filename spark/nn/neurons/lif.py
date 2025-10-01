@@ -18,7 +18,7 @@ from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator, ZeroOneValidator
 
 from spark.nn.components.delays.dummy import DummyDelays
-from spark.nn.components.somas.adaptive_leaky import AdaptiveLeakySoma, AdaptiveLeakySomaConfig
+from spark.nn.components.somas.adaptive_leaky import LeakySoma, LeakySomaConfig
 from spark.nn.components.delays.base import Delays, DelaysConfig
 from spark.nn.components.delays.n2n_delays import N2NDelaysConfig
 from spark.nn.components.synapses.base import Synanpses, SynanpsesConfig
@@ -31,7 +31,7 @@ from spark.nn.components.learning_rules.zenke_rule import ZenkeRuleConfig
 #################################################################################################################################################
 
 @register_config
-class ALIFNeuronConfig(NeuronConfig):
+class LIFNeuronConfig(NeuronConfig):
     units: Shape = dc.field(
         metadata = {
             'validators': [
@@ -67,7 +67,7 @@ class ALIFNeuronConfig(NeuronConfig):
             'description': 'Use asynchronous spikes. This parameter should be True if the incomming spikes are \
                             intercepted by a delay component and False otherwise.',
         })
-    soma_config: AdaptiveLeakySomaConfig = dc.field(
+    soma_config: LeakySomaConfig = dc.field(
         metadata = {
             'description': 'Soma configuration.',
         })
@@ -90,19 +90,19 @@ class ALIFNeuronConfig(NeuronConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class ALIFNeuron(Neuron):
+class LIFNeuron(Neuron):
     """
-        Leaky integrate and fire neuronal model.
+        Leaky Integrate and Fire neuronal model.
     """
-    config: ALIFNeuronConfig
+    config: LIFNeuronConfig
 
     # Auxiliary type hints
-    soma: AdaptiveLeakySoma
+    soma: LeakySoma
     delays: Delays
     synapses: Synanpses
     learning_rule: LearningRule
 
-    def __init__(self, config: ALIFNeuronConfig = None, **kwargs):
+    def __init__(self, config: LIFNeuronConfig = None, **kwargs):
         super().__init__(config=config, **kwargs)
         # Main attributes
         self.max_delay = self.config.max_delay
@@ -119,7 +119,7 @@ class ALIFNeuron(Neuron):
         inhibition_mask = inhibition_mask.at[indices].set(-1).reshape(self.units)
         self._inhibition_mask = Constant(inhibition_mask, dtype=jnp.float16)
         # Soma model.
-        self.soma = AdaptiveLeakySoma(config=self.config.soma_config)
+        self.soma = LeakySoma(config=self.config.soma_config)
         # Delays model.
         self.delays = self.config.delays_config.class_ref(config=self.config.delays_config) if self.async_spikes else DummyDelays()
         # Synaptic model.

@@ -19,6 +19,7 @@ import jax.numpy as jnp
 DEFAULT_SPARKMODULE_PATH = 'spark.core.module.SparkModule'
 DEFAULT_PAYLOAD_PATH = 'spark.core.payloads.SparkPayload'
 DEFAULT_INITIALIZER_PATH = 'spark.nn.initializers'
+DEFAULT_CONFIG_PATH = 'spark.core.config.BaseSparkConfig'
 DEFAULT_CFG_VALIDATOR_PATH = 'spark.core.config_validation.ConfigurationValidator'
 
 def _is_spark_type(obj: tp.Any, type_name: str) -> bool:
@@ -116,16 +117,16 @@ def _is_module_type(obj: tp.Any) -> bool:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def _is_module_instance(obj: tp.Any) -> bool:
+def _is_config_instance(obj: tp.Any) -> bool:
     """
-        Check if an object instance is derived from 'spark.core.module.SparkModule'.
+        Check if an object instance is derived from DEFAULT_CONFIG_PATH.
 
         Args:
             obj (tp.Any): The instance to check.
         Returns:
-            bool: True if the object is an instance of 'SparkModule', False otherwise.
+            bool: True if the object is an instance of 'BaseSparkConfig', False otherwise.
     """
-    return _is_spark_instance(obj, DEFAULT_SPARKMODULE_PATH)
+    return _is_spark_instance(obj, DEFAULT_CONFIG_PATH)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

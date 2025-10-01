@@ -12,7 +12,7 @@ from jax._src import dtypes
 from jax.typing import DTypeLike
 from spark.core.shape import Shape
 from math import prod
-from spark.core.registry import register_initializer
+from spark.core.registry import register_initializer, register_config
 from spark.core.config_validation import TypeValidator, ZeroOneValidator, PositiveValidator
 from spark.nn.initializers.base import Initializer, InitializerConfig
 
@@ -71,6 +71,7 @@ _KERNEL_CONFIG_REGISTRY: dict[str, type[KernelInitializerConfig]] = {}
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@register_config
 class UniformKernelInitializerConfig(KernelInitializerConfig):
     name: tp.Literal['uniform_kernel_initializer'] = 'uniform_kernel_initializer'
 _KERNEL_CONFIG_REGISTRY['uniform_kernel_initializer'] = UniformKernelInitializerConfig
@@ -100,6 +101,7 @@ def uniform_kernel_initializer(config: UniformKernelInitializerConfig) -> Initia
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@register_config
 class SparseUniformKernelInitializerConfig(KernelInitializerConfig):
     name: tp.Literal['sparse_uniform_kernel_initializer'] = 'sparse_uniform_kernel_initializer'
     density: float = dc.field(

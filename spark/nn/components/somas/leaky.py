@@ -11,7 +11,7 @@ import jax.numpy as jnp
 import dataclasses as dc
 from spark.core.payloads import SpikeArray, CurrentArray
 from spark.core.variables import Variable, Constant
-from spark.core.registry import register_module
+from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.somas.base import Soma, SomaConfig
 
@@ -19,6 +19,7 @@ from spark.nn.components.somas.base import Soma, SomaConfig
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+@register_config
 class LeakySomaConfig(SomaConfig):
     potential_rest: float = dc.field(
         default = -60.0, 

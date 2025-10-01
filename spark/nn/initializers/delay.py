@@ -11,8 +11,7 @@ import dataclasses as dc
 from jax.typing import DTypeLike
 from jax._src import dtypes
 from spark.core.shape import bShape
-from spark.core.registry import register_initializer
-from spark.core.config import BaseSparkConfig
+from spark.core.registry import register_initializer, register_config
 from spark.core.config_validation import TypeValidator
 from spark.nn.initializers.base import Initializer, InitializerConfig
 
@@ -52,6 +51,7 @@ _DELAY_CONFIG_REGISTRY: dict[str, type[DelayInitializerConfig]] = {}
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@register_config
 class ConstantDelayInitializerConfig(DelayInitializerConfig):
     name: tp.Literal['constant_delay_initializer'] = 'constant_delay_initializer'
 _DELAY_CONFIG_REGISTRY['constant_delay_initializer'] = ConstantDelayInitializerConfig
@@ -70,6 +70,7 @@ def constant_delay_initializer(config: ConstantDelayInitializerConfig) -> Initia
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@register_config
 class UniformDelayInitializerConfig(DelayInitializerConfig):
     name: tp.Literal['uniform_delay_initializer'] = 'uniform_delay_initializer'
 _DELAY_CONFIG_REGISTRY['uniform_delay_initializer'] = UniformDelayInitializerConfig
