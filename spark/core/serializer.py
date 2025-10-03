@@ -87,7 +87,7 @@ class SparkJSONEncoder(json.JSONEncoder):
 		if isinstance(obj, BaseSparkConfig):
 			return {
 				'__type__': REGISTRY.CONFIG.get_by_cls(obj.__class__).name,
-				'__cfg__': obj._to_dict(),
+				'__cfg__': obj.to_dict(),
 			}
 		# Encode spark specs. 
 		# NOTE: Order matters!

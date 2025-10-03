@@ -106,6 +106,12 @@ class SparkMetaConfig(abc.ABCMeta):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+# TODO: The Mutable-Frozen pattern for configuration objects can be improved. 
+# Option 1) Use a simple frozen dataclass and replace it every time with .replace, this may be quite annoying on the SparkGraph, 
+#           and may require some updates to the meta class to avoid a lot of extra decorators.
+# Option 2) Replace this class for an improved version of the freeze function, that cast config to a dynamically generated dataclass. 
+# Option 3) Custom dataclass, a mixture of 1 and 2
+
 @jax.tree_util.register_static
 @dc.dataclass(init=False, frozen=True, kw_only=True)
 class FrozenSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
@@ -142,7 +148,6 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
     """
         Base class for module configuration.
     """
-    __schema_version__: str = '1.0'
     __config_delimiter__: str = '__'
     __shared_config_delimiter__: str = '_s_'
 
@@ -156,7 +161,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
     @classmethod
-    def _create_partial(cls):
+    def _create_partial(cls, **kwargs):
         """
             Create an incomplete config for the SparkGraphEditor.
         """
@@ -177,7 +182,11 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             field_type = type_hints[field.name]
             if isinstance(type_hints[field.name], type) and issubclass(field_type, BaseSparkConfig):
                 # Field is another SparkConfig use create partial recursively.
-                setattr(instance, field.name, field_type._create_partial())
+                # TODO: We need a way to distuinguish when to use the field_type and when to use the default_factory
+                try:
+                    setattr(instance, field.name, field.default_factory._create_partial(**kwargs))
+                except:
+                    setattr(instance, field.name, field_type._create_partial(**kwargs))
             elif field.default_factory is not dc.MISSING:
                 # Fallback to default factory.
                 setattr(instance, field.name, field.default_factory())
@@ -187,6 +196,10 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             else:
                 setattr(instance, field.name, None)
                 
+        # Set existing attributes
+        kwargs_fold, shared_partial = instance._fold_partial(instance, kwargs)
+        # Set attributes programatically
+        instance._set_partial_attributes(kwargs_fold, shared_partial)
         return instance
 
 
@@ -405,16 +418,6 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         """
             Serialize config to dictionary
         """
-        # Easy approach is to serialize.
-        from spark.core.serializer import SparkJSONEncoder
-        return json.dumps(self, cls=SparkJSONEncoder) 
-
-
-
-    def _to_dict(self) -> dict[str, dict[str, tp.Any]]:
-        """
-            Serialize config to dictionary
-        """
         # Get type hints
         type_hints = tp.get_type_hints(self.__class__)
         for key in type_hints.keys():
@@ -426,7 +429,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         for field in dc.fields(self):
             # Nested config need to be treated differently, propagating kwargs if necessary
             if isinstance(type_hints[field.name], type) and issubclass(type_hints[field.name], BaseSparkConfig):
-                dataclass_dict[field.name] = getattr(self, field.name)._to_dict()
+                dataclass_dict[field.name] = getattr(self, field.name).to_dict()
             else:
                 dataclass_dict[field.name] = getattr(self, field.name)
         return dataclass_dict
@@ -438,22 +441,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         """
             Create config instance from dictionary.
         """
-        # Easy approach is to deserialize.
-        from spark.core.serializer import SparkJSONDecoder
-        # Try to decode
-        try:
-            obj = json.loads(dct, cls=SparkJSONDecoder) 
-        except:
-            raise RuntimeError(
-                f'An unexpected error ocurred when trying to decode... '
-                f'418 I\'m a teapot.'
-            )
-        if not _is_config_instance(obj):
-            raise TypeError(
-                f'Expected final object to be of type \"BaseSparkConfig\" but after decoding the final object was of type \"{obj.__class__}\".'
-            )
-        return obj
-
+        return cls(**dct)
 
 
 
@@ -466,8 +454,14 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             # Ensure the parent directory exists.
             path.parent.mkdir(parents=True, exist_ok=True)
             # Write to file.
+            from spark.core.serializer import SparkJSONEncoder
             with open(path, 'w', encoding='utf-8') as json_file:
-                json.dump(self.to_dict(), json_file, indent=4)
+                # Add top config metadata
+                json_dict = {
+                    '__type__': REGISTRY.CONFIG.get_by_cls(self.__class__).name,
+                    '__cfg__': self.to_dict(),
+                }
+                json.dump(json_dict, json_file, cls=SparkJSONEncoder, indent=4)
             print(f'Successfully exported data to {path}')
         except Exception as e:
             raise Exception(
@@ -485,8 +479,21 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 raise FileNotFoundError(f'No file found at the specified path: \"{path}\".')
             # Parse the file
             with open(path, 'r', encoding='utf-8') as json_file:
-                data = json.load(json_file)
-            return cls.from_dict(data)
+                # Try to decode
+                from spark.core.serializer import SparkJSONDecoder
+                try:
+                    obj = json.load(json_file, cls=SparkJSONDecoder) 
+                except:
+                    raise RuntimeError(
+                        f'An unexpected error ocurred when trying to decode... '
+                        f'418 I\'m a teapot.'
+                    )
+                if not _is_config_instance(obj):
+                    raise TypeError(
+                        f'Expected final object to be of type \"BaseSparkConfig\" but after decoding the final object was of type \"{obj.__class__}\".'
+                    )
+                return obj
+            #return cls.from_dict(data)
         except Exception as e:
             raise Exception(
                 f'ERROR: Could not read file \"{path}\". Reason: {e}'

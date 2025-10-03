@@ -47,9 +47,14 @@ class PortSpecs:
             try:
                 shape = Shape(shape)
             except:
-                shape = ShapeCollection(shape)
-        #except:
-        #    raise TypeError(f'Expected "shape" to be broadcastable to "Shape | ShapeCollection" but "{shape}" is not broadcastable.')
+                pass
+            if not isinstance(shape, Shape):
+                try:
+                    shape = ShapeCollection(shape)
+                except:
+                    pass
+            if not (isinstance(shape, Shape) or isinstance(shape, ShapeCollection)):
+                raise TypeError(f'Expected "shape" to be broadcastable to "Shape | ShapeCollection" but "{shape}" is not broadcastable.')
         if dtype and not isinstance(jnp.dtype(dtype), jnp.dtype):
             raise TypeError(f'Expected "dtype" to be of type "{DTypeLike}" but got "{type(dtype).__name__}".')
         if description and not (isinstance(description, str) or description is None):
@@ -314,7 +319,7 @@ class ModuleSpecs:
                 '__module_type__': REGISTRY.MODULES.get_by_cls(self.module_cls).name,
             },
             'inputs': self.inputs,
-            'config': self.config._to_dict()
+            'config': self.config.to_dict()
         }
     
     @classmethod

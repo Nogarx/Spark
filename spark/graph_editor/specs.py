@@ -18,6 +18,9 @@ from spark.core.shape import bShape, Shape
 from spark.core.payloads import SparkPayload
 from spark.core.registry import REGISTRY
 
+# TODO: Keeping a pair of Mutable-Frozen specs is annoying. This classes need to be consumed by core.specs. 
+# Related to the other to-do entry just above the FrozenSparkConfig
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

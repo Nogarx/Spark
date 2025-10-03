@@ -35,7 +35,7 @@ class AbstractNode(BaseNode, abc.ABC):
     NODE_NAME = 'Abstract Node'
     input_specs: dict[str, InputSpecEditor] = {}
     output_specs: dict[str, OutputSpecEditor] = {}
-    graph: SparkNodeGraph
+    _graph: SparkNodeGraph
 
     def __init__(self,):
         super().__init__()
@@ -59,7 +59,7 @@ class AbstractNode(BaseNode, abc.ABC):
         self.input_specs[port_name].shape = value
         # Broadcast
         logging.info(f'Updated input port "{port_name}" of node "{self.id}" to "{value}".')
-        self.graph.property_changed.emit(self, f'{self.id}.input_port.{port_name}', value)
+        self._graph.property_changed.emit(self, f'{self.id}.input_port.{port_name}', value)
 
     def update_output_shape(self, port_name: str, value: Shape):
         """
@@ -77,7 +77,7 @@ class AbstractNode(BaseNode, abc.ABC):
         self.output_specs[port_name].shape = value
         # Broadcast
         logging.info(f'Updated output port "{port_name}" of node "{self.id}" to "{value}".')
-        self.graph.property_changed.emit(self, f'{self.id}.output_port.{port_name}', value)
+        self._graph.property_changed.emit(self, f'{self.id}.output_port.{port_name}', value)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -146,17 +146,15 @@ class SparkModuleNode(AbstractNode, abc.ABC):
     """
 
     NODE_NAME = 'SparkModule'
-    cls_name: str
+    module_cls: type[SparkModule]
     node_config: BaseSparkConfig
 
     def __init__(self,):
         # Init super
         super().__init__()
-        # Get node_cls
-        node_cls: type[SparkModule] = REGISTRY.MODULES.get(self.cls_name).class_ref
         # Add input ports.
         self.input_specs = {
-            key: InputSpecEditor.from_input_specs(value, []) for key, value in node_cls._get_input_specs().items()
+            key: InputSpecEditor.from_input_specs(value, []) for key, value in self.module_cls._get_input_specs().items()
         }
         if isinstance(self.input_specs, dict):
             for key, port_spec in self.input_specs.items():
@@ -167,7 +165,7 @@ class SparkModuleNode(AbstractNode, abc.ABC):
                 )
         # Add output ports.
         self.output_specs = {
-            key: OutputSpecEditor.from_output_specs(value) for key, value in node_cls._get_output_specs().items()
+            key: OutputSpecEditor.from_output_specs(value) for key, value in self.module_cls._get_output_specs().items()
         }
         if isinstance(self.output_specs, dict):
             for key, port_spec in self.output_specs.items():
@@ -177,8 +175,10 @@ class SparkModuleNode(AbstractNode, abc.ABC):
                     painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__)
                 )
         # Create partial configuration
-        node_config_type = node_cls.get_config_spec()
-        self.node_config = node_config_type._create_partial()
+        node_config_type = self.module_cls.get_config_spec()
+        #self.node_config = node_config_type._create_partial()
+        # NOTE: DUMMY TEST
+        self.node_config = node_config_type._create_partial(_s_units=Shape(256,), _s_async_spikes=True, _s_num_outputs=1)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -196,7 +196,7 @@ def module_to_nodegraph(entry: RegistryEntry) -> type[SparkModuleNode]:
         {
             '__identifier__': f'spark',
             'NODE_NAME': module_cls.__name__,
-            'cls_name': entry.name,
+            'module_cls': module_cls,
         } 
     )
     return nodegraph_class

@@ -214,6 +214,9 @@ class NodeInspectorWidget(QtWidgets.QWidget):
             # Skip non-configs
             if field.name in nested_configs:
                 continue
+            # Skip config-metadata
+            if field.name in ['__config_delimiter__', '__shared_config_delimiter__']:
+                continue
             # Add widget to collapsible
             #if field.name == 'kernel_initializer':
             self._add_attr_widget_to_layout(
@@ -229,6 +232,9 @@ class NodeInspectorWidget(QtWidgets.QWidget):
         for field in dc.fields(config):
             # Skip configs
             if field.name not in nested_configs:
+                continue
+            # Skip config-metadata
+            if field.name in ['__config_delimiter__', '__shared_config_delimiter__']:
                 continue
             # Create a collapsable window
             if not field.name in self._sections:
