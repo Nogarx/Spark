@@ -16,7 +16,7 @@
         <img src="https://img.shields.io/badge/license-APACHE 2.0-blue?style=for-the-badge" alt="License">
     </a>
     <a href="#">
-        <img src="https://img.shields.io/github/stars/nogarx/spark?style=for-the-badge" alt="GitHub Stars">
+        <img src="https://img.shields.io/github/stars/Nogarx/Spark?style=for-the-badge" alt="GitHub Stars">
     </a>
 	<!--
     <a href="#">
