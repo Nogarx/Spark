@@ -8,9 +8,9 @@ import re
 import json
 import inspect
 import jax.numpy as jnp
+import dataclasses as dc
 from typing import Dict, List, Union, Any
 from NodeGraphQt import NodeGraphMenu
-from dataclasses import is_dataclass, asdict
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -95,11 +95,11 @@ def _normalize_name(name: str) -> str:
 
 def to_dict(obj: Any) -> Any:
     """
-    Recursively converts dataclasses, lists, and dicts into pure dictionaries.
+    Recursively converts dc, lists, and dicts into pure dictionaries.
     """
-    if is_dataclass(obj):
+    if dc.is_dataclass(obj):
         # Use asdict to map dataclass.
-        return asdict(obj)
+        return dc.asdict(obj)
     elif isinstance(obj, list) or isinstance(obj, tuple):
         # Recursively call this function on each item.
         return [to_dict(item) for item in obj]
@@ -138,15 +138,15 @@ def _normalize_section_header(header: str) -> str:
 class JsonEncoder(json.JSONEncoder):
     def default(self, o):
         
-		# NOTE: SparkPayloads are also dataclasses. 
+		# NOTE: SparkPayloads are also dc. 
 		# Flipping the order here leads to objects of type SparkPayload being detected as a dataclass.
         # For class types (like payload_type)
         if inspect.isclass(o):
             return o.__name__
 
-        # For dataclasses, convert them to dicts and let the encoder handle the dict
-        if is_dataclass(o):
-            return asdict(o)
+        # For dc, convert them to dicts and let the encoder handle the dict
+        if dc.is_dataclass(o):
+            return dc.asdict(o)
         
         # For JAX/Numpy dtypes
         if isinstance(o, (jnp.dtype)):

@@ -11,22 +11,23 @@ if TYPE_CHECKING:
 import abc
 import jax
 import jax.numpy as jnp
+import dataclasses as dc
+import typing as tp
 from math import prod
-from typing import Dict, List, TypedDict
 from spark.nn.interfaces.base import Interface
 from spark.core.tracers import SaturableTracer, SaturableDoubleTracer
 from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Variable
-from spark.core.shape import bShape, Shape, normalize_shape
 from spark.core.registry import register_module
-from spark.nn.interfaces.base import Interface
+from spark.core.config_validation import TypeValidator, PositiveValidator
+from spark.nn.interfaces.base import Interface, InterfaceConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
 # Generic OutputInterface output contract.
-class OutputInterfaceOutput(TypedDict):
+class OutputInterfaceOutput(tp.TypedDict):
     signal: FloatArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -36,16 +37,66 @@ class OutputInterface(Interface, abc.ABC):
         Abstract output interface model.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, config: InterfaceConfig = None, **kwargs):
         # Main attributes
-        super().__init__(**kwargs)
+        super().__init__(config = config, **kwargs)
 
     @abc.abstractmethod
-    def __call__(self, *args: SpikeArray, **kwargs) -> Dict[str, SparkPayload]:
+    def __call__(self, *args: SpikeArray, **kwargs) -> dict[str, SparkPayload]:
         """
             Transform incomming spikes into a output signal.
         """
         pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class ExponentialIntegratorConfig(InterfaceConfig):
+    num_outputs: int = dc.field(
+        metadata = {
+            'validators': [
+                TypeValidator,
+                PositiveValidator,
+            ],
+            'description': 'Number of output signals. Input spikes are distributed equally among the output signals. \
+                            If num_outputs does not exactly divide the number of incomming spikes then an approximately \
+                            even assigment is used.',
+        })
+    saturation_freq: float = dc.field(
+        default = 50.0, 
+        metadata = {
+            'units': 'Hz',
+            'validators': [
+                TypeValidator,
+                PositiveValidator,
+            ],
+            'description': 'Approximate average firing frequency at which the population needs to fire to sature the integrator.',
+        })
+    tau: float = dc.field(
+        default = 20.0, 
+        metadata = {
+            'units': 'ms',
+            'validators': [
+                TypeValidator,
+                PositiveValidator,
+            ],
+            'description': 'Decay time constant of the membrane potential of the units of the spiker.',
+        })
+    shuffle: bool = dc.field(
+        default = True, 
+        metadata = {
+            'validators': [
+                TypeValidator,
+            ],
+            'description': 'Shuffles the input spikes, otherwise they are used sequentially to create the output signal.',
+        })
+    smooth_trace: bool = dc.field(
+        default = True, 
+        metadata = {
+            'validators': [
+                TypeValidator,
+            ],
+            'description': 'Smooths the output signal with an using a double exponential moving average instead of a single EMA.',
+        })
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -61,7 +112,7 @@ class ExponentialIntegrator(OutputInterface):
             saturation_freq: float [Hz]
             tau: float [ms]
             shuffle: bool
-            smooth_trace: boll
+            smooth_trace: bool
             
         Input:
             spikes: SpikeArray
@@ -69,22 +120,17 @@ class ExponentialIntegrator(OutputInterface):
         Output:
             signal: FloatArray
     """
+    config: ExponentialIntegratorConfig
 
-    def __init__(self, 
-                 num_outputs: int,
-                 saturation_freq: float = 50,   # [Hz]
-                 tau: float = 20,               # [ms]
-                 shuffle: bool = True,
-                 smooth_trace: bool = True,
-                 **kwargs):
+    def __init__(self, config: ExponentialIntegratorConfig = None, **kwargs):
         # Initialize super.
-        super().__init__(**kwargs)
+        super().__init__(config=config, **kwargs)
         # Initialize internal variables
-        self.num_outputs = num_outputs
-        self.saturation_freq = saturation_freq
-        self.tau = tau
-        self.shuffle = shuffle
-        self.smooth_trace = smooth_trace
+        self.num_outputs = self.config.num_outputs
+        self.saturation_freq = self.config.saturation_freq
+        self.tau = self.config.tau
+        self.shuffle = self.config.shuffle
+        self.smooth_trace = self.config.smooth_trace
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Output mapping.

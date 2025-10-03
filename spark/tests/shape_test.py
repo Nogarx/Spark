@@ -5,7 +5,7 @@
 
 import pytest
 from typing import List, Any
-from spark.core.shape import bShape, Shape, normalize_shape
+from spark.core.shape import bShape, Shape, Shape
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -32,7 +32,7 @@ def test_normalize_single_shapes(input_shape: bShape, expected_shape: Shape):
     """
         Tests various inputs that should normalize to a single tuple shape.
     """
-    assert normalize_shape(input_shape) == expected_shape
+    assert Shape(input_shape) == expected_shape
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -55,7 +55,7 @@ def test_normalize_list_of_shapes(input_list: List, expected_list: List[Shape]):
     """
         Tests various inputs that should normalize to a list of tuple shapes.
     """
-    assert normalize_shape(input_list) == expected_list
+    assert Shape(input_list) == expected_list
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -83,7 +83,7 @@ def test_raises_type_error_for_invalid_types(invalid_input: Any):
         Asserts that a TypeError is raised for inputs of an invalid type.
     """
     with pytest.raises(TypeError, match='Input must be an int, tuple, or list'):
-        normalize_shape(invalid_input)
+        Shape(invalid_input)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -113,7 +113,7 @@ def test_raises_value_error_for_invalid_contents(invalid_input: Any, expected_er
         Asserts that a ValueError is raised for inputs with invalid contents.
     """
     with pytest.raises(ValueError, match=expected_error_message):
-        normalize_shape(invalid_input)
+        Shape(invalid_input)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

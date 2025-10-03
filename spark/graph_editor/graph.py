@@ -11,7 +11,7 @@ from Qt import QtCore
 from NodeGraphQt import NodeGraph, Port, BaseNode
 from NodeGraphQt.widgets.viewer import NodeViewer
 from spark.core.specs import PortMap
-from spark.core.shape import normalize_shape
+from spark.core.shape import Shape
 from spark.graph_editor.nodes import SourceNode, SinkNode, AbstractNode
 
 #################################################################################################################################################
@@ -124,15 +124,15 @@ class SparkNodeGraph(NodeGraph):
             port_map = port_map_list[0]
             output_node: AbstractNode = self.get_node_by_id(port_map.origin)
             port_shape = output_node.output_specs[port_map.port].shape
-            shape = normalize_shape(port_shape) if port_shape else None
+            shape = Shape(port_shape) if port_shape else None
         else:
             shape = 0
             for port_map in port_map_list:
                 output_node: AbstractNode = self.get_node_by_id(port_map.origin)
                 port_shape = output_node.output_specs[port_map.port].shape
-                port_shape = normalize_shape(output_node.output_specs[port_map.port].shape) if port_shape else None
+                port_shape = Shape(output_node.output_specs[port_map.port].shape) if port_shape else None
                 shape = shape + prod(port_shape) if port_shape else shape
-            shape = normalize_shape(shape)
+            shape = Shape(shape)
         input_node.input_specs[input_port.name()].shape = shape
 
     def _on_node_name_changed(self, node_id: str, node_name: str):

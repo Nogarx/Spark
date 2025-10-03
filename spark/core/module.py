@@ -5,25 +5,22 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.specs import OutputSpec, InputSpec, InputArgSpec, VarSpec
     from spark.core.payloads import SparkPayload
-    from spark.core.shape import Shape
-from spark.core.specs import InputSpec, VarSpec
-from spark.core.payloads import DummyArray
+from spark.core.specs import OutputSpec, InputSpec
 
-import os
 import abc
 import jax
+import inspect
 import jax.numpy as jnp
 import flax.nnx as nnx
-import inspect
+import typing as tp
+import dataclasses as dc
 from jax.typing import DTypeLike
-from typing import Any, TypedDict, Type
-from spark.core.wrappers import HookingMeta
 from functools import wraps
-from dataclasses import dataclass, fields, MISSING, asdict, field
 import spark.core.signature_parser as sig_parser
 import spark.core.validation as validation
+from spark.core.shape import Shape
+from spark.core.config import SparkConfig
 
 # TODO: Support for list[SparkPayloads] was implemented in a wacky manner and 
 # may have damage several parts of the module. This needs to be further validated. 
@@ -33,8 +30,7 @@ import spark.core.validation as validation
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# Meta module to resolve metaclass conflicts
-class SparkMeta(nnx.module.ModuleMeta, HookingMeta):
+class SparkMeta(nnx.module.ModuleMeta):
 
     def __new__(mcs, name, bases, dct):
         # Instantiate object
@@ -51,7 +47,6 @@ class SparkMeta(nnx.module.ModuleMeta, HookingMeta):
                  raise TypeError(f'Class "{name}" must implement or inherit a __call__ method to be used with {mcs.__name__}.')
             return cls
 
-
         # We check for a marker on the function to avoid wrapping it again.
         if getattr(original_call, '__is_wrapped__', False):
             return cls
@@ -62,15 +57,9 @@ class SparkMeta(nnx.module.ModuleMeta, HookingMeta):
             """
                 Wrapper around __call__ to trigger lazy init.
             """
-            # Use getattr for a safe check on the instance's `__built__` flag.
+            # Check if already built.
             if not getattr(self, '__built__', False):
                 self._build(*args, **kwargs)
-                #try:
-                #    # Call the _build method.
-                #    self._build(*args, **kwargs)
-                #except Exception as e:
-                #    # Provide a more informative error message upon failure.
-                #    raise RuntimeError(f'An error was encountered while trying to build module "{self.name}": {e}.') from e
             # After potentially building, execute the original __call__ logic.
             return original_call(self, *args, **kwargs)
 
@@ -81,99 +70,49 @@ class SparkMeta(nnx.module.ModuleMeta, HookingMeta):
         setattr(cls, '__call__', wrapped_call)
 
         return cls
-
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-class SparkConfiguration:
-    """
-        Base class for module configuration.
-    """
-    __SCHEMA_VERSION__ = '1.0'
-    seed: int | None = field(default=None, metadata={})
-    dtype: DTypeLike = field(default=jnp.float16, metadata={})
-    dt: float = field(default=1.0, metadata={})
-
-    @classmethod
-    def create(cls: Type['SparkConfiguration'], partial: dict[str, Any] = None) -> 'SparkConfiguration':
-        """
-            Create config with partial overrides.
-        """
-        # Get default instance
-        instance = cls()
-        # Apply partial updates
-        if partial:
-            valid_fields = {f.name for f in fields(cls)}
-            for key, value in partial.items():
-                if key in valid_fields:
-                    setattr(instance, key, value)
-                else:
-                    raise ValueError(f"Invalid config key: {key}")
-        return instance
-
-    def merge(self, partial: dict[str, Any]) -> None:
-        """
-            Update config with partial overrides.
-        """
-        valid_fields = {f.name for f in fields(self)}
-        for key, value in partial.items():
-            if key in valid_fields:
-                setattr(self, value)
-            else:
-                raise ValueError(f"Invalid config key: {key}")
-
-    def diff(self, other: 'SparkConfiguration') -> dict[str, Any]:
-        """
-            Return differences from another config.
-        """
-        return {
-            field.name: getattr(self, field.name) for field in fields(self) if getattr(self, field.name) != getattr(other, field.name)
-        }
-
-    @classmethod
-    def from_dict(cls: Type['SparkConfiguration'], data: dict) -> 'SparkConfiguration':
-        """
-            Create config instance from dictionary
-        """
-        return cls(**data)
-    
-    def to_dict(self) -> dict:
-        """
-            Serialize config to dictionary
-        """
-        return asdict(self)
-
-    def validate(self,):
-        # Sanity checks.
-        if not isinstance(self.dt, float):
-            raise TypeError(f'Expected "dt" to be of type "float" but got "{type(self.dt).__name__}".')
-        elif not self.dt >= 0:
-            raise ValueError(f'Expected "dt" to be a positive "float" but got "{self.dt}."')
-        if not isinstance(jnp.dtype(self.dtype), jnp.dtype):
-            raise TypeError(f'Expected "dtype" to be of type "{DTypeLike}" but got "{type(self.dtype).__name__}".')
-        if self.seed and not isinstance(self.seed, int):
-            raise TypeError(f'Expected "seed" to be of type "int|None" but got "{type(self.seed).__name__}".')
-        
-    def __post_init__(self):
-        self.validate()
-
-
+            
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
             
-# TODO: We need a reliable way to infer the shape/type for inputs and outputs.
 class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
     name: str = 'name'
-    default_config: object = SparkConfiguration
+    config: SparkConfig
+    default_config: type[SparkConfig] = SparkConfig
 
-    def __init__(self, *, config: SparkConfiguration = None, **kwargs):
+    # NOTE: This is a workaround to require all childs of SparkModule to define a, 
+    # default_config while at the same time allow for a lazy definition of the property. 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        # Special cases and abstract classes dont need config yet they are SparkModules ¯\_(ツ)_/¯
+        is_abc = inspect.isabstract(cls) and len(getattr(cls, '__abstractmethods__', set())) == 0
+        if cls.__name__ in ['Brain'] or is_abc:
+            cls.default_config = None
+            return
+        # Check if defines config
+        resolved_hints = tp.get_type_hints(cls)
+        config_type = resolved_hints.get('config')
+        if not config_type and not issubclass(config_type, SparkConfig):
+            raise AttributeError('SparkModules must define a valid config: type[SparkConfig] attribute.')
+        cls.default_config = config_type
+
+
+
+    def __init__(self, *, config: SparkConfig = None, name: str = None, **kwargs):
         # Initialize super.
         super().__init__()
+        # Override config if provided
+        if config is None:
+            self.config = self.default_config(**kwargs)
+        else:
+            import copy
+            self.config = copy.deepcopy(config)
+            self.config.merge(partial=kwargs)
         # Define default parameters.
-        self._dtype = config.dtype
-        self._dt = config.dt
+        self.name = name if name else self.__class__.__name__
+        self._dtype = self.config.dtype
+        self._dt = self.config.dt
+        self._seed = self.config.seed
         # Random engine key.
-        self._seed = int.from_bytes(os.urandom(4), 'little') if config.seed is None else config.seed
         self.rng = nnx.Variable(jax.random.PRNGKey(self._seed))
         #self.rng = nnx.Rngs(default=42)
         # Specs
@@ -182,95 +121,14 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         # Flags
         self.__built__: bool = False
         self.__allow_cycles__: bool = False
-        self._default_payload_type = DummyArray
+        self._recurrent_shape_contract: dict[str, Shape] | None = None
 
-    @property
-    @abc.abstractmethod
-    def default_config(self):
-        """
-            Returns the default configuration dataclass for this module.
-        """
-        pass
 
-    @classmethod
-    def get_default_config(cls,):
-        """
-            Returns the default configuration dict of the module.
-        """
-        return {}
-    
-    @classmethod
-    def get_config_spec(cls):
-        """
-            Expose safe-to-inspect configuration metadata.
-        """
-        if not hasattr(cls, 'config_cls'):
-            return {}
-        return {
-            field.name: {
-                'type': field.type.__name__,
-                'default': field.default if field.default is not MISSING else None,
-                'description': field.metadata.get('description', '')
-            }
-            for field in fields(cls.config_cls)
-        }
 
-    def initialize(self, shape: Shape = None, dtype: DTypeLike = None, specs: dict[str, VarSpec] = None) -> None:
-        # Skip if already compiled
-        if self.__built__:
-            return
-
-        # Check if got shape and dtype
-        if shape and validation.is_shape(shape) and dtype and validation.is_dtype(dtype):
-            # Define mock input, all using the same shape and dtype.
-            input_specs = sig_parser.get_input_specs(type(self))
-            mock_input = {}
-            for key, value in input_specs.items():
-                payload_type = value.payload_type
-                if payload_type.__name__ == 'SparkPayload' and self._default_payload_type:
-                    payload_type = self._default_payload_type
-                mock_input[key] = payload_type(jnp.zeros(shape, dtype=dtype))
-
-        # Check if got list[shape] and dtype
-        # This scenario is only for variadic arguments.
-        elif shape and validation.is_list_shape(shape):
-            # Define mock input, all using the same shape and dtype.
-            input_specs = sig_parser.get_input_specs(type(self))
-            mock_input = {}
-            for key, value in input_specs.items():
-                payload_type = value.payload_type
-                if payload_type.__name__ == 'SparkPayload' and self._default_payload_type:
-                    payload_type = self._default_payload_type
-                mock_input[key] = [payload_type(jnp.zeros(s, dtype=dtype)) for s in shape]
-
-        # Check if got dict
-        elif specs and validation.is_dict_of(specs, VarSpec):
-            input_specs = sig_parser.get_input_specs(type(self))
-            # Make sure the keys match. To prevent errors and avoid missunderstadings.
-            for key in input_specs.keys():
-                if not key in specs:
-                    raise ValueError(f'Expected VarSpec for key "{key}" but key is not defined.')
-            for key in specs.keys():
-                if not key in input_specs:
-                    raise ValueError(f'VarSpec defined for key "{key}" but key is not part of the __call__ method.')
-            # Define mock input
-            mock_input = {}
-            for key, value in input_specs.items():
-                payload_type = value.payload_type
-                if payload_type.__name__ == 'SparkPayload' and self._default_payload_type:
-                    payload_type = self._default_payload_type
-                mock_input[key] = payload_type(jnp.zeros(specs[key].shape, dtype=specs[key].dtype))
-
-        # Raise error, cannot build mock input safely.
-        else:
-            raise RuntimeError(f'Expected either shape and dtype or specs to be not None but got'
-                               f'shape: {shape}, dtype: {dtype} and specs:{specs}')
-
-        # Use call with the mock input.
-        self.__call__(**mock_input)
-
-        # Reset stateful modules 
-        self.reset()
+    @classmethod 
+    def get_config_spec(cls) -> type[SparkConfig]:
+        type_hints = tp.get_type_hints(cls)
+        return type_hints['config']
 
 
 
@@ -278,7 +136,6 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         """
             Triggers the shape inference and parameter initialization cascade.
         """
-
         # Bind arguments to avoid parameter mixing.
         call_signature = inspect.signature(self.__call__)
         try:
@@ -288,10 +145,10 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
             raise TypeError(f'Error binding arguments for "{self.name}": {error}') from error
 
         # Construct input specs.
-        input_specs = self._construct_input_specs(bound_args.arguments)
+        self._input_specs = self._construct_input_specs(bound_args.arguments)
 
         # Build model.
-        self.build(input_specs)
+        self.build(self._input_specs)
         self.__built__ = True
 
         # TODO: The correct approach to build the model is through eval_shape. 
@@ -319,7 +176,10 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         abc_output = self.__call__(**mock_input)
 
         # Contruct output sepcs.
-        self._construct_output_specs(abc_output)
+        self._output_specs = self._construct_output_specs(abc_output)
+
+        # Replace config with a dict version of itself to prevent errors with JIT.
+        self.config = self.config._freeze()
 
 
 
@@ -339,115 +199,133 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
 
 
-    def set_output_shapes(self, output_specs: Shape | dict[str, Shape | OutputSpec | SparkPayload]) -> None:
+    def set_recurrent_shape_contract(self, shape: Shape = None, output_shapes: dict[str, Shape] = None) -> None:
         """
-            Auxiliary function prematurely defines the shape of the output_specs.
+            Recurrent shape policy pre-defines expected shapes for the output specs.
 
             This is function is a binding contract that allows the modules to accept self connections.
+
+            Input:
+                shape: Shape, A common shape for all the outputs.
+                output_shapes: dict[str, Shape], A specific policy for every single output variable.
+
+            NOTE: If both, shape and output_specs, are provided, output_specs takes preference over shape.
         """
 
-        # Set output specs to the default
-        self._output_specs = sig_parser.get_output_specs(type(self))
-
-        # Check if is a Shape
-        if validation.is_shape(output_specs):
-            # Set the same shape for all outputs
-            for k in self._output_specs.keys():
-                object.__setattr__(self._output_specs[k], 'shape', output_specs)
-
-        # Check if is dict[str, Shape]
-        elif validation.is_dict_of(output_specs, Shape):
-            for k in self._output_specs.keys():
-                object.__setattr__(self._output_specs[k], 'shape', output_specs[k])
-
-        # Check if is dict[str, OutputSpec] or dict[str, SparkPayload]
-        elif validation.is_dict_of(output_specs, OutputSpec) or validation.is_dict_of(output_specs, SparkPayload):
-            for k in self._output_specs.keys():
-                object.__setattr__(self._output_specs[k], 'shape', output_specs[k].shape)
-
-        # Raise error, output_spec is invalid
+        # Validate shapes.
+        output_specs = sig_parser.get_output_specs(type(self))
+        if not output_shapes is None:
+            # Validate specs and output_shapes match.
+            if output_specs.keys() != output_shapes.keys():
+                raise ValueError(
+                    f'Keys missmatch between expected outputs and provided outputs. '
+                    f'Expected: {list(output_specs.keys())}. '
+                    f'Provided: {list(output_shapes.keys())},'
+                )
+            # Construct recurrent contract.
+            self._recurrent_shape_contract = {}
+            for key, value in output_shapes.items():
+                try:
+                    self._recurrent_shape_contract[key] = Shape(value)
+                except:
+                    raise TypeError(
+                        f'Arguemnt \"output_shapes[\"{key}\"]\" is not a valid shape.'
+                    )
+        elif not shape is None:
+            # Construct recurrent contract.
+            self._recurrent_shape_contract = {}
+            try:
+                for key in output_specs.keys():
+                    self._recurrent_shape_contract[key] = Shape(shape)
+            except:
+                raise TypeError(
+                    f'Arguemnt \"shape\" is not a valid shape.'
+                )
         else:
-            raise TypeError(f'Expected "output_spec" to be of type "Shape | dict[str, Shape | OutputSpec | SparkPayload]" '
-                            f'but got "{type(output_specs).__name__}".')
-
+            raise ValueError(
+                f'Expected \"output_spec\" or \"shape\" to be provided but both are None.'
+            )
         # Enable recurrence flag.
         self.__allow_cycles__ = True
+        
+
+
+    def get_recurrent_shape_contract(self,):
+        """
+            Retrieve the recurrent shape policy of the module.
+        """
+        if self.__allow_cycles__:
+            return self._recurrent_shape_contract
+        raise RuntimeError(
+            f'Trying to access the recurrent shape contract of module \"{self.name}\", but \"set_recurrent_shape_contract\" '
+            f'has not been called with the appropiate shapes. If you are trying to use \"{self.name}\" within a recurrent context '
+            f'set the recurrent shape contract inside the __init__ method of \"{self.__class__.__name__}\".'
+        )
 
 
 
     def _construct_input_specs(self, abc_args: dict[str, SparkPayload | list[SparkPayload]]) -> dict[str, InputSpec]:
-
         # Get default spec from signature. Default specs helps validate the user didn't make a mistake.
-        self._input_specs = sig_parser.get_input_specs(type(self))
-
-        # Validate specs and abc_args match
-        if len(self._input_specs) != len(abc_args):
-            raise ValueError(f'Default Input Specs encounter {len(self._input_specs)} variables ' 
-                             f'but only {len(abc_args)} were passed to the compiler.')
-        
-        # Finish specs
-        for key in self._input_specs.keys():
-
-            # Unpack
-            value = self._input_specs[key]
-            abc_paylaod = abc_args[key]
-
-            # Sanity check
-            if not (abc_paylaod is None) \
-                and value.payload_type.__name__ != 'SparkPayload' \
-                and not isinstance(abc_paylaod, value.payload_type):
-                raise TypeError(f'Expected non-optional input payload "{key}" of module "{self.name}" to be '
-                                f'of type "{value.payload_type}" but got type {type(abc_paylaod)}')
-            
-            # Replace default spec (Specs are frozen)
-            if value.payload_type.__name__ == 'SparkPayload' and self._default_payload_type:
-                # NOTE: This is a particular case for modules that expect abstract variadic positional arguments. 
-                # I am looking at you Merger (╯°□°）╯︵ ┻━┻.
-                object.__setattr__(self._input_specs[key], 'payload_type', self._default_payload_type)
-            shape, dtype = None, None
-            if abc_paylaod:
-                shape = abc_paylaod.shape if not isinstance(abc_paylaod, list) else [p.shape for p in abc_paylaod]
-                dtype = abc_paylaod.dtype if not isinstance(abc_paylaod, list) else abc_paylaod[0].dtype
-            object.__setattr__(self._input_specs[key], 'shape', shape)
-            object.__setattr__(self._input_specs[key], 'dtype', dtype)
-            object.__setattr__(self._input_specs[key], 'description', 
-                               f'Auto-generated input spec for input "{key}" of module "{self.name}".')
-
-        return self._input_specs
+        input_specs = sig_parser.get_input_specs(type(self))
+        # Validate specs and abc_args match.
+        if input_specs.keys() != abc_args.keys():
+            # Check if missing key is optional.
+            set_diff = set(input_specs.keys()).difference(abc_args.keys())
+            for key in set_diff:
+                if not input_specs[key].is_optional:
+                    raise ValueError(
+                        f'Module \"{self.name}\" expects non-optional variable \"{key}\" but it was not provided.'
+                    )
+            # Check if extra keys are provided.
+            set_diff = set(abc_args.keys()).difference(input_specs.keys())
+            for key in set_diff:
+                raise ValueError(
+                    f'Module \"{self.name}\" received an extra variable \"{key}\" but it is not part of the specification.'
+                )
+        # Finish specs, use abc_args to skip optional missing keys.
+        for key, payload in abc_args.items():
+            # NOTE: This is a particular case for modules that expect abstract variadic positional arguments. 
+            # I am looking at you Concat (╯°□°）╯︵ ┻━┻.
+            if input_specs[key].payload_type.__name__ == 'SparkPayload':
+                payload_type = payload.__class__ if not isinstance(payload, list) else payload[0].__class__
+            else:
+                payload_type = input_specs[key].payload_type
+            shape = payload.shape if not isinstance(payload, list) else [p.shape for p in payload]
+            dtype = payload.dtype if not isinstance(payload, list) else payload[0].dtype
+            # InputSpec are immutable, we need to create a new one.
+            input_specs[key] = InputSpec(
+                payload_type=payload_type,
+                shape=shape,
+                dtype=dtype,
+                is_optional=input_specs[key].is_optional,
+                description=f'Auto-generated input spec for input \"{key}\" of module \"{self.name}\".',
+            )
+        return input_specs
 
 
 
     def _construct_output_specs(self, abc_args: dict[str, SparkPayload]) -> dict[str, OutputSpec]:
-
-        # Get default spec from signature. Default specs helps validate the user didn't make a mistake.
-        self._output_specs = sig_parser.get_output_specs(type(self))
-
-        # Validate specs and abc_args match
-        if len(self._output_specs) != len(abc_args):
-            raise ValueError(f'Default Output Specs encounter {len(self._output_specs)} variables ' 
-                            f'but only {len(abc_args)} were produced at the end of __call__.')
-        
-        # Finish specs
-        for key in self._output_specs.keys():
-            # Unpack
-            value = self._output_specs[key]
-            abc_paylaod = abc_args[key]
-
-            # Sanity check
-            if not (abc_paylaod is None) and not isinstance(abc_paylaod, value.payload_type):
-                raise TypeError(f'Expected non-optional output payload "{key}" of module "{self.name}" to be '
-                                f'of type "{value.payload_type}" but got type {type(abc_paylaod)}')
-            
-            # Replace default spec (Specs are frozen)
-            object.__setattr__(self._output_specs[key], 'shape', abc_paylaod.shape if abc_paylaod else None)
-            object.__setattr__(self._output_specs[key], 'dtype', abc_paylaod.dtype if abc_paylaod else None)
-            object.__setattr__(self._output_specs[key], 'description', 
-                            f'Auto-generated output spec for input "{key}" of module "{self.name}".')
-
-
-
-    def set_fallback_payload_type(self, payload_type: type[SparkPayload]) -> None:
-        self._default_payload_type = payload_type
+        """
+            Default Output Specs constructor.
+        """
+        # Get default spec from signature.
+        output_specs = sig_parser.get_output_specs(type(self))
+        # Validate specs and abc_args match.
+        if output_specs.keys() != abc_args.keys():
+            raise ValueError(
+                f'Keys missmatch between expected outputs (TypedDict) and outputs (__call__). '
+                f'Expected: {list(output_specs.keys())}. '
+                f'__call__: {list(abc_args.keys())},'
+            )
+        # Finish specs.
+        for key in output_specs.keys():
+            output_specs[key] = OutputSpec(
+                payload_type=output_specs[key].payload_type,
+                shape=abc_args[key].shape,
+                dtype=abc_args[key].dtype,
+                description=f'Auto-generated output spec for input \"{key}\" of module \"{self.name}\".',
+            )
+        return output_specs
 
 
 
@@ -456,7 +334,7 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
             Returns a dictionary of the SparkModule's input port specifications.
         """
         if not self._input_specs:
-            raise RuntimeError('Module requires to be initialized first.')
+            raise RuntimeError('Module not yet built.')
         return self._input_specs
 
 
@@ -465,9 +343,8 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         """
             Returns a dictionary of the SparkModule's input port specifications.
         """
-        # Build the spec.
-        if not self._output_specs:
-            raise RuntimeError('Module requires to be initialized first.')
+        if not self._input_specs:
+            raise RuntimeError('Module not yet built.')
         return self._output_specs
 
 
@@ -487,15 +364,6 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
             Returns a dictionary of the SparkModule's input port specifications.
         """
         return sig_parser.get_output_specs(cls)
-
-
-
-    @classmethod
-    def _get_init_signature(cls) -> dict[str, InputArgSpec]:
-        """
-            Returns a dictionary mapping logical output port names to their OutputSpec.
-        """
-        return sig_parser.get_method_signature(cls.__init__)  
 
 
 

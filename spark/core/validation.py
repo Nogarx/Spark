@@ -4,9 +4,8 @@
 
 from __future__ import annotations
 
-import jax
+import typing as tp
 import jax.numpy as jnp
-from typing import Any
 
 # TODO: These methods are useful to prevent some circular imports, specially  
 # with the parser and registry, but there should be a better way to validate.
@@ -20,8 +19,10 @@ from typing import Any
 DEFAULT_SPARKMODULE_PATH = 'spark.core.module.SparkModule'
 DEFAULT_PAYLOAD_PATH = 'spark.core.payloads.SparkPayload'
 DEFAULT_INITIALIZER_PATH = 'spark.nn.initializers'
+DEFAULT_CONFIG_PATH = 'spark.core.config.BaseSparkConfig'
+DEFAULT_CFG_VALIDATOR_PATH = 'spark.core.config_validation.ConfigurationValidator'
 
-def _is_spark_type(obj: Any, type_name: str) -> bool:
+def _is_spark_type(obj: tp.Any, type_name: str) -> bool:
     """
         Check if a given object is a subclass of a specific fully qualified type name.
 
@@ -31,7 +32,7 @@ def _is_spark_type(obj: Any, type_name: str) -> bool:
             in the MRO with the target type name. It only works if 'obj' is an actual class.
 
         Args:
-            obj (Any): The class to check.
+            obj (tp.Any): The class to check.
             type_name (str): The fully qualified name of the target type.
         Returns:
             bool: True if 'obj' is a subclass of the specified type, False otherwise.
@@ -45,7 +46,7 @@ def _is_spark_type(obj: Any, type_name: str) -> bool:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def _is_spark_instance(obj: Any, type_name: str) -> bool:
+def _is_spark_instance(obj: tp.Any, type_name: str) -> bool:
     """
         Check if an object instance is derived from a specific fully qualified type name.
 
@@ -55,7 +56,7 @@ def _is_spark_instance(obj: Any, type_name: str) -> bool:
             in the MRO with the target type name. It only works if 'obj' is an actual class.
 
         Args:
-            obj (Any): The instance to check.
+            obj (tp.Any): The instance to check.
             type_name (str): The fully qualified name of the target type.
         Returns:
             bool: True if the instance is derived from the specified type, False otherwise.
@@ -70,19 +71,19 @@ def _is_spark_instance(obj: Any, type_name: str) -> bool:
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 # TODO: Improve initializaer validation.
-def _is_initializer(obj: Any):
+def _is_initializer(obj: tp.Any):
     if callable(obj):
         return True
     return False
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def _is_payload_type(obj: Any) -> bool:
+def _is_payload_type(obj: tp.Any) -> bool:
     """
         Check if a object is a subclass of 'spark.core.payloads.SparkPayload'.
 
         Args:
-            obj (Any): The class to check.
+            obj (tp.Any): The class to check.
         Returns:
             bool: True if 'obj' is a subclass of 'SparkPayload', False otherwise.
     """
@@ -90,12 +91,12 @@ def _is_payload_type(obj: Any) -> bool:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def _is_payload_instance(obj: Any) -> bool:
+def _is_payload_instance(obj: tp.Any) -> bool:
     """
         Check if an object instance is derived from 'spark.core.payloads.SparkPayload'.
 
         Args:
-            obj (Any): The instance to check.
+            obj (tp.Any): The instance to check.
         Returns:
             bool: True if the 'obj' is an instance of 'SparkPayload', False otherwise.
     """
@@ -103,12 +104,12 @@ def _is_payload_instance(obj: Any) -> bool:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def _is_module_type(obj: Any) -> bool:
+def _is_module_type(obj: tp.Any) -> bool:
     """
         Check if a object is a subclass of 'spark.core.module.SparkModule'.
 
         Args:
-            obj (Any): The class to check.
+            obj (tp.Any): The class to check.
         Returns:
             bool: True if 'obj' is a subclass of 'SparkModule', False otherwise.
     """
@@ -116,25 +117,25 @@ def _is_module_type(obj: Any) -> bool:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def _is_module_instance(obj: Any) -> bool:
+def _is_config_instance(obj: tp.Any) -> bool:
     """
-        Check if an object instance is derived from 'spark.core.module.SparkModule'.
+        Check if an object instance is derived from DEFAULT_CONFIG_PATH.
 
         Args:
-            obj (Any): The instance to check.
+            obj (tp.Any): The instance to check.
         Returns:
-            bool: True if the object is an instance of 'SparkModule', False otherwise.
+            bool: True if the object is an instance of 'BaseSparkConfig', False otherwise.
     """
-    return _is_spark_instance(obj, DEFAULT_SPARKMODULE_PATH)
+    return _is_spark_instance(obj, DEFAULT_CONFIG_PATH)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def is_shape(obj: Any) -> bool:
+def is_shape(obj: tp.Any) -> bool:
     """
         Check if an object instance is of 'Shape', i.e., 'tuple[int,...]'.
 
         Args:
-            obj (Any): The instance to check.
+            obj (tp.Any): The instance to check.
         Returns:
             bool: True if the object is an instance of 'Shape', False otherwise.
     """
@@ -145,12 +146,12 @@ def is_shape(obj: Any) -> bool:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def is_list_shape(obj: Any) -> bool:
+def is_list_shape(obj: tp.Any) -> bool:
     """
         Check if an object instance is of 'list[Shape]', i.e., 'list[tuple[int,...]]'.
 
         Args:
-            obj (Any): The instance to check.
+            obj (tp.Any): The instance to check.
         Returns:
             bool: True if the object is an instance of 'Shape', False otherwise.
     """
@@ -161,12 +162,12 @@ def is_list_shape(obj: Any) -> bool:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def is_dict_of(obj: Any, value_cls: type[Any], key_cls: type[Any] = str) -> bool:
+def is_dict_of(obj: tp.Any, value_cls: type[tp.Any], key_cls: type[tp.Any] = str) -> bool:
     """
         Check if an object instance is of 'dict[key_cls, value_cls]'.
 
         Args:
-            obj (Any): The instance to check.
+            obj (tp.Any): The instance to check.
         Returns:
             bool: True if the object is an instance of 'dict[key_cls, value_cls]', False otherwise.
     """
@@ -181,12 +182,12 @@ def is_dict_of(obj: Any, value_cls: type[Any], key_cls: type[Any] = str) -> bool
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def is_list_of(obj: Any, cls: type[Any]) -> bool:
+def is_list_of(obj: tp.Any, cls: type[tp.Any]) -> bool:
     """
         Check if an object instance is of 'list[cls]'.
 
         Args:
-            obj (Any): The instance to check.
+            obj (tp.Any): The instance to check.
         Returns:
             bool: True if the object is an instance of 'list[cls]', False otherwise.
     """
@@ -199,12 +200,12 @@ def is_list_of(obj: Any, cls: type[Any]) -> bool:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def is_dtype(obj: Any) -> bool:
+def is_dtype(obj: tp.Any) -> bool:
     """
         Check if an object is a 'DTypeLike'.
 
         Args:
-            obj (Any): The instance to check.
+            obj (tp.Any): The instance to check.
         Returns:
             bool: True if the object is a 'DTypeLike', False otherwise.
     """

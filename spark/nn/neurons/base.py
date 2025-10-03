@@ -5,19 +5,25 @@
 from __future__ import annotations
 
 import abc
+import typing as tp
 from math import prod
-from typing import TypedDict
 from spark.core.module import SparkModule
+from spark.core.shape import Shape
 from spark.core.payloads import SpikeArray
-from spark.core.shape import bShape, normalize_shape
+from spark.core.config import SparkConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
 # Generic Soma output contract.
-class NeuronOutput(TypedDict):
+class NeuronOutput(tp.TypedDict):
     out_spikes: SpikeArray
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class NeuronConfig(SparkConfig):
+    pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -29,13 +35,11 @@ class Neuron(SparkModule, abc.ABC):
         Can be thought as the equivalent of Sequential in standard ML frameworks.
     """
 
-    def __init__(self, 
-                 units: bShape,
-                 **kwargs):
+    def __init__(self, config: NeuronConfig = None, **kwargs):
         # Initialize super.
-        super().__init__(**kwargs)
+        super().__init__(config = config, **kwargs)
         # Initialize shapes
-        self.units = normalize_shape(units)
+        self.units = Shape(self.config.units)
         self._units = prod(self.units)
         self._component_names: list[SparkModule] = None
 

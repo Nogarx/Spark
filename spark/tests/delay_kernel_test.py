@@ -7,7 +7,9 @@ import pytest
 import jax
 import jax.numpy as jnp
 from spark import SpikeArray
-from spark.nn.synapses import SynapticDelays
+from spark.nn.components.delays import N2NDelays as SynapticDelays
+
+# TODO: These test are no longer valid, they need to be updated.
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

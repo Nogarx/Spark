@@ -7,7 +7,9 @@ from __future__ import annotations
 import abc
 import jax
 import numpy as np
-from dataclasses import dataclass
+import dataclasses as dc
+
+# TODO: Several parts of this code need to be further validated. 
 
 # NOTE: Direct jax.Array subclassing is not supported. Currently the best approach is to define __jax_array__ 
 # (https://docs.jax.dev/en/latest/jep/28661-jax-array-protocol.html). However it is probable that such approach will be deprecated
@@ -16,14 +18,15 @@ from dataclasses import dataclass
 # The best we can do right now is go for a Level 1 approach (polymorphic inputs) plus a manual override of relevant operations.
 # The goal eventually is get rid of all the .value and other things that may be annoying for the user in a more graceful and robust manner.
 
-# TODO: Several parts of this code need to be further validated. 
+# Payloads are incredibly useful to support a GUI and several other handshakes with the user 
+# at basically zero overhead cost to the framework since the default approach is to JIT compile the model.
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
 @jax.tree_util.register_pytree_node_class
-@dataclass(frozen=True)
+@dc.dataclass(frozen=True)
 class SparkPayload(abc.ABC):
     """
         Abstract payload definition to validate exchanges between SparkModule's.
@@ -52,7 +55,7 @@ class SparkPayload(abc.ABC):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.tree_util.register_pytree_node_class
-@dataclass(frozen=True)
+@dc.dataclass(frozen=True)
 class ValueSparkPayload(SparkPayload, abc.ABC):
     """
         Abstract payload definition to single value payloads.
@@ -91,18 +94,7 @@ from spark.core.registry import register_payload
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.tree_util.register_pytree_node_class
-@dataclass(frozen=True)
-@register_payload
-class DummyArray(ValueSparkPayload):
-    """
-        Dummy array for internal collections.
-    """
-    pass
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-@jax.tree_util.register_pytree_node_class
-@dataclass(frozen=True)
+@dc.dataclass(frozen=True)
 @register_payload
 class SpikeArray(ValueSparkPayload):
     """
@@ -113,7 +105,7 @@ class SpikeArray(ValueSparkPayload):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.tree_util.register_pytree_node_class
-@dataclass(frozen=True)
+@dc.dataclass(frozen=True)
 @register_payload
 class CurrentArray(ValueSparkPayload):
     """
@@ -124,7 +116,7 @@ class CurrentArray(ValueSparkPayload):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.tree_util.register_pytree_node_class
-@dataclass(frozen=True)
+@dc.dataclass(frozen=True)
 @register_payload
 class PotentialArray(ValueSparkPayload):
     """
@@ -135,7 +127,7 @@ class PotentialArray(ValueSparkPayload):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.tree_util.register_pytree_node_class
-@dataclass(frozen=True)
+@dc.dataclass(frozen=True)
 @register_payload
 class BooleanMask(ValueSparkPayload):
     """
@@ -146,7 +138,7 @@ class BooleanMask(ValueSparkPayload):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.tree_util.register_pytree_node_class
-@dataclass(frozen=True)
+@dc.dataclass(frozen=True)
 @register_payload
 class IntegerMask(ValueSparkPayload):
     """
@@ -157,7 +149,7 @@ class IntegerMask(ValueSparkPayload):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.tree_util.register_pytree_node_class
-@dataclass(frozen=True)
+@dc.dataclass(frozen=True)
 @register_payload
 class FloatArray(ValueSparkPayload):
     """
@@ -168,7 +160,7 @@ class FloatArray(ValueSparkPayload):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.tree_util.register_pytree_node_class
-@dataclass(frozen=True)
+@dc.dataclass(frozen=True)
 @register_payload
 class IntegerArray(ValueSparkPayload):
     """

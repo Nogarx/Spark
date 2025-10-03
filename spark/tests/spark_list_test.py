@@ -7,7 +7,7 @@ import pytest
 import jax.numpy as jnp
 from jax import Array
 
-# TODO: Fix this test.
+# TODO: These test are no longer valid, they need to be updated.
 from spark.core.payloads import SparkPayload
 
 #################################################################################################################################################

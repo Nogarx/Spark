@@ -1,4 +1,3 @@
-
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
@@ -8,16 +7,42 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.payloads import SparkPayload
 
-import jax
-import jax.numpy as jnp
+import abc
+import typing as tp
+from spark.nn.interfaces.base import Interface
+from spark.core.payloads import SpikeArray, FloatArray
+from spark.nn.interfaces.base import Interface, InterfaceConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-def concatenate_payloads(args: list[SparkPayload]):
-    payload_type = type(args[0])
-    return payload_type(jnp.concatenate([x.value.reshape(-1) for x in args]))
+# Generic OutputInterface output contract.
+class OutputInterfaceOutput(tp.TypedDict):
+    signal: FloatArray
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class OutputInterfaceConfig(InterfaceConfig):
+    pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class OutputInterface(Interface, abc.ABC):
+    """
+        Abstract output interface model.
+    """
+
+    def __init__(self, config: OutputInterfaceConfig = None, **kwargs):
+        # Main attributes
+        super().__init__(config = config, **kwargs)
+
+    @abc.abstractmethod
+    def __call__(self, *args: SpikeArray, **kwargs) -> dict[str, SparkPayload]:
+        """
+            Transform incomming spikes into a output signal.
+        """
+        pass
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

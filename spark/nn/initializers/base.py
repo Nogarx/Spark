@@ -6,15 +6,21 @@ from __future__ import annotations
 
 import jax
 import jax.numpy as jnp 
-from jax._src import dtypes
+import inspect
+import typing as tp
 from jax.typing import DTypeLike
 from typing import Protocol, runtime_checkable
 from spark.core.shape import bShape
-from spark.core.registry import register_initializer
+from spark.core.config import BaseSparkConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
+
+class InitializerConfig(BaseSparkConfig):
+    pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @runtime_checkable
 class Initializer(Protocol):

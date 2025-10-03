@@ -8,10 +8,12 @@ if TYPE_CHECKING:
     from spark.core.module import SparkModule
     from spark.core.payloads import SparkPayload
     from spark.nn.initializers.base import Initializer
+    from spark.core.config import BaseSparkConfig
+    from spark.core.config_validation import ConfigurationValidator
 
 import logging
-from dataclasses import dataclass
-from typing import Type, Union, Dict, Any, Iterator, List, Callable
+import dataclasses as dc
+import typing as tp
 from collections.abc import Mapping, ItemsView
 from spark.core.utils import normalize_name
 import spark.core.validation as validation
@@ -20,14 +22,14 @@ import spark.core.validation as validation
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-@dataclass
+@dc.dataclass
 class RegistryEntry:
     """
         Structured entry for the registry.
     """
     name: str
-    class_ref: Type
-    path: List[str]
+    class_ref: type
+    path: list[str]
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -37,8 +39,8 @@ class SubRegistry(Mapping):
     """
 
     def __init__(self, registry_base_type: str):
-        self._raw_registry: Dict[str, Type[object]] = {}
-        self._registry: Dict[str, RegistryEntry] = {}
+        self._raw_registry: dict[str, type[object]] = {}
+        self._registry: dict[str, RegistryEntry] = {}
         self._leaf_class = set()
         self.__built__ = False
         self._registry_base_type = registry_base_type
@@ -49,7 +51,7 @@ class SubRegistry(Mapping):
             raise RuntimeError('Registry is not build yet.')
         return self._registry[key]
 
-    def __iter__(self) -> Iterator[str]:
+    def __iter__(self) -> tp.Iterator[str]:
         if not self.__built__:
             raise RuntimeError('Registry is not build yet.')
         return iter(self._registry)
@@ -62,7 +64,7 @@ class SubRegistry(Mapping):
     def items(self) -> ItemsView[str, RegistryEntry]:
         return ItemsView(self)
 
-    def register(self, name: str, cls: Type[object], path: List[str] | None = None):
+    def register(self, name: str, cls: type[object], path: list[str] | None = None):
         """
             Register new registry_base_type.
         """
@@ -74,7 +76,7 @@ class SubRegistry(Mapping):
                 raise NameError(f'{self._registry_base_type} name "{name}" is already queued to be register.')
             self._raw_registry[name] = cls
 
-    def _register(self, name: str, cls: Type[object], path: List[str] | None = None):
+    def _register(self, name: str, cls: type[object], path: list[str] | None = None):
         """
             Validate and register new item.
         """
@@ -121,7 +123,19 @@ class SubRegistry(Mapping):
             Safely retrieves a component entry by name.
         """
         if self.__built__:
-            return self._registry.get(normalize_name(name))
+            return self._registry.get(normalize_name(name), None)
+        else: 
+            raise RuntimeError(f'Registry is not yet built. Registry must be built first before trying to access it.')
+
+    def get_by_cls(self, cls: type) -> RegistryEntry | None:
+        """
+            Safely retrieves a component entry by name.
+        """
+        if self.__built__:
+            for value in self._registry.values():
+                if value.class_ref == cls:
+                    return value
+            return None
         else: 
             raise RuntimeError(f'Registry is not yet built. Registry must be built first before trying to access it.')
 
@@ -130,7 +144,7 @@ class SubRegistry(Mapping):
             return True
         return False
 
-    def _get_default_path(self, cls: Any):
+    def _get_default_path(self, cls: tp.Any):
         if self._registry_base_type == validation.DEFAULT_INITIALIZER_PATH:
             name = cls.__module__.split('.')[-1]
             name_map = INITIALIZERS_ALIAS_MAP.get(name, name)
@@ -166,11 +180,15 @@ class Registry():
         self.MODULES = SubRegistry(registry_base_type=validation.DEFAULT_SPARKMODULE_PATH)
         self.PAYLOADS = SubRegistry(registry_base_type=validation.DEFAULT_PAYLOAD_PATH)
         self.INITIALIZERS = SubRegistry(registry_base_type=validation.DEFAULT_INITIALIZER_PATH)
+        self.CONFIG = SubRegistry(registry_base_type=validation.DEFAULT_INITIALIZER_PATH)
+        self.CFG_VALIDATORS = SubRegistry(registry_base_type=validation.DEFAULT_CFG_VALIDATOR_PATH)
 
     def _build(self,):
         self.MODULES._build()
         self.PAYLOADS._build()
         self.INITIALIZERS._build()
+        self.CONFIG._build()
+        self.CFG_VALIDATORS._build()
 
 # Default Instance
 REGISTRY = Registry()
@@ -222,7 +240,38 @@ def register_initializer(arg: Initializer | str | None = None):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# Alias map for pretty paths. 
+# Decorator method for configuration validators.
+def register_config(arg: BaseSparkConfig | str | None = None):
+    def decorator(cls):
+        name = arg if isinstance(arg, str) else cls.__name__
+        REGISTRY.CONFIG.register(cls=cls, name=name)
+        return cls
+    if callable(arg):
+        # Decorator was used as "", arg is the class itself. 
+        return decorator(arg)
+    else:
+        # Decorator was used as "('somename')" or "()", in this case, 'arg' is the name (or None).
+        return decorator
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+# Decorator method for configuration validators.
+def register_cfg_validator(arg: ConfigurationValidator | str | None = None):
+    def decorator(cls):
+        name = arg if isinstance(arg, str) else cls.__name__
+        REGISTRY.CFG_VALIDATORS.register(cls=cls, name=name)
+        return cls
+    if callable(arg):
+        # Decorator was used as "", arg is the class itself. 
+        return decorator(arg)
+    else:
+        # Decorator was used as "('somename')" or "()", in this case, 'arg' is the name (or None).
+        return decorator
+    
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+# NOTE: This aliases are used by the Graph Editor to create pretty context menus.
+
 MRO_PATH_ALIAS_MAP = {
     # Aliases
     'Interface': 'Interfaces',

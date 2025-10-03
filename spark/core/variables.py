@@ -11,9 +11,8 @@ import jax
 import numpy as np
 import jax.numpy as jnp
 import flax.nnx as nnx
-from dataclasses import dataclass
 from typing import Any
-from collections.abc import Iterable, ValuesView, KeysView, ItemsView
+from collections.abc import Iterable
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -145,71 +144,6 @@ class Constant:
 
     def __rpow__(self, other) -> jax.Array: 
         return jnp.pow(other, self.value)
-
-#################################################################################################################################################
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-#################################################################################################################################################
-
-@jax.tree_util.register_static
-@dataclass(init=False, frozen=True)
-class ConfigDict:
-    """
-        Dataclass wrapper for configuration dictionaries used to prevent JIT from detecting some parameters as leaf nodes.
-    """
-    config: dict[str, Any]
-
-    def __init__(self, config: dict):
-        if not isinstance(config, dict):
-            raise TypeError(f'"config" must be of type "{dict.__name__}", got "{type(config).__name__}"')
-        object.__setattr__(self, 'config', config)
-
-    def __getitem__(self, key):
-        """
-        	Redirects __getitem__ to internal config.__getitem__.
-        """
-        return self.config[key]
-
-    def __setitem__(self, key, value):
-        """
-        	Redirects __setitem__ to internal config.__setitem__.
-        """
-        self.config[key] = value
-
-    def __iter__(self):
-        """
-        	Redirects __iter__ to internal config.__iter__.
-        """
-        return iter(self.config)
-
-    def __len__(self):
-        """
-        	Redirects __len__ to internal config.__len__.
-        """
-        return len(self.config)
-    
-    def values(self,) -> ValuesView[Any]:
-        """
-        	Redirects values to internal config.values.
-        """
-        return self.config.values()
-    
-    def keys(self,) -> KeysView[str]:
-        """
-        	Redirects keys to internal config.keys.
-        """
-        return self.config.keys()
-        
-    def items(self,) -> ItemsView[str, Any]:
-        """
-        	Redirects items to internal config.items.
-        """
-        return self.config.items()
-        
-    def setdefault(self, key: str, default: Any) -> Any:
-        """
-        	Redirects setdefault to internal config.setdefault.
-        """
-        self.config.setdefault(key, default)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
