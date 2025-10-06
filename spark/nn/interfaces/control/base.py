@@ -21,15 +21,17 @@ class ControlInterfaceOutput(tp.TypedDict):
 
 class ControlInterfaceConfig(InterfaceConfig):
     pass
+ConfigT = tp.TypeVar("ConfigT", bound=ControlInterfaceConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class ControlInterface(Interface, abc.ABC):
+class ControlInterface(Interface, abc.ABC, tp.Generic[ConfigT]):
     """
         Abstract control flow model.
     """
+    config: ConfigT
 
-    def __init__(self, config: ControlInterfaceConfig = None, **kwargs):
+    def __init__(self, config: ConfigT | None = None, **kwargs):
         # Initialize super.
         super().__init__(config = config, **kwargs)
 

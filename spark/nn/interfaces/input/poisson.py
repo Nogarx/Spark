@@ -51,7 +51,7 @@ class PoissonSpiker(InputInterface):
     """
     config: PoissonSpikerConfig
 
-    def __init__(self, config: PoissonSpikerConfig = None, **kwargs):
+    def __init__(self, config: PoissonSpikerConfig | None = None, **kwargs):
         # Initialize super
         super().__init__(config=config, **kwargs)
         # Initialize variables

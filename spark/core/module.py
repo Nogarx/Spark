@@ -4,9 +4,10 @@
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
+
+from spark import ShapeCollection
 if TYPE_CHECKING:
     from spark.core.payloads import SparkPayload
-from spark.core.specs import OutputSpec, InputSpec
 
 import abc
 import jax
@@ -17,10 +18,13 @@ import typing as tp
 import dataclasses as dc
 from jax.typing import DTypeLike
 from functools import wraps
+
 import spark.core.signature_parser as sig_parser
 import spark.core.validation as validation
+from spark.core.specs import OutputSpec, InputSpec
+from spark.core.config import BaseSparkConfig
 from spark.core.shape import Shape
-from spark.core.config import SparkConfig
+from spark.core.variables import Variable
 
 # TODO: Support for list[SparkPayloads] was implemented in a wacky manner and 
 # may have damage several parts of the module. This needs to be further validated. 
@@ -29,6 +33,14 @@ from spark.core.config import SparkConfig
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
+
+ConfigT = tp.TypeVar("ConfigT", bound=BaseSparkConfig)
+InputT = tp.TypeVar("InputT")
+
+class ModuleOutput(tp.TypedDict):
+    pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class SparkMeta(nnx.module.ModuleMeta):
 
@@ -64,7 +76,7 @@ class SparkMeta(nnx.module.ModuleMeta):
             return original_call(self, *args, **kwargs)
 
         # Mark our new wrapper function. This is for the safeguard check above.
-        wrapped_call.__is_wrapped__ = True
+        setattr(wrapped_call, '__is_wrapped__', True)
 
         # Replace the original __call__ method on the class with our new wrapped version.
         setattr(cls, '__call__', wrapped_call)
@@ -72,32 +84,32 @@ class SparkMeta(nnx.module.ModuleMeta):
         return cls
             
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
-            
-class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
+
+class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkMeta):
 
     name: str = 'name'
-    config: SparkConfig
-    default_config: type[SparkConfig] = SparkConfig
+    config: ConfigT
+    default_config: type[ConfigT]
 
     # NOTE: This is a workaround to require all childs of SparkModule to define a, 
     # default_config while at the same time allow for a lazy definition of the property. 
     def __init_subclass__(cls, **kwargs):
+        from spark.core.config import BaseSparkConfig
         super().__init_subclass__(**kwargs)
         # Special cases and abstract classes dont need config yet they are SparkModules ¯\_(ツ)_/¯
         is_abc = inspect.isabstract(cls) and len(getattr(cls, '__abstractmethods__', set())) == 0
-        if cls.__name__ in ['Brain'] or is_abc:
-            cls.default_config = None
+        if is_abc:
             return
         # Check if defines config
         resolved_hints = tp.get_type_hints(cls)
         config_type = resolved_hints.get('config')
-        if not config_type and not issubclass(config_type, SparkConfig):
-            raise AttributeError('SparkModules must define a valid config: type[SparkConfig] attribute.')
-        cls.default_config = config_type
+        if not config_type or not issubclass(config_type, BaseSparkConfig):
+            raise AttributeError('SparkModules must define a valid config: type[BaseSparkConfig] attribute.')
+        cls.default_config = tp.cast(type[ConfigT], config_type)#config_type
 
 
 
-    def __init__(self, *, config: SparkConfig = None, name: str = None, **kwargs):
+    def __init__(self, *, config: ConfigT | None = None, name: str | None = None, **kwargs):
         # Initialize super.
         super().__init__()
         # Override config if provided
@@ -109,15 +121,20 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
             self.config.merge(partial=kwargs)
         # Define default parameters.
         self.name = name if name else self.__class__.__name__
-        self._dtype = self.config.dtype
-        self._dt = self.config.dt
-        self._seed = self.config.seed
-        # Random engine key.
-        self.rng = nnx.Variable(jax.random.PRNGKey(self._seed))
-        #self.rng = nnx.Rngs(default=42)
+        dtype = getattr(self.config, 'dtype', None)
+        if dtype:
+            self._dtype = dtype
+        dt = getattr(self.config, 'dt', None)
+        if dt:
+            self._dt = dt
+        seed = getattr(self.config, 'seed', None)
+        if seed:
+            self._seed = seed
+            # Random engine key.
+            self.rng = Variable(jax.random.PRNGKey(self._seed))
         # Specs
-        self._input_specs: dict[str, InputSpec] = None
-        self._output_specs: dict[str, OutputSpec] = None
+        self._input_specs: dict[str, InputSpec] | None = None
+        self._output_specs: dict[str, OutputSpec] | None = None
         # Flags
         self.__built__: bool = False
         self.__allow_cycles__: bool = False
@@ -126,7 +143,7 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
 
     @classmethod 
-    def get_config_spec(cls) -> type[SparkConfig]:
+    def get_config_spec(cls) -> type[BaseSparkConfig]:
         type_hints = tp.get_type_hints(cls)
         return type_hints['config']
 
@@ -167,19 +184,21 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
             abc_output = nnx.eval_shape(self.__call__, **abc_inputs)
 
         # Evaluate workaround, just use the __call__ directly with some mock input. 
+        from spark.core.payloads import ValueSparkPayload
         mock_input = {}
         for key, value in self._input_specs.items():
-            if not isinstance(value.shape, list):
-                mock_input[key] = value.payload_type(jnp.zeros(value.shape, dtype=value.dtype))
-            else:
-                mock_input[key] = [value.payload_type(jnp.zeros(s, dtype=value.dtype)) for s in value.shape]
+            if value.payload_type and issubclass(value.payload_type, ValueSparkPayload):
+                if not isinstance(value.shape, (list, ShapeCollection)):
+                        mock_input[key] = value.payload_type(jnp.zeros(value.shape, dtype=value.dtype))
+                else:
+                        mock_input[key] = [value.payload_type(jnp.zeros(s, dtype=value.dtype)) for s in value.shape]
         abc_output = self.__call__(**mock_input)
 
         # Contruct output sepcs.
         self._output_specs = self._construct_output_specs(abc_output)
 
         # Replace config with a dict version of itself to prevent errors with JIT.
-        self.config = self.config._freeze()
+        #self.config = self.config._freeze()
 
 
 
@@ -199,7 +218,7 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
 
 
-    def set_recurrent_shape_contract(self, shape: Shape = None, output_shapes: dict[str, Shape] = None) -> None:
+    def set_recurrent_shape_contract(self, shape: Shape | None = None, output_shapes: dict[str, Shape] | None = None) -> None:
         """
             Recurrent shape policy pre-defines expected shapes for the output specs.
 
@@ -286,7 +305,8 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         for key, payload in abc_args.items():
             # NOTE: This is a particular case for modules that expect abstract variadic positional arguments. 
             # I am looking at you Concat (╯°□°）╯︵ ┻━┻.
-            if input_specs[key].payload_type.__name__ == 'SparkPayload':
+            payload_type = input_specs[key].payload_type
+            if payload_type and payload_type.__name__ == 'SparkPayload':
                 payload_type = payload.__class__ if not isinstance(payload, list) else payload[0].__class__
             else:
                 payload_type = input_specs[key].payload_type
@@ -304,7 +324,7 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
 
 
-    def _construct_output_specs(self, abc_args: dict[str, SparkPayload]) -> dict[str, OutputSpec]:
+    def _construct_output_specs(self, abc_args: ModuleOutput) -> dict[str, OutputSpec]:
         """
             Default Output Specs constructor.
         """
@@ -343,7 +363,7 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
         """
             Returns a dictionary of the SparkModule's input port specifications.
         """
-        if not self._input_specs:
+        if not self._output_specs:
             raise RuntimeError('Module not yet built.')
         return self._output_specs
 
@@ -376,7 +396,7 @@ class SparkModule(nnx.Module, abc.ABC, metaclass=SparkMeta):
 
 
     @abc.abstractmethod
-    def __call__(self, *args: SparkPayload, **kwargs) -> dict[str, SparkPayload]:
+    def __call__(self, **kwargs: InputT) -> ModuleOutput:
         pass
     
 #################################################################################################################################################

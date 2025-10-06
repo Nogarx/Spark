@@ -29,7 +29,7 @@ class BaseTracer(nnx.Module, abc.ABC):
 			**kwargs
 		):
 		# Sanity checks
-		if not isinstance(dt, float) and dt >= 0:
+		if not isinstance(dt, float) or dt < 0:
 			raise ValueError(f'"dt" must be a positive float, got {dt}')
 		# Initialize super.
 		super().__init__(**kwargs)
@@ -72,9 +72,9 @@ class Tracer(BaseTracer):
 	def __init__(
 			self, 
 			shape: bShape, 
-			tau: jax.Array, 
-			scale: jax.Array = 1, 
-			base: jax.Array = 0,
+			tau: jax.Array | float, 
+			scale: jax.Array | float = 1, 
+			base: jax.Array | float = 0,
 			**kwargs
 		):
 		# Initialize super.
@@ -110,12 +110,12 @@ class DoubleTracer(BaseTracer):
 	def __init__(
 			self, 
 			shape: bShape, 
-			tau_1: jax.Array, 
-			tau_2: jax.Array,
-			scale_1: jax.Array = 1, 
-			scale_2: jax.Array = 1, 
-			base_1: jax.Array = 0,
-			base_2: jax.Array = 0,
+			tau_1: jax.Array | float, 
+			tau_2: jax.Array | float,
+			scale_1: jax.Array | float = 1, 
+			scale_2: jax.Array | float = 1, 
+			base_1: jax.Array | float = 0,
+			base_2: jax.Array | float = 0,
 			*args,
 			**kwargs
 		):
@@ -187,9 +187,9 @@ class RUTracer(BaseTracer):
 	def __init__(
 			self, 
 			shape: bShape, 
-			R_tau: jax.Array, 
-			U_tau: jax.Array, 
-			scale_U: jax.Array, 
+			R_tau: jax.Array | float, 
+			U_tau: jax.Array | float, 
+			scale_U: jax.Array | float, 
 			**kwargs
 		):
 		# Initialize super.

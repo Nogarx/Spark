@@ -25,15 +25,16 @@ class OutputInterfaceOutput(tp.TypedDict):
 
 class OutputInterfaceConfig(InterfaceConfig):
     pass
+ConfigT = tp.TypeVar("ConfigT", bound=OutputInterfaceConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class OutputInterface(Interface, abc.ABC):
+class OutputInterface(Interface, abc.ABC, tp.Generic[ConfigT]):
     """
         Abstract output interface model.
     """
-
-    def __init__(self, config: OutputInterfaceConfig = None, **kwargs):
+    
+    def __init__(self, config: ConfigT | None = None, **kwargs):
         # Main attributes
         super().__init__(config = config, **kwargs)
 

@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 import inspect
 import typing as tp
 from spark.core.specs import InputSpec, OutputSpec
-from spark.core.shape import bShape, Shape
 import spark.core.validation as validation
 
 #################################################################################################################################################

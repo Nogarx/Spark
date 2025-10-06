@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import abc
+import typing as tp
 from spark.core.module import SparkModule
 from spark.core.config import SparkConfig
 
@@ -17,12 +18,15 @@ class ComponentConfig(SparkConfig):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class Component(SparkModule, abc.ABC):
+ConfigT = tp.TypeVar("ConfigT", bound=ComponentConfig)
+
+class Component(SparkModule, abc.ABC, tp.Generic[ConfigT]):
     """
         Abstract neruonal component.
     """
+    config: ConfigT
 
-    def __init__(self, config: SparkConfig = None, **kwargs):
+    def __init__(self, config: ConfigT | None = None, **kwargs):
         # Initialize super.
         super().__init__(config = config, **kwargs)
 

@@ -28,15 +28,21 @@ class SomaOutput(tp.TypedDict):
 
 class SomaConfig(ComponentConfig):
     pass
+ConfigT = tp.TypeVar("ConfigT", bound=SomaConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class Soma(Component):
+class Soma(Component, tp.Generic[ConfigT]):
     """
         Abstract soma model.
     """
+    config: ConfigT
 
-    def __init__(self, config: SomaConfig = None, **kwargs):
+    # Type hints
+    _potential: Variable
+    _shape: Shape
+
+    def __init__(self, config: ConfigT | None = None, **kwargs):
         # Initialize super.
         super().__init__(config = config, **kwargs)
 

@@ -105,7 +105,7 @@ class TopologicalPoissonSpiker(InputInterface):
     """
     config: TopologicalPoissonSpikerConfig
 
-    def __init__(self, config: TopologicalPoissonSpikerConfig = None, **kwargs):
+    def __init__(self, config: TopologicalPoissonSpikerConfig | None = None, **kwargs):
         # Initialize super
         super().__init__(config=config, **kwargs)
         # Initialize variables
@@ -179,7 +179,7 @@ class TopologicalLinearSpiker(InputInterface):
     """
     config: TopologicalLinearSpikerConfig
 
-    def __init__(self, config: TopologicalLinearSpikerConfig = None, **kwargs):
+    def __init__(self, config: TopologicalLinearSpikerConfig | None = None, **kwargs):
         # Initialize super.
         super().__init__(config=config, **kwargs)
         # Initialize variables

@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from spark.core.payloads import SparkPayload
     
 import abc
+import typing as tp
 from spark.core.module import SparkModule
 from spark.core.config import SparkConfig
 
@@ -15,22 +16,29 @@ from spark.core.config import SparkConfig
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class InterfaceConfig(SparkConfig):
+class InterfaceOutput(tp.TypedDict):
     pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class Interface(SparkModule, abc.ABC):
+class InterfaceConfig(SparkConfig):
+    pass
+ConfigT = tp.TypeVar("ConfigT", bound=InterfaceConfig)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class Interface(SparkModule, abc.ABC, tp.Generic[ConfigT]):
     """
         Abstract interface model.
     """
+    config: ConfigT
 
-    def __init__(self, config: InterfaceConfig = None, **kwargs):
+    def __init__(self, config: ConfigT | None = None, **kwargs):
         # Main attributes
         super().__init__(config = config, **kwargs)
 
     @abc.abstractmethod
-    def __call__(self, *args: SparkPayload, **kwargs) -> dict[str, SparkPayload]:
+    def __call__(self, *args: SparkPayload, **kwargs) -> InterfaceOutput:
         """
             Computes the control flow operation.
         """

@@ -8,6 +8,7 @@ import json
 import numpy as np
 import jax.numpy as jnp
 import warnings
+import typing as tp
 from jax.typing import DTypeLike
 from spark.core.registry import REGISTRY
 from spark.core.config import BaseSparkConfig
@@ -17,6 +18,8 @@ from spark.core.specs import PortSpecs, InputSpec, OutputSpec, PortMap, ModuleSp
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
+
+T = tp.TypeVar('T')
 
 class SparkJSONEncoder(json.JSONEncoder):
 	"""
@@ -183,51 +186,53 @@ class SparkJSONDecoder(json.JSONDecoder):
 			return ShapeCollection(obj.get('data'))
 		# Decode payload and module types
 		if isinstance(obj, dict) and obj.get('__payload_type__'):
-			return REGISTRY.PAYLOADS.get(obj.get('__payload_type__')).class_ref
+			payload_type: str | None = obj.get('__payload_type__')
+			if not payload_type or not isinstance(payload_type, str):
+				raise TypeError(f'Expected \"__payload_type__\" to be of type \"str\", but got {payload_type}')
+			reg = REGISTRY.PAYLOADS.get(payload_type)
+			if not reg:
+				raise KeyError(f'There is no payload with name \"{payload_type}\" in the registry.')
+			return reg.class_ref
 		if isinstance(obj, dict) and obj.get('__module_type__'):
-			return REGISTRY.MODULES.get(obj.get('__module_type__')).class_ref
+			module_type: str | None = obj.get('__module_type__')
+			if not module_type or not isinstance(module_type, str):
+				raise TypeError(f'Expected \"__module_type__\" to be of type \"str\", but got {module_type}')
+			reg = REGISTRY.MODULES.get(module_type)
+			if not reg:
+				raise KeyError(f'There is no module with name \"{module_type}\" in the registry.')
+			return reg.class_ref
 		# Decode spark configs
 		if obj.get('__cfg__'):
-			cls: BaseSparkConfig = REGISTRY.CONFIG.get(obj.get('__type__')).class_ref
-			return cls(**obj.get('__cfg__'))
+			config_type: str | None = obj.get('__type__')
+			if not config_type or not isinstance(config_type, str):
+				raise TypeError(f'Expected \"__type__\" to be of type \"str\", but got {config_type}')
+			reg = REGISTRY.CONFIG.get(config_type)
+			if not reg:
+				raise KeyError(f'There is no config with name \"{config_type}\" in the registry.')
+			config_data = obj.get('__cfg__')
+			if not isinstance(config_data, dict):
+				raise TypeError(f'Expected \"__cfg__\" to be of type \"dict\", but got {config_data}')
+			return reg.class_ref(**config_data)
 			#return cls.from_dict(obj.get('__cfg__'))
 		# Decode spark specs
 		if obj.get('__type__') == 'port_specs':
-			return PortSpecs.from_dict(obj.get('__data__'))
+			return self._decode_spec(PortSpecs, obj)
 		if obj.get('__type__') == 'input_specs':
-			return InputSpec.from_dict(obj.get('__data__'))
+			return self._decode_spec(InputSpec, obj)
 		if obj.get('__type__') == 'output_specs':
-			return OutputSpec.from_dict(obj.get('__data__'))
+			return self._decode_spec(OutputSpec, obj)
 		if obj.get('__type__') == 'port_map':
-			return PortMap.from_dict(obj.get('__data__'))
+			return self._decode_spec(PortMap, obj)
 		if obj.get('__type__') == 'module_specs':
-			return ModuleSpecs.from_dict(obj.get('__data__'))
+			return self._decode_spec(ModuleSpecs, obj)
 		# Default handler
 		return obj
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-class Serializer:
-
-    def __init__(self):
-        pass
-
-    def serialize():
-        pass
-
-    def _serialize_shape(shape: Shape) -> list[int]:
-        return list(shape)
-    
-    def _deserialize_shape(shape: list[int]) -> Shape:
-        return tuple(shape)
-
-    def _serialize_dtype(dtype: DTypeLike) -> str:
-        return dtype.name
-    
-    def _deserialize_dtype(shape: str) -> DTypeLike:
-        return jnp.dtype(shape)
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
+	
+	def _decode_spec(self, type: type[T], obj: dict) -> T:
+		data = obj.get('__data__')
+		if not isinstance(data, dict):
+			raise TypeError(f'Expected \"__data__\" to be of type \"dict\", but got {data}')
+		return type(**data)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

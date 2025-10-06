@@ -20,15 +20,16 @@ class LearningRuleOutput(tp.TypedDict):
 
 class LearningRuleConfig(ComponentConfig):
     pass
+ConfigT = tp.TypeVar("ConfigT", bound=LearningRuleConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class LearningRule(Component):
+class LearningRule(Component, tp.Generic[ConfigT]):
     """
         Abstract learning rule model.
     """
 
-    def __init__(self, config: ComponentConfig = None, **kwargs):
+    def __init__(self, config: ConfigT | None = None, **kwargs):
         # Initialize super.
         super().__init__(config = config, **kwargs)
 

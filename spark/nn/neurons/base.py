@@ -6,11 +6,13 @@ from __future__ import annotations
 
 import abc
 import typing as tp
+import dataclasses as dc
 from math import prod
 from spark.core.module import SparkModule
 from spark.core.shape import Shape
 from spark.core.payloads import SpikeArray
 from spark.core.config import SparkConfig
+from spark.core.config_validation import TypeValidator
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -23,25 +25,33 @@ class NeuronOutput(tp.TypedDict):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class NeuronConfig(SparkConfig):
-    pass
+    units: Shape = dc.field(
+        metadata = {
+            'validators': [
+                TypeValidator,
+            ],
+            'description': 'Shape of the pool of neurons.',
+        })
+ConfigT = tp.TypeVar("ConfigT", bound=NeuronConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class Neuron(SparkModule, abc.ABC):
+class Neuron(SparkModule, abc.ABC, tp.Generic[ConfigT]):
     """
         Abstract neuronal model.
 
         This is a convenience class used to synchronize data more easily.
         Can be thought as the equivalent of Sequential in standard ML frameworks.
     """
+    config: ConfigT
 
-    def __init__(self, config: NeuronConfig = None, **kwargs):
+    def __init__(self, config: ConfigT | None = None, **kwargs):
         # Initialize super.
         super().__init__(config = config, **kwargs)
         # Initialize shapes
         self.units = Shape(self.config.units)
         self._units = prod(self.units)
-        self._component_names: list[SparkModule] = None
+        self._component_names: list[SparkModule] | None = None
 
     # TODO: This should be called post build. 
     def _build_component_list(self):
@@ -76,6 +86,10 @@ class Neuron(SparkModule, abc.ABC):
         # Reset components.
         for name in self._component_names:
             getattr(self, name).reset()
+
+    @abc.abstractmethod
+    def __call__(self, in_spikes: SpikeArray) -> NeuronOutput:
+        pass
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

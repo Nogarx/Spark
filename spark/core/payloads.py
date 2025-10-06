@@ -5,9 +5,13 @@
 from __future__ import annotations
 
 import abc
-import jax
 import numpy as np
+import jax
+import jax.numpy as jnp
+import typing as tp
 import dataclasses as dc
+from spark.core.shape import Shape
+from jax.typing import DTypeLike
 
 # TODO: Several parts of this code need to be further validated. 
 
@@ -25,65 +29,44 @@ import dataclasses as dc
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-@jax.tree_util.register_pytree_node_class
+@jax.tree_util.register_dataclass
 @dc.dataclass(frozen=True)
 class SparkPayload(abc.ABC):
     """
         Abstract payload definition to validate exchanges between SparkModule's.
     """
+    pass
 
-    def tree_flatten(self):
-        children = ()
-        aux_data = ()
-        return children, aux_data
+    @property
+    def shape(self) -> tp.Any:
+        pass
 
-    @classmethod
-    def tree_unflatten(cls, aux_data, children):
-        return cls(*aux_data)
+    @property
+    def dtype(self) -> tp.Any:
+        pass
     
-    @property
-    @abc.abstractmethod
-    def shape(self):
-        pass
-
-    @property
-    @abc.abstractmethod
-    def dtype(self):
-        pass
-
-
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@jax.tree_util.register_pytree_node_class
+@jax.tree_util.register_dataclass
 @dc.dataclass(frozen=True)
 class ValueSparkPayload(SparkPayload, abc.ABC):
     """
         Abstract payload definition to single value payloads.
     """
-    value: jax.Array
+    value: jnp.ndarray
 
-    def tree_flatten(self):
-        children = (self.value,)
-        aux_data = ()
-        return children, aux_data
-
-    @classmethod
-    def tree_unflatten(cls, aux_data, children):
-        (value,) = children
-        return cls(value=value,)
-
-    def __jax_array__(self) -> jax.Array: 
+    def __jax_array__(self) -> jnp.ndarray: 
         return self.value
     
-    def __array__(self, dtype=None) -> jax.Array: 
+    def __array__(self, dtype=None) -> np.ndarray: 
         return np.array(self.value).astype(dtype if dtype else self.value.dtype)
 
     @property
-    def shape(self):
-        return self.value.shape
+    def shape(self) -> Shape:
+        return Shape(self.value.shape)
 
     @property
-    def dtype(self):
+    def dtype(self) -> DTypeLike:
         return self.value.dtype
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -93,9 +76,9 @@ from spark.core.registry import register_payload
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@jax.tree_util.register_pytree_node_class
-@dc.dataclass(frozen=True)
 @register_payload
+@jax.tree_util.register_dataclass
+@dc.dataclass(frozen=True)
 class SpikeArray(ValueSparkPayload):
     """
         Representation of a collection of spike events.
@@ -104,9 +87,9 @@ class SpikeArray(ValueSparkPayload):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@jax.tree_util.register_pytree_node_class
-@dc.dataclass(frozen=True)
 @register_payload
+@jax.tree_util.register_dataclass
+@dc.dataclass(frozen=True)
 class CurrentArray(ValueSparkPayload):
     """
         Representation of a collection of currents.
@@ -115,9 +98,9 @@ class CurrentArray(ValueSparkPayload):
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@jax.tree_util.register_pytree_node_class
-@dc.dataclass(frozen=True)
 @register_payload
+@jax.tree_util.register_dataclass
+@dc.dataclass(frozen=True)
 class PotentialArray(ValueSparkPayload):
     """
         Representation of a collection of membrane potentials.
@@ -126,9 +109,9 @@ class PotentialArray(ValueSparkPayload):
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@jax.tree_util.register_pytree_node_class
-@dc.dataclass(frozen=True)
 @register_payload
+@jax.tree_util.register_dataclass
+@dc.dataclass(frozen=True)
 class BooleanMask(ValueSparkPayload):
     """
         Representation of an inhibitory boolean mask.
@@ -137,9 +120,9 @@ class BooleanMask(ValueSparkPayload):
         
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@jax.tree_util.register_pytree_node_class
-@dc.dataclass(frozen=True)
 @register_payload
+@jax.tree_util.register_dataclass
+@dc.dataclass(frozen=True)
 class IntegerMask(ValueSparkPayload):
     """
         Representation of an integer mask.
@@ -148,9 +131,9 @@ class IntegerMask(ValueSparkPayload):
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@jax.tree_util.register_pytree_node_class
-@dc.dataclass(frozen=True)
 @register_payload
+@jax.tree_util.register_dataclass
+@dc.dataclass(frozen=True)
 class FloatArray(ValueSparkPayload):
     """
         Representation of a float array.
@@ -159,9 +142,9 @@ class FloatArray(ValueSparkPayload):
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@jax.tree_util.register_pytree_node_class
-@dc.dataclass(frozen=True)
 @register_payload
+@jax.tree_util.register_dataclass
+@dc.dataclass(frozen=True)
 class IntegerArray(ValueSparkPayload):
     """
         Representation of an integer array.

@@ -75,7 +75,7 @@ class LinearSpiker(InputInterface):
     """
     config: LinearSpikerConfig
 
-    def __init__(self, config: LinearSpikerConfig = None, **kwargs):
+    def __init__(self, config: LinearSpikerConfig | None = None, **kwargs):
         # Initialize super
         super().__init__(config=config, **kwargs)
         # Initialize variables

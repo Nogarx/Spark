@@ -15,7 +15,7 @@ from spark.core.variables import Variable
 from spark.core.shape import Shape
 from spark.core.payloads import SparkPayload, FloatArray
 from spark.core.registry import register_config, REGISTRY
-from spark.core.config import SparkConfig
+from spark.core.config import BaseSparkConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -27,7 +27,7 @@ class BrainMeta(SparkMeta):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_config
-class BrainConfig(SparkConfig):
+class BrainConfig(BaseSparkConfig):
 	input_map: dict[str, InputSpec] = dc.field(
 		metadata = {
 			'description': 'Input map configuration.',

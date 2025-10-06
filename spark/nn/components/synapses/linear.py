@@ -67,6 +67,13 @@ class LinearSynapses(Synanpses):
             
         Output:
             currents: CurrentArray
+
+
+        Reference: 
+            Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition. 
+            Gerstner W, Kistler WM, Naud R, Paninski L. 
+            Chapter 1.3 Integrate-And-Fire Models
+            https://neuronaldynamics.epfl.ch/online/Ch1.S3.html
     """
     config: LinearSynapsesConfig
 

@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import collections.abc
+import typing as tp
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -17,7 +18,7 @@ class Shape(tuple):
 
 		This class has a similar behavior to tuples. Useful for type checking and extra validation.
     """
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> tp.Self:
         elements = args[0] if len(args) == 1 and isinstance(args[0], collections.abc.Iterable) else args
         # Sanity checks
         for element in elements:
@@ -31,10 +32,10 @@ class Shape(tuple):
 				)
         return super().__new__(cls, elements)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'Shape{super().__repr__()}'
     
-    def to_dict(self,):
+    def to_dict(self,) -> dict[str, tp.Any]:
         return {
             '__type__': 'shape',
             'data': self,
@@ -48,14 +49,14 @@ class ShapeCollection(tuple):
 
         This class has a similar behavior to tuples. Useful for type checking and extra validation.
     """
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> tp.Self:
         elements = args[0] if len(args) == 1 and isinstance(args[0], collections.abc.Iterable) else args
         return super().__new__(cls, [Shape(e) for e in elements])
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'ShapeCollection{super().__repr__()}'
     
-    def to_dict(self,):
+    def to_dict(self,) -> dict[str, tp.Any]:
         return {
             '__type__': 'shape_collection',
             'data': self,

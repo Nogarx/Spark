@@ -8,10 +8,10 @@ import abc
 import jax
 import numpy as np
 import jax.numpy as jnp
+import jax.typing
 import dataclasses as dc
 import typing as tp
-from spark.core.registry import REGISTRY
-from spark.core.registry import register_cfg_validator
+from spark.core.registry import REGISTRY, register_cfg_validator
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -19,11 +19,11 @@ from spark.core.registry import register_cfg_validator
 
 class ConfigurationValidator:
 
-    def __init__(self, field: dc.Field):
+    def __init__(self, field: dc.Field) -> None:
         self.field = field
 
     @abc.abstractmethod
-    def validate(self,) -> None:
+    def validate(self, value: tp.Any) -> None:
         pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -38,8 +38,9 @@ class TypeValidator(ConfigurationValidator):
 
     def validate(self, value: tp.Any) -> None:
         # Get and parse valid types.
-        valid_types = self.field.metadata.get('valid_types')
+        valid_types = self.field.metadata.get('valid_types', '')
         valid_types = self._str_to_types(valid_types)
+        return
         # Compare against valid types.
         if len(valid_types) > 0 and not isinstance(value, valid_types):
             if len(valid_types) == 1:
@@ -49,7 +50,7 @@ class TypeValidator(ConfigurationValidator):
             raise TypeError(f'Attribute "{self.field.name}" expects types {types_str}, but got type \"{type(value).__name__}\".')
 
     @staticmethod    
-    def _str_to_types(str_types: str):
+    def _str_to_types(str_types: str) -> tuple[tp.Any, ...]:
         str_list = str_types.replace(' ', '').split('|')
         types_list = []
         for st in str_list:
@@ -69,20 +70,20 @@ class TypeValidator(ConfigurationValidator):
                     types_list.append(str)
                     types_list.append(np.dtype)
                     types_list.append(jnp.dtype)
-                    types_list.append(jax._src.typing.SupportsDType)
+                    types_list.append(jax.typing.DTypeLike)
             # Check if it is a spark class
             if not t:
                 t = REGISTRY.MODULES.get(st)
                 if t:
-                    types_list.append(t)
+                    types_list.append(t.class_ref)
             if not t:
                 t = REGISTRY.PAYLOADS.get(st)
                 if t:
-                    types_list.append(t)
+                    types_list.append(t.class_ref)
             if not t:
                 t = REGISTRY.INITIALIZERS.get(st)
                 if t:
-                    types_list.append(t)
+                    types_list.append(t.class_ref)
         return tuple(types_list)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

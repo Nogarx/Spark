@@ -3,16 +3,14 @@
 #################################################################################################################################################
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from spark.core.shape import Shape
-    
+
 import jax
 import numpy as np
 import jax.numpy as jnp
 import flax.nnx as nnx
 from typing import Any
 from collections.abc import Iterable
+from spark.core.shape import Shape
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -23,8 +21,10 @@ class Constant:
     """
         Jax.Array wrapper for constant arrays.
     """
+    # Type hint
+    value: jax.Array
 
-    def __init__(self, data: Any, dtype: Any = None):
+    def __init__(self, data: Any, dtype: Any = None) -> None:
         if isinstance(data, jax.Array):
             # Input is an array.
             self.value = data.astype(dtype=dtype if dtype else data.dtype)
@@ -45,25 +45,25 @@ class Constant:
         if len(self.value.shape) == 0:
             self.value = self.value.reshape(-1)
 
-    def tree_flatten(self):
-        children = (self.value, self.value.dtype)
-        aux_data = ()
-        return children, aux_data
+    #def tree_flatten(self):
+    #    children = (self.value, self.value.dtype)
+    #    aux_data = ()
+    #    return children, aux_data
 
-    @classmethod
-    def tree_unflatten(cls, aux_data, children):
-        (value, dtype) = children
-        return cls(value=value, dtype=dtype)
+    #@classmethod
+    #def tree_unflatten(cls, aux_data, children):
+    #    (value, dtype) = children
+    #    return cls(value=value, dtype=dtype)
 
     def __jax_array__(self) -> jax.Array: 
         return self.value
     
-    def __array__(self, dtype=None) -> jax.Array: 
+    def __array__(self, dtype=None) -> np.ndarray: 
         return np.array(self.value).astype(dtype if dtype else self.value.dtype)
 
     @property
     def shape(self) -> Shape:
-        return self.value.shape
+        return Shape(self.value.shape)
 
     @property
     def dtype(self) -> Any:
@@ -149,13 +149,18 @@ class Constant:
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+# TODO: Currently we constraint Variable to cast everything to arrays. Initially, the plan was to simplify 
+# the use factor of the class by removing the .value element, however it may be useful to allow for the full
+# flexibility of the original nnx.Variable. 
 class Variable(nnx.Variable):
     """
         The base class for all ``Variable`` types.
         Note that this is just a convinience wrapper around Flax's nnx.Variable to simplify imports.
     """
-    
-    def __init__(self, value: Any, dtype: Any = None, **metadata):
+    # Type hint
+    value: jax.Array
+
+    def __init__(self, value: Any, dtype: Any = None, **metadata) -> None:
 
         if isinstance(value, jax.Array):
             # Input is an array.
@@ -178,8 +183,12 @@ class Variable(nnx.Variable):
     def __jax_array__(self) -> jax.Array: 
         return self.value
     
-    def __array__(self, dtype=None) -> jax.Array: 
+    def __array__(self, dtype=None) -> np.ndarray: 
         return np.array(self.value).astype(dtype if dtype else self.value.dtype)
+
+    @property
+    def shape(self) -> Shape:
+        return Shape(self.value.shape)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
