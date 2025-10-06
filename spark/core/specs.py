@@ -19,11 +19,15 @@ from spark.core.shape import Shape, ShapeCollection
 import spark.core.validation as validation
 from spark.core.registry import REGISTRY
 
+# TODO: It would be ideal to combine the graph_editor/specs with this file. Both files implement basically the same logic 
+# except that the specs of the editor are mutable. There are more robust patters that would allow the code to be more
+# maintainable. 
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-@jax.tree_util.register_pytree_node_class
+@jax.tree_util.register_dataclass
 @dc.dataclass(init=False, frozen=True)
 class PortSpecs:
     """
@@ -40,7 +44,7 @@ class PortSpecs:
             shape: Shape | None, 
             dtype: DTypeLike | None, 
             description: str | None = None 
-        ):
+        ) -> None:
         if payload_type and not validation._is_payload_type(payload_type):
             raise TypeError(f'Expected "payload_type" to be of type "SparkPayload" but got "{type(payload_type).__name__}".')
         if shape:
@@ -64,41 +68,22 @@ class PortSpecs:
         object.__setattr__(self, 'dtype', dtype)
         object.__setattr__(self, 'description', description)
 
-    def tree_flatten(self):
-        children = (
-            self.payload_type, 
-            self.shape, 
-            self.dtype, 
-            self.description
-        )
-        aux_data = ()
-        return children, aux_data
-
-    @classmethod
-    def tree_unflatten(cls, aux_data, children):
-        (payload_type, shape, dtype, description) = children
-        return cls(
-            payload_type=payload_type, 
-            shape=shape, 
-            dtype=dtype, 
-            description=description,
-        )
-
-    def to_dict(self) -> dict[str, dict[str, tp.Any]]:
+    def to_dict(self) -> dict[str, tp.Any]:
         """
             Serialize PortSpecs to dictionary
         """
+        reg = REGISTRY.PAYLOADS.get_by_cls(self.payload_type)
         return {
             'payload_type': {
-                '__payload_type__': REGISTRY.PAYLOADS.get_by_cls(self.payload_type).name,
+                '__payload_type__': reg.name if reg else None,
             },
-            'shape': self.shape.to_dict(),
+            'shape': self.shape.to_dict() if self.shape else None,
             'dtype': self.dtype,
             'description': self.description,
         }
     
     @classmethod
-    def from_dict(cls, dct) -> dict[str, dict[str, tp.Any]]:
+    def from_dict(cls, dct: dict) -> tp.Self:
         """
             Deserialize dictionary to  PortSpecs
         """
@@ -106,7 +91,7 @@ class PortSpecs:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@jax.tree_util.register_pytree_node_class
+@jax.tree_util.register_dataclass
 @dc.dataclass(init=False, frozen=True)
 class InputSpec(PortSpecs):
     """
@@ -121,50 +106,29 @@ class InputSpec(PortSpecs):
             dtype: DTypeLike | None, 
             is_optional: bool, 
             description: str | None = None
-        ):
+        ) -> None:
         super().__init__(payload_type=payload_type, shape=shape, dtype=dtype, description=description)
         if not isinstance(is_optional, bool):
             raise ValueError(f'Expected "is_optional" to be of type "bool" but got "{type(is_optional).__name__}".')
         object.__setattr__(self, 'is_optional', is_optional)
 
-    def tree_flatten(self):
-        children = (
-            self.payload_type, 
-            self.shape, 
-            self.dtype, 
-            self.is_optional, 
-            self.description
-        )
-        aux_data = ()
-        return children, aux_data
-
-    @classmethod
-    def tree_unflatten(cls, aux_data, children):
-        (payload_type, shape, dtype, is_optional, description) = children
-        return cls(
-            payload_type=payload_type, 
-            shape=shape, 
-            dtype=dtype, 
-            is_optional=is_optional, 
-            description=description,
-        )
-
-    def to_dict(self) -> dict[str, dict[str, tp.Any]]:
+    def to_dict(self) -> dict[str, tp.Any]:
         """
             Serialize InputSpec to dictionary
         """
+        reg = REGISTRY.PAYLOADS.get_by_cls(self.payload_type)
         return {
             'payload_type': {
-                '__payload_type__': REGISTRY.PAYLOADS.get_by_cls(self.payload_type).name,
+                '__payload_type__': reg.name if reg else None,
             },
-            'shape': self.shape.to_dict(),
+            'shape': self.shape.to_dict() if self.shape else None,
             'dtype': self.dtype,
             'description': self.description,
             'is_optional': self.is_optional,
         }
 
     @classmethod
-    def from_dict(cls, dct) -> dict[str, dict[str, tp.Any]]:
+    def from_dict(cls, dct: dict) -> tp.Self:
         """
             Deserialize dictionary to  PortSpecs
         """
@@ -172,21 +136,21 @@ class InputSpec(PortSpecs):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@jax.tree_util.register_pytree_node_class
+@jax.tree_util.register_dataclass
 @dc.dataclass(frozen=True)
 class OutputSpec(PortSpecs):
     """
         Specification for an output port of an SparkModule.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def to_dict(self) -> dict[str, dict[str, tp.Any]]:
+    def to_dict(self) -> dict[str, tp.Any]:
         return super().to_dict()
 
     @classmethod
-    def from_dict(cls, dct) -> dict[str, dict[str, tp.Any]]:
+    def from_dict(cls, dct: dict) -> tp.Self:
         """
             Deserialize dictionary to  PortSpecs
         """
@@ -194,7 +158,7 @@ class OutputSpec(PortSpecs):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@jax.tree_util.register_pytree_node_class
+@jax.tree_util.register_dataclass
 @dc.dataclass(init=False, frozen=True)
 class PortMap:
     """
@@ -203,7 +167,7 @@ class PortMap:
     origin: str        
     port: str       
 
-    def __init__(self, origin: str, port: str):
+    def __init__(self, origin: str, port: str) -> None:
         if not isinstance(origin, str):
             raise TypeError(f'Expected "origin" to be of type "str" but got "{type(origin).__name__}".')
         if not isinstance(port, str):
@@ -211,23 +175,7 @@ class PortMap:
         object.__setattr__(self, 'origin', origin)
         object.__setattr__(self, 'port', port)
 
-    def tree_flatten(self):
-        children = (
-            self.origin, 
-            self.port
-        )
-        aux_data = ()
-        return children, aux_data
-
-    @classmethod
-    def tree_unflatten(cls, aux_data, children):
-        (origin, port) = children
-        return cls(
-            origin=origin, 
-            port=port
-        )
-
-    def to_dict(self) -> dict[str, dict[str, tp.Any]]:
+    def to_dict(self) -> dict[str, tp.Any]:
         """
             Serialize PortMap to dictionary
         """
@@ -237,7 +185,7 @@ class PortMap:
         }
     
     @classmethod
-    def from_dict(cls, dct) -> dict[str, dict[str, tp.Any]]:
+    def from_dict(cls, dct: dict) -> tp.Self:
         """
             Deserialize dictionary to PortMap
         """
@@ -247,7 +195,7 @@ class PortMap:
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 # TODO: Inspect for missing mandatory fields.
-@jax.tree_util.register_pytree_node_class
+@jax.tree_util.register_dataclass
 @dc.dataclass(init=False, frozen=True)
 class ModuleSpecs:
     """
@@ -259,7 +207,7 @@ class ModuleSpecs:
     inputs: dict[str, list[PortMap]]               
     config: BaseSparkConfig
 
-    def __init__(self, name: str, module_cls: type, inputs: dict[str, list[PortMap]], config: BaseSparkConfig):
+    def __init__(self, name: str, module_cls: type, inputs: dict[str, list[PortMap]], config: BaseSparkConfig) -> None:
         # TODO: Refactor code to remove lazy imports.
         from spark.core.registry import REGISTRY
         # Validate module_cls
@@ -289,50 +237,45 @@ class ModuleSpecs:
         object.__setattr__(self, 'inputs', inputs)
         object.__setattr__(self, 'config', config)
 
-    def tree_flatten(self):
-        children = (
-            self.name, 
-            self.module_cls, 
-            self.inputs, 
-            self.config
-        )
-        aux_data = ()
-        return children, aux_data
-
-    @classmethod
-    def tree_unflatten(cls, aux_data, children):
-        (name, module_cls, inputs, config) = children
-        return cls(
-            name=name, 
-            module_cls=module_cls, 
-            inputs=inputs, 
-            config=config,
-        )
-
-    def to_dict(self) -> dict[str, dict[str, tp.Any]]:
+    def to_dict(self) -> dict[str, tp.Any]:
         """
             Serialize ModuleSpecs to dictionary
         """
+        reg = REGISTRY.MODULES.get_by_cls(self.module_cls)
         return {
             'name': self.name,
             'module_cls': {
-                '__module_type__': REGISTRY.MODULES.get_by_cls(self.module_cls).name,
+                '__module_type__': reg.name if reg else None,
             },
             'inputs': self.inputs,
             'config': self.config.to_dict()
         }
     
     @classmethod
-    def from_dict(cls, dct: dict) -> dict[str, dict[str, tp.Any]]:
+    def from_dict(cls, dct: dict) -> tp.Self:
         """
             Deserialize dictionary to ModuleSpecs
         """
-        module_cls: type[SparkModule] = dct.get('module_cls')
+        # Validate dictionary
+        name: str | None = dct.get('name', None)
+        if not name or not isinstance(name, str):
+            raise TypeError(f'Expected \"name\" to be of type \"str\", but got {name}')
+        module_cls: type[SparkModule] | None = dct.get('module_cls', None)
+        if not module_cls or not issubclass(module_cls, SparkModule):
+            raise TypeError(f'Expected \"module_cls\" to be of type \"type[SparkModule]\", but got {module_cls}')
+        config: BaseSparkConfig | dict | None = dct.get('config', None)
+        if not config or not isinstance(config, (dict, BaseSparkConfig)):
+            raise TypeError(f'Expected \"config\" to be of type[BaseSparkConfig] | dict, but got {config}')
+        config = module_cls.get_config_spec()(**config) if isinstance(config, dict) else config
+        inputs: dict | None = dct.get('inputs', None)
+        if not inputs or not isinstance(config, dict):
+            raise TypeError(f'Expected \"inputs\" to be of dict, but got {inputs}')
+        # Reconstruct spec
         return cls(
-            name=dct.get('name'), 
+            name=name, 
             module_cls=module_cls,
-            inputs=dct.get('inputs'),
-            config=module_cls.get_config_spec()(**dct.get('config')),
+            config=config,
+            inputs=inputs,
         )
 
 #################################################################################################################################################

@@ -50,7 +50,7 @@ class Sampler(ControlInterface):
     """
     config: SamplerConfig
 
-    def __init__(self, config: SamplerConfig = None, **kwargs):
+    def __init__(self, config: SamplerConfig | None = None, **kwargs):
         # Initialize super.
         super().__init__(config=config, **kwargs)
         # Initialize variables
@@ -60,11 +60,15 @@ class Sampler(ControlInterface):
         # Initialize shapes
         input_shape = Shape(input_specs['input'].shape)
         # Initialize variables
-        self._indices = Constant(jax.random.randint(self.get_rng_keys(1), 
-                                                         self.sample_size, 
-                                                         minval=0, 
-                                                         maxval=prod(input_shape)), 
-                                                         dtype=jnp.uint32)
+        self._indices = Constant(
+            jax.random.randint(
+                self.get_rng_keys(1), 
+                self.sample_size, 
+                minval=0, 
+                maxval=prod(input_shape)
+            ), 
+            dtype=jnp.uint32
+        )
 
     @property
     def indices(self,) -> jax.Array:

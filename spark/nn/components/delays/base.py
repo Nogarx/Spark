@@ -21,15 +21,16 @@ class DelaysOutput(tp.TypedDict):
 
 class DelaysConfig(ComponentConfig):
     pass
+ConfigT = tp.TypeVar("ConfigT", bound=DelaysConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class Delays(Component):
+class Delays(Component, tp.Generic[ConfigT]):
     """
         Abstract synaptic delay model.
     """
 
-    def __init__(self, config: DelaysConfig = None, **kwargs):
+    def __init__(self, config: ConfigT | None = None, **kwargs):
         # Initialize super.
         super().__init__(config = config, **kwargs)
     

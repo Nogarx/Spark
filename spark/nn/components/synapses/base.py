@@ -21,10 +21,11 @@ class SynanpsesOutput(tp.TypedDict):
 
 class SynanpsesConfig(ComponentConfig):
     pass
+ConfigT = tp.TypeVar("ConfigT", bound=SynanpsesConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class Synanpses(Component):
+class Synanpses(Component, tp.Generic[ConfigT]):
     """
         Abstract synapse model.
 
@@ -37,7 +38,7 @@ class Synanpses(Component):
             currents: CurrentArray
     """
 
-    def __init__(self, config: SynanpsesConfig = None, **kwargs):
+    def __init__(self, config: ConfigT | None = None, **kwargs):
         # Initialize super.
         super().__init__(config = config, **kwargs)
 

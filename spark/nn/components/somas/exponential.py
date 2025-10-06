@@ -21,7 +21,7 @@ from spark.nn.components.somas.base import Soma, SomaConfig
 #################################################################################################################################################
 
 @register_config
-class LeakySomaConfig(SomaConfig):
+class ExponentialSomaConfig(SomaConfig):
     potential_rest: float = dc.field(
         default = -60.0, 
         metadata = {
@@ -68,13 +68,22 @@ class LeakySomaConfig(SomaConfig):
             ], 
             'description': 'Action potential threshold base value.',
         })
+    spike_slope: float = dc.field(
+        default = -40.0, 
+        metadata = {
+            'units': 'mV',
+            'validators': [
+                TypeValidator,
+            ], 
+            'description': 'Sharpness of action potential initiation.',
+        })
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class LeakySoma(Soma):
+class ExponentialSoma(Soma):
     """
-        Leaky soma model.
+        Exponential soma model.
 
         Init:
             units: Shape
@@ -91,20 +100,25 @@ class LeakySoma(Soma):
             out_spikes: SpikeArray
 
         Reference: 
+            How Spike Generation Mechanisms Determine the Neuronal Response to Fluctuating Inputs
+            Nicolas Fourcaud-Trocmé, David Hansel, Carl van Vreeswijk, and Nicolas Brunel
+            The Journal of Neuroscience, December 17, 2003
+            https://www.jneurosci.org/content/23/37/11628
             Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition. 
             Gerstner W, Kistler WM, Naud R, Paninski L. 
             Chapter 1.3 Integrate-And-Fire Models
             https://neuronaldynamics.epfl.ch/online/Ch1.S3.html
     """
-    config: LeakySomaConfig
+    config: ExponentialSomaConfig
 
     # Type hints
     potential_reset: Constant
     potential_scale: Constant
     resistance: Constant
     threshold: Constant
+    spike_slope: Constant
 
-    def __init__(self, config: LeakySomaConfig | None = None, **kwargs):
+    def __init__(self, config: ExponentialSomaConfig = None, **kwargs):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
@@ -119,6 +133,8 @@ class LeakySoma(Soma):
         self.resistance = Constant(self.config.resistance / 1000.0, dtype=self._dtype) # Current is in pA for stability
         # Threshold.
         self.threshold = Constant(self.config.threshold - self.config.potential_rest, dtype=self._dtype)
+        # Spike slope.
+        self.spike_slope = Constant(self.config.spike_slope, dtype=self._dtype)
 
     def reset(self) -> None:
         """
@@ -130,7 +146,11 @@ class LeakySoma(Soma):
         """
             Update neuron's soma states variables.
         """
-        self._potential.value += self.potential_scale * (-self._potential.value + self.resistance * current.value)
+        self._potential.value += self.potential_scale * (
+            -self._potential.value + 
+            (1 / self.resistance) * self.spike_slope * jnp.exp((self._potential.value - self.threshold)/self.spike_slope) +
+            self.resistance * current.value
+        )
 
     def _compute_spikes(self,) -> SpikeArray:
         """
@@ -146,8 +166,9 @@ class LeakySoma(Soma):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+
 @register_config
-class RefractoryLeakySomaConfig(LeakySomaConfig):
+class RefractoryExponentialSomaConfig(ExponentialSomaConfig):
     cooldown: float = dc.field(
         default = 2.0, 
         metadata = {
@@ -161,9 +182,9 @@ class RefractoryLeakySomaConfig(LeakySomaConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class RefractoryLeakySoma(LeakySoma):
+class RefractoryExponentialSoma(ExponentialSoma):
     """
-        Leaky soma with refractory time model.
+        Exponential soma with refractory time model.
 
         Init:
             units: Shape
@@ -186,13 +207,13 @@ class RefractoryLeakySoma(LeakySoma):
             Chapter 1.3 Integrate-And-Fire Models
             https://neuronaldynamics.epfl.ch/online/Ch1.S3.html
     """
-    config: RefractoryLeakySomaConfig
+    config: RefractoryExponentialSomaConfig
 
     # Type hints
     cooldown: Constant
     refractory: Variable
 
-    def __init__(self, config: RefractoryLeakySomaConfig | None = None, **kwargs):
+    def __init__(self, config: RefractoryExponentialSomaConfig = None, **kwargs):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
@@ -235,7 +256,7 @@ class RefractoryLeakySoma(LeakySoma):
 #################################################################################################################################################
 
 @register_config
-class AdaptiveLeakySomaConfig(RefractoryLeakySomaConfig):
+class AdaptiveExponentialSomaConfig(RefractoryExponentialSomaConfig):
     threshold_tau: float = dc.field(
         default = 20.0, 
         metadata = {
@@ -259,9 +280,9 @@ class AdaptiveLeakySomaConfig(RefractoryLeakySomaConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class AdaptiveLeakySoma(RefractoryLeakySoma):
+class AdaptiveExponentialSoma(RefractoryExponentialSoma):
     """
-        Adaptive leaky soma model.
+        Adaptive Exponential soma model.
 
         Init:
             units: Shape
@@ -286,12 +307,12 @@ class AdaptiveLeakySoma(RefractoryLeakySoma):
             Chapter 5.1 Thresholds in a nonlinear integrate-and-fire model
             https://neuronaldynamics.epfl.ch/online/Ch5.S1.html
     """
-    config: AdaptiveLeakySomaConfig
+    config: AdaptiveExponentialSomaConfig
 
     # Type hints
     threshold: Tracer
 
-    def __init__(self, config: AdaptiveLeakySomaConfig | None = None, **kwargs):
+    def __init__(self, config: AdaptiveExponentialSomaConfig = None, **kwargs):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 

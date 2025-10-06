@@ -18,7 +18,7 @@ from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator, ZeroOneValidator
 
 from spark.nn.components.delays.dummy import DummyDelays
-from spark.nn.components.somas.adaptive_leaky import AdaptiveLeakySoma, AdaptiveLeakySomaConfig
+from spark.nn.components.somas.leaky import AdaptiveLeakySoma, AdaptiveLeakySomaConfig
 from spark.nn.components.delays.base import Delays, DelaysConfig
 from spark.nn.components.delays.n2n_delays import N2NDelaysConfig
 from spark.nn.components.synapses.base import Synanpses, SynanpsesConfig
@@ -32,13 +32,6 @@ from spark.nn.components.learning_rules.zenke_rule import ZenkeRuleConfig
 
 @register_config
 class ALIFNeuronConfig(NeuronConfig):
-    units: Shape = dc.field(
-        metadata = {
-            'validators': [
-                TypeValidator,
-            ],
-            'description': 'Shape of the pool of neurons.',
-        })
     max_delay: float = dc.field(
         default = 0.2, 
         metadata = {
@@ -102,7 +95,7 @@ class ALIFNeuron(Neuron):
     synapses: Synanpses
     learning_rule: LearningRule
 
-    def __init__(self, config: ALIFNeuronConfig = None, **kwargs):
+    def __init__(self, config: ALIFNeuronConfig | None = None, **kwargs):
         super().__init__(config=config, **kwargs)
         # Main attributes
         self.max_delay = self.config.max_delay
@@ -137,8 +130,8 @@ class ALIFNeuron(Neuron):
         soma_output = self.soma(synapses_output['currents'])
         # Learning
         learning_rule_output = self.learning_rule(delays_output['out_spikes'], soma_output['spikes'], self.synapses.get_kernel())
-        #self.synapses.set_kernel(learning_rule_output['kernel'])
-        self.synapses.kernel.value = learning_rule_output['kernel'].value
+        self.synapses.set_kernel(learning_rule_output['kernel'])
+        #self.synapses.kernel.value = learning_rule_output['kernel'].value
         # Signed spikes
         return {
             'out_spikes': SpikeArray(soma_output['spikes'].value * self._inhibition_mask)

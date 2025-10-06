@@ -28,7 +28,7 @@ def normalize_name(name: str) -> str:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def get_einsum_labels(num_dims: int, offset: int = 0):
+def get_einsum_labels(num_dims: int, offset: int = 0) -> str:
 	if (offset + num_dims) > len(string.ascii_letters):
 		raise ValueError(f'Requested up to {offset + num_dims} symbols but it is only possible to represent up to {len(string.ascii_letters)} '
 						f'different symbols. If this was intentional consider defining a custom label map.')

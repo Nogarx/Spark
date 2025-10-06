@@ -3,9 +3,6 @@
 #################################################################################################################################################
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from spark.core.module import SparkModule
 
 import os
 import abc
@@ -18,12 +15,11 @@ import warnings
 import json
 import pathlib as pl
 from jax.typing import DTypeLike
+from numpy import isin
 from spark.core.shape import Shape
 from spark.core.validation import _is_config_instance
 from spark.core.registry import REGISTRY, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
-
-
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -39,6 +35,8 @@ METADATA_TEMPLATE = {
 }
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+T = tp.TypeVar('T')
 
 class SparkMetaConfig(abc.ABCMeta):
     """
@@ -77,13 +75,20 @@ class SparkMetaConfig(abc.ABCMeta):
                     if 'validators' in attr_value.metadata 
                     else METADATA_TEMPLATE['validators']
                 }
-                attr_value.metadata = {
-                    **METADATA_TEMPLATE, 
-                    **(attr_value.metadata or {}), 
-                    **valid_types, 
-                    **validators
-                }
-                field = attr_value
+                field = dc.field(
+                    default=attr_value.default,
+                    default_factory=attr_value.default_factory,
+                    init=attr_value.init,
+                    repr=attr_value.repr,
+                    hash=attr_value.hash,
+                    compare=attr_value.compare,
+                    metadata={
+                        **METADATA_TEMPLATE, 
+                        **(attr_value.metadata or {}), 
+                        **valid_types, 
+                        **validators
+                    },
+                )
 
             # If is not field, promote to field
             else:
@@ -101,49 +106,13 @@ class SparkMetaConfig(abc.ABCMeta):
 
         # Create the dataclass
         new_class = super().__new__(cls, name, bases, dct)
-        new_dataclass = dc.dataclass(new_class, kw_only=True, init=False)
-        return new_dataclass
+
+        return new_class
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# TODO: The Mutable-Frozen pattern for configuration objects can be improved. 
-# Option 1) Use a simple frozen dataclass and replace it every time with .replace, this may be quite annoying on the SparkGraph, 
-#           and may require some updates to the meta class to avoid a lot of extra decorators.
-# Option 2) Replace this class for an improved version of the freeze function, that cast config to a dynamically generated dataclass. 
-# Option 3) Custom dataclass, a mixture of 1 and 2
-
-@jax.tree_util.register_static
-@dc.dataclass(init=False, frozen=True, kw_only=True)
-class FrozenSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
-    """
-        Frozen class for module configuration compatible with JIT.
-    """
-
-    def __init__(self, spark_config: SparkConfig):
-        if not issubclass(type(spark_config), BaseSparkConfig):
-            raise TypeError(f'"spark_config" must be of a subclass of "BaseSparkConfig", got "{type(spark_config).__name__}"')
-        
-        # Get type hints
-        type_hints = tp.get_type_hints(spark_config.__class__)
-        for key in type_hints.keys():
-            if tp.get_origin(type_hints[key]): 
-                hints = list(tp.get_args(type_hints[key]))
-                type_hints[key] = (h for h in hints if h is not type(None))
-
-        for field in dc.fields(spark_config):
-            if isinstance(type_hints[field.name], type) and issubclass(type_hints[field.name], BaseSparkConfig):
-                # Freeze configs recursively
-                object.__setattr__(self, f'{field.name}', FrozenSparkConfig(getattr(spark_config, f'{field.name}')))
-            else:
-                # Plain attribute
-                object.__setattr__(self, f'{field.name}', getattr(spark_config, f'{field.name}'))
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-# TODO: For some reason SparkModule stopped recognizing config expected class, now the IDE don't 
-# want to show type hints for configs. This is not a critical error but is quite annoying.
-# The problem seems to be related to the class itself, since any other property is recognized.
-
+@jax.tree_util.register_dataclass
+@dc.dataclass(init=False, kw_only=True)
 class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
     """
         Base class for module configuration.
@@ -151,14 +120,16 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
     __config_delimiter__: str = '__'
     __shared_config_delimiter__: str = '_s_'
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        dc.dataclass(cls, init=False, kw_only=True)
+
     def __init__(self, **kwargs):
         # Fold kwargs
         kwargs_fold, shared_partial = self._fold_partial(self, kwargs)
         # Set attributes programatically
         self._set_partial_attributes(kwargs_fold, shared_partial)
         self.__post_init__()
-
-
 
     @classmethod
     def _create_partial(cls, **kwargs):
@@ -184,7 +155,17 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 # Field is another SparkConfig use create partial recursively.
                 # TODO: We need a way to distuinguish when to use the field_type and when to use the default_factory
                 try:
-                    setattr(instance, field.name, field.default_factory._create_partial(**kwargs))
+                    factory = field.default_factory
+                    if not factory or factory is dc.MISSING:
+                        raise ValueError(
+                            f'Configuration class does not define a default_factory for Subconfig: \"{field.name}\".'
+                        )
+                    if not isinstance(factory, type) or not issubclass(factory, BaseSparkConfig):
+                        raise TypeError(
+                            f'Configuration class defines default_factory for Subconfig: \"{field.name}\" '
+                            f'expected factory of type \"{BaseSparkConfig.__name__}\" but got {factory}.'
+                        )
+                    setattr(instance, field.name, factory._create_partial(**kwargs))
                 except:
                     setattr(instance, field.name, field_type._create_partial(**kwargs))
             elif field.default_factory is not dc.MISSING:
@@ -244,11 +225,11 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             # Add shared keys to current level and all its childs
             for s_key, value in shared_partial.items():
                 fold_partial[s_key] = value
-            #for key in fold_partial.keys():
-            #    if isinstance(fold_partial[key], dict):
-            #        for s_key, value in shared_partial.items():
-            #            # Add __shared_config_delimiter__ to allow for further propagation of the parameter
-            #            fold_partial[key][obj.__shared_config_delimiter__ + s_key] = value
+            for key in fold_partial.keys():
+                if isinstance(fold_partial[key], dict):
+                    for s_key, value in shared_partial.items():
+                        # Add __shared_config_delimiter__ to allow for further propagation of the parameter
+                        fold_partial[key][obj.__shared_config_delimiter__ + s_key] = value
         
         return fold_partial, shared_partial
 
@@ -268,7 +249,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
             # Parse field name, remove __shared_config_delimiter__ if present
             if self.__shared_config_delimiter__ == field.name[:len(self.__shared_config_delimiter__)]:
-                field_name = key[len(self.__shared_config_delimiter__):]
+                field_name = field.name[len(self.__shared_config_delimiter__):]
             else:
                 field_name = field.name
 
@@ -387,14 +368,17 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 f'To prevent errors impute the class manually. Alternatively, update the name '
                 f'of one of the classes to avoid overlappings (not recommended).'
             )
-        if not (module_class_ref or initializer_class_ref):
+        if module_class_ref:
+            class_ref = module_class_ref.class_ref
+        elif initializer_class_ref: 
+            class_ref = initializer_class_ref.class_ref
+        else:
             raise AttributeError(
                 f'Configuration \"{obj.__name__}\" cannot resolve __class_ref__. '
                 f'No Module nor Initializer with the same reference were found. '
                 f'Either rename the configuration object as \"Object.__name__ + Config\" or'
                 f'manually define __class_ref__ using the registry name of the object (default: Object.__name__).'
             )
-        class_ref = module_class_ref.class_ref if module_class_ref else initializer_class_ref.class_ref
         return class_ref
 
 
@@ -408,9 +392,9 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 hints = list(tp.get_args(type_hints[key]))
                 type_hints[key] = (h for h in hints if h is not type(None))
         # TODO: This is a dirty hack around broadcasting shapes to the internal class.
-        for key, value in type_hints.items():
-            if isinstance(value, type) and issubclass(value, Shape):
-                setattr(self, key, Shape(getattr(self, key)))
+        #for key, value in type_hints.items():
+        #    if isinstance(value, type) and issubclass(value, Shape):
+        #        setattr(self, key, Shape(getattr(self, key)))
 
 
 
@@ -456,16 +440,22 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             # Write to file.
             from spark.core.serializer import SparkJSONEncoder
             with open(path, 'w', encoding='utf-8') as json_file:
+                reg = REGISTRY.CONFIG.get_by_cls(self.__class__)
+                if not reg:
+                    raise RuntimeError(
+                        f'Config class \"{self.__class__}\" is not in the registry.'
+                        f'Use the \"register_config\" decorator to add the class to the registry.'
+                    )
                 # Add top config metadata
                 json_dict = {
-                    '__type__': REGISTRY.CONFIG.get_by_cls(self.__class__).name,
+                    '__type__': reg.name,
                     '__cfg__': self.to_dict(),
                 }
                 json.dump(json_dict, json_file, cls=SparkJSONEncoder, indent=4)
             print(f'Successfully exported data to {path}')
         except Exception as e:
             raise Exception(
-                f'ERROR: Could not write file \"{path}\". Reason: {e}'
+                f'ERROR: Could not write file \"{file_path}\". Reason: {e}'
             )
 
 
@@ -496,8 +486,42 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             #return cls.from_dict(data)
         except Exception as e:
             raise Exception(
-                f'ERROR: Could not read file \"{path}\". Reason: {e}'
+                f'ERROR: Could not read file \"{file_path}\". Reason: {e}'
             )
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+# TODO: The Mutable-Frozen pattern for configuration objects can be improved. 
+# Option 1) Use a simple frozen dataclass and replace it every time with .replace, this may be quite annoying on the SparkGraph, 
+#           and may require some updates to the meta class to avoid a lot of extra decorators.
+# Option 2) Replace this class for an improved version of the freeze function, that cast config to a dynamically generated dataclass. 
+# Option 3) Custom dataclass, a mixture of 1 and 2
+
+@jax.tree_util.register_static
+@dc.dataclass(init=False, frozen=True, kw_only=True)
+class FrozenSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
+    """
+        Frozen class for module configuration compatible with JIT.
+    """
+
+    def __init__(self, spark_config: BaseSparkConfig):
+        if not issubclass(type(spark_config), BaseSparkConfig):
+            raise TypeError(f'"spark_config" must be of a subclass of "BaseSparkConfig", got "{type(spark_config).__name__}"')
+        
+        # Get type hints
+        type_hints = tp.get_type_hints(spark_config.__class__)
+        for key in type_hints.keys():
+            if tp.get_origin(type_hints[key]): 
+                hints = list(tp.get_args(type_hints[key]))
+                type_hints[key] = (h for h in hints if h is not type(None))
+
+        for field in dc.fields(spark_config):
+            if isinstance(type_hints[field.name], type) and issubclass(type_hints[field.name], BaseSparkConfig):
+                # Freeze configs recursively
+                object.__setattr__(self, f'{field.name}', FrozenSparkConfig(getattr(spark_config, f'{field.name}')))
+            else:
+                # Plain attribute
+                object.__setattr__(self, f'{field.name}', getattr(spark_config, f'{field.name}'))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

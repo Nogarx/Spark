@@ -24,15 +24,17 @@ class InputInterfaceOutput(tp.TypedDict):
 
 class InputInterfaceConfig(InterfaceConfig):
     pass
+ConfigT = tp.TypeVar("ConfigT", bound=InputInterfaceConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class InputInterface(Interface, abc.ABC):
+class InputInterface(Interface, abc.ABC, tp.Generic[ConfigT]):
     """
         Abstract input interface model.
     """
+    config: ConfigT
 
-    def __init__(self, config: InputInterfaceConfig = None, **kwargs):
+    def __init__(self, config: ConfigT | None = None, **kwargs):
         # Main attributes
         super().__init__(config = config, **kwargs)
 
