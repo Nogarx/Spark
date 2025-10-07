@@ -75,7 +75,24 @@ Design your network's structure, set parameters for each component, and connect 
     </p>
 </div>
 
-Export your model and build it.
+You can start the Graph Editor through the CLI,
+
+```
+editor = spark.GraphEditor()
+editor.launch()
+```
+
+or inside a Notebook!
+
+```
+%gui qt
+editor = spark.GraphEditor()
+if __name__ == "__main__":
+    editor.launch()
+```
+(Note: Currently the editor is in an early stage of development an it is not recommended for building neurons from scratch due to a small latency factor that is introduced when the model is "compiled".)
+
+Afterwards you can simply export your model and build it.
 
 ```
 import spark

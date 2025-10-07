@@ -38,10 +38,6 @@ class Soma(Component, tp.Generic[ConfigT]):
     """
     config: ConfigT
 
-    # Type hints
-    _potential: Variable
-    _shape: Shape
-
     def __init__(self, config: ConfigT | None = None, **kwargs):
         # Initialize super.
         super().__init__(config = config, **kwargs)
@@ -59,12 +55,11 @@ class Soma(Component, tp.Generic[ConfigT]):
         # Initialize variables
         self._potential = Variable(jnp.zeros(self._shape, dtype=self._dtype), dtype=self._dtype)
 
-    @abc.abstractmethod
     def reset(self):
         """
             Resets neuron states to their initial values.
         """
-        pass
+        self._potential.value = jnp.zeros(self._shape, dtype=self._dtype)
 
     @abc.abstractmethod
     def _update_states(self, current: CurrentArray) -> None:

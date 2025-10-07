@@ -77,7 +77,7 @@ class LinearSynapses(Synanpses):
     """
     config: LinearSynapsesConfig
 
-    def __init__(self, config: LinearSynapses = None, **kwargs):
+    def __init__(self, config: LinearSynapses | None = None, **kwargs):
         # Initialize super.
         super().__init__(config=config, **kwargs)
         # Initialize shapes
@@ -107,8 +107,8 @@ class LinearSynapses(Synanpses):
     def get_flat_kernel(self,) -> FloatArray:
         return FloatArray(self.kernel.value.reshape(prod(self._output_shape), prod(self._real_input_shape)))
 
-    def set_kernel(self, new_kernel: FloatArray) -> FloatArray:
-        self.kernel.value = new_kernel
+    def set_kernel(self, new_kernel: FloatArray) -> None:
+        self.kernel.value = new_kernel.value
 
     def _dot(self, spikes: SpikeArray) -> CurrentArray:
         return CurrentArray(jnp.sum(self.kernel.value * spikes.value, axis=self._sum_axes))
