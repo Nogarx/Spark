@@ -7,18 +7,22 @@
         Build, train, and deploy state-of-the-art Spiking Neural Networks with a powerful visual interface and JAX.
     </strong>
     <br/><br/>
+	<!--
     <a href="#">
         <img src="https://img.shields.io/badge/build-passing-brightgreen?style=for-the-badge" alt="Build Status">
     </a>
+	-->
     <a href="#">
         <img src="https://img.shields.io/badge/license-APACHE 2.0-blue?style=for-the-badge" alt="License">
     </a>
     <a href="#">
-        <img src="https://img.shields.io/github/stars/nogarx/spark?style=for-the-badge" alt="GitHub Stars">
+        <img src="https://img.shields.io/github/stars/Nogarx/Spark?style=for-the-badge" alt="GitHub Stars">
     </a>
+	<!--
     <a href="#">
         <img src="https://img.shields.io/pypi/v/spark?style=for-the-badge" alt="PyPI version">
     </a>
+	-->
 </p>
 
 Spark is a next-generation framework designed to simplify and accelerate the research, development, and deployment of non-gradient-base Spiking Neural Networks (SNNs). Our goal is to make SNNs more accessible to researchers, engineers, and enthusiasts by abstracting away boilerplate code and providing intuitive tools for model creation and experimentation, while maintaing state-of-the-art performance.
@@ -123,7 +127,7 @@ out, state = run_model(graph, state, **my_awesome_inputs)
 # State now contains the updated state of the model!.
 ```
 
-There is much more to Spark that what we can show here, if you are ready to learn more you can go to the [tutorial section](https://flax.readthedocs.io/)! 
+There is much more to Spark that what we can show here, if you are ready to learn more you can go to the [tutorial section](https://github.com/Nogarx/Spark/tree/main/tutorials)! 
 
 
 ## Roadmap
