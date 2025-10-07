@@ -32,6 +32,9 @@ def grad(f: tp.Callable[..., tp.Any] | Missing = MISSING,
          allow_int: bool = False,
          reduce_axes: tp.Sequence[AxisName] = (),
          ) -> (tp.Callable[..., tp.Any] | tp.Callable[[tp.Callable[..., tp.Any]], tp.Callable[..., tp.Any]] ):
+    """
+        Wrapper around flax.nnx.grad to simply imports.
+    """
     return nnx.grad(
         f, 
         argnums=argnums, 
@@ -58,6 +61,9 @@ def jit(
         inline: bool = False,
         abstracted_axes: tp.Any | None = None,
         ) -> JitWrapped | tp.Callable[[tp.Callable[..., tp.Any]], JitWrapped]:
+    """
+        Wrapper around flax.nnx.jit to simply imports.
+    """
     return nnx.jit(
         fun, 
         in_shardings=in_shardings, 
@@ -79,6 +85,9 @@ def eval_shape(f: tp.Callable[..., A],
                *args: tp.Any,
                **kwargs: tp.Any,
                ) -> A:
+    """
+        Wrapper around flax.nnx.eval_shape to simply imports.
+    """
     return nnx.eval_shape(f,
                           *args,
                           **kwargs)
@@ -88,6 +97,9 @@ def eval_shape(f: tp.Callable[..., A],
 def split(node: A, 
           *filters: filterlib.Filter
           ) -> tuple[GraphDef[A], GraphState | VariableState, tpe.Unpack[tuple[GraphState | VariableState, ...]],]:
+    """
+        Wrapper around flax.nnx.split to simply imports.
+    """
     return nnx.split(
         node,
         *filters
@@ -100,6 +112,9 @@ def merge(graphdef: GraphDef[A],
           /,
           *states: tp.Any, 
           ) -> A:
+    """
+        Wrapper around flax.nnx.merge to simply imports.
+    """
     return nnx.merge(graphdef,
                      state,
                      *states)

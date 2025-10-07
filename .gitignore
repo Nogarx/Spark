@@ -1,5 +1,6 @@
 notebooks/
 .env2/
+.env_docs/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

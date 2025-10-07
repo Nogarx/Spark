@@ -23,6 +23,10 @@ from spark.nn.interfaces.output.base import OutputInterface, OutputInterfaceConf
 #################################################################################################################################################
 
 class ExponentialIntegratorConfig(OutputInterfaceConfig):
+    """
+        ExponentialIntegrator configuration class.
+    """
+
     num_outputs: int = dc.field(
         metadata = {
             'validators': [

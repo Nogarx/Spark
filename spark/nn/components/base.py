@@ -14,6 +14,9 @@ from spark.core.config import SparkConfig
 #################################################################################################################################################
 
 class ComponentConfig(SparkConfig):
+    """
+       Abstract neuronal component configuration class.
+    """
     pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -22,7 +25,7 @@ ConfigT = tp.TypeVar("ConfigT", bound=ComponentConfig)
 
 class Component(SparkModule, abc.ABC, tp.Generic[ConfigT]):
     """
-        Abstract neruonal component.
+        Abstract neuronal component.
     """
     config: ConfigT
 

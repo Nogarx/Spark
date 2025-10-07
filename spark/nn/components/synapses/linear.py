@@ -25,6 +25,10 @@ from spark.nn.components.synapses.base import Synanpses, SynanpsesConfig
 
 @register_config
 class LinearSynapsesConfig(SynanpsesConfig):
+    """
+        LinearSynapses model configuration class.
+    """
+
     units: Shape = dc.field(
         metadata = {
             'validators': [

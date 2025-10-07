@@ -21,6 +21,10 @@ from spark.nn.interfaces.input.base import InputInterface, InputInterfaceConfig,
 
 @register_config
 class PoissonSpikerConfig(InputInterfaceConfig):
+    """
+        PoissonSpiker model configuration class.
+    """
+
     max_freq: float = dc.field(
         default = 50.0, 
         metadata = {

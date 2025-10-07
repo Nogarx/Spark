@@ -18,7 +18,9 @@ from spark.core.variables import Variable, Constant
 #################################################################################################################################################
 
 class BaseTracer(nnx.Module, abc.ABC):
-	name: str
+	"""
+		Base Tracer class
+	"""
 
 	def __init__(
 			self, 

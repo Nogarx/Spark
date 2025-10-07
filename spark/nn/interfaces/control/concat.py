@@ -19,6 +19,10 @@ from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceC
 
 @register_config
 class ConcatConfig(ControlInterfaceConfig):
+    """
+        Concat configuration class.
+    """
+
     num_inputs: int = dc.field(
         metadata = {
             'validators': [
@@ -80,6 +84,10 @@ class Concat(ControlInterface):
 
 @register_config
 class ConcatReshapeConfig(ConcatConfig):
+    """
+        ConcatReshape configuration class.
+    """
+
     reshape: Shape = dc.field(
         metadata = {
             'validators': [

@@ -24,6 +24,10 @@ from spark.nn.components.learning_rules.base import LearningRule, LearningRuleCo
 
 @register_config
 class ZenkeRuleConfig(LearningRuleConfig):
+    """
+       ZenkeRule configuration class.
+    """
+
     async_spikes: bool = dc.field(
         metadata = {
             'validators': [

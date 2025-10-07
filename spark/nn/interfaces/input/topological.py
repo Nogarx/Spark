@@ -25,6 +25,10 @@ from spark.nn.interfaces.input.linear import LinearSpikerConfig
 
 @register_config
 class TopologicalSpikerConfig(InputInterfaceConfig):
+    """
+        Base TopologicalSpiker configuration class.
+    """
+    
     glue: jax.Array = dc.field(
         default_factory = lambda: jnp.array(0), 
         metadata = {
@@ -78,6 +82,9 @@ class TopologicalSpikerConfig(InputInterfaceConfig):
 
 @register_config
 class TopologicalPoissonSpikerConfig(TopologicalSpikerConfig, PoissonSpikerConfig):
+    """
+        TopologicalPoissonSpiker configuration class.
+    """
     pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -150,6 +157,9 @@ class TopologicalPoissonSpiker(InputInterface):
 
 @register_config
 class TopologicalLinearSpikerConfig(TopologicalSpikerConfig, LinearSpikerConfig):
+    """
+        TopologicalLinearSpiker configuration class.
+    """
     pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

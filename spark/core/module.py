@@ -38,11 +38,17 @@ ConfigT = tp.TypeVar("ConfigT", bound=BaseSparkConfig)
 InputT = tp.TypeVar("InputT")
 
 class ModuleOutput(tp.TypedDict):
+    """
+        Spark module output template
+    """
     pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class SparkMeta(nnx.module.ModuleMeta):
+    """
+        Metaclass for Spark Modules.
+    """
 
     def __new__(mcs, name, bases, dct):
         # Instantiate object
@@ -86,6 +92,9 @@ class SparkMeta(nnx.module.ModuleMeta):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkMeta):
+    """
+        Base class for Spark Modules
+    """
 
     name: str = 'name'
     config: ConfigT
@@ -144,6 +153,9 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
     @classmethod 
     def get_config_spec(cls) -> type[BaseSparkConfig]:
+        """
+            Returns the default configuratio class associated with this module.
+        """
         type_hints = tp.get_type_hints(cls)
         return type_hints['config']
 
@@ -284,6 +296,9 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
 
     def _construct_input_specs(self, abc_args: dict[str, SparkPayload | list[SparkPayload]]) -> dict[str, InputSpec]:
+        """
+            Input spec constructor.
+        """
         # Get default spec from signature. Default specs helps validate the user didn't make a mistake.
         input_specs = sig_parser.get_input_specs(type(self))
         # Validate specs and abc_args match.
@@ -326,7 +341,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
     def _construct_output_specs(self, abc_args: ModuleOutput) -> dict[str, OutputSpec]:
         """
-            Default Output Specs constructor.
+            Output spec constructor.
         """
         # Get default spec from signature.
         output_specs = sig_parser.get_output_specs(type(self))
@@ -388,6 +403,9 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
 
     def get_rng_keys(self, num_keys: int) -> jax.Array | list[jax.Array]:
+        """
+            Generates a new collection of random keys for the JAX's random engine.
+        """
         self.rng.value, *keys = jax.random.split(self.rng.value, num_keys+1)
         if num_keys == 1:
             return keys[0]
@@ -397,6 +415,9 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
     @abc.abstractmethod
     def __call__(self, **kwargs: InputT) -> ModuleOutput:
+        """
+            Execution method.
+        """
         pass
     
 #################################################################################################################################################

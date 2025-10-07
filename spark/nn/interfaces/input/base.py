@@ -16,13 +16,18 @@ from spark.nn.interfaces.base import Interface, InterfaceConfig
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# Generic InputInterface output contract.
 class InputInterfaceOutput(tp.TypedDict):
+    """
+       InputInterface model output spec.
+    """
     spikes: SpikeArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class InputInterfaceConfig(InterfaceConfig):
+    """
+        Abstract InputInterface model configuration class.
+    """
     pass
 ConfigT = tp.TypeVar("ConfigT", bound=InputInterfaceConfig)
 

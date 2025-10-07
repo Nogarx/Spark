@@ -23,6 +23,10 @@ from spark.nn.components.somas.base import Soma, SomaConfig
 
 @register_config
 class ExponentialSomaConfig(SomaConfig):
+    """
+        ExponentialSoma model configuration class.
+    """
+
     potential_rest: float | jax.Array = dc.field(
         default = -60.0, 
         metadata = {
@@ -166,6 +170,9 @@ class ExponentialSoma(Soma):
 
 @register_config
 class RefractoryExponentialSomaConfig(ExponentialSomaConfig):
+    """
+        RefractoryExponentialSoma model configuration class.
+    """
     cooldown: float | jax.Array = dc.field(
         default = 2.0, 
         metadata = {
@@ -260,6 +267,10 @@ class RefractoryExponentialSoma(ExponentialSoma):
 
 @register_config
 class AdaptiveExponentialSomaConfig(RefractoryExponentialSomaConfig):
+    """
+        AdaptiveExponentialSoma model configuration class.
+    """
+
     adaptation_tau: float | jax.Array = dc.field(
         default = 20.0, 
         metadata = {
@@ -370,6 +381,10 @@ class AdaptiveExponentialSoma(RefractoryExponentialSoma):
 
 @register_config
 class SimplifiedAdaptiveExponentialSomaConfig(RefractoryExponentialSomaConfig):
+    """
+        SimplifiedAdaptiveExponentialSoma model configuration class.
+    """
+
     threshold_tau: float | jax.Array = dc.field(
         default = 20.0, 
         metadata = {

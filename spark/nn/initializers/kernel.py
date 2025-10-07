@@ -29,6 +29,10 @@ BASE_SCALE = 3 #3E3
 #################################################################################################################################################
 
 class KernelInitializerConfig(InitializerConfig):
+    """
+        KernelInitializer configuration class.
+    """
+
     name: str = dc.field(
         default = 'sparse_uniform_kernel_initializer', 
         metadata = {
@@ -73,6 +77,10 @@ _KERNEL_CONFIG_REGISTRY: dict[str, type[KernelInitializerConfig]] = {}
 
 @register_config
 class UniformKernelInitializerConfig(KernelInitializerConfig):
+    """
+        UniformKernelInitializer configuration class.
+    """
+
     name: tp.Literal['uniform_kernel_initializer'] = 'uniform_kernel_initializer'
 _KERNEL_CONFIG_REGISTRY['uniform_kernel_initializer'] = UniformKernelInitializerConfig
 
@@ -103,6 +111,10 @@ def uniform_kernel_initializer(config: UniformKernelInitializerConfig) -> Initia
 
 @register_config
 class SparseUniformKernelInitializerConfig(KernelInitializerConfig):
+    """
+        SparseUniformKernelInitializer configuration class.
+    """
+
     name: tp.Literal['sparse_uniform_kernel_initializer'] = 'sparse_uniform_kernel_initializer'
     density: float = dc.field(
         default = 0.2, 

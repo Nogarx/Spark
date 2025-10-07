@@ -35,6 +35,9 @@ class Cache:
 
     @property
     def value(self,) -> ValueSparkPayload:
+        """
+            Current value store in the cache object.
+        """
         return self.payload_type(self.variable.value)
     
     @value.setter
@@ -43,10 +46,16 @@ class Cache:
 
     @property
     def shape(self,) -> tuple[int, ...]:
+        """
+            Shape of the value store in the cache object.
+        """
         return self.variable.value.shape
 
     @property
     def dtype(self,) -> jnp.dtype:
+        """
+            Dtype of the value store in the cache object.
+        """
         return self.variable.value.dtype
 
 #################################################################################################################################################

@@ -23,6 +23,10 @@ from spark.nn.components.somas.base import Soma, SomaConfig
 
 @register_config
 class LeakySomaConfig(SomaConfig):
+    """
+        LeakySoma model configuration class.
+    """
+
     potential_rest: float | jax.Array = dc.field(
         default = -60.0, 
         metadata = {
@@ -137,6 +141,10 @@ class LeakySoma(Soma):
 
 @register_config
 class RefractoryLeakySomaConfig(LeakySomaConfig):
+    """
+        RefractoryLeakySoma model configuration class.
+    """
+
     cooldown: float | jax.Array = dc.field(
         default = 2.0, 
         metadata = {
@@ -223,6 +231,10 @@ class RefractoryLeakySoma(LeakySoma):
 
 @register_config
 class AdaptiveLeakySomaConfig(RefractoryLeakySomaConfig):
+    """
+        AdaptiveLeakySoma model configuration class.
+    """
+
     threshold_tau: float | jax.Array = dc.field(
         default = 20.0, 
         metadata = {

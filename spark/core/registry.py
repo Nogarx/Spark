@@ -178,7 +178,10 @@ class SubRegistry(Mapping):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class Registry():
-
+    """
+        Registry object.
+    """
+    
     def __init__(self):
         self.MODULES = SubRegistry(registry_base_type=validation.DEFAULT_SPARKMODULE_PATH)
         self.PAYLOADS = SubRegistry(registry_base_type=validation.DEFAULT_PAYLOAD_PATH)
@@ -195,6 +198,9 @@ class Registry():
 
 # Default Instance
 REGISTRY = Registry()
+"""
+    Registry singleton.
+"""
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -238,34 +244,59 @@ def create_registry_decorator(
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+
 register_module = create_registry_decorator(
     sub_registry=REGISTRY.MODULES, 
     base_class_name='SparkModule', 
     base_class_path='spark.core.module.SparkModule',
     base_class_abr='spark.nn.Module'
 )
+"""
+    Decorator used to register a new SparkModule. 
+    Note that module must inherit from spark.nn.Module (spark.core.module.SparkModule)
+"""
+
 register_payload = create_registry_decorator(
     sub_registry=REGISTRY.PAYLOADS, 
     base_class_name='SparkPayload', 
     base_class_path='spark.core.payloads.SparkPayload',
     base_class_abr='spark.SparkPayload'
 )
+"""
+    Decorator used to register a new SparkPayload. 
+    Note that module must inherit from spark.SparkPayload (spark.core.payloads.SparkPayload)
+"""
+
 register_initializer = create_registry_decorator(
     sub_registry=REGISTRY.INITIALIZERS, 
     base_class_name='Initializer', 
     base_class_path='spark.nn.initializers.base.Initializer',
 )
+"""
+    Decorator used to register a new Initializer. 
+    Note that module must inherit from spark.nn.initializers.base.Initializer
+"""
+
 register_config = create_registry_decorator(
     sub_registry=REGISTRY.CONFIG, 
     base_class_name='SparkConfig', 
     base_class_path='spark.core.config.BaseSparkConfig',
     base_class_abr='spark.nn.BaseConfig'
 )
+"""
+    Decorator used to register a new SparkConfig. 
+    Note that module must inherit from spark.nn.BaseConfig (spark.core.config.BaseSparkConfig)
+"""
+
 register_cfg_validator = create_registry_decorator(
     sub_registry=REGISTRY.CFG_VALIDATORS, 
     base_class_name='ConfigurationValidator', 
     base_class_path='spark.core.config_validation.ConfigurationValidator',
 )
+"""
+    Decorator used to register a new ConfigurationValidator. 
+    Note that module must inherit from spark.core.config_validation.ConfigurationValidator
+"""
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

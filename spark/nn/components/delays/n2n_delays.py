@@ -26,6 +26,10 @@ from spark.nn.components.delays.n_delays import NDelaysConfig
 
 @register_config
 class N2NDelaysConfig(NDelaysConfig):
+    """
+       N2NDelays configuration class.
+    """
+
     units: Shape = dc.field(
         metadata = {
             'validators': [

@@ -18,13 +18,18 @@ from spark.core.config_validation import TypeValidator
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# Generic Soma output contract.
 class NeuronOutput(tp.TypedDict):
+    """
+       Generic Neuron model output spec.
+    """
     out_spikes: SpikeArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class NeuronConfig(SparkConfig):
+    """
+        Abstract Neuron model configuration class.
+    """
     units: Shape = dc.field(
         metadata = {
             'validators': [
@@ -38,7 +43,7 @@ ConfigT = tp.TypeVar("ConfigT", bound=NeuronConfig)
 
 class Neuron(SparkModule, abc.ABC, tp.Generic[ConfigT]):
     """
-        Abstract neuronal model.
+        Abstract Neuron model.
 
         This is a convenience class used to synchronize data more easily.
         Can be thought as the equivalent of Sequential in standard ML frameworks.

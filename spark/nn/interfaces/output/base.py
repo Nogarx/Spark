@@ -17,13 +17,18 @@ from spark.nn.interfaces.base import Interface, InterfaceConfig
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# Generic OutputInterface output contract.
 class OutputInterfaceOutput(tp.TypedDict):
+    """
+       OutputInterface model output spec.
+    """
     signal: FloatArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class OutputInterfaceConfig(InterfaceConfig):
+    """
+        Abstract OutputInterface model configuration class.
+    """
     pass
 ConfigT = tp.TypeVar("ConfigT", bound=OutputInterfaceConfig)
 
@@ -31,7 +36,7 @@ ConfigT = tp.TypeVar("ConfigT", bound=OutputInterfaceConfig)
 
 class OutputInterface(Interface, abc.ABC, tp.Generic[ConfigT]):
     """
-        Abstract output interface model.
+        Abstract OutputInterface model.
     """
     
     def __init__(self, config: ConfigT | None = None, **kwargs):

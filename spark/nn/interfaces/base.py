@@ -17,11 +17,17 @@ from spark.core.config import SparkConfig
 #################################################################################################################################################
 
 class InterfaceOutput(tp.TypedDict):
+    """
+       Generic Interface model output spec.
+    """
     pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class InterfaceConfig(SparkConfig):
+    """
+       Abstract Interface model configuration class.
+    """
     pass
 ConfigT = tp.TypeVar("ConfigT", bound=InterfaceConfig)
 
@@ -29,7 +35,7 @@ ConfigT = tp.TypeVar("ConfigT", bound=InterfaceConfig)
 
 class Interface(SparkModule, abc.ABC, tp.Generic[ConfigT]):
     """
-        Abstract interface model.
+        Abstract Interface model.
     """
     config: ConfigT
 

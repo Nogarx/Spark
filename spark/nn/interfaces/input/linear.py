@@ -22,6 +22,10 @@ from spark.nn.interfaces.input.base import InputInterface, InputInterfaceConfig,
 
 @register_config
 class LinearSpikerConfig(InputInterfaceConfig):
+    """
+        LinearSpiker model configuration class.
+    """
+    
     tau: float = dc.field(
         default = 100.0, 
         metadata = {

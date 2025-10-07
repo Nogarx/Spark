@@ -13,13 +13,18 @@ from spark.nn.interfaces.base import Interface, InterfaceConfig
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# Generic OutputInterface output contract.
 class ControlInterfaceOutput(tp.TypedDict):
+    """
+       ControlInterface model output spec.
+    """
     output: SparkPayload
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class ControlInterfaceConfig(InterfaceConfig):
+    """
+        Abstract ControlInterface model configuration class.
+    """
     pass
 ConfigT = tp.TypeVar("ConfigT", bound=ControlInterfaceConfig)
 
@@ -27,7 +32,7 @@ ConfigT = tp.TypeVar("ConfigT", bound=ControlInterfaceConfig)
 
 class ControlInterface(Interface, abc.ABC, tp.Generic[ConfigT]):
     """
-        Abstract control flow model.
+        Abstract ControlInterface model.
     """
     config: ConfigT
 
