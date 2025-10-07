@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.specs import InputSpec
 
+import jax
 import jax.numpy as jnp
 import dataclasses as dc
 from spark.core.tracers import Tracer, DoubleTracer
@@ -21,7 +22,7 @@ from spark.nn.components.synapses.linear import LinearSynapses, LinearSynapsesCo
 
 @register_config
 class TracedSynapsesConfig(LinearSynapsesConfig):
-    tau: float = dc.field(
+    tau: float | jax.Array = dc.field(
         default = 5.0, 
         metadata = {
             'units': 'ms',
@@ -31,7 +32,7 @@ class TracedSynapsesConfig(LinearSynapsesConfig):
             ],
             'description': 'Tracer decay constant.',
     })
-    scale: float = dc.field(
+    scale: float | jax.Array = dc.field(
         default = 1.0, 
         metadata = {
             'validators': [
@@ -40,7 +41,7 @@ class TracedSynapsesConfig(LinearSynapsesConfig):
             ],
             'description': 'Tracer spike scaling.',
     })
-    base: float = dc.field(
+    base: float | jax.Array = dc.field(
         default = 0.0, 
         metadata = {
             'validators': [
@@ -61,8 +62,9 @@ class TracedSynapses(LinearSynapses):
             units: Shape
             async_spikes: bool
             kernel_initializer: KernelInitializerConfig
-            tau: float
-            scale: float
+            tau: float | jax.Array
+            scale: float | jax.Array
+            base: float | jax.Array
 
         Input:
             spikes: SpikeArray
@@ -75,7 +77,7 @@ class TracedSynapses(LinearSynapses):
     # Auxiliary type hints
     current_tracer: Tracer
 
-    def __init__(self, config: TracedSynapsesConfig = None, **kwargs):
+    def __init__(self, config: TracedSynapsesConfig | None = None, **kwargs):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
@@ -106,7 +108,7 @@ class TracedSynapses(LinearSynapses):
 
 @register_config
 class DoubleTracedSynapsesConfig(LinearSynapsesConfig):
-    tau_1: float = dc.field(
+    tau_1: float | jax.Array = dc.field(
         default = 5.0, 
         metadata = {
             'units': 'ms',
@@ -116,7 +118,7 @@ class DoubleTracedSynapsesConfig(LinearSynapsesConfig):
             ],
             'description': 'First tracer decay constant.',
     })
-    scale_1: float = dc.field(
+    scale_1: float | jax.Array = dc.field(
         default = 1.0, 
         metadata = {
             'validators': [
@@ -125,7 +127,7 @@ class DoubleTracedSynapsesConfig(LinearSynapsesConfig):
             ],
             'description': 'First tracer spike scaling.',
     })
-    base_1: float = dc.field(
+    base_1: float | jax.Array = dc.field(
         default = 0.0, 
         metadata = {
             'validators': [
@@ -133,7 +135,7 @@ class DoubleTracedSynapsesConfig(LinearSynapsesConfig):
             ],
             'description': 'First tracer rest value.',
     })
-    tau_2: float = dc.field(
+    tau_2: float | jax.Array = dc.field(
         default = 5.0, 
         metadata = {
             'units': 'ms',
@@ -143,7 +145,7 @@ class DoubleTracedSynapsesConfig(LinearSynapsesConfig):
             ],
             'description': 'Second tracer decay constant.',
     })
-    scale_2: float = dc.field(
+    scale_2: float | jax.Array = dc.field(
         default = 1.0, 
         metadata = {
             'validators': [
@@ -152,7 +154,7 @@ class DoubleTracedSynapsesConfig(LinearSynapsesConfig):
             ],
             'description': 'Second tracer spike scaling.',
     })
-    base_2: float = dc.field(
+    base_2: float | jax.Array = dc.field(
         default = 0.0, 
         metadata = {
             'validators': [
@@ -173,10 +175,12 @@ class DoubleTracedSynapses(LinearSynapses):
             units: Shape
             async_spikes: bool
             kernel_initializer: KernelInitializerConfig
-            tau_1: float
-            scale_1: float
-            tau_2: float
-            scale_2: float
+            tau_1: float | jax.Array
+            scale_1: float | jax.Array
+            base_1: float | jax.Array
+            tau_2: float | jax.Array
+            scale_2: float | jax.Array
+            base_2: float | jax.Array
 
         Input:
             spikes: SpikeArray
@@ -189,7 +193,7 @@ class DoubleTracedSynapses(LinearSynapses):
     # Auxiliary type hints
     current_tracer: DoubleTracer
 
-    def __init__(self, config: DoubleTracedSynapsesConfig = None, **kwargs):
+    def __init__(self, config: DoubleTracedSynapsesConfig | None = None, **kwargs):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 

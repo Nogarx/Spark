@@ -29,7 +29,7 @@ class LearningRule(Component, tp.Generic[ConfigT]):
         Abstract learning rule model.
     """
 
-    def __init__(self, config: ConfigT | None = None, **kwargs):
+    def __init__(self, config: ConfigT | None = None, **kwargs) -> None:
         # Initialize super.
         super().__init__(config = config, **kwargs)
 

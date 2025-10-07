@@ -18,7 +18,7 @@ from spark.core.registry import REGISTRY
 REGISTRY._build()
 
 # Editor
-from spark.graph_editor.editor import SparkGraphEditor
+from spark.graph_editor.editor import SparkGraphEditor as GraphEditor
 
 __all__ = [
     'nn', 
@@ -28,7 +28,7 @@ __all__ = [
     'PortSpecs', 'InputSpec', 'OutputSpec', 'PortMap', 'ModuleSpecs',
     'validation',
     'split', 'merge',
-    'SparkGraphEditor',
+    'GraphEditor',
     'register_module', 'register_initializer', 'register_payload', 'register_config', 'register_cfg_validator',
     'REGISTRY',
 ]

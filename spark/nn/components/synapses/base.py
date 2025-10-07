@@ -47,7 +47,7 @@ class Synanpses(Component, tp.Generic[ConfigT]):
         pass
 
     @abc.abstractmethod
-    def set_kernel(self, new_kernel: FloatArray) -> FloatArray:
+    def set_kernel(self, new_kernel: FloatArray) -> None:
         pass
 
     @abc.abstractmethod

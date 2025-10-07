@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.specs import InputSpec
 
+import jax
 import jax.numpy as jnp
 import dataclasses as dc
 from spark.core.tracers import Tracer
@@ -22,7 +23,7 @@ from spark.nn.components.somas.base import Soma, SomaConfig
 
 @register_config
 class LeakySomaConfig(SomaConfig):
-    potential_rest: float = dc.field(
+    potential_rest: float | jax.Array = dc.field(
         default = -60.0, 
         metadata = {
             'units': 'mV',
@@ -31,7 +32,7 @@ class LeakySomaConfig(SomaConfig):
             ], 
             'description': 'Membrane rest potential.',
         })
-    potential_reset: float = dc.field(
+    potential_reset: float | jax.Array = dc.field(
         default = -50.0, 
         metadata = {
             'units': 'mV',
@@ -40,7 +41,7 @@ class LeakySomaConfig(SomaConfig):
             ], 
             'description': 'Membrane after spike reset potential.',
         })
-    potential_tau: float = dc.field(
+    potential_tau: float | jax.Array = dc.field(
         default = 20.0, 
         metadata = {
             'units': 'ms',
@@ -50,7 +51,7 @@ class LeakySomaConfig(SomaConfig):
             ],
             'description': 'Membrane potential decay constant.',
         })
-    resistance: float = dc.field(
+    resistance: float | jax.Array = dc.field(
         default = 100.0,
         metadata = {
             'units': 'MΩ', # [1/µS]
@@ -59,7 +60,7 @@ class LeakySomaConfig(SomaConfig):
             ], 
             'description': 'Membrane resistance.',
         })
-    threshold: float = dc.field(
+    threshold: float | jax.Array = dc.field(
         default = -40.0, 
         metadata = {
             'units': 'mV',
@@ -78,11 +79,11 @@ class LeakySoma(Soma):
 
         Init:
             units: Shape
-            potential_rest: float
-            potential_reset: float
-            potential_tau: float
-            resistance: float
-            threshold: float
+            potential_rest: float | jax.Array
+            potential_reset: float | jax.Array
+            potential_tau: float | jax.Array
+            resistance: float | jax.Array
+            threshold: float | jax.Array
 
         Input:
             in_spikes: SpikeArray
@@ -98,18 +99,12 @@ class LeakySoma(Soma):
     """
     config: LeakySomaConfig
 
-    # Type hints
-    potential_reset: Constant
-    potential_scale: Constant
-    resistance: Constant
-    threshold: Constant
-
-    def __init__(self, config: LeakySomaConfig | None = None, **kwargs):
+    def __init__(self, config: LeakySomaConfig | None = None, **kwargs) -> None:
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
     # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, input_specs: dict[str, InputSpec]):
+    def build(self, input_specs: dict[str, InputSpec]) -> None:
         super().build(input_specs)
         # Initialize variables.
         # Membrane. Substract potential_rest to potential related terms to rebase potential at zero.
@@ -119,12 +114,6 @@ class LeakySoma(Soma):
         self.resistance = Constant(self.config.resistance / 1000.0, dtype=self._dtype) # Current is in pA for stability
         # Threshold.
         self.threshold = Constant(self.config.threshold - self.config.potential_rest, dtype=self._dtype)
-
-    def reset(self) -> None:
-        """
-            Resets component state.
-        """
-        self._potential.value = jnp.zeros_like(self._potential.value, dtype=self._dtype)
 
     def _update_states(self, current: CurrentArray) -> None:
         """
@@ -148,7 +137,7 @@ class LeakySoma(Soma):
 
 @register_config
 class RefractoryLeakySomaConfig(LeakySomaConfig):
-    cooldown: float = dc.field(
+    cooldown: float | jax.Array = dc.field(
         default = 2.0, 
         metadata = {
             'units': 'ms',
@@ -167,12 +156,12 @@ class RefractoryLeakySoma(LeakySoma):
 
         Init:
             units: Shape
-            potential_rest: float
-            potential_reset: float
-            potential_tau: float
-            resistance: float
-            threshold: float
-            cooldown: float
+            potential_rest: float | jax.Array
+            potential_reset: float | jax.Array
+            potential_tau: float | jax.Array
+            resistance: float | jax.Array
+            threshold: float | jax.Array
+            cooldown: float | jax.Array
 
         Input:
             in_spikes: SpikeArray
@@ -188,16 +177,12 @@ class RefractoryLeakySoma(LeakySoma):
     """
     config: RefractoryLeakySomaConfig
 
-    # Type hints
-    cooldown: Constant
-    refractory: Variable
-
-    def __init__(self, config: RefractoryLeakySomaConfig | None = None, **kwargs):
+    def __init__(self, config: RefractoryLeakySomaConfig | None = None, **kwargs) -> None:
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
     # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, input_specs: dict[str, InputSpec]):
+    def build(self, input_specs: dict[str, InputSpec]) -> None:
         super().build(input_specs)
         # Refractory period.
         self.cooldown = Constant(self.config.cooldown, dtype=self._dtype)
@@ -222,8 +207,10 @@ class RefractoryLeakySoma(LeakySoma):
             Compute neuron's spikes.
         """
         # Compute spikes.
-        spikes = jnp.logical_and(jnp.greater(self._potential.value, self.threshold.value), 
-                                 jnp.greater(self.refractory.value, self.cooldown)).astype(self._dtype)
+        spikes = jnp.logical_and(
+            jnp.greater(self._potential.value, self.threshold.value), 
+            jnp.greater(self.refractory.value, self.cooldown)
+        ).astype(self._dtype)
         # Reset neurons.
         self._potential.value = spikes * self.potential_reset + (1 - spikes) * self._potential.value
         # Set neuron refractory period.
@@ -236,7 +223,7 @@ class RefractoryLeakySoma(LeakySoma):
 
 @register_config
 class AdaptiveLeakySomaConfig(RefractoryLeakySomaConfig):
-    threshold_tau: float = dc.field(
+    threshold_tau: float | jax.Array = dc.field(
         default = 20.0, 
         metadata = {
             'units': 'ms',
@@ -246,7 +233,7 @@ class AdaptiveLeakySomaConfig(RefractoryLeakySomaConfig):
             ],
             'description': 'Adaptive action potential threshold decay constant.',
         })
-    threshold_delta: float = dc.field(
+    threshold_delta: float | jax.Array = dc.field(
         default = 100.0, 
         metadata = {
             'units': 'mV',
@@ -265,14 +252,14 @@ class AdaptiveLeakySoma(RefractoryLeakySoma):
 
         Init:
             units: Shape
-            potential_rest: float
-            potential_reset: float
-            potential_tau: float
-            resistance: float
-            threshold: float
-            cooldown: float
-            threshold_tau: float
-            threshold_delta: float
+            potential_rest: float | jax.Array
+            potential_reset: float | jax.Array
+            potential_tau: float | jax.Array
+            resistance: float | jax.Array
+            threshold: float | jax.Array
+            cooldown: float | jax.Array
+            threshold_tau: float | jax.Array
+            threshold_delta: float | jax.Array
 
         Input:
             in_spikes: SpikeArray
@@ -288,15 +275,12 @@ class AdaptiveLeakySoma(RefractoryLeakySoma):
     """
     config: AdaptiveLeakySomaConfig
 
-    # Type hints
-    threshold: Tracer
-
-    def __init__(self, config: AdaptiveLeakySomaConfig | None = None, **kwargs):
+    def __init__(self, config: AdaptiveLeakySomaConfig | None = None, **kwargs) -> None:
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
     # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, input_specs: dict[str, InputSpec]):
+    def build(self, input_specs: dict[str, InputSpec]) -> None:
         super().build(input_specs)
         # Overwrite constant threshold with a tracer.
         self.threshold = Tracer(

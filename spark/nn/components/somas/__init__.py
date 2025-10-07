@@ -8,6 +8,10 @@ from spark.nn.components.somas.exponential import (
     ExponentialSoma, ExponentialSomaConfig,
     RefractoryExponentialSoma, RefractoryExponentialSomaConfig,
     AdaptiveExponentialSoma, AdaptiveExponentialSomaConfig,
+    SimplifiedAdaptiveExponentialSoma, SimplifiedAdaptiveExponentialSomaConfig,
+)
+from spark.nn.components.somas.izhikevich import (
+    IzhikevichSoma, IzhikevichSomaConfig
 )
 
 __all__ = [
@@ -21,4 +25,7 @@ __all__ = [
     'ExponentialSoma', 'ExponentialSomaConfig',
     'RefractoryExponentialSoma', 'RefractoryExponentialSomaConfig',
     'AdaptiveExponentialSoma', 'AdaptiveExponentialSomaConfig',
+    'SimplifiedAdaptiveExponentialSoma', 'SimplifiedAdaptiveExponentialSomaConfig',
+    # Izhikevich
+    'IzhikevichSoma', 'IzhikevichSomaConfig',
 ]
