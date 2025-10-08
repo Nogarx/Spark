@@ -5,7 +5,6 @@ from spark.nn.brain import Brain, BrainConfig
 from spark.nn import interfaces
 from spark.nn import neurons
 from spark.nn import initializers
-from spark.nn.components.base import Component
 import spark.nn.components.somas as somas
 import spark.nn.components.delays as delays
 import spark.nn.components.synapses as synapses
@@ -18,7 +17,6 @@ __all__ = [
     'interfaces', 
     'neurons', 
     'initializers',
-    'Component',
     'somas',
     'delays',
     'synapses',
