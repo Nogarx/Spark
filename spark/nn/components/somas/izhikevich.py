@@ -23,6 +23,10 @@ from spark.nn.components.somas.base import Soma, SomaConfig
 
 @register_config
 class IzhikevichSomaConfig(SomaConfig):
+    """
+        IzhikevichSoma model configuration class.
+    """
+
     potential_rest: float | jax.Array = dc.field(
         default = -65.0, 
         metadata = {

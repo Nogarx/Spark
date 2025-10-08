@@ -1,0 +1,32 @@
+name: "Documentation"
+on: 
+  push:
+    branches:
+      - main
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.13
+  
+    - name: Install Sphinx and Dependencies
+      run: |
+        python -m pip install sphinx sphinx-toolbox pydata-sphinx-theme sphinx-copybutton sphinx-autoapi sphinx_book_theme sphinx-remove-toctrees sphinx-copybutton myst_nb sphinx_design sphinxext-rediraffe
+    - name: Build docs
+      run: |
+        sphinx-build -M html docs/ docs/_build/
+    - name: Deploy Python docs for latest release version - stable
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        folder: docs/_build/html
+        single-commit: true

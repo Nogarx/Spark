@@ -32,6 +32,10 @@ from spark.nn.components.learning_rules.zenke_rule import ZenkeRuleConfig
 
 @register_config
 class LIFNeuronConfig(NeuronConfig):
+    """
+        LIFNeuron configuration class.
+    """
+
     max_delay: float = dc.field(
         default = 0.2, 
         metadata = {

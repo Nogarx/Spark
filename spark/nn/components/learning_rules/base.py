@@ -12,13 +12,18 @@ from spark.nn.components.base import Component, ComponentConfig
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# Generic LearningRule output contract.
 class LearningRuleOutput(tp.TypedDict):
+    """
+       Generic learning rule model output spec.
+    """
     kernel: FloatArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class LearningRuleConfig(ComponentConfig):
+    """
+        Abstract learning rule configuration class.
+    """
     pass
 ConfigT = tp.TypeVar("ConfigT", bound=LearningRuleConfig)
 

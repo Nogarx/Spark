@@ -13,13 +13,18 @@ from spark.core.payloads import SpikeArray, CurrentArray, FloatArray
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# Generic Soma output contract.
 class SynanpsesOutput(tp.TypedDict):
+    """
+       Generic synapses model output spec.
+    """
     currents: CurrentArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class SynanpsesConfig(ComponentConfig):
+    """
+       Abstract synapse model configuration class.
+    """
     pass
 ConfigT = tp.TypeVar("ConfigT", bound=SynanpsesConfig)
 

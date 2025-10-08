@@ -26,6 +26,10 @@ from spark.nn.components.delays.base import Delays, DelaysOutput, DelaysConfig
 
 @register_config
 class NDelaysConfig(DelaysConfig):
+    """
+       NDelays configuration class.
+    """
+
     max_delay: float = dc.field(
         default = 8.0, 
         metadata = {

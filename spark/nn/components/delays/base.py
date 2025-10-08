@@ -13,13 +13,18 @@ from spark.nn.components.base import Component, ComponentConfig
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# Generic Delays output contract.
 class DelaysOutput(tp.TypedDict):
+    """
+       Generic delay model output spec.
+    """
     out_spikes: SpikeArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class DelaysConfig(ComponentConfig):
+    """
+       Base synaptic delay configuration class.
+    """
     pass
 ConfigT = tp.TypeVar("ConfigT", bound=DelaysConfig)
 

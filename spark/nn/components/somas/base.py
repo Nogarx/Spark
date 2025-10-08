@@ -19,14 +19,19 @@ from spark.core.payloads import SpikeArray, CurrentArray, PotentialArray
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# Generic Soma output contract.
 class SomaOutput(tp.TypedDict):
+    """
+       Generic soma model output spec.
+    """
     spikes: SpikeArray
     potentials: PotentialArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class SomaConfig(ComponentConfig):
+    """
+        Abstract soma model configuration class.
+    """
     pass
 ConfigT = tp.TypeVar("ConfigT", bound=SomaConfig)
 

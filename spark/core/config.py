@@ -117,6 +117,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
     """
         Base class for module configuration.
     """
+
     __config_delimiter__: str = '__'
     __shared_config_delimiter__: str = '_s_'
 
@@ -200,6 +201,10 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
     @staticmethod
     def _fold_partial(obj: 'BaseSparkConfig', partial: dict[str, tp.Any]) -> tuple[dict[str, tp.Any], dict[str, tp.Any]]:
+        """
+            Restructures the partial dict, consuming the __config_delimiter__ and __shared_config_delimiter__ 
+            tokens and propagating the information within.
+        """
         fold_partial = {}
         shared_partial = {}
         for key, value in partial.items():
@@ -236,6 +241,9 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
     def _set_partial_attributes(self, kwargs_fold: dict[str, tp.Any], shared_partial: dict[str, tp.Any]) -> None:
+        """
+            Method to recursively set/override the attributes of the configuration instance from a dictionary of values.
+        """
         # Get type hints
         type_hints = tp.get_type_hints(self.__class__)
         for key in type_hints.keys():
@@ -333,6 +341,9 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
     def validate(self,) -> None:
+        """
+            Validates all fields in the configuration class.
+        """
         for field in dc.fields(self):
             for validator in field.metadata.get('validators', []):
                 validator_instance = validator(field)
@@ -341,6 +352,9 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
     def get_metadata(self) -> dict[str, tp.Any]:
+        """
+            Returns all the metadata in the configuration class, indexed by the attribute name.
+        """
         metadata = {}
         for field in dc.fields(self):
             metadata[field.name] = dict(field.metadata)
@@ -350,6 +364,13 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
     @property
     def class_ref(obj: 'BaseSparkConfig') -> type:
+        """
+            Returns the type of the associated Module/Initializer.
+
+            NOTE: It is recommended to set the __class_ref__ to the name of the associated module/initializer
+            when defining custom configuration classes. The current class_ref solver is extremely brittle and
+            likely to fail in many different custom scenarios.
+        """
         # Check for class_ref otherwise try to set it up.
         if getattr(obj, '__class_ref__', None) is None:
             if obj.__class__.__name__[-6:].lower() == 'config':
@@ -430,6 +451,9 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
     def to_file(self, file_path: str) -> None:
+        """
+            Export a config instance from a .scfg file.
+        """
         try:
             # Validate path
             path = pl.Path(file_path)
@@ -462,6 +486,9 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
     @classmethod
     def from_file(cls: type['BaseSparkConfig'], file_path: str) -> None:
+        """
+            Create config instance from a .scfg file.
+        """
         try:
             path = pl.Path(file_path)
             # Validate path

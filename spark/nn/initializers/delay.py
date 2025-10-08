@@ -20,6 +20,10 @@ from spark.nn.initializers.base import Initializer, InitializerConfig
 #################################################################################################################################################
 
 class DelayInitializerConfig(InitializerConfig):
+    """
+        DelayInitializer configuration class.
+    """
+
     name: str = dc.field(
         default = 'uniform_delay_initializer', 
         metadata = {
@@ -53,6 +57,10 @@ _DELAY_CONFIG_REGISTRY: dict[str, type[DelayInitializerConfig]] = {}
 
 @register_config
 class ConstantDelayInitializerConfig(DelayInitializerConfig):
+    """
+        ConstantDelayInitializer configuration class.
+    """
+
     name: tp.Literal['constant_delay_initializer'] = 'constant_delay_initializer'
 _DELAY_CONFIG_REGISTRY['constant_delay_initializer'] = ConstantDelayInitializerConfig
 
@@ -72,6 +80,10 @@ def constant_delay_initializer(config: ConstantDelayInitializerConfig) -> Initia
 
 @register_config
 class UniformDelayInitializerConfig(DelayInitializerConfig):
+    """
+        UniformDelayInitializer configuration class.
+    """
+
     name: tp.Literal['uniform_delay_initializer'] = 'uniform_delay_initializer'
 _DELAY_CONFIG_REGISTRY['uniform_delay_initializer'] = UniformDelayInitializerConfig
 

@@ -22,6 +22,10 @@ from spark.nn.components.synapses.linear import LinearSynapses, LinearSynapsesCo
 
 @register_config
 class TracedSynapsesConfig(LinearSynapsesConfig):
+    """
+        TracedSynapses model configuration class.
+    """
+
     tau: float | jax.Array = dc.field(
         default = 5.0, 
         metadata = {
@@ -108,6 +112,10 @@ class TracedSynapses(LinearSynapses):
 
 @register_config
 class DoubleTracedSynapsesConfig(LinearSynapsesConfig):
+    """
+        DoubleTracedSynapses model configuration class.
+    """
+
     tau_1: float | jax.Array = dc.field(
         default = 5.0, 
         metadata = {

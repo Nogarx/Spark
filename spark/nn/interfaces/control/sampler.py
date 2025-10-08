@@ -22,6 +22,10 @@ from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceC
 
 @register_config
 class SamplerConfig(ControlInterfaceConfig):
+    """
+        Sampler configuration class.
+    """
+    
     sample_size: int = dc.field(
         metadata = {
             'validators': [

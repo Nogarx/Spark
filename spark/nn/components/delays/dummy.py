@@ -21,6 +21,9 @@ from spark.nn.components.delays.base import Delays, DelaysOutput, DelaysConfig
 
 @register_config
 class DummyDelaysConfig(DelaysConfig):
+    """
+       DummyDelays configuration class.
+    """
     pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

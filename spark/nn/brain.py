@@ -22,12 +22,18 @@ from spark.core.config import BaseSparkConfig
 #################################################################################################################################################
 
 class BrainMeta(SparkMeta):
+	"""
+		Brain metaclass.
+	"""
 	pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_config
 class BrainConfig(BaseSparkConfig):
+	"""
+		Configuration class for Brain's.
+	"""
 	input_map: dict[str, InputSpec] = dc.field(
 		metadata = {
 			'description': 'Input map configuration.',
@@ -149,6 +155,9 @@ class Brain(SparkModule, metaclass=BrainMeta):
 
 
 	def _build_modules(self,):
+		"""
+			Construct the modules defined in the modules_map of the configuration class.
+		"""
 		# Construc all modules.
 		for module_name, module_specs in self.config.modules_map.items():
 			setattr(self, module_name, REGISTRY.MODULES.get(module_specs.module_cls.__name__).class_ref(config=module_specs.config))
@@ -162,6 +171,9 @@ class Brain(SparkModule, metaclass=BrainMeta):
 
 	# TODO: I think most of this validation can be moved to BrainConfig
 	def _validate_connections(self,):
+		"""
+			Prevalidates that all modules are reachable.
+		"""
 		# Collect all modules input/output specs.
 		self._modules_input_specs = {}
 		self._modules_output_specs = {}
@@ -250,6 +262,9 @@ class Brain(SparkModule, metaclass=BrainMeta):
 
 
 	def resolve_initialization_order(self,):
+		"""
+			Resolves the initialization order of the modules.
+		"""
 		import networkx as nx
 		# Create directed graph
 		graph = {}
@@ -416,7 +431,7 @@ class Brain(SparkModule, metaclass=BrainMeta):
 
 	def reset(self):
 		"""
-			Resets neuron state to their initial values.
+			Resets all the modules to its initial state.
 		"""
 		# Build components list. TODO: This should be called post init. 
 		if self._neuron_names is not None:
@@ -463,8 +478,11 @@ class Brain(SparkModule, metaclass=BrainMeta):
 		return brain_output
 
 
-
+	# TODO: This needs to be set differently, perhaps through some sort of mask. 
 	def get_spikes_from_cache(self):
+		"""
+			Collect the brain's spikes.
+		"""
 		brain_spikes = {}
 		for module_name in self._modules_list:
 			if 'spikes' in self._cache[module_name]:

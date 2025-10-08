@@ -25,6 +25,7 @@ __all__ = [
     'tracers', 
     'Constant', 'Variable',
     'SparkPayload', 'SpikeArray', 'CurrentArray', 'PotentialArray', 'FloatArray', 'IntegerArray', 'BooleanMask',
+    'Shape', 'ShapeCollection',
     'PortSpecs', 'InputSpec', 'OutputSpec', 'PortMap', 'ModuleSpecs',
     'validation',
     'split', 'merge',

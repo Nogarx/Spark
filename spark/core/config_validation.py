@@ -18,6 +18,9 @@ from spark.core.registry import REGISTRY, register_cfg_validator
 #################################################################################################################################################
 
 class ConfigurationValidator:
+    """
+        Base class for validators for the fields in a SparkConfig.
+    """
 
     def __init__(self, field: dc.Field) -> None:
         self.field = field
@@ -35,6 +38,9 @@ class ConfigurationValidator:
 # TODO: Add support for sensible numpy and jax.numpy validation.
 @register_cfg_validator
 class TypeValidator(ConfigurationValidator):
+    """
+        Validates the type of the field against a set of valid_types defined in the metadata.
+    """
 
     def validate(self, value: tp.Any) -> None:
         # Get and parse valid types.
@@ -90,6 +96,9 @@ class TypeValidator(ConfigurationValidator):
 
 @register_cfg_validator
 class PositiveValidator(ConfigurationValidator):
+    """
+        Validates that the value(s) of the attribute are greater than zero.
+    """
 
     def validate(self, value: tp.Any) -> None:
         if isinstance(value, (int, float)):
@@ -107,6 +116,9 @@ class PositiveValidator(ConfigurationValidator):
 
 @register_cfg_validator
 class BinaryValidator(ConfigurationValidator):
+    """
+        Validates that the value(s) of the attribute are in the set {0,1}.
+    """
 
     def validate(self, value: tp.Any) -> None:
         if isinstance(value, (int, float)):
@@ -126,6 +138,9 @@ class BinaryValidator(ConfigurationValidator):
 
 @register_cfg_validator
 class ZeroOneValidator(ConfigurationValidator):
+    """
+        Validates that the value(s) of the attribute are in the range [0,1].
+    """
 
     def validate(self, value: tp.Any) -> None:
         if isinstance(value, (int, float)):
