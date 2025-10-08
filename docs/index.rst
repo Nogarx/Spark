@@ -33,4 +33,5 @@ Spark API
 
 .. toctree::
    :maxdepth: 5
+   
    autoapi/index
