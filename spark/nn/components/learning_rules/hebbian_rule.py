@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
+
+from numpy import square
 if TYPE_CHECKING:
     from spark.core.specs import InputSpec
 
@@ -125,7 +127,10 @@ class HebbianRule(LearningRule):
         pre_trace = self.pre_trace(pre_spikes.value)
         post_trace = self.post_trace(post_spikes.value)
         # Compute rule
-        dK = self.gamma * (pre_spikes.value * post_trace + pre_trace * post_spikes.value)
+        dK = self.gamma * (
+            jnp.einsum(self._post_pre_prod, post_trace, pre_spikes.value)
+            + jnp.einsum(self._ker_post_prod, pre_trace, post_spikes.value)
+        )
         return current_kernel.value + self._dt * dK
         
     def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, current_kernel: FloatArray) -> LearningRuleOutput:
@@ -181,7 +186,10 @@ class OjaRule(HebbianRule):
         pre_trace = self.pre_trace(pre_spikes.value)
         post_trace = self.post_trace(post_spikes.value)
         # Compute rule
-        dK = self.gamma * (pre_trace * post_spikes.value - current_kernel.value * post_trace**2)
+        dK = self.gamma * (
+            jnp.einsum(self._ker_post_prod, pre_trace, post_spikes.value)
+            - jnp.einsum(self._ker_post_prod, current_kernel.value, jnp.square(post_trace))
+        )
         return current_kernel.value + self._dt * dK
 
 #################################################################################################################################################

@@ -62,7 +62,7 @@ class Sampler(ControlInterface):
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Initialize shapes
-        input_shape = Shape(input_specs['input'].shape)
+        input_shape = Shape(input_specs['inputs'].shape)
         # Initialize variables
         self._indices = Constant(
             jax.random.randint(
@@ -78,12 +78,12 @@ class Sampler(ControlInterface):
     def indices(self,) -> jax.Array:
         return self._indices.value
 
-    def __call__(self, input: SparkPayload) -> ControlInterfaceOutput:
+    def __call__(self, inputs: SparkPayload) -> ControlInterfaceOutput:
         """
             Sub/Super-sample the input stream to get the pre-specified number of samples.
         """
         # Sample
-        sample = type(input)(input.value.reshape(-1)[self.indices])
+        sample = type(inputs)(inputs.value.reshape(-1)[self.indices])
         return {
             'output': sample
         }

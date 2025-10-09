@@ -7,11 +7,13 @@ from __future__ import annotations
 
 import collections.abc
 import typing as tp
+import jax
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+@jax.tree_util.register_pytree_node_class
 class Shape(tuple):
     """
 		Custom tuple subclass that represents the shape of an array or tensor.
@@ -41,8 +43,16 @@ class Shape(tuple):
             'data': self,
         }
 
+    def tree_flatten(self):
+        return ((self), None)
+
+    @classmethod
+    def tree_unflatten(cls, aux_data, children):
+        return cls(*children)
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@jax.tree_util.register_pytree_node_class
 class ShapeCollection(tuple):
     """
         Custom list subclass that represents a collection of shapes.
@@ -61,6 +71,13 @@ class ShapeCollection(tuple):
             '__type__': 'shape_collection',
             'data': self,
         }
+
+    def tree_flatten(self):
+        return ((self), None)
+
+    @classmethod
+    def tree_unflatten(cls, aux_data, children):
+        return cls(*children)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
