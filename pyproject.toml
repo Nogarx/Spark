@@ -23,7 +23,7 @@ dependencies = [
     "PyYAML>=5.4.1",
     "treescope>=0.1.7",
     # flax
-    "flax==0.10.3",
+    "flax>=0.12.0",
     # other requirements
     "networkx>=3.5",
     "PySide6>=6.9.1",
