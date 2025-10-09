@@ -16,6 +16,7 @@ from spark.core.variables import Variable, Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.somas.base import Soma, SomaConfig
+from spark.core.flax_imports import data
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -295,13 +296,14 @@ class AdaptiveLeakySoma(RefractoryLeakySoma):
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         super().build(input_specs)
         # Overwrite constant threshold with a tracer.
-        self.threshold = Tracer(
+        import flax.nnx as nnx
+        self.threshold = data(Tracer(
             self._shape,
             tau=self.config.threshold_tau, 
             base=(self.config.threshold - self.config.potential_rest), 
             scale=self.config.threshold_delta, 
             dt=self._dt, dtype=self._dtype
-        )
+        ))
 
     def reset(self) -> None:
         """

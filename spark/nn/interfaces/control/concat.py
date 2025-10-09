@@ -69,13 +69,13 @@ class Concat(ControlInterface):
                 )
         self.payload_type = payload_type
 
-    def __call__(self, input: list[SparkPayload]) -> ControlInterfaceOutput:
+    def __call__(self, inputs: list[SparkPayload]) -> ControlInterfaceOutput:
         """
             Merge all input streams into a single data output stream.
         """
         # Control flow operation
         return {
-            'output': self.payload_type(jnp.concatenate([x.value.reshape(-1) for x in input]))
+            'output': self.payload_type(jnp.concatenate([x.value.reshape(-1) for x in inputs]))
         }
 
 #################################################################################################################################################
