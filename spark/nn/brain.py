@@ -8,11 +8,11 @@ import jax.numpy as jnp
 import typing as tp
 import dataclasses as dc
 from math import prod
+import spark.core.utils as utils
 from spark.core.cache import Cache
 from spark.core.module import SparkModule, SparkMeta
 from spark.core.specs import PortSpecs, PortMap, OutputSpec, InputSpec, ModuleSpecs
 from spark.core.variables import Variable
-from spark.core.shape import Shape
 from spark.core.payloads import SparkPayload, FloatArray
 from spark.core.registry import register_config, REGISTRY
 from spark.core.config import BaseSparkConfig
@@ -251,7 +251,7 @@ class Brain(SparkModule, metaclass=BrainMeta):
 						output_specs: OutputSpec = getattr(self, port_map.origin).get_output_specs()[port_map.port]
 						shape = output_specs.shape
 				# Normalize and compare shapes.
-				shape = Shape(shape)
+				shape = utils.validate_shape(shape)
 				expected_input_shape = self._modules_input_specs[module_name][port_name].shape
 				if expected_input_shape != shape:
 					raise ValueError(

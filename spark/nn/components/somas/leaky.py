@@ -83,7 +83,7 @@ class LeakySoma(Soma):
         Leaky soma model.
 
         Init:
-            units: Shape
+            units: tuple[int, ...]
             potential_rest: float | jax.Array
             potential_reset: float | jax.Array
             potential_tau: float | jax.Array
@@ -164,7 +164,7 @@ class RefractoryLeakySoma(LeakySoma):
         Leaky soma with refractory time model.
 
         Init:
-            units: Shape
+            units: tuple[int, ...]
             potential_rest: float | jax.Array
             potential_reset: float | jax.Array
             potential_tau: float | jax.Array
@@ -264,7 +264,7 @@ class AdaptiveLeakySoma(RefractoryLeakySoma):
         Adaptive leaky soma model.
 
         Init:
-            units: Shape
+            units: tuple[int, ...]
             potential_rest: float | jax.Array
             potential_reset: float | jax.Array
             potential_tau: float | jax.Array

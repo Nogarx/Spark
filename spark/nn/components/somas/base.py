@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 import abc
 import jax.numpy as jnp
 import typing as tp
-from spark.core.shape import Shape
+import spark.core.utils as utils
 from spark.core.variables import Variable
 from spark.nn.components.base import Component, ComponentConfig
 from spark.core.payloads import SpikeArray, CurrentArray, PotentialArray
@@ -56,7 +56,7 @@ class Soma(Component, tp.Generic[ConfigT]):
     
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
-        self._shape = Shape(input_specs['current'].shape)
+        self._shape = utils.validate_shape(input_specs['current'].shape)
         # Initialize variables
         self._potential = Variable(jnp.zeros(self._shape, dtype=self._dtype), dtype=self._dtype)
 

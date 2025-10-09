@@ -14,12 +14,9 @@ import abc
 import jax.numpy as jnp
 import typing as tp
 import dataclasses as dc
-from spark.core.shape import bShape, Shape
+import spark.core.utils as utils
 from spark.core.payloads import SparkPayload
 from spark.core.registry import REGISTRY
-
-# TODO: Keeping a pair of Mutable-Frozen specs is annoying. This classes need to be consumed by core.specs. 
-# Related to the other to-do entry just above the FrozenSparkConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -49,14 +46,14 @@ class PortSpecEditor(BaseSpecEditor):
         Mutable base specification for a port of an SparkModule.
     """
     payload_type: type[SparkPayload]        
-    shape: bShape | None                  
-    dtype: tp.Any | None                               
-    description: str | None       
+    shape: tuple[int, ...] | list[tuple[int, ...]] | None   
+    dtype: tp.Any | None
+    description: str | None
 
     def __init__(
             self, 
             payload_type: type[SparkPayload],  
-            shape: bShape | None = None, 
+            shape: tuple[int, ...] | list[tuple[int, ...]] | None = None, 
             dtype: tp.Any | None = None,  
             description: str | None = None
         ):
@@ -64,11 +61,14 @@ class PortSpecEditor(BaseSpecEditor):
         # Validate attributes
         if not issubclass(payload_type, SparkPayload):
             raise ValueError(f'Expected "payload_type" of type "SparkPayload", got "{type(payload_type).__name__}".')
-        try:
-            if not shape is None:
-                shape = Shape(shape)
-        except:
-            raise ValueError(f'Expected "shape" of type {bShape.__name__}, got "{type(shape).__name__}".')
+        if shape and utils.is_shape(shape):
+            shape = utils.validate_shape(shape)
+        elif shape and utils.is_list_shape(shape):
+            shape = utils.validate_list_shape(shape)
+        elif shape:
+            raise TypeError(
+                f'Expected "shape" to be broadcastable to \"tuple[int, ...] | list[tuple[int, ...]]\".'
+            )
         if not isinstance(jnp.dtype(dtype), jnp.dtype):
             raise ValueError(f'Expected "dtype" of type {jnp.dtype.__name__}, got  "{type(dtype).__name__}".')
         if not (isinstance(description, str) or description is None):
@@ -94,7 +94,7 @@ class InputSpecEditor(PortSpecEditor):
     def __init__(
             self, 
             payload_type: type[SparkPayload], 
-            shape: bShape, 
+            shape: tuple[int, ...] | list[tuple[int, ...]], 
             dtype: jnp.dtype, 
             is_optional: bool, 
             port_maps: list[PortMap] = [],

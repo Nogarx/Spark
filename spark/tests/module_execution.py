@@ -226,9 +226,11 @@ data_test = [
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-
 @jax.jit
-def run_module_simplified(module, module_inputs) -> tuple[tp.Any, spark.nn.Module]:
+def run_module_simplified(
+        module: spark.nn.Brain, 
+        module_inputs: dict
+    ) -> tuple[tp.Any, spark.nn.Module]:
     s = module(**module_inputs)
     return s, module
 
@@ -249,7 +251,11 @@ def run_jax_jit_simplified(
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.jit
-def run_module_split(graph, state, module_inputs) -> tuple[tp.Any, nnx.GraphState | nnx.VariableState]:
+def run_module_split(
+        graph: nnx.GraphDef, 
+        state: nnx.GraphState | nnx.VariableState, 
+        module_inputs: dict
+    ) -> tuple[tp.Any, nnx.GraphState | nnx.VariableState]:
     module = spark.merge(graph, state)
     s = module(**module_inputs)
     _, state = spark.split((module))

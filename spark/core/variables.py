@@ -10,7 +10,6 @@ import jax.numpy as jnp
 import flax.nnx as nnx
 from typing import Any
 from collections.abc import Iterable
-from spark.core.shape import Shape
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -62,8 +61,8 @@ class Constant:
         return np.array(self.value).astype(dtype if dtype else self.value.dtype)
 
     @property
-    def shape(self) -> Shape:
-        return Shape(self.value.shape)
+    def shape(self) -> tuple[int, ...]:
+        return self.value.shape
 
     @property
     def dtype(self) -> Any:
@@ -187,8 +186,8 @@ class Variable(nnx.Variable):
         return np.array(self.value).astype(dtype if dtype else self.value.dtype)
 
     @property
-    def shape(self) -> Shape:
-        return Shape(self.value.shape)
+    def shape(self) -> tuple[int, ...]:
+        return self.value.shape
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

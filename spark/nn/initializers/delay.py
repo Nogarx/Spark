@@ -10,7 +10,6 @@ import typing as tp
 import dataclasses as dc
 from jax.typing import DTypeLike
 from jax._src import dtypes
-from spark.core.shape import bShape
 from spark.core.registry import register_initializer, register_config
 from spark.core.config_validation import TypeValidator
 from spark.nn.initializers.base import Initializer, InitializerConfig
@@ -72,7 +71,7 @@ def constant_delay_initializer(config: ConstantDelayInitializerConfig) -> Initia
         Builds an initializer that returns a constant positive integer array.
     """
 
-    def init(key: jax.Array, shape: bShape, buffer_size: int) -> Initializer:
+    def init(key: jax.Array, shape: tuple[int, ...], buffer_size: int) -> Initializer:
         return buffer_size * jnp.ones(shape, dtype=dtypes.canonicalize_dtype(config.dtype))
     return init
 
@@ -95,7 +94,7 @@ def uniform_delay_initializer(config: UniformDelayInitializerConfig) -> Initiali
         Builds an initializer that returns positive integers uniformly-distributed random arrays.
     """
 
-    def init(key: jax.Array, shape: bShape, buffer_size: int) -> Initializer:
+    def init(key: jax.Array, shape: tuple[int, ...], buffer_size: int) -> Initializer:
         return jax.random.randint(key, shape, 1, buffer_size, dtype=dtypes.canonicalize_dtype(config.dtype))
     return init
 

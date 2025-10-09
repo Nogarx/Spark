@@ -11,7 +11,7 @@ import jax.numpy as jnp
 import dataclasses as dc
 from math import prod
 import typing as tp
-from spark.core.shape import Shape, Shape
+import spark.core.utils as utils
 from spark.core.payloads import SpikeArray, CurrentArray, FloatArray
 from spark.core.variables import Variable
 from spark.core.registry import register_module, register_config, REGISTRY
@@ -29,12 +29,12 @@ class LinearSynapsesConfig(SynanpsesConfig):
         LinearSynapses model configuration class.
     """
 
-    units: Shape = dc.field(
+    units: tuple[int, ...] = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,
             ], 
-            'description': 'Shape of the postsynaptic pool of neurons.',
+            'description': 'tuple[int, ...] of the postsynaptic pool of neurons.',
         })
     async_spikes: bool = dc.field(
         metadata = {
@@ -62,7 +62,7 @@ class LinearSynapses(Synanpses):
         Output currents are computed as the dot product of the kernel with the input spikes.
 
         Init:
-            units: Shape
+            units: tuple[int, ...]
             async_spikes: bool
             kernel_initializer: KernelInitializerConfig
 
@@ -85,14 +85,14 @@ class LinearSynapses(Synanpses):
         # Initialize super.
         super().__init__(config=config, **kwargs)
         # Initialize shapes
-        self._output_shape = Shape(self.config.units)
+        self._output_shape = utils.validate_shape(self.config.units)
         # Initialize varibles
         self.async_spikes = self.config.async_spikes
         
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
-        self._input_shape = Shape(input_specs['spikes'].shape)
+        self._input_shape = utils.validate_shape(input_specs['spikes'].shape)
         self._real_input_shape = self._input_shape[len(self._output_shape):] if self.async_spikes else self._input_shape
         self._sum_axes = tuple(range(len(self._output_shape), len(self._output_shape)+len(self._real_input_shape)))
         # Initialize varibles

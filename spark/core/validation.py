@@ -130,38 +130,6 @@ def _is_config_instance(obj: tp.Any) -> bool:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def is_shape(obj: tp.Any) -> bool:
-    """
-        Check if an object instance is of 'Shape', i.e., 'tuple[int,...]'.
-
-        Args:
-            obj (tp.Any): The instance to check.
-        Returns:
-            bool: True if the object is an instance of 'Shape', False otherwise.
-    """
-    if isinstance(obj, tuple):
-        if all(isinstance(x, int) for x in obj):    
-            return True
-    return False
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-def is_list_shape(obj: tp.Any) -> bool:
-    """
-        Check if an object instance is of 'list[Shape]', i.e., 'list[tuple[int,...]]'.
-
-        Args:
-            obj (tp.Any): The instance to check.
-        Returns:
-            bool: True if the object is an instance of 'Shape', False otherwise.
-    """
-    if isinstance(obj, list):
-        if all(is_shape(o) for o in obj):
-            return True
-    return False
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
 def is_dict_of(obj: tp.Any, value_cls: type[tp.Any], key_cls: type[tp.Any] = str) -> bool:
     """
         Check if an object instance is of 'dict[key_cls, value_cls]'.

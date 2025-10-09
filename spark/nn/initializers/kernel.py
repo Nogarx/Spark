@@ -10,7 +10,6 @@ import dataclasses as dc
 import typing as tp
 from jax._src import dtypes
 from jax.typing import DTypeLike
-from spark.core.shape import Shape
 from math import prod
 from spark.core.registry import register_initializer, register_config
 from spark.core.config_validation import TypeValidator, ZeroOneValidator, PositiveValidator
@@ -92,7 +91,7 @@ def uniform_kernel_initializer(config: UniformKernelInitializerConfig) -> Initia
         Builds an initializer that returns real uniformly-distributed random arrays.
     """
 
-    def init(key: jax.Array, shape: Shape, input_shape: Shape) -> Initializer:
+    def init(key: jax.Array, shape: tuple[int, ...], input_shape: tuple[int, ...]) -> Initializer:
         _ax_sum = list(range(len(shape[:-len(input_shape)]), len(shape)))
         _ax_transpose = list(range(len(shape[:-len(input_shape)]), len(shape))) +\
                         list(range(len(shape[:-len(input_shape)])))
@@ -134,7 +133,7 @@ def sparse_uniform_kernel_initializer(config: SparseUniformKernelInitializerConf
     """
         Builds an initializer that returns a real sparse uniformly-distributed random arrays.
     """
-    def init(key: jax.Array, output_shape: Shape, input_shape: Shape) -> Initializer:
+    def init(key: jax.Array, output_shape: tuple[int, ...], input_shape: tuple[int, ...]) -> Initializer:
         shape = output_shape + input_shape
         _ax_sum = list(range(len(shape[:-len(input_shape)]), len(shape)))
         _ax_transpose = list(range(len(shape[:-len(input_shape)]), len(shape))) +\

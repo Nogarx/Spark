@@ -10,7 +10,6 @@ import jax
 import jax.numpy as jnp
 import flax.nnx as nnx
 from typing import Any
-from spark.core.shape import bShape, Shape
 from spark.core.variables import Variable, Constant
 
 #################################################################################################################################################
@@ -24,7 +23,7 @@ class BaseTracer(nnx.Module, abc.ABC):
 
 	def __init__(
 			self, 
-			shape: bShape, 
+			shape: tuple[int, ...], 
 			seed: int | None = None, 
 			dtype: Any | None = jnp.float16, 
 			dt: float | None = 1.0,
@@ -36,7 +35,7 @@ class BaseTracer(nnx.Module, abc.ABC):
 		# Initialize super.
 		super().__init__(**kwargs)
 		# Main attributes
-		self.shape = Shape(shape)
+		self.shape = shape
 		self._seed = int.from_bytes(os.urandom(4), 'little') if seed is None else seed
 		self.rng = Variable(jax.random.PRNGKey(self._seed))
 		self._dtype = dtype
@@ -73,7 +72,7 @@ class Tracer(BaseTracer):
 
 	def __init__(
 			self, 
-			shape: bShape, 
+			shape: tuple[int, ...], 
 			tau: jax.Array | float, 
 			scale: jax.Array | float = 1, 
 			base: jax.Array | float = 0,
@@ -111,7 +110,7 @@ class DoubleTracer(BaseTracer):
 
 	def __init__(
 			self, 
-			shape: bShape, 
+			shape: tuple[int, ...], 
 			tau_1: jax.Array | float, 
 			tau_2: jax.Array | float,
 			scale_1: jax.Array | float = 1, 
@@ -188,7 +187,7 @@ class RUTracer(BaseTracer):
 	
 	def __init__(
 			self, 
-			shape: bShape, 
+			shape: tuple[int, ...], 
 			R_tau: jax.Array | float, 
 			U_tau: jax.Array | float, 
 			scale_U: jax.Array | float, 

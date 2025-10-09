@@ -18,7 +18,6 @@ import typing as tp
 from Qt import QtWidgets, QtCore, QtGui
 from NodeGraphQt import NodeGraph, Port
 from spark.core.specs import ModuleSpecs, InputSpec, OutputSpec, PortMap
-from spark.core.shape import Shape
 from spark.nn.brain import BrainConfig
 from spark.graph_editor.utils import MenuTree, JsonEncoder
 from spark.graph_editor.nodes import module_to_nodegraph, SourceNode, SinkNode, AbstractNode, SparkModuleNode
@@ -395,7 +394,7 @@ class SparkGraphEditor:
                 # Source nodes had a single output of the appropiate type
                 input_map[node.NODE_NAME] = InputSpec(
                     payload_type=node.output_specs['value'].payload_type,
-                    shape=node.output_specs['value'].shape if node.output_specs['value'].shape else Shape(1,),
+                    shape=node.output_specs['value'].shape if node.output_specs['value'].shape else (1,),
                     dtype=node.output_specs['value'].dtype if node.output_specs['value'].dtype else jnp.float16,
                     is_optional=False,
                     description=node.output_specs['value'].description,
@@ -421,7 +420,7 @@ class SparkGraphEditor:
                 # Create OutputSpec
                 output_map[origin_name][port_name] = OutputSpec(
                     payload_type=origin_node.output_specs[port_name].payload_type,
-                    shape=origin_node.output_specs[port_name].shape if origin_node.output_specs[port_name].shape else Shape(1,),
+                    shape=origin_node.output_specs[port_name].shape if origin_node.output_specs[port_name].shape else (1,),
                     dtype=origin_node.output_specs[port_name].dtype if origin_node.output_specs[port_name].dtype else jnp.float16,
                     description=origin_node.output_specs[port_name].description,
                 )

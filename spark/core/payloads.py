@@ -10,7 +10,6 @@ import jax
 import jax.numpy as jnp
 import typing as tp
 import dataclasses as dc
-from spark.core.shape import Shape
 from jax.typing import DTypeLike
 
 # TODO: Several parts of this code need to be further validated. 
@@ -62,8 +61,8 @@ class ValueSparkPayload(SparkPayload, abc.ABC):
         return np.array(self.value).astype(dtype if dtype else self.value.dtype)
 
     @property
-    def shape(self) -> Shape:
-        return Shape(self.value.shape)
+    def shape(self) -> tuple[int, ...]:
+        return self.value.shape
 
     @property
     def dtype(self) -> DTypeLike:

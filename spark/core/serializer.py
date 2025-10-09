@@ -12,7 +12,6 @@ import typing as tp
 from jax.typing import DTypeLike
 from spark.core.registry import REGISTRY
 from spark.core.config import BaseSparkConfig
-from spark.core.shape import Shape, ShapeCollection
 from spark.core.specs import PortSpecs, InputSpec, OutputSpec, PortMap, ModuleSpecs
 
 #################################################################################################################################################
@@ -37,39 +36,7 @@ class SparkJSONEncoder(json.JSONEncoder):
 	def iterencode(self, o, _one_shot=False):
 		return super().iterencode(self._preprocess(o), _one_shot)
 
-	def _preprocess(self, obj):
-		# Encode shape
-		if isinstance(obj, Shape):
-			return {
-				'__type__': 'shape',
-				'data': list(obj),
-			}
-		# Encode shape collections
-		if isinstance(obj, ShapeCollection):
-			return {
-				'__type__': 'shape_collection',
-				'data': list(list(o) for o in obj),
-			}
-		elif isinstance(obj, dict):
-			return {k: self._preprocess(v) for k, v in obj.items()}
-		elif isinstance(obj, (list, tuple)):
-			return [self._preprocess(v) for v in obj]
-		else:
-			return obj
-
 	def default(self, obj):
-		# Encode shape
-		if isinstance(obj, Shape):
-			return {
-				'__type__': 'shape',
-				'data': list(obj),
-			}
-		# Encode shape collections
-		if isinstance(obj, ShapeCollection):
-			return {
-				'__type__': 'shape_collection',
-				'data': list(list(o) for o in obj),
-			}
 		# Encode jax arrays
 		if isinstance(obj, jnp.ndarray):
 			return {
@@ -178,12 +145,6 @@ class SparkJSONDecoder(json.JSONDecoder):
 		# Decode jax dtypes
 		if obj.get('__type__') == 'numpy_dtype':
 			return np.dtype(obj.get('name')).type
-		# Decode shapes
-		if obj.get('__type__') == 'shape':
-			return Shape(obj.get('data'))
-		# Decode shape collections
-		if obj.get('__type__') == 'shape_collection':
-			return ShapeCollection(obj.get('data'))
 		# Decode payload and module types
 		if isinstance(obj, dict) and obj.get('__payload_type__'):
 			payload_type: str | None = obj.get('__payload_type__')

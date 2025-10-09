@@ -10,7 +10,6 @@ import inspect
 import typing as tp
 from jax.typing import DTypeLike
 from typing import Protocol, runtime_checkable
-from spark.core.shape import bShape
 from spark.core.config import BaseSparkConfig
 
 #################################################################################################################################################
@@ -32,7 +31,7 @@ class Initializer(Protocol):
     """
 
     @staticmethod
-    def __call__(key: jax.Array, shape: bShape, dtype: DTypeLike = jnp.float16) -> jax.Array:
+    def __call__(key: jax.Array, shape: tuple[int, ...], dtype: DTypeLike = jnp.float16) -> jax.Array:
         raise NotImplementedError
 
 #################################################################################################################################################

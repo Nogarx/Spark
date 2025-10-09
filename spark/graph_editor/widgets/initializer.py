@@ -123,7 +123,7 @@ class QInitializer(SparkQWidget):
             'int': QInt,
             'float': QFloat,
             'str': QString,
-            'Shape': QShape,
+            'tuple': QShape,
             'DTypeLike': QDtype,
             'dict': QDict,
         }

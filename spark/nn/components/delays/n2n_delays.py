@@ -11,10 +11,10 @@ import jax
 import jax.numpy as jnp
 import dataclasses as dc
 import typing as tp
+import spark.core.utils as utils
 from math import prod, ceil
 from spark.core.payloads import SpikeArray
 from spark.core.variables import Variable, Constant
-from spark.core.shape import Shape, Shape
 from spark.core.registry import register_module, register_config, REGISTRY
 from spark.core.config_validation import TypeValidator
 from spark.nn.components.delays.base import Delays, DelaysOutput
@@ -30,7 +30,7 @@ class N2NDelaysConfig(NDelaysConfig):
        N2NDelays configuration class.
     """
 
-    units: Shape = dc.field(
+    units: tuple[int, ...] = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,
@@ -49,7 +49,7 @@ class N2NDelays(Delays):
                  neuron C recieves A's spikes J timesteps later and neuron D recieves A's spikes K timesteps later.
 
         Init:
-            units: Shape
+            units: tuple[int, ...]
             max_delay: int
             delay_kernel_initializer: Initializer
 
@@ -67,9 +67,9 @@ class N2NDelays(Delays):
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
-        self._in_shape = Shape(input_specs['in_spikes'].shape)
-        self.output_shape = Shape(self.config.units)
-        self._kernel_shape = Shape((prod(self.output_shape), prod(self._in_shape)))
+        self._in_shape = utils.validate_shape(input_specs['in_spikes'].shape)
+        self.output_shape = utils.validate_shape(self.config.units)
+        self._kernel_shape = utils.validate_shape((prod(self.output_shape), prod(self._in_shape)))
         self._units = prod(self._in_shape)
         # Initialize varibles
         self.max_delay = self.config.max_delay

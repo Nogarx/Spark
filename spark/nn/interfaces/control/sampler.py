@@ -7,10 +7,10 @@ from __future__ import annotations
 import jax
 import jax.numpy as jnp
 import dataclasses as dc
+import spark.core.utils as utils
 from math import prod
 from spark.core.specs import InputSpec
 from spark.core.variables import Constant
-from spark.core.shape import Shape, Shape
 from spark.core.registry import register_module, register_config
 from spark.core.payloads import SparkPayload
 from spark.core.config_validation import TypeValidator, PositiveValidator
@@ -62,7 +62,7 @@ class Sampler(ControlInterface):
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Initialize shapes
-        input_shape = Shape(input_specs['inputs'].shape)
+        input_shape = utils.validate_shape(input_specs['inputs'].shape)
         # Initialize variables
         self._indices = Constant(
             jax.random.randint(

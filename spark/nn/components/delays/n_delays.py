@@ -11,10 +11,10 @@ import jax
 import jax.numpy as jnp
 import dataclasses as dc
 import typing as tp
+import spark.core.utils as utils
 from math import prod, ceil
 from spark.core.payloads import SpikeArray
 from spark.core.variables import Variable, Constant
-from spark.core.shape import Shape
 from spark.core.registry import register_module, register_config, REGISTRY
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.initializers.delay import DelayInitializerConfig, UniformDelayInitializerConfig
@@ -77,7 +77,7 @@ class NDelays(Delays):
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
-        self._shape = Shape(input_specs['in_spikes'].shape)
+        self._shape = utils.validate_shape(input_specs['in_spikes'].shape)
         self._units = prod(self._shape)
         # Initialize varibles
         self.max_delay = self.config.max_delay

@@ -6,11 +6,11 @@ from __future__ import annotations
 
 import jax.numpy as jnp
 import dataclasses as dc
+import spark.core.utils as utils
 from spark.core.specs import InputSpec
 from spark.core.registry import register_module, register_config
 from spark.core.payloads import SparkPayload
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.core.shape import Shape
 from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceConfig, ControlInterfaceOutput
 
 #################################################################################################################################################
@@ -88,7 +88,7 @@ class ConcatReshapeConfig(ConcatConfig):
         ConcatReshape configuration class.
     """
 
-    reshape: Shape = dc.field(
+    reshape: tuple[int, ...] = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,
@@ -105,7 +105,7 @@ class ConcatReshape(ControlInterface):
 
         Init:
             num_inputs: int
-            reshape: Shape
+            reshape: tuple[int, ...]
             payload_type: type[SparkPayload]
             
         Input:
@@ -120,7 +120,7 @@ class ConcatReshape(ControlInterface):
 		# Initialize super.
         super().__init__(config=config, **kwargs)
         # Intialize variables.
-        self.reshape = Shape(self.config.reshape)
+        self.reshape = utils.validate_shape(self.config.reshape)
         self.num_inputs = self.config.num_inputs
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
