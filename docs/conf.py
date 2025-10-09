@@ -191,6 +191,7 @@ nb_execution_timeout = 100
 # List of patterns, relative to source directory, that match notebook
 # files that will not be executed.
 nb_execution_excludepatterns = [
+   'tutorials/*',
 ]
 
 # -- Options for HTMLHelp output ---------------------------------------------

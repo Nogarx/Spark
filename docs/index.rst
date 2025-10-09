@@ -28,10 +28,12 @@ Spiking neural networks are not special, why should they require special data?!.
 Design complex SNN architectures by dragging, dropping, and connecting pre-built neural components. 
 No coding required for model design.
 
-Spark API
+Contents
 --------
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 1
    
+   tutorials
    autoapi/index
+   
