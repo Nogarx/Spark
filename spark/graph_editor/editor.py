@@ -21,7 +21,6 @@ from spark.core.specs import ModuleSpecs, InputSpec, OutputSpec, PortMap
 from spark.nn.brain import BrainConfig
 from spark.graph_editor.utils import MenuTree, JsonEncoder
 from spark.graph_editor.nodes import module_to_nodegraph, SourceNode, SinkNode, AbstractNode, SparkModuleNode
-#from spark.graph_editor.specs import InputSpecEditor, OutputSpecEditor, PortMap, ModuleSpecsEditor
 from spark.graph_editor.graph import SparkNodeGraph
 from spark.graph_editor.inspector import NodeInspectorWidget
 

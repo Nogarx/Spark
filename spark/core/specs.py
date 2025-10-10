@@ -19,16 +19,12 @@ import spark.core.utils as utils
 import spark.core.validation as validation
 from spark.core.registry import REGISTRY
 
-# TODO: It would be ideal to combine the graph_editor/specs with this file. Both files implement basically the same logic 
-# except that the specs of the editor are mutable. There are more robust patters that would allow the code to be more
-# maintainable. 
-
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
 @jax.tree_util.register_dataclass
-@dc.dataclass(init=False, frozen=True)
+@dc.dataclass(init=False)
 class PortSpecs:
     """
         Base specification for a port of an SparkModule.
@@ -65,10 +61,10 @@ class PortSpecs:
             raise TypeError(
                 f'Expected \"description\" to be of type \"str\" but got "{type(description).__name__}".'
             )
-        object.__setattr__(self, 'payload_type', payload_type)
-        object.__setattr__(self, 'shape', shape)
-        object.__setattr__(self, 'dtype', dtype)
-        object.__setattr__(self, 'description', description)
+        self.payload_type = payload_type
+        self.shape = shape
+        self.dtype = dtype
+        self.description = description
 
     def to_dict(self) -> dict[str, tp.Any]:
         """
@@ -94,7 +90,7 @@ class PortSpecs:
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.tree_util.register_dataclass
-@dc.dataclass(init=False, frozen=True)
+@dc.dataclass(init=False)
 class InputSpec(PortSpecs):
     """
         Specification for an input port of an SparkModule.
@@ -114,7 +110,7 @@ class InputSpec(PortSpecs):
             raise ValueError(
                 f'Expected \"is_optional\" to be of type \"bool\" but got \"{type(is_optional).__name__}\".'
             )
-        object.__setattr__(self, 'is_optional', is_optional)
+        self.is_optional = is_optional
 
     def to_dict(self) -> dict[str, tp.Any]:
         """
@@ -141,7 +137,7 @@ class InputSpec(PortSpecs):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.tree_util.register_dataclass
-@dc.dataclass(frozen=True)
+@dc.dataclass(init=False)
 class OutputSpec(PortSpecs):
     """
         Specification for an output port of an SparkModule.
@@ -163,7 +159,7 @@ class OutputSpec(PortSpecs):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.tree_util.register_dataclass
-@dc.dataclass(init=False, frozen=True)
+@dc.dataclass(init=False)
 class PortMap:
     """
         Specification for an output port of an SparkModule.
@@ -180,8 +176,8 @@ class PortMap:
             raise TypeError(
                 f'Expected "port" to be of type "str" but got "{type(port).__name__}".'
             )
-        object.__setattr__(self, 'origin', origin)
-        object.__setattr__(self, 'port', port)
+        self.origin = origin
+        self.port = port
 
     def to_dict(self) -> dict[str, tp.Any]:
         """
@@ -204,7 +200,7 @@ class PortMap:
 
 # TODO: Inspect for missing mandatory fields.
 @jax.tree_util.register_dataclass
-@dc.dataclass(init=False, frozen=True)
+@dc.dataclass(init=False)
 class ModuleSpecs:
     """
         Specification for SparkModule automatic constructor.
@@ -253,11 +249,10 @@ class ModuleSpecs:
             raise TypeError(
                 f'\"config\" must be of type \"{type_hints['config'].__name__}\" but got \"{type(config).__name__}\".'
             )
-
-        object.__setattr__(self, 'name', name)
-        object.__setattr__(self, 'module_cls', module_cls)
-        object.__setattr__(self, 'inputs', inputs)
-        object.__setattr__(self, 'config', config)
+        self.name = name
+        self.module_cls = module_cls
+        self.inputs = inputs
+        self.config = config
 
     def to_dict(self) -> dict[str, tp.Any]:
         """
