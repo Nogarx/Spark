@@ -9,6 +9,7 @@ import numpy as np
 import jax.numpy as jnp
 import warnings
 import typing as tp
+import spark.core.utils as utils
 from jax.typing import DTypeLike
 from spark.core.registry import REGISTRY
 from spark.core.config import BaseSparkConfig
@@ -86,18 +87,10 @@ class SparkJSONEncoder(json.JSONEncoder):
 				'__type__': 'module_specs',
 				'__data__': obj.to_dict(),
 			}
-		# NOTE: isdtype thinks BaseSparkConfig, PortSpecs, InputSpec, OutputSpec, PortMap and ModuleSpecs are dtypes!. 
-		# isdtype should be the last checks.
-		# Encode jax dtypes
-		if jnp.isdtype(obj, ('numeric', 'bool')):
+		# Encode jax/numpy dtypes
+		if utils.is_dtype(obj):
 			return {
-				'__type__': 'jax_dtype',
-				'name': obj.__name__,
-			}
-		# Encode numpy dtypes
-		if np.isdtype(obj, ('numeric', 'bool')):
-			return {
-				'__type__': 'numpy_dtype',
+				'__type__': 'dtype',
 				'name': obj.__name__,
 			}
 		# Default handler
@@ -139,11 +132,8 @@ class SparkJSONDecoder(json.JSONDecoder):
 		# Decode numpy arrays
 		if obj.get('__type__') == 'numpy_array':
 			return np.array(obj.get('data'), dtype=obj.get('dtype')).reshape(obj.get('shape'))
-		# Decode jax dtypes
-		if obj.get('__type__') == 'jax_dtype':
-			return jnp.dtype(obj.get('name')).type
-		# Decode jax dtypes
-		if obj.get('__type__') == 'numpy_dtype':
+		# Decode numpy/jax dtypes
+		if obj.get('__type__') == 'dtype':
 			return np.dtype(obj.get('name')).type
 		# Decode payload and module types
 		if isinstance(obj, dict) and obj.get('__payload_type__'):

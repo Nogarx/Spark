@@ -128,59 +128,6 @@ def _is_config_instance(obj: tp.Any) -> bool:
     """
     return _is_spark_instance(obj, DEFAULT_CONFIG_PATH)
 
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-def is_dict_of(obj: tp.Any, value_cls: type[tp.Any], key_cls: type[tp.Any] = str) -> bool:
-    """
-        Check if an object instance is of 'dict[key_cls, value_cls]'.
-
-        Args:
-            obj (tp.Any): The instance to check.
-        Returns:
-            bool: True if the object is an instance of 'dict[key_cls, value_cls]', False otherwise.
-    """
-    if not isinstance(key_cls, type):
-        raise TypeError(f'Expected "key_cls" to be of a type but got {key_cls}')
-    if not isinstance(value_cls, type):
-        raise TypeError(f'Expected "value_cls" to be of a type but got {key_cls}')
-    if isinstance(obj, dict):
-        if all(isinstance(k, key_cls) and isinstance(v, value_cls) for k, v in obj.items()):    
-            return True
-    return False
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-def is_list_of(obj: tp.Any, cls: type[tp.Any]) -> bool:
-    """
-        Check if an object instance is of 'list[cls]'.
-
-        Args:
-            obj (tp.Any): The instance to check.
-        Returns:
-            bool: True if the object is an instance of 'list[cls]', False otherwise.
-    """
-    if not isinstance(cls, type):
-        raise TypeError(f'Expected "cls" to be of a type but got {cls}')
-    if isinstance(obj, list):
-        if all(isinstance(x, cls) for x in obj):    
-            return True
-    return False
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-def is_dtype(obj: tp.Any) -> bool:
-    """
-        Check if an object is a 'DTypeLike'.
-
-        Args:
-            obj (tp.Any): The instance to check.
-        Returns:
-            bool: True if the object is a 'DTypeLike', False otherwise.
-    """
-    if isinstance(jnp.dtype(obj), jnp.dtype):
-        return True
-    return False
-
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

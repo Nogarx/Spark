@@ -76,7 +76,7 @@ class MenuTree:
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def _normalize_name(name: str) -> str:
+def _normalize_str(name: str) -> str:
     """
         Converts any string into a consistent lowercase_snake_case format.
     """
@@ -125,7 +125,7 @@ def _normalize_section_header(header: str) -> str:
 
 
     # Normalize for safe-r comparison
-    norm_header = _normalize_name(header)
+    norm_header = _normalize_str(header)
     for suffix in ['_param', '_params', '_parameter', '_parameters']:
         if norm_header.endswith(suffix):
             # Remove the suffix and convert to title case

@@ -12,11 +12,10 @@ if TYPE_CHECKING:
 import jax
 import jax.numpy as jnp
 import typing as tp
-from jax.typing import DTypeLike
 import dataclasses as dc
-
 import spark.core.utils as utils
 import spark.core.validation as validation
+from jax.typing import DTypeLike
 from spark.core.registry import REGISTRY
 
 #################################################################################################################################################
@@ -198,7 +197,6 @@ class PortMap:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# TODO: Inspect for missing mandatory fields.
 @jax.tree_util.register_dataclass
 @dc.dataclass(init=False)
 class ModuleSpecs:
@@ -212,8 +210,6 @@ class ModuleSpecs:
     config: BaseSparkConfig
 
     def __init__(self, name: str, module_cls: type, inputs: dict[str, list[PortMap]], config: BaseSparkConfig) -> None:
-        # TODO: Refactor code to remove lazy imports.
-        from spark.core.registry import REGISTRY
         # Validate module_cls
         if not validation._is_module_type(module_cls):
             raise TypeError(
@@ -242,7 +238,6 @@ class ModuleSpecs:
                     raise TypeError(
                         f'Expected PortMap at value {key} of \"inputs\", but found value \"{inputs[key]}\" of type \"{type(inputs[key]).__name__}\".'
                     )
-        
         # Validate model_config
         type_hints = tp.get_type_hints(module_cls)
         if not isinstance(config, type_hints['config']):

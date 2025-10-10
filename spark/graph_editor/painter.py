@@ -7,7 +7,7 @@ from __future__ import annotations
 import math
 from PySide6 import QtGui, QtCore
 import spark.core.payloads as vars
-from spark.graph_editor.utils import _normalize_name
+from spark.graph_editor.utils import _normalize_str
 from spark.core.payloads import SparkPayload
 
 #################################################################################################################################################
@@ -86,21 +86,21 @@ class Pallete:
 
     pallete = {
         # Triangle
-        _normalize_name(vars.IntegerArray.__name__): make_port_painter(regular_polygon_builder(3)),
+        _normalize_str(vars.IntegerArray.__name__): make_port_painter(regular_polygon_builder(3)),
         # Square
-        _normalize_name(vars.FloatArray.__name__):   make_port_painter(regular_polygon_builder(4)),
+        _normalize_str(vars.FloatArray.__name__):   make_port_painter(regular_polygon_builder(4)),
         # Pentagon
-        _normalize_name(vars.PotentialArray.__name__): make_port_painter(regular_polygon_builder(5)),
+        _normalize_str(vars.PotentialArray.__name__): make_port_painter(regular_polygon_builder(5)),
         # Hexagon
-        _normalize_name(vars.CurrentArray.__name__):  make_port_painter(regular_polygon_builder(6)),
+        _normalize_str(vars.CurrentArray.__name__):  make_port_painter(regular_polygon_builder(6)),
         # Star
-        _normalize_name(vars.SpikeArray.__name__):     make_port_painter(star_builder(points=5, inner_ratio=0.5)),
+        _normalize_str(vars.SpikeArray.__name__):     make_port_painter(star_builder(points=5, inner_ratio=0.5)),
         # Circle
         'default': make_port_painter(lambda rect: QtGui.QPainterPath().addEllipse(rect) or QtGui.QPainterPath()),
     }
 
     def __call__(self, payload: type[SparkPayload]):
-        painter = self.pallete.get(_normalize_name(payload), None)
+        painter = self.pallete.get(_normalize_str(payload), None)
         if painter is None:
             painter = self.pallete['default']
         return painter

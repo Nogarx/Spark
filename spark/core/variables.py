@@ -11,6 +11,10 @@ import flax.nnx as nnx
 from typing import Any
 from collections.abc import Iterable
 
+# TODO: Currently we constraint Constant/Variable to cast everything to arrays. Initially, the plan was to simplify 
+# the use of the class by removing the .value element, however it may be useful to allow for the full
+# flexibility of the original nnx.Variable. 
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
@@ -148,9 +152,6 @@ class Constant:
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# TODO: Currently we constraint Variable to cast everything to arrays. Initially, the plan was to simplify 
-# the use factor of the class by removing the .value element, however it may be useful to allow for the full
-# flexibility of the original nnx.Variable. 
 class Variable(nnx.Variable):
     """
         The base class for all ``Variable`` types.

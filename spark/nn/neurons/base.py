@@ -58,7 +58,10 @@ class Neuron(SparkModule, abc.ABC, tp.Generic[ConfigT]):
         self._units = prod(self.units)
         self._component_names: list[SparkModule] | None = None
 
-    # TODO: This should be called post build. 
+    def _build(self, *abc_args, **kwargs):
+        super()._build(*abc_args, **kwargs)
+        self._build_component_list()
+    
     def _build_component_list(self):
         """
             Inspect the object to collect the names of all child of type Component.
