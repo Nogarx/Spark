@@ -27,6 +27,8 @@ A = tp.TypeVar('A')
 def data(value: A, /) -> A:
     return nnx.data(value)
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def grad(f: tp.Callable[..., tp.Any] | Missing = MISSING,
          *,
          argnums: int | DiffState | tp.Sequence[int | DiffState] = 0,
