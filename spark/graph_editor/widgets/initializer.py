@@ -10,8 +10,8 @@ import typing as tp
 import dataclasses as dc
 from functools import partial
 from Qt import QtCore, QtWidgets, QtGui
-from spark.nn.initializers.delay import DelayInitializerConfig, _DELAY_CONFIG_REGISTRY
-from spark.nn.initializers.kernel import KernelInitializerConfig, _KERNEL_CONFIG_REGISTRY
+from spark.nn.initializers.base import InitializerConfig
+from spark.core.registry import REGISTRY
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 from spark.graph_editor.utils import _to_human_readable
 from spark.graph_editor.widgets.dict import QDict
@@ -32,16 +32,13 @@ class QInitializer(SparkQWidget):
     """
 
     def __init__(self,
-                 initializer_config: KernelInitializerConfig | DelayInitializerConfig,
+                 initializer_config: InitializerConfig,
                  section: QCollapsible,
                  parent: QtWidgets.QWidget = None):
         super().__init__(parent=parent)
         # Config reference 
         self._initializer_config = initializer_config
-        if isinstance(initializer_config, KernelInitializerConfig):
-            self._config_registry = _KERNEL_CONFIG_REGISTRY
-        else:
-            self._config_registry = _DELAY_CONFIG_REGISTRY
+        self._config_registry = REGISTRY.INITIALIZERS
         self._section = section
         self._widgets_map: dict[str, QtWidgets.QWidget] = {}
         # Add layout

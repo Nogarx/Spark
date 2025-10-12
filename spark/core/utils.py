@@ -59,6 +59,35 @@ def get_einsum_labels(num_dims: int, offset: int = 0) -> str:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+def get_axes_einsum_labels(axes: tuple[int, ...], ignore_repeated:bool = False) -> str:
+	"""
+		Generates labels for a generalized dot product using Einstein notation.
+
+		Args:
+			axes: tuple[int, ...], requested dimensions (labels) to generate
+
+		Returns:
+			str, a string with num_dims different labels, skipping the first offset characters 
+	"""
+	
+	if any([ax < 0 for ax in axes]):
+		raise ValueError(
+			f'\"axes\" out of bounds, expected all axis to be positive. '
+		)
+	
+	if any([ax >= len(string.ascii_letters) for ax in axes]):
+		raise ValueError(
+			f'\"axes\" out of bounds, it is only possible to represent up to {len(string.ascii_letters)-1} symbols. '
+			f'If this was intentional consider defining a custom label map.'
+		)
+	if (not ignore_repeated) and len(set(ax for ax in axes)) != len(axes):
+		raise ValueError(
+			f'Requested two labels for the same axis. If this was intended use the flag \"ignore_repeated=True\".'
+		)
+	return ''.join([string.ascii_letters[ax] for ax in axes])
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def validate_shape(obj: tp.Any) -> tuple[int, ...]:
     """
         Verifies that the object is broadcastable to a valid shape (tuple of integers).
@@ -213,6 +242,24 @@ def is_dtype(obj: tp.Any) -> bool:
 	"""
 	try:
 		if np.isdtype(obj, ('numeric', 'bool')):
+			return True
+	except: 
+		pass
+	return False
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def is_float(obj: tp.Any) -> bool:
+	"""
+		Check if an object is a 'DTypeLike'.
+
+		Args:
+			obj (tp.Any): The instance to check.
+		Returns:
+			bool, True if the object is a 'DTypeLike', False otherwise.
+	"""
+	try:
+		if np.isdtype(obj, ('real floating',)):
 			return True
 	except: 
 		pass

@@ -74,7 +74,7 @@ class SubRegistry(Mapping):
             Validate and register new item.
         """
         if self._registry_base_type == validation.DEFAULT_INITIALIZER_PATH:
-            if not validation._is_initializer(cls):
+            if not validation._is_initializer_type(cls):
                 raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
                                 f'"{cls.__name__}" is not a valid Initializer.')
         else:
@@ -179,7 +179,7 @@ class Registry():
         self.MODULES = SubRegistry(registry_base_type=validation.DEFAULT_SPARKMODULE_PATH)
         self.PAYLOADS = SubRegistry(registry_base_type=validation.DEFAULT_PAYLOAD_PATH)
         self.INITIALIZERS = SubRegistry(registry_base_type=validation.DEFAULT_INITIALIZER_PATH)
-        self.CONFIG = SubRegistry(registry_base_type=validation.DEFAULT_INITIALIZER_PATH)
+        self.CONFIG = SubRegistry(registry_base_type=validation.DEFAULT_CONFIG_PATH)
         self.CFG_VALIDATORS = SubRegistry(registry_base_type=validation.DEFAULT_CFG_VALIDATOR_PATH)
 
     def _build(self,):

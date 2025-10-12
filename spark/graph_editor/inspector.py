@@ -12,8 +12,7 @@ import typing as tp
 import jax.numpy as jnp
 from functools import partial
 from Qt import QtCore, QtWidgets, QtGui
-from spark.nn.initializers.delay import DelayInitializerConfig, _DELAY_CONFIG_REGISTRY
-from spark.nn.initializers.kernel import KernelInitializerConfig, _KERNEL_CONFIG_REGISTRY
+from spark.nn.initializers.base import InitializerConfig
 from spark.graph_editor.nodes import AbstractNode, SinkNode, SourceNode, SparkModuleNode
 from spark.graph_editor.utils import _normalize_section_header, _to_human_readable
 from spark.graph_editor.widgets.dict import QDict
@@ -242,16 +241,13 @@ class NodeInspectorWidget(QtWidgets.QWidget):
             subsection = self._get_section(field.name)
             # Add collapsible recursively
             type_hints = tp.get_type_hints(config.__class__)
-            if issubclass(type_hints[field.name], (KernelInitializerConfig, DelayInitializerConfig)):
+            if issubclass(type_hints[field.name], InitializerConfig):
                 # Initialize an initializer config if none is provided
                 class_type = getattr(config, field.name).__class__
-                if class_type in [KernelInitializerConfig, DelayInitializerConfig, type(None)]:
+                if class_type in [InitializerConfig, type(None)]:
                     name_field = {f.name: f for f in dc.fields(type_hints[field.name])}['name']
-                    default_initializer = name_field.default if name_field.default else name_field.metadata['value_options'][0]
-                    if issubclass(type_hints[field.name], KernelInitializerConfig):
-                        default_config = _KERNEL_CONFIG_REGISTRY[default_initializer]()
-                    else: 
-                        default_config = _DELAY_CONFIG_REGISTRY[default_initializer]()
+                    #default_initializer = name_field.default if name_field.default else name_field.metadata['value_options'][0]
+                    default_config = class_type()
                     setattr(config, field.name, default_config)
                 initializer_config = getattr(config, field.name)
                 # Add widget to inspector

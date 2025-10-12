@@ -15,10 +15,11 @@ import spark.core.utils as utils
 from math import prod, ceil
 from spark.core.payloads import SpikeArray
 from spark.core.variables import Variable, Constant
-from spark.core.registry import register_module, register_config, REGISTRY
+from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator
 from spark.nn.components.delays.base import Delays, DelaysOutput
 from spark.nn.components.delays.n_delays import NDelaysConfig
+from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -78,9 +79,17 @@ class N2NDelays(Delays):
         self._padding = (0, num_bytes * 8 - self._units)
         self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
         self._current_idx = Variable(0, dtype=jnp.int32)
+        # Get kernel initializer
+        initializer_cls: type[Initializer] = self.config.delay_initializer.class_ref
+        # Override initializer config
+        initializer = initializer_cls(
+            config=self.config.delay_initializer, 
+            scale=self._buffer_size+1,
+            min_value=1, 
+            dtype=jnp.uint8
+        )
         # Initialize kernel
-        initializer: tp.Callable = REGISTRY.INITIALIZERS[self.config.delay_initializer.name].class_ref(self.config.delay_initializer)
-        delay_kernel = initializer(self.get_rng_keys(1), self._kernel_shape, self._buffer_size)
+        delay_kernel = initializer(self.get_rng_keys(1), self._kernel_shape)
         self.delay_kernel = Constant(delay_kernel, dtype=jnp.uint8)
 
     def reset(self) -> None:

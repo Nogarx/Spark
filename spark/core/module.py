@@ -113,7 +113,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         config_type = resolved_hints.get('config')
         if not config_type or not issubclass(config_type, BaseSparkConfig):
             raise AttributeError('SparkModules must define a valid config: type[BaseSparkConfig] attribute.')
-        cls.default_config = tp.cast(type[ConfigT], config_type)#config_type
+        cls.default_config = tp.cast(type[ConfigT], config_type)
 
 
 
