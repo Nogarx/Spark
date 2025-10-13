@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from spark.core.variables import Shape
     from spark.core.module import SparkModule
     from spark.core.config import BaseSparkConfig
-    from spark.graph_editor.graph import SparkNodeGraph
+    from spark.graph_editor.models.graph import SparkNodeGraph
 
 import abc
 import logging
@@ -18,7 +18,7 @@ from NodeGraphQt import BaseNode
 from spark.core.registry import REGISTRY
 from spark.core.payloads import FloatArray
 from spark.graph_editor.painter import DEFAULT_PALLETE
-from spark.graph_editor.specs import InputSpecEditor, OutputSpecEditor
+from spark.core.specs import InputSpec, OutputSpec
 from spark.core.registry import RegistryEntry
 from spark.core.shape import Shape
 
@@ -33,8 +33,8 @@ class AbstractNode(BaseNode, abc.ABC):
 
     __identifier__ = 'spark'
     NODE_NAME = 'Abstract Node'
-    input_specs: dict[str, InputSpecEditor] = {}
-    output_specs: dict[str, OutputSpecEditor] = {}
+    input_specs: dict[str, InputSpec] = {}
+    output_specs: dict[str, OutputSpec] = {}
     _graph: SparkNodeGraph
 
     def __init__(self,):
@@ -92,7 +92,7 @@ class SourceNode(AbstractNode):
         super().__init__()
         # Delay specs definition for better control.
         self.output_specs = {
-            'value': OutputSpecEditor(
+            'value': OutputSpec(
                 payload_type=FloatArray,
                 shape=None,
                 dtype=jnp.float16,
@@ -121,7 +121,7 @@ class SinkNode(AbstractNode):
         super().__init__()
         # Delay specs definition for better control.
         self.input_specs = {
-            'value': InputSpecEditor(
+            'value': InputSpec(
                 payload_type=FloatArray,
                 shape=None,
                 dtype=jnp.float16,
@@ -153,9 +153,7 @@ class SparkModuleNode(AbstractNode, abc.ABC):
         # Init super
         super().__init__()
         # Add input ports.
-        self.input_specs = {
-            key: InputSpecEditor.from_input_specs(value, []) for key, value in self.module_cls._get_input_specs().items()
-        }
+        self.input_specs = self.module_cls._get_input_specs()
         if isinstance(self.input_specs, dict):
             for key, port_spec in self.input_specs.items():
                 self.add_input(
@@ -164,9 +162,7 @@ class SparkModuleNode(AbstractNode, abc.ABC):
                     painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__)
                 )
         # Add output ports.
-        self.output_specs = {
-            key: OutputSpecEditor.from_output_specs(value) for key, value in self.module_cls._get_output_specs().items()
-        }
+        self.output_specs = self.module_cls._get_output_specs()
         if isinstance(self.output_specs, dict):
             for key, port_spec in self.output_specs.items():
                 self.add_output(

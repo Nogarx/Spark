@@ -12,7 +12,7 @@ from NodeGraphQt import NodeGraph, Port, BaseNode
 from NodeGraphQt.widgets.viewer import NodeViewer
 from spark.core.specs import PortMap
 from spark.core.shape import Shape
-from spark.graph_editor.nodes import SourceNode, SinkNode, AbstractNode
+from spark.graph_editor.models.nodes import SourceNode, SinkNode, AbstractNode
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -98,22 +98,23 @@ class SparkNodeGraph(NodeGraph):
             input_port.disconnect_from(output_port, push_undo=False, emit_signal=False)
             return
         # Update port map.
-        port_map = PortMap(origin=output_node.id, port=output_port.name())
-        input_node.input_specs[input_port.name()].port_maps.append(port_map)
+        #port_map = PortMap(origin=output_node.id, port=output_port.name())
+        #input_node.input_specs[input_port.name()].port_maps.append(port_map)
         # Update port specs.
-        self._update_port_specs(input_port)
+        #self._update_port_specs(input_port)
 
     def _on_port_disconnected(self, input_port: Port, output_port: Port):
         # Get nodes.
         input_node: AbstractNode = input_port.node()
         output_node: AbstractNode = output_port.node()
         # Remove port_map from node.
-        port_map = PortMap(origin=output_node.id, port=output_port.name())
-        input_node.input_specs[input_port.name()].remove_port_map(port_map)
+        #port_map = PortMap(origin=output_node.id, port=output_port.name())
+        #input_node.input_specs[input_port.name()].remove_port_map(port_map)
         # Update port specs.
-        self._update_port_specs(input_port)
+        #self._update_port_specs(input_port)
 
     def _update_port_specs(self, input_port: Port):
+        return
         # Get node
         input_node: AbstractNode = input_port.node()
         # Get connected ports
