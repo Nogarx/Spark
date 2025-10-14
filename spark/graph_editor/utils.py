@@ -18,7 +18,7 @@ from NodeGraphQt import NodeGraphMenu
 
 class MenuTree:
     """
-        A smart wrapper around a NodeGraphMenu that allows for easy, hierarchical creation and access of submenus.
+        A wrapper around a NodeGraphMenu that allows for easy, hierarchical creation and access of submenus.
     """
     def __init__(self, graph_menu: NodeGraphMenu):
         if not isinstance(graph_menu, NodeGraphMenu):

@@ -187,7 +187,7 @@ def module_to_nodegraph(entry: RegistryEntry) -> type[SparkModuleNode]:
     # Create the new class on the fly.
     module_cls: type[SparkModule] = entry.class_ref
     nodegraph_class = type(
-        f'_NG_{module_cls.__name__}',
+        f'{module_cls.__name__}',
         (SparkModuleNode,),
         {
             '__identifier__': f'spark',

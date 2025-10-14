@@ -6,62 +6,174 @@ from __future__ import annotations
 
 import os
 import sys
+import warnings
 import typing as tp
-from Qt import QtWidgets, QtCore, QtGui
+from PySide6 import QtWidgets, QtCore, QtGui
+import PySide6QtAds as ads
 
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 from spark.graph_editor.ui.menu_bar import MenuBar
 from spark.graph_editor.ui.status_bar import StatusBar
 from spark.graph_editor.ui.graph_panel import GraphPanel
-from spark.graph_editor.ui.console_panel import ConsolePanel
-from spark.graph_editor.ui.inspector_panel import InspectorPanel
-from spark.graph_editor.ui.parameters_panel import ParametersPanel
+from spark.graph_editor.widgets.dock_panel import QDockPanel
 
+from spark.graph_editor.ui.inspector_panel import InspectorPanel
+
+# NOTE: Small workaround to at least have base autocompletion.
+if tp.TYPE_CHECKING:
+    CDockWidget = QtWidgets.QWidget
+else:
+    CDockWidget = ads.CDockWidget
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class SparkGraphEditor:
+class EditorWindow(QtWidgets.QMainWindow):
 
-    # Singletons.
-    app = None
-    window = None
-    graph = None
-    inspector = None
-    _current_session_path = None
-    _current_model_path = None
+    __layout_file__: str = 'layout.xml'
+    windowClosed = QtCore.Signal() 
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        # Header
+        self.setWindowTitle('Spark Graph Editor')
+        # Create the docking manager and set it as central container
+        self.dock_manager = ads.CDockManager(self)
+        self.setCentralWidget(self.dock_manager)
+        
+    def add_dock_widget(self, area: ads.DockWidgetArea, dock_widget: CDockWidget) -> ads.CDockAreaWidget:
+        out_area = self.dock_manager.addDockWidget(area, dock_widget)
+        return out_area
+
+    # TODO: Figure out how to safely restore the layout. Currently trying to restore the layout state crashes the app.
+    def closeEvent(self, event):
+        #self.save_layout()
+        super().closeEvent(event)
+        self.windowClosed.emit()
+
+    def save_layout(self):
+        """
+            Save current layout.
+        """
+        try:
+            settings = QtCore.QSettings('userPrefs.ini', QtCore.QSettings.IniFormat)
+            settings.setValue('dock_manager', self.dock_manager.saveState())
+        except Exception as e:
+            warnings.warn(f'Error saving layout: {e}')
+
+    def restore_layout(self):
+        """
+            Try restoring the previous layout.
+        """
+        if os.path.exists(self.__layout_file__):
+            try:
+                settings = QtCore.QSettings('userPrefs.ini', QtCore.QSettings.IniFormat)
+                self.dock_manager.restoreState(settings.value('dock_manager').toByteArray())
+                print("Layout restored.")
+            except Exception as e:
+                warnings.warn(f'Error restoring layout: {e}')
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class SparkGraphEditor:
 
     def __init__(self):
         # QApplication instance.
-        if SparkGraphEditor.app is None:
-            SparkGraphEditor.app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
+        self.app = QtWidgets.QApplication.instance()
+        if self.app is None:
+            self.app = QtWidgets.QApplication(sys.argv)
+        # Check if the editor was launched in the CLI or is using IPykernel
+        self._is_interactive = 'ipykernel' in sys.modules
+        if self._is_interactive:
+            # Integrate Qt event loop so we don't call exec()
+            try:
+                from IPython import get_ipython
+                get_ipython().enable_gui('qt')
+            except Exception:
+                # some rare IPython shells may not support enable_gui; ignore
+                pass
+
+    def launch(self) -> None:
+        """
+            Creates and shows the editor window without blocking.
+            This method is safe to call multiple times.
+        """
+        # If a previous window exists, explicitly delete it (safe)
+        if getattr(self, 'window', None):
+            self.window.close()
+            self.window.deleteLater()
+            del self.window
 
         # Create base window.
-        window = QtWidgets.QMainWindow()
-        window.setWindowTitle('Spark Graph Editor')
-        window.resize(1366, 768)
+        self.window = EditorWindow()
+        self.window.windowClosed.connect(self._on_window_closed)
+        # Default layout
+        self._setup_layout()
+        # General style
+        self.window.setStyleSheet(
+            f"""
+                color: {GRAPH_EDITOR_CONFIG.default_font_color};
+            """
+        )
+        self.window.showMaximized()
 
-        window.setMenuBar(MenuBar())
+        # Start loop if instance is not being run in a notebook
+        if not self._is_interactive:
+            # TODO: This should not terminate python shells.
+            sys.exit(self.app.exec_())
+        else:
+            # TODO: This is a workaround to prevent bugs when using launch twice on the same editor instance. 
+            # This, however, is not a nice approach and throws some errors in a IPykernel. Moreover, it leaves
+            # an ugly 'X' symbol on the terminal suggesting that the app failed: unacceptable (╯`Д´)╯︵ ┻━┻.
+            pass
+            #code = self.app.exec_()
+            #import warnings
+            #from IPython import get_ipython
+            #warnings.filterwarnings("ignore", message="To exit: use 'exit', 'quit', or Ctrl-D.")
+            #ip = get_ipython()
+            #if ip is not None:
+            #    ip._showtraceback = lambda *a, **k: None
+            #raise SystemExit(code)
 
-        parameters_panel = ParametersPanel(parent=window)
-        window.addDockWidget(GRAPH_EDITOR_CONFIG.parameters_panel_pos, parameters_panel)
 
-        inspector_panel = InspectorPanel(parent=window)
-        window.addDockWidget(GRAPH_EDITOR_CONFIG.inspector_panel_pos, inspector_panel)
+    def _on_window_closed(self,) -> None:
+        if not self._is_interactive:
+            self.app.quit()
 
-        console_panel = ConsolePanel(parent=window)
-        window.addDockWidget(GRAPH_EDITOR_CONFIG.console_panel_pos, console_panel)
+    def _setup_layout(self,) -> None:
+        """
+            Initialize the default window layout.
+        """
+        # Main panel
+        self.graph_panel = GraphPanel(parent=self.window)
+        self.window.dock_manager.setCentralWidget(self.graph_panel)
+        self.graph_panel._debug_model()
+        # Menu bar
+        self.menu_bar = MenuBar()
+        self.window.setMenuBar(self.menu_bar)
+        # Console panel
+        console_panel = QDockPanel('Console', parent=self.window)
+        self.window.add_dock_widget(GRAPH_EDITOR_CONFIG.console_panel_pos, console_panel)
+        # Nodes
+        self.nodes_panel = QDockPanel('Nodes', parent=self.window)
+        left_panel = self.window.add_dock_widget(GRAPH_EDITOR_CONFIG.nodes_panel_pos, self.nodes_panel)
+        # Parameters
+        self.parameters_panel = QDockPanel('Parameters', parent=self.window)
+        left_panel.addDockWidget(self.parameters_panel)
+        left_panel.setCurrentIndex(0)
+        # Inspector
+        self.inspector_panel = InspectorPanel(parent=self.window)
+        self.window.add_dock_widget(GRAPH_EDITOR_CONFIG.inspector_panel_pos, self.inspector_panel)
+        # Status bar
+        self.status_bar = StatusBar()
+        self.window.setStatusBar(self.status_bar)
+        # Setup events
+        self._setup_events()
 
-        window.setStatusBar(StatusBar())
+    def _setup_events(self,):
+        self.graph_panel.graph.node_selection_changed.connect(self.inspector_panel.on_graph_selection_update)
 
-        graph_panel = GraphPanel(parent=window)
-        window.setCentralWidget(graph_panel)
-
-        window.setCorner(QtCore.Qt.Corner.BottomLeftCorner, QtCore.Qt.DockWidgetArea.LeftDockWidgetArea)
-        window.setCorner(QtCore.Qt.Corner.BottomRightCorner, QtCore.Qt.DockWidgetArea.RightDockWidgetArea)
-
-        SparkGraphEditor.window = window
 
     def _get_styles(self,):
         import os
@@ -74,27 +186,6 @@ class SparkGraphEditor:
             with open(p, 'r') as f:
                 style = style + f.read()
         return style
-
-    def launch(self) -> None:
-        """
-            Creates and shows the editor window without blocking.
-            This method is safe to call multiple times.
-        """
-        if self.window.isVisible():
-            self.window.activateWindow()
-            self.window.raise_()
-        else:
-            self.window.show()
-        if not self.is_interactive():
-            sys.exit(SparkGraphEditor.app.exec_())
-
-    def is_interactive(self,):
-        """
-            Check if the script is running in an interactive environment
-            (like a Jupyter notebook or IPython console).
-        """
-        import __main__ as main
-        return not hasattr(main, '__file__')
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

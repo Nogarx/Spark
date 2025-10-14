@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from Qt import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets, QtGui
 from spark.core.shape import Shape
 from spark.graph_editor.widgets.line_edits import QIntLineEdit
 from spark.graph_editor.widgets.base import SparkQWidget

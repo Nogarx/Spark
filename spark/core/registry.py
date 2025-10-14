@@ -14,8 +14,9 @@ if TYPE_CHECKING:
 import logging
 import dataclasses as dc
 import typing as tp
+import copy
 from collections.abc import Mapping, ItemsView
-from spark.core.utils import normalize_name
+from spark.core.utils import normalize_str
 import spark.core.validation as validation
 
 #################################################################################################################################################
@@ -49,7 +50,7 @@ class SubRegistry(Mapping):
     def __getitem__(self, key: str) -> RegistryEntry:
         if not self.__built__:
             raise RuntimeError('Registry is not build yet.')
-        return self._registry[key]
+        return copy.deepcopy(self._registry[key])
 
     def __iter__(self) -> tp.Iterator[str]:
         if not self.__built__:
@@ -98,7 +99,7 @@ class SubRegistry(Mapping):
                 if not isinstance(p, str):
                     raise TypeError(f'Expect path to be a list of str but found item of type {type(p).__name__}.')
         # Register
-        name = normalize_name(name)
+        name = normalize_str(name)
         path = self._get_default_path(cls) if path is None else path
         self._leaf_class.add(cls.__name__)
         self._registry[name] = RegistryEntry(name=name, class_ref=cls, path=path)
@@ -123,7 +124,7 @@ class SubRegistry(Mapping):
             Safely retrieves a component entry by name.
         """
         if self.__built__:
-            return self._registry.get(normalize_name(name), default)
+            return self._registry.get(normalize_str(name), default)
         else: 
             raise RuntimeError(f'Registry is not yet built. Registry must be built first before trying to access it.')
 

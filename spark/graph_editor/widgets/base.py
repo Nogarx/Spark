@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import abc
 import typing as tp
-from Qt import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 
 #################################################################################################################################################
@@ -29,8 +29,12 @@ class SparkQWidget(QtWidgets.QFrame, abc.ABC, metaclass=SparkQWidgetMeta):
         super().__init__(*args, **kwargs)
         # Style
         self.setContentsMargins(GRAPH_EDITOR_CONFIG.field_margin)
-        self.setStyleSheet(f'background-color: {GRAPH_EDITOR_CONFIG.field_bg_color};\
-                             border-radius: {GRAPH_EDITOR_CONFIG.field_border_radius}px;')
+        self.setStyleSheet(
+            f"""
+                background-color: {GRAPH_EDITOR_CONFIG.field_bg_color};
+                border-radius: {GRAPH_EDITOR_CONFIG.field_border_radius}px;
+            """
+        )
 
     @abc.abstractmethod
     def get_value(self,) -> tp.Any:

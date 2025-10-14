@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import jax.numpy as jnp
 import typing as tp
-from Qt import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets, QtGui
 from spark.graph_editor.widgets.base import SparkQWidget
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 from spark.graph_editor.utils import _to_human_readable

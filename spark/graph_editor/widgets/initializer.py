@@ -9,7 +9,7 @@ import jax.numpy as jnp
 import typing as tp
 import dataclasses as dc
 from functools import partial
-from Qt import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets, QtGui
 from spark.nn.initializers.delay import DelayInitializerConfig, _DELAY_CONFIG_REGISTRY
 from spark.nn.initializers.kernel import KernelInitializerConfig, _KERNEL_CONFIG_REGISTRY
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG

@@ -7,7 +7,7 @@ from __future__ import annotations
 import typing as tp
 import dataclasses as dc
 import Qt
-from Qt import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets, QtGui
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

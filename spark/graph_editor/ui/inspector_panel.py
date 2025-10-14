@@ -5,52 +5,56 @@
 from __future__ import annotations
     
 import typing as tp
-import dataclasses as dc
-import Qt
-from Qt import QtCore, QtWidgets, QtGui
+from PySide6 import QtWidgets, QtCore, QtGui
 
-from spark.graph_editor.widgets.title_bar import DockTitleBar
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
+from spark.graph_editor.widgets.dock_panel import QDockPanel
+from spark.graph_editor.widgets.inspector_idle import InspectorIdleWidget
+from spark.graph_editor.widgets.node_config import QNodeConfig
+from spark.graph_editor.models.nodes import AbstractNode
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class InspectorPanel(QtWidgets.QDockWidget):
+class InspectorPanel(QDockPanel):
     """
-        Container for the Inspector (Node description).
+        Generic dockable panel.
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.setAllowedAreas(
-            QtCore.Qt.DockWidgetArea.LeftDockWidgetArea | QtCore.Qt.DockWidgetArea.RightDockWidgetArea
-        )
-        # Header
-        self.setTitleBarWidget(DockTitleBar('Inspector'))
-        # Main layout
-        layout = QtWidgets.QHBoxLayout(self)
-        layout.setContentsMargins(6, 2, 6, 2)
-        layout.setSpacing(6)
-        layout.addStretch()
-        self.setLayout(layout)
+    def __init__(self, name: str = 'Inspector', parent: QtWidgets.QWidget = None, **kwargs) -> None:
+        super().__init__(name, parent=parent, **kwargs)
+        self._target_node = None
 
-        label = QtWidgets.QLabel('TEST')
-        self.layout().addWidget(label)
+    def on_graph_selection_update(self, new_selection: list[AbstractNode], previous_selection: list[AbstractNode]) -> None:
+        """
+            Event handler for graph selections.
+        """
+        if len(new_selection) == 1:
+            self.set_node(new_selection[0])
+        else: 
+            self.set_node(None)
 
-        self.setObjectName('QDockWidget')
-        self.setStyleSheet(
-            f"""
-                QWidget#QDockWidget>QWidget {{
-                    background-color: {GRAPH_EDITOR_CONFIG.primary_bg_color};
-                    font-size: {GRAPH_EDITOR_CONFIG.medium_font_size}px;
-                    padding: 2px;
-                    border-width: 1px;
-                    border-style: solid;
-                    border-color: {GRAPH_EDITOR_CONFIG.border_color};
-                }}
-            """
-        )
+    def set_node(self, node: AbstractNode | None):
+        """
+            Sets the node to be inspected. If the node is None, it clears the inspector.
+            
+            Input:
+                node: The node to inspect, or None to clear.
+        """
+        if self._target_node is node:
+            return
+        self._target_node = node
+        
+        if self._target_node:
+            self.clearWidgets()
+            self.setContent(
+                QNodeConfig(self._target_node)
+            )
+        else:
+            self.setContent(
+                InspectorIdleWidget()
+            )
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
