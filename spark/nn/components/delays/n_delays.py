@@ -6,18 +6,19 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.specs import InputSpec
-
+    
 import jax
 import jax.numpy as jnp
 import dataclasses as dc
 import typing as tp
+import spark.core.utils as utils
 from math import prod, ceil
 from spark.core.payloads import SpikeArray
 from spark.core.variables import Variable, Constant
-from spark.core.shape import Shape
-from spark.core.registry import register_module, register_config, REGISTRY
+from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.nn.initializers.delay import DelayInitializerConfig, UniformDelayInitializerConfig
+from spark.nn.initializers.common import UniformInitializerConfig
+from spark.nn.initializers.base import Initializer, InitializerConfig
 from spark.nn.components.delays.base import Delays, DelaysOutput, DelaysConfig
 
 #################################################################################################################################################
@@ -40,8 +41,8 @@ class NDelaysConfig(DelaysConfig):
             ],
             'description': 'Maximum synaptic delay. Note: Final max delay is computed as ⌈max/dt⌉.',
         })
-    delay_initializer: DelayInitializerConfig = dc.field(
-        default_factory = UniformDelayInitializerConfig,
+    delay_initializer: InitializerConfig = dc.field(
+        default_factory = UniformInitializerConfig,
         metadata = {
             'validators': [
                 TypeValidator,
@@ -77,7 +78,7 @@ class NDelays(Delays):
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
-        self._shape = Shape(input_specs['in_spikes'].shape)
+        self._shape = utils.validate_shape(input_specs['in_spikes'].shape)
         self._units = prod(self._shape)
         # Initialize varibles
         self.max_delay = self.config.max_delay
@@ -86,9 +87,17 @@ class NDelays(Delays):
         self._padding = (0, num_bytes * 8 - self._units)
         self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
         self._current_idx = Variable(0, dtype=jnp.int32)
-        # Initialize delay kernel
-        initializer: tp.Callable = REGISTRY.INITIALIZERS[self.config.delay_initializer.name].class_ref(self.config.delay_initializer)
-        delay_kernel = initializer(self.get_rng_keys(1), (self._units,), self._buffer_size)
+        # Get kernel initializer
+        initializer_cls: type[Initializer] = self.config.delay_initializer.class_ref
+        # Override initializer config
+        initializer = initializer_cls(
+            config=self.config.delay_initializer, 
+            scale=self._buffer_size+1,
+            min_value=1, 
+            dtype=jnp.uint8
+        )
+        # Initialize kernel
+        delay_kernel = initializer(self.get_rng_keys(1), (self._units,))
         self.delay_kernel = Constant(delay_kernel, dtype=jnp.uint8)
 
     def reset(self) -> None:

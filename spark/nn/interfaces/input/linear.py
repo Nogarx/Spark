@@ -9,9 +9,9 @@ if TYPE_CHECKING:
 
 import jax.numpy as jnp
 import dataclasses as dc
+import spark.core.utils as utils
 from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Variable, Constant
-from spark.core.shape import Shape
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.interfaces.input.base import InputInterface, InputInterfaceConfig, InputInterfaceOutput
@@ -95,7 +95,7 @@ class LinearSpiker(InputInterface):
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Initialize shapes
-        self._shape = Shape(input_specs['signal'].shape)
+        self._shape = utils.validate_shape(input_specs['signal'].shape)
         # Initialize variables
         self._cooldown = Constant(self.cd * jnp.ones(shape=self._shape), dtype=self._dtype)
         self._refractory = Variable(self._cooldown, dtype=self._dtype)

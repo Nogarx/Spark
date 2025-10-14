@@ -11,12 +11,9 @@ import jax.numpy as jnp
 import dataclasses as dc
 import typing as tp
 import copy
-import warnings
 import json
 import pathlib as pl
 from jax.typing import DTypeLike
-from numpy import isin
-from spark.core.shape import Shape
 from spark.core.validation import _is_config_instance
 from spark.core.registry import REGISTRY, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
@@ -35,8 +32,6 @@ METADATA_TEMPLATE = {
 }
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-T = tp.TypeVar('T')
 
 class SparkMetaConfig(abc.ABCMeta):
     """
@@ -331,15 +326,6 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def _freeze(self,) -> FrozenSparkConfig:
-        """
-            Returns a frozen version of the config instance. 
-            Use to make the SparkConfig compatible with JIT.
-        """
-        return FrozenSparkConfig(self)
-
-
-
     def validate(self,) -> None:
         """
             Validates all fields in the configuration class.
@@ -361,7 +347,8 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         return metadata
 
 
-
+    # TODO: This method is not ideal. It solves the module association problem in a very brittle way. 
+    # There should be another better pattern for this problem.
     @property
     def class_ref(obj: 'BaseSparkConfig') -> type:
         """
@@ -412,10 +399,6 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             if tp.get_origin(type_hints[key]): 
                 hints = list(tp.get_args(type_hints[key]))
                 type_hints[key] = (h for h in hints if h is not type(None))
-        # TODO: This is a dirty hack around broadcasting shapes to the internal class.
-        #for key, value in type_hints.items():
-        #    if isinstance(value, type) and issubclass(value, Shape):
-        #        setattr(self, key, Shape(getattr(self, key)))
 
 
 
@@ -515,40 +498,6 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             raise Exception(
                 f'ERROR: Could not read file \"{file_path}\". Reason: {e}'
             )
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-# TODO: The Mutable-Frozen pattern for configuration objects can be improved. 
-# Option 1) Use a simple frozen dataclass and replace it every time with .replace, this may be quite annoying on the SparkGraph, 
-#           and may require some updates to the meta class to avoid a lot of extra decorators.
-# Option 2) Replace this class for an improved version of the freeze function, that cast config to a dynamically generated dataclass. 
-# Option 3) Custom dataclass, a mixture of 1 and 2
-
-@jax.tree_util.register_static
-@dc.dataclass(init=False, frozen=True, kw_only=True)
-class FrozenSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
-    """
-        Frozen class for module configuration compatible with JIT.
-    """
-
-    def __init__(self, spark_config: BaseSparkConfig):
-        if not issubclass(type(spark_config), BaseSparkConfig):
-            raise TypeError(f'"spark_config" must be of a subclass of "BaseSparkConfig", got "{type(spark_config).__name__}"')
-        
-        # Get type hints
-        type_hints = tp.get_type_hints(spark_config.__class__)
-        for key in type_hints.keys():
-            if tp.get_origin(type_hints[key]): 
-                hints = list(tp.get_args(type_hints[key]))
-                type_hints[key] = (h for h in hints if h is not type(None))
-
-        for field in dc.fields(spark_config):
-            if isinstance(type_hints[field.name], type) and issubclass(type_hints[field.name], BaseSparkConfig):
-                # Freeze configs recursively
-                object.__setattr__(self, f'{field.name}', FrozenSparkConfig(getattr(spark_config, f'{field.name}')))
-            else:
-                # Plain attribute
-                object.__setattr__(self, f'{field.name}', getattr(spark_config, f'{field.name}'))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

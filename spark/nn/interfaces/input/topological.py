@@ -10,9 +10,9 @@ if TYPE_CHECKING:
 import jax
 import jax.numpy as jnp
 import dataclasses as dc
+import spark.core.utils as utils
 from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Variable, Constant
-from spark.core.shape import Shape
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator, BinaryValidator
 from spark.nn.interfaces.input.base import InputInterface, InputInterfaceConfig, InputInterfaceOutput
@@ -128,8 +128,8 @@ class TopologicalPoissonSpiker(InputInterface):
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Initialize shapes
-        input_shape = Shape(input_specs['signal'].shape)
-        self._output_shape = Shape(input_specs['signal'].shape + (self.resolution,))
+        input_shape = utils.validate_shape(input_specs['signal'].shape)
+        self._output_shape = utils.validate_shape(input_specs['signal'].shape + (self.resolution,))
         # Initialize variables
         self._space = Constant(jnp.linspace(jnp.zeros(input_shape), 
                                                  jnp.pi*jnp.ones(input_shape), 
@@ -211,8 +211,8 @@ class TopologicalLinearSpiker(InputInterface):
 
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         # Initialize shapes
-        input_shape = Shape(input_specs['signal'].shape)
-        self._output_shape = Shape(input_specs['signal'].shape + (self.resolution,))
+        input_shape = utils.validate_shape(input_specs['signal'].shape)
+        self._output_shape = utils.validate_shape(input_specs['signal'].shape + (self.resolution,))
         # Initialize variables
         self._space = Constant(jnp.linspace(jnp.zeros(input_shape), 
                                                  jnp.pi*jnp.ones(input_shape), 

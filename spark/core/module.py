@@ -5,7 +5,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from spark import ShapeCollection
 if TYPE_CHECKING:
     from spark.core.payloads import SparkPayload
 
@@ -21,9 +20,9 @@ from functools import wraps
 
 import spark.core.signature_parser as sig_parser
 import spark.core.validation as validation
+import spark.core.utils as utils
 from spark.core.specs import OutputSpec, InputSpec
 from spark.core.config import BaseSparkConfig
-from spark.core.shape import Shape
 from spark.core.variables import Variable
 
 # TODO: Support for list[SparkPayloads] was implemented in a wacky manner and 
@@ -114,7 +113,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         config_type = resolved_hints.get('config')
         if not config_type or not issubclass(config_type, BaseSparkConfig):
             raise AttributeError('SparkModules must define a valid config: type[BaseSparkConfig] attribute.')
-        cls.default_config = tp.cast(type[ConfigT], config_type)#config_type
+        cls.default_config = tp.cast(type[ConfigT], config_type)
 
 
 
@@ -147,7 +146,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # Flags
         self.__built__: bool = False
         self.__allow_cycles__: bool = False
-        self._recurrent_shape_contract: dict[str, Shape] | None = None
+        self._recurrent_shape_contract: dict[str, tuple[int, ...]] | None = None
 
 
 
@@ -200,7 +199,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         mock_input = {}
         for key, value in self._input_specs.items():
             if value.payload_type and issubclass(value.payload_type, ValueSparkPayload):
-                if not isinstance(value.shape, (list, ShapeCollection)):
+                if not isinstance(value.shape, list):
                         mock_input[key] = value.payload_type(jnp.zeros(value.shape, dtype=value.dtype))
                 else:
                         mock_input[key] = [value.payload_type(jnp.zeros(s, dtype=value.dtype)) for s in value.shape]
@@ -208,9 +207,6 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
         # Contruct output sepcs.
         self._output_specs = self._construct_output_specs(abc_output)
-
-        # Replace config with a dict version of itself to prevent errors with JIT.
-        #self.config = self.config._freeze()
 
 
 
@@ -230,15 +226,19 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
 
 
-    def set_recurrent_shape_contract(self, shape: Shape | None = None, output_shapes: dict[str, Shape] | None = None) -> None:
+    def set_recurrent_shape_contract(
+            self, 
+            shape: tuple[int, ...] | None = None, 
+            output_shapes: dict[str, tuple[int, ...]] | None = None
+        ) -> None:
         """
             Recurrent shape policy pre-defines expected shapes for the output specs.
 
             This is function is a binding contract that allows the modules to accept self connections.
 
             Input:
-                shape: Shape, A common shape for all the outputs.
-                output_shapes: dict[str, Shape], A specific policy for every single output variable.
+                shape: tuple[int, ...], A common shape for all the outputs.
+                output_shapes: dict[str, tuple[int, ...]], A specific policy for every single output variable.
 
             NOTE: If both, shape and output_specs, are provided, output_specs takes preference over shape.
         """
@@ -257,20 +257,20 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             self._recurrent_shape_contract = {}
             for key, value in output_shapes.items():
                 try:
-                    self._recurrent_shape_contract[key] = Shape(value)
-                except:
+                    self._recurrent_shape_contract[key] = utils.validate_shape(value)
+                except Exception as e:
                     raise TypeError(
-                        f'Arguemnt \"output_shapes[\"{key}\"]\" is not a valid shape.'
+                        f'Arguemnt \"output_shapes[\"{key}\"]\" is not a valid shape. Error: {e}'
                     )
         elif not shape is None:
             # Construct recurrent contract.
             self._recurrent_shape_contract = {}
             try:
                 for key in output_specs.keys():
-                    self._recurrent_shape_contract[key] = Shape(shape)
-            except:
+                    self._recurrent_shape_contract[key] = utils.validate_shape(shape)
+            except Exception as e:
                 raise TypeError(
-                    f'Arguemnt \"shape\" is not a valid shape.'
+                    f'Arguemnt \"shape\" is not a valid shape. Error: {e}'
                 )
         else:
             raise ValueError(

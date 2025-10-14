@@ -10,7 +10,10 @@ import jax.numpy as jnp
 import flax.nnx as nnx
 from typing import Any
 from collections.abc import Iterable
-from spark.core.shape import Shape
+
+# TODO: Currently we constraint Constant/Variable to cast everything to arrays. Initially, the plan was to simplify 
+# the use of the class by removing the .value element, however it may be useful to allow for the full
+# flexibility of the original nnx.Variable. 
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -62,8 +65,8 @@ class Constant:
         return np.array(self.value).astype(dtype if dtype else self.value.dtype)
 
     @property
-    def shape(self) -> Shape:
-        return Shape(self.value.shape)
+    def shape(self) -> tuple[int, ...]:
+        return self.value.shape
 
     @property
     def dtype(self) -> Any:
@@ -149,9 +152,6 @@ class Constant:
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# TODO: Currently we constraint Variable to cast everything to arrays. Initially, the plan was to simplify 
-# the use factor of the class by removing the .value element, however it may be useful to allow for the full
-# flexibility of the original nnx.Variable. 
 class Variable(nnx.Variable):
     """
         The base class for all ``Variable`` types.
@@ -187,8 +187,8 @@ class Variable(nnx.Variable):
         return np.array(self.value).astype(dtype if dtype else self.value.dtype)
 
     @property
-    def shape(self) -> Shape:
-        return Shape(self.value.shape)
+    def shape(self) -> tuple[int, ...]:
+        return self.value.shape
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

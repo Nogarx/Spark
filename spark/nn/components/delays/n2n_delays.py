@@ -11,14 +11,15 @@ import jax
 import jax.numpy as jnp
 import dataclasses as dc
 import typing as tp
+import spark.core.utils as utils
 from math import prod, ceil
 from spark.core.payloads import SpikeArray
 from spark.core.variables import Variable, Constant
-from spark.core.shape import Shape, Shape
-from spark.core.registry import register_module, register_config, REGISTRY
+from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator
 from spark.nn.components.delays.base import Delays, DelaysOutput
 from spark.nn.components.delays.n_delays import NDelaysConfig
+from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -30,7 +31,7 @@ class N2NDelaysConfig(NDelaysConfig):
        N2NDelays configuration class.
     """
 
-    units: Shape = dc.field(
+    units: tuple[int, ...] = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,
@@ -49,7 +50,7 @@ class N2NDelays(Delays):
                  neuron C recieves A's spikes J timesteps later and neuron D recieves A's spikes K timesteps later.
 
         Init:
-            units: Shape
+            units: tuple[int, ...]
             max_delay: int
             delay_kernel_initializer: Initializer
 
@@ -67,9 +68,9 @@ class N2NDelays(Delays):
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
-        self._in_shape = Shape(input_specs['in_spikes'].shape)
-        self.output_shape = Shape(self.config.units)
-        self._kernel_shape = Shape((prod(self.output_shape), prod(self._in_shape)))
+        self._in_shape = utils.validate_shape(input_specs['in_spikes'].shape)
+        self.output_shape = utils.validate_shape(self.config.units)
+        self._kernel_shape = utils.validate_shape((prod(self.output_shape), prod(self._in_shape)))
         self._units = prod(self._in_shape)
         # Initialize varibles
         self.max_delay = self.config.max_delay
@@ -78,9 +79,17 @@ class N2NDelays(Delays):
         self._padding = (0, num_bytes * 8 - self._units)
         self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
         self._current_idx = Variable(0, dtype=jnp.int32)
+        # Get kernel initializer
+        initializer_cls: type[Initializer] = self.config.delay_initializer.class_ref
+        # Override initializer config
+        initializer = initializer_cls(
+            config=self.config.delay_initializer, 
+            scale=self._buffer_size+1,
+            min_value=1, 
+            dtype=jnp.uint8
+        )
         # Initialize kernel
-        initializer: tp.Callable = REGISTRY.INITIALIZERS[self.config.delay_initializer.name].class_ref(self.config.delay_initializer)
-        delay_kernel = initializer(self.get_rng_keys(1), self._kernel_shape, self._buffer_size)
+        delay_kernel = initializer(self.get_rng_keys(1), self._kernel_shape)
         self.delay_kernel = Constant(delay_kernel, dtype=jnp.uint8)
 
     def reset(self) -> None:

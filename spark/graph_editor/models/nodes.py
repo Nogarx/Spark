@@ -5,7 +5,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.variables import Shape
     from spark.core.module import SparkModule
     from spark.core.config import BaseSparkConfig
     from spark.graph_editor.models.graph import SparkNodeGraph
@@ -14,13 +13,12 @@ import abc
 import logging
 import jax.numpy as jnp
 import typing as tp
+import spark.core.utils as utils
 from NodeGraphQt import BaseNode
-from spark.core.registry import REGISTRY
+from spark.core.registry import REGISTRY, RegistryEntry
 from spark.core.payloads import FloatArray
-from spark.graph_editor.painter import DEFAULT_PALLETE
 from spark.core.specs import InputSpec, OutputSpec
-from spark.core.registry import RegistryEntry
-from spark.core.shape import Shape
+from spark.graph_editor.painter import DEFAULT_PALLETE
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -43,7 +41,7 @@ class AbstractNode(BaseNode, abc.ABC):
         self._view._text_item.set_locked(True)
 
 
-    def update_input_shape(self, port_name: str, value: Shape):
+    def update_input_shape(self, port_name: str, value: tuple[int, ...]):
         """
             Updates the shape of an input port and broadcast the update.
 
@@ -55,13 +53,13 @@ class AbstractNode(BaseNode, abc.ABC):
         if not port_name in self.input_specs:
             raise ValueError(f'Input specs does not define an input port named "{port_name}"')
         # Update port
-        value = Shape(value)
+        value = utils.validate_shape(value)
         self.input_specs[port_name].shape = value
         # Broadcast
         logging.info(f'Updated input port "{port_name}" of node "{self.id}" to "{value}".')
         self._graph.property_changed.emit(self, f'{self.id}.input_port.{port_name}', value)
 
-    def update_output_shape(self, port_name: str, value: Shape):
+    def update_output_shape(self, port_name: str, value: tuple[int, ...]):
         """
             Updates the shape of an input port and broadcast the update.
 
@@ -73,7 +71,7 @@ class AbstractNode(BaseNode, abc.ABC):
         if not port_name in self.output_specs:
             raise ValueError(f'Output specs does not define an input port named "{port_name}"')
         # Update port
-        value = Shape(value)
+        value = utils.validate_shape(value)
         self.output_specs[port_name].shape = value
         # Broadcast
         logging.info(f'Updated output port "{port_name}" of node "{self.id}" to "{value}".')
@@ -174,7 +172,7 @@ class SparkModuleNode(AbstractNode, abc.ABC):
         node_config_type = self.module_cls.get_config_spec()
         #self.node_config = node_config_type._create_partial()
         # NOTE: DUMMY TEST
-        self.node_config = node_config_type._create_partial(_s_units=Shape(256,), _s_async_spikes=True, _s_num_outputs=1)
+        self.node_config = node_config_type._create_partial(_s_units=utils.validate_shape(1,), _s_async_spikes=True, _s_num_outputs=1)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
