@@ -59,7 +59,7 @@ def to_human_readable(s: str) -> str:
     # Replace any spaces or hyphens with a single underscore.
     s = re.sub(r'[-\s]+', '_', s)
     # Replace all underscores with spaces.
-    return s.replace('_', ' ')
+    return s.replace('_', ' ').capitalize()
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

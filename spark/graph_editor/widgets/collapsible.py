@@ -56,8 +56,8 @@ class QCollapsible(QtWidgets.QFrame):
         )
         self._toggle_btn.toggled.connect(self._toggle)
 
-        self.setStyleSheet(f'margin: 0px; padding: 0px; background-color: coral;')
-        self.setContentsMargins(0,0,0,0)
+        #self.setStyleSheet(f'margin: 0px; padding: 0px; background-color: coral;')
+        #self.setContentsMargins(0,0,0,0)
         
 
         # frame layout

@@ -499,6 +499,26 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 f'ERROR: Could not read file \"{file_path}\". Reason: {e}'
             )
 
+
+
+    def __iter__(self) -> tp.Iterator[tuple[str, dc.Field, tp.Any]]:
+        """
+            Custom iterator to simplify SparkConfig inspection across the entire ecosystem.
+            This iterator excludes private fields.
+
+            Output:
+                field_name: str, field name 
+                field_value: tp.Any, field value
+        """
+        # Iterate over all defined fields of the dataclass
+        for f in dc.fields(self):
+            # Check for fields to skip
+            if f.name in ['__config_delimiter__', '__shared_config_delimiter__']:
+                continue
+
+            # Yield the field name and its corresponding value
+            yield (f.name, f, getattr(self, f.name))
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_config

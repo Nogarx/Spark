@@ -47,7 +47,6 @@ class InspectorPanel(QDockPanel):
         self._target_node = node
         
         if self._target_node:
-            self.clearWidgets()
             self.setContent(
                 QNodeConfig(self._target_node)
             )

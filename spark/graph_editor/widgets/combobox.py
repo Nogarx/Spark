@@ -39,12 +39,16 @@ class QComboBoxEdit(QtWidgets.QComboBox):
             QtWidgets.QSizePolicy.Policy.Expanding
         )
         # NOTE: Left padding seems to be missing 4px to match standard QLineEdit style.
-        self.setStyleSheet(f'background-color: {GRAPH_EDITOR_CONFIG.input_field_bg_color};\
-                             border-radius: {GRAPH_EDITOR_CONFIG.input_field_border_radius}px;\
-                             padding-left: {GRAPH_EDITOR_CONFIG.input_field_margin.left()+4}px;\
-                             padding-top: {GRAPH_EDITOR_CONFIG.input_field_margin.top()}px;\
-                             padding-right: {GRAPH_EDITOR_CONFIG.input_field_margin.right()}px;\
-                             padding-bottom: {GRAPH_EDITOR_CONFIG.input_field_margin.bottom()}px;')
+        self.setStyleSheet(
+            f"""
+                background-color: {GRAPH_EDITOR_CONFIG.input_field_bg_color};
+                border-radius: {GRAPH_EDITOR_CONFIG.input_field_border_radius}px;
+                padding-left: {GRAPH_EDITOR_CONFIG.input_field_margin.left()+4}px;
+                padding-top: {GRAPH_EDITOR_CONFIG.input_field_margin.top()}px;
+                padding-right: {GRAPH_EDITOR_CONFIG.input_field_margin.right()}px;
+                padding-bottom: {GRAPH_EDITOR_CONFIG.input_field_margin.bottom()}px;
+            """
+        )
 
     def set_value(self, value: tp.Any) -> None:
         """
@@ -76,10 +80,6 @@ class QDtype(SparkQWidget):
         # Add layout
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        # Add label
-        self._label = QtWidgets.QLabel(label, minimumWidth=GRAPH_EDITOR_CONFIG.min_attr_label_size, parent=self)
-        self._label.setContentsMargins(GRAPH_EDITOR_CONFIG.label_field_margin)
-        layout.addWidget(self._label)
         # Add QShapeEdit
         options_list = [(_to_human_readable(dtype.__name__), dtype) for dtype in values_options]
         self._dtype_edit = QComboBoxEdit(initial_value, options_list, self)
@@ -107,10 +107,6 @@ class QBool(SparkQWidget):
         # Add layout
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        # Add label
-        self._label = QtWidgets.QLabel(label, minimumWidth=GRAPH_EDITOR_CONFIG.min_attr_label_size, parent=self)
-        self._label.setContentsMargins(GRAPH_EDITOR_CONFIG.label_field_margin)
-        layout.addWidget(self._label)
         # Add QShapeEdit
         self._bool_edit = QComboBoxEdit(initial_value, [('True', True), ('False', False)], self)
         # Update callback
@@ -138,10 +134,6 @@ class QGenericComboBox(SparkQWidget):
         # Add layout
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        # Add label
-        self._label = QtWidgets.QLabel(label, minimumWidth=GRAPH_EDITOR_CONFIG.min_attr_label_size, parent=self)
-        self._label.setContentsMargins(GRAPH_EDITOR_CONFIG.label_field_margin)
-        layout.addWidget(self._label)
         # Add QShapeEdit
         options_list = [(key, value) for key, value in values_options.items()]
         self._value_edit = QComboBoxEdit(initial_value, options_list, self)

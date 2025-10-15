@@ -38,7 +38,6 @@ class QDockPanel(CDockWidget):
         _content = QtWidgets.QWidget()
         _content.setLayout(_layout)
         self.setContent(_content)
-
         self.setMinimumWidth(GRAPH_EDITOR_CONFIG.dock_min_width)
         self.setMinimumHeight(GRAPH_EDITOR_CONFIG.dock_min_height)
 

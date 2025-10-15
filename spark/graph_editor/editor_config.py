@@ -27,7 +27,7 @@ class GraphEditorConfig:
     header_font_size: int = 16
     default_font_color: str = "#E4E4E4"
     # Docks
-    dock_min_width : int = 250 
+    dock_min_width : int = 300 
     dock_min_height : int = 150 
     dock_layout_spacing: int = 2
     dock_layout_margins: QtCore.QMargins = dc.field(default_factory = lambda: QtCore.QMargins(0, 4, 0, 4))
@@ -36,12 +36,12 @@ class GraphEditorConfig:
     nodes_panel_pos = ads.LeftDockWidgetArea
     console_panel_pos = ads.BottomDockWidgetArea
 
-
-
+    # Field configuration
+    min_attr_label_size: int = 100
 
 
     # ?
-    min_attr_label_size: int = 150
+    
     input_field_bg_color: str = '#2A2A2A'
     input_field_border_radius: int = 4
     input_field_margin: QtCore.QMargins = dc.field(default_factory = lambda: QtCore.QMargins(4, 4, 4, 4))

@@ -65,15 +65,23 @@ class QShapeEdit(QtWidgets.QWidget):
             self.removeButton = QPushButtonSquare("-")
             self.removeButton.setFixedSize(20, 20)
             self.removeButton.clicked.connect(self._remove_last_dimension)
-            self.removeButton.setStyleSheet(f'background-color: {GRAPH_EDITOR_CONFIG.button_bg_color};\
-                                              border-radius: {GRAPH_EDITOR_CONFIG.button_border_radius}px;')
+            self.removeButton.setStyleSheet(
+                f"""
+                    background-color: {GRAPH_EDITOR_CONFIG.button_bg_color};
+                    border-radius: {GRAPH_EDITOR_CONFIG.button_border_radius}px;
+                """
+            )
             self._layout.addWidget(self.removeButton)
 
             self.addButton = QPushButtonSquare("+")
             self.addButton.setFixedSize(20, 20)
             self.addButton.clicked.connect(lambda: self._add_dimension())
-            self.addButton.setStyleSheet(f'background-color: {GRAPH_EDITOR_CONFIG.button_bg_color};\
-                                           border-radius: {GRAPH_EDITOR_CONFIG.button_border_radius}px;')
+            self.addButton.setStyleSheet(
+                f"""
+                    background-color: {GRAPH_EDITOR_CONFIG.button_bg_color};
+                    border-radius: {GRAPH_EDITOR_CONFIG.button_border_radius}px;
+                """
+            )
             self._layout.addWidget(self.addButton)
 
         # Initialize with the provided shape
@@ -181,23 +189,20 @@ class QShape(SparkQWidget):
         Custom QWidget used for integer fields in the SparkGraphEditor's Inspector.
     """
 
-    def __init__(self,
-                 label: str,
-                 initial_shape: tuple[int, ...] = (1,),
-                 min_dims: int = 1,
-                 max_dims: int = 8,
-                 max_shape: int = 1E9,
-                 is_static: bool = False,
-                 parent: QtWidgets.QWidget = None):
+    def __init__(
+            self,
+            initial_shape: tuple[int, ...] = (1,),
+            min_dims: int = 1,
+            max_dims: int = 8,
+            max_shape: int = 1E9,
+            is_static: bool = False,
+            parent: QtWidgets.QWidget = None
+        ) -> None:
         super().__init__(parent=parent)
 
         # Add layout
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        # Add label
-        self._label = QtWidgets.QLabel(label, minimumWidth=GRAPH_EDITOR_CONFIG.min_attr_label_size, parent=self)
-        self._label.setContentsMargins(GRAPH_EDITOR_CONFIG.label_field_margin)
-        layout.addWidget(self._label)
         # Add QShapeEdit
         self._shape_edit = QShapeEdit(initial_shape, min_dims, max_dims, max_shape, is_static, self)
         # Update callback
@@ -206,7 +211,7 @@ class QShape(SparkQWidget):
         layout.addWidget(self._shape_edit)
         self.setLayout(layout)
 
-    def get_value(self):
+    def get_value(self) -> tuple[int, ...]:
         return self._shape_edit.get_shape()
 
 #################################################################################################################################################
