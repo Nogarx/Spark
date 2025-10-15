@@ -42,7 +42,7 @@ class NDelaysConfig(DelaysConfig):
             'description': 'Maximum synaptic delay. Note: Final max delay is computed as ⌈max/dt⌉.',
         })
     delay_initializer: InitializerConfig = dc.field(
-        default_factory = UniformInitializerConfig,
+        default_factory = lambda **kwargs: UniformInitializerConfig(dtype = jnp.uint8, **kwargs),
         metadata = {
             'validators': [
                 TypeValidator,

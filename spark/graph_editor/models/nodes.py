@@ -40,7 +40,6 @@ class AbstractNode(BaseNode, abc.ABC):
         # Name edition is handle through the inspector
         self._view._text_item.set_locked(True)
 
-
     def update_input_shape(self, port_name: str, value: tuple[int, ...]):
         """
             Updates the shape of an input port and broadcast the update.
@@ -77,6 +76,15 @@ class AbstractNode(BaseNode, abc.ABC):
         logging.info(f'Updated output port "{port_name}" of node "{self.id}" to "{value}".')
         self._graph.property_changed.emit(self, f'{self.id}.output_port.{port_name}', value)
 
+    @property
+    @abc.abstractmethod
+    def config_metadata(self,):
+        pass
+    
+    def _update_graph_metadata(self,):
+        # Update metadata for model graph editor model reconstruction.
+        self.config_metadata['pos'] = self.pos()
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 # TODO: Make source node general
@@ -106,6 +114,10 @@ class SourceNode(AbstractNode):
                 painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__)
             )
         
+    @property
+    def config_metadata(self,):
+        return None
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 # TODO: Make sink node general
@@ -135,6 +147,10 @@ class SinkNode(AbstractNode):
                 display_name=False, 
                 painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__)
             )
+
+    @property
+    def config_metadata(self,):
+        return None
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -173,6 +189,10 @@ class SparkModuleNode(AbstractNode, abc.ABC):
         #self.node_config = node_config_type._create_partial()
         # NOTE: DUMMY TEST
         self.node_config = node_config_type._create_partial(_s_units=utils.validate_shape(1,), _s_async_spikes=True, _s_num_outputs=1)
+
+    @property
+    def config_metadata(self,):
+        return self.node_config.__graph_editor_metadata__
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

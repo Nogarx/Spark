@@ -22,7 +22,12 @@ class QComboBoxEdit(QtWidgets.QComboBox):
         A QComboBox widget for selecting a dtype from a predefined list.
     """
 
-    def __init__(self, initial_value: jnp.dtype, options_list: list[tuple[str, tp.Any]], parent: QtWidgets.QWidget = None):
+    def __init__(
+            self, 
+            initial_value: jnp.dtype, 
+            options_list: list[tuple[str, tp.Any]], 
+            parent: QtWidgets.QWidget = None
+        ) -> None:
         super().__init__(parent)
 
         # Populate ComboBox
@@ -71,11 +76,12 @@ class QDtype(SparkQWidget):
         Custom QWidget used for dtypes fields in the SparkGraphEditor's Inspector.
     """
 
-    def __init__(self,
-                 label: str,
-                 initial_value: jnp.dtype,
-                 values_options: list[jnp.dtype],
-                 parent: QtWidgets.QWidget = None):
+    def __init__(
+            self,
+            initial_value: jnp.dtype,
+            values_options: list[jnp.dtype],
+            parent: QtWidgets.QWidget = None
+        ) -> None:
         super().__init__(parent=parent)
         # Add layout
         layout = QtWidgets.QHBoxLayout()
@@ -91,6 +97,9 @@ class QDtype(SparkQWidget):
 
     def get_value(self):
         return self._dtype_edit.get_value()
+    
+    def set_value(self, value: jnp.dtype):
+        return self._dtype_edit.set_value(value)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -99,10 +108,11 @@ class QBool(SparkQWidget):
         Custom QWidget used for bool fields in the SparkGraphEditor's Inspector.
     """
 
-    def __init__(self,
-                 label: str,
-                 initial_value: bool = True,
-                 parent: QtWidgets.QWidget = None):
+    def __init__(
+            self,
+            initial_value: bool = True,
+            parent: QtWidgets.QWidget = None
+        ) -> None:
         super().__init__(parent=parent)
         # Add layout
         layout = QtWidgets.QHBoxLayout()
@@ -118,6 +128,9 @@ class QBool(SparkQWidget):
     def get_value(self):
         return self._bool_edit.get_value()
     
+    def set_value(self, value: bool):
+        return self._bool_edit.set_value(value)
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class QGenericComboBox(SparkQWidget):
@@ -125,11 +138,12 @@ class QGenericComboBox(SparkQWidget):
         Custom QWidget used for arbitrary selectable fields fields in the SparkGraphEditor's Inspector.
     """
 
-    def __init__(self,
-                 label: str,
-                 initial_value: str,
-                 values_options: dict[str, tp.Any],
-                 parent: QtWidgets.QWidget = None):
+    def __init__(
+            self,
+            initial_value: str,
+            values_options: dict[str, tp.Any],
+            parent: QtWidgets.QWidget = None
+        ) -> None:
         super().__init__(parent=parent)
         # Add layout
         layout = QtWidgets.QHBoxLayout()
@@ -146,6 +160,9 @@ class QGenericComboBox(SparkQWidget):
     def get_value(self):
         return self._value_edit.get_value()
     
+    def set_value(self, value: tp.Any):
+        return self._value_edit.set_value(value)
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

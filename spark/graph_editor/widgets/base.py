@@ -14,12 +14,12 @@ from spark.graph_editor.widgets.checkbox import InheritToggleButton, WarningFlag
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class SparkQWidgetMeta(type(QtWidgets.QWidget), abc.ABCMeta):
-    pass
+#class SparkQWidgetMeta(type(QtWidgets.QWidget), abc.ABCMeta):
+#    pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class SparkQWidget(QtWidgets.QWidget, abc.ABC, metaclass=SparkQWidgetMeta):
+class SparkQWidget(QtWidgets.QWidget):
     """
         Base QWidget class for the graph editor attributes.
     """
@@ -29,12 +29,19 @@ class SparkQWidget(QtWidgets.QWidget, abc.ABC, metaclass=SparkQWidgetMeta):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    @abc.abstractmethod
+    #@abc.abstractmethod
     def get_value(self,) -> tp.Any:
         """
             Returns the widget value.
         """
-        pass
+        raise NotImplementedError()
+
+    #@abc.abstractmethod
+    def set_value(self, value: tp.Any) -> tp.Any:
+        """
+            Returns the widget value.
+        """
+        raise NotImplementedError()
 
     def _on_update(self):
         self.on_update.emit(self.get_value())
@@ -45,6 +52,8 @@ class QField(QtWidgets.QWidget):
     """
         Base QWidget class for the graph editor attributes.
     """
+
+    inheritance_toggled = QtCore.Signal(bool)
 
     def __init__(
             self, 
@@ -67,6 +76,7 @@ class QField(QtWidgets.QWidget):
         # Inheritance checkbox.
         if inheritance_box:
             self.inheritance_checkbox = InheritToggleButton(value=inheritance_value, parent=self)
+            self.inheritance_checkbox.toggled.connect(self.on_inheritance_toggled)
             layout.addWidget(self.inheritance_checkbox)
         else:
             dummy_widget = QtWidgets.QWidget(parent=self)
@@ -83,15 +93,18 @@ class QField(QtWidgets.QWidget):
         )
         layout.addWidget(self.label)  
         # Attribute widget
-        if not isinstance(attr_widget, SparkQWidget):
-            raise TypeError(
-                f'Expected \"attr_widget\" to be of type \"SparkQWidget\", but got \"{attr_widget.__class__}\".'
-            )
+        #if not isinstance(attr_widget, SparkQWidget):
+        #    raise TypeError(
+        #        f'Expected \"attr_widget\" to be of type \"SparkQWidget\", but got \"{attr_widget.__class__}\".'
+        #    )
         self.widget = attr_widget
         self.widget.setParent(self)
         layout.addWidget(self.widget)  
         # Set layout
         self.setLayout(layout)
+
+    def on_inheritance_toggled(self, state: bool):
+        self.inheritance_toggled.emit(state)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

@@ -72,7 +72,7 @@ class QCollapsible(QtWidgets.QFrame):
         self._animation.setPropertyName(b"maximumHeight")
         self._animation.setStartValue(0)
         self._animation.finished.connect(self._on_animation_done)
-        self.setDuration(300)
+        self.setDuration(0)#self.setDuration(300)
         self.setEasingCurve(QtCore.QEasingCurve.Type.InOutCubic)
 
         # default content widget

@@ -65,6 +65,9 @@ class QString(SparkQWidget):
     def get_value(self) -> str:
         return self._line_edit.text()
 
+    def set_value(self, value: str):
+        return self._line_edit.setText(value)
+    
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class QIntLineEdit(QtWidgets.QLineEdit):
@@ -125,6 +128,9 @@ class QInt(SparkQWidget):
 
     def get_value(self) -> int:
         return int(self._line_edit.text())
+
+    def set_value(self, value: int):
+        return self._line_edit.setText(value)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -188,6 +194,9 @@ class QFloat(SparkQWidget):
     def get_value(self) -> float:
         return float(self._line_edit.text())
 
+    def set_value(self, value: float):
+        return self._line_edit.setText(value)
+    
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class NodeNameWidget(SparkQWidget):
@@ -227,6 +236,9 @@ class NodeNameWidget(SparkQWidget):
 
     def get_value(self) -> str:
         return self._line_edit.text()
+
+    def set_value(self, value: str):
+        return self._line_edit.setText(value)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

@@ -89,7 +89,7 @@ class SparkGraphEditor:
             # Integrate Qt event loop so we don't call exec()
             try:
                 from IPython import get_ipython
-                get_ipython().enable_gui('qt')
+                #get_ipython().enable_gui('qt')
             except Exception:
                 # some rare IPython shells may not support enable_gui; ignore
                 pass
@@ -126,6 +126,7 @@ class SparkGraphEditor:
             # TODO: This is a workaround to prevent bugs when using launch twice on the same editor instance. 
             # This, however, is not a nice approach and throws some errors in a IPykernel. Moreover, it leaves
             # an ugly 'X' symbol on the terminal suggesting that the app failed: unacceptable (╯`Д´)╯︵ ┻━┻.
+            sys.exit(self.app.exec_())
             pass
             #code = self.app.exec_()
             #import warnings

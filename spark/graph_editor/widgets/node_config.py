@@ -5,6 +5,8 @@
 from __future__ import annotations
     
 import typing as tp
+import jax
+import numpy as np
 from PySide6 import QtWidgets, QtCore, QtGui
 
 import dataclasses as dc
@@ -33,7 +35,7 @@ class QNodeConfig(QtWidgets.QWidget):
         super().__init__(parent=parent, **kwargs)
         # Node reference
         self._target_node = node
-        self._cfg_widget_map: dict[str, QtWidgets.QWidget] = {}
+        self._cfg_widget_map: dict[tuple[str, ...], dict[str, QtWidgets.QWidget]] = {}
         # Widget layout
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
@@ -52,6 +54,7 @@ class QNodeConfig(QtWidgets.QWidget):
         content_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
         # Setup layout
         self._setup_layout()
+        print(self._cfg_widget_map)
 
 
     def addWidget(self, widget: QtWidgets.QWidget) -> None:
@@ -74,18 +77,22 @@ class QNodeConfig(QtWidgets.QWidget):
         # Add configs recurrently
         node_config: BaseSparkConfig = getattr(self._target_node, 'node_config', None)
         if node_config:
-            self._add_config_recurrently('Main', node_config)
+            self._add_config_recurrently('Main', node_config, ['_'])
 
 
-    def _add_config_recurrently(self, config_name: str, config: BaseSparkConfig) -> None:
+    def _add_config_recurrently(self, config_name: str, config: BaseSparkConfig, path: list[str] = []) -> None:
         # Create new QCollapsible
         collapsible = QCollapsible(utils.to_human_readable(config_name), parent=self)
         # Get nested config's names
         nested_configs = config._get_nested_configs_names()
+        type_hints = config._get_type_hints()
+        # Exapnd widget map
+        self._cfg_widget_map[tuple(path)] = {}
 
         #partial(lambda config_var, name_var, value: setattr(config_var, name_var, value), config, field.name),
 
         # Iterate over fields, add simple attributes
+        show_inheritance_box = len(nested_configs) > 0
         for name, field, value in config:
             # Skip non-configs
             if name in nested_configs:
@@ -93,20 +100,23 @@ class QNodeConfig(QtWidgets.QWidget):
             # Add widget to collapsible
             update_func = partial(lambda config_var, name_var, value: setattr(config_var, name_var, value), config, field.name)
             attr_widget = self._attr_widget(
-                field.type,
+                type_hints[name],
                 update_func,
                 value = value,
+                metadata= field.metadata,
             )
             field_widget = QField(
                 utils.to_human_readable(name),
                 attr_widget,
                 warning_value = False,
-                inheritance_box = True,
+                inheritance_box = show_inheritance_box,
                 inheritance_value = False,
                 parent= self
             )
             # Add widget to collapsible
             collapsible.addWidget(field_widget)
+            # Add widget to map 
+            self._cfg_widget_map[tuple(path)][name] = field_widget
         # Add collapsible to layout
         collapsible.expand()
         self.addWidget(collapsible)
@@ -116,14 +126,13 @@ class QNodeConfig(QtWidgets.QWidget):
             # Skip non-configs
             if name not in nested_configs:
                 continue
+            print(value)
             # Add widget to collapsible
-            self._add_config_recurrently(name, value)
-
-
+            self._add_config_recurrently(name, value, path + [name])
 
     def _attr_widget(
             self, 
-            attr_type: type, 
+            attr_type: tuple[type, ...], 
             attr_update_method: tp.Callable,
             value: tp.Any | None = None, 
             metadata: dict[str, tp.Any] = None
@@ -144,19 +153,25 @@ class QNodeConfig(QtWidgets.QWidget):
         widget.on_update.connect(attr_update_method)
         return widget
 
-    def _get_widget_class_for_type(self, attr_type: type) -> type[QtWidgets.QWidget]:
+    # TODO: This method needs to define a widget preference order since more than one widget may be a viable option.
+    def _get_widget_class_for_type(self, attr_type: tuple[type, ...]) -> type[QtWidgets.QWidget]:
         """
             Maps an argument type to a corresponding widget class.
         """
         WIDGET_TYPE_MAP = {
-            'bool': QBool,
-            'int': QInt,
-            'float': QFloat,
-            'str': QString,
-            'Shape': QShape,
-            'DTypeLike': QDtype,
+            bool: QBool,
+            int: QInt,
+            float: QFloat,
+            jax.Array: QFloat,
+            str: QString,
+            tuple[int, ...]: QShape,
+            np.dtype: QDtype,
         }
-        return WIDGET_TYPE_MAP.get(attr_type, QMissing)
+        for t in attr_type:
+            widget_cls = WIDGET_TYPE_MAP.get(t, None)
+            if widget_cls:
+                return widget_cls
+        return QMissing
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

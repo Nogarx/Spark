@@ -91,9 +91,6 @@ class InheritToggleButton(QtWidgets.QPushButton):
         self.setCheckable(True) 
         self.setIcon(self.toggle_icon)
         self.setChecked(value)
-        
-        # Signal connection (equivalent to stateChanged)
-        # self.toggled.connect(lambda checked: print(f"Toggled to {checked}")) 
 
         self.setStyleSheet(
             f"""

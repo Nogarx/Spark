@@ -8,6 +8,7 @@ import os
 import abc
 import jax
 import jax.numpy as jnp
+import numpy as np
 import dataclasses as dc
 import typing as tp
 import copy
@@ -115,6 +116,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
     __config_delimiter__: str = '__'
     __shared_config_delimiter__: str = '_s_'
+    __graph_editor_metadata__ = {}
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -149,19 +151,28 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             field_type = type_hints[field.name]
             if isinstance(type_hints[field.name], type) and issubclass(field_type, BaseSparkConfig):
                 # Field is another SparkConfig use create partial recursively.
-                # TODO: We need a way to distuinguish when to use the field_type and when to use the default_factory
                 try:
                     factory = field.default_factory
                     if not factory or factory is dc.MISSING:
                         raise ValueError(
                             f'Configuration class does not define a default_factory for Subconfig: \"{field.name}\".'
                         )
-                    if not isinstance(factory, type) or not issubclass(factory, BaseSparkConfig):
+                    is_config_cls = isinstance(factory, type) and issubclass(factory, BaseSparkConfig)
+                    is_callable = callable(factory)
+                    if not (is_callable or is_config_cls):
                         raise TypeError(
                             f'Configuration class defines default_factory for Subconfig: \"{field.name}\" '
-                            f'expected factory of type \"{BaseSparkConfig.__name__}\" but got {factory}.'
+                            f'expected factory of type \"{BaseSparkConfig.__name__} | tp.Callable" but got {factory}.'
                         )
-                    setattr(instance, field.name, factory._create_partial(**kwargs))
+                    if is_config_cls:
+                        field_config = factory._create_partial(**kwargs)
+                    else:
+                        field_config = factory(**kwargs)
+                    if not isinstance(field_config, BaseSparkConfig):
+                        raise TypeError(
+                            f'Expected factory output to be of type \"{BaseSparkConfig.__name__}\", but got \"{field_config.__class__}\".'
+                        )
+                    setattr(instance, field.name, field_config)
                 except:
                     setattr(instance, field.name, field_type._create_partial(**kwargs))
             elif field.default_factory is not dc.MISSING:
@@ -273,6 +284,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     setattr(self, field_name, field_config)
                 elif field.default_factory is not dc.MISSING:
                     # Use default factory if provided
+                    print(field_name)
                     setattr(self, field_name, field.default_factory(**{**subconfig, **prefixed_shared_partial}))
                 else:
                     # Use type class otherwise
@@ -324,6 +336,26 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
         return nested_configs
 
+
+
+    def _get_type_hints(self,):
+        """
+            Returns a dict containing all type hints.
+        """
+        # Get type hints
+        type_hints = tp.get_type_hints(self.__class__)
+        for key in type_hints.keys():
+            if tp.get_origin(type_hints[key]): 
+                hints = list(tp.get_args(type_hints[key]))
+                process_hints = tuple([h for h in hints if h is not type(None)])
+                if np.dtype in process_hints or jnp.dtype in process_hints:
+                    type_hints[key] = (np.dtype,)
+                else:
+                    type_hints[key] = process_hints
+            else:
+                type_hints[key] = (type_hints[key],)
+        return type_hints
+    
 
 
     def validate(self,) -> None:
@@ -513,7 +545,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         # Iterate over all defined fields of the dataclass
         for f in dc.fields(self):
             # Check for fields to skip
-            if f.name in ['__config_delimiter__', '__shared_config_delimiter__']:
+            if f.name in ['__config_delimiter__', '__shared_config_delimiter__', '__class_ref__', '__graph_editor_metadata__']:
                 continue
 
             # Yield the field name and its corresponding value
@@ -543,7 +575,6 @@ class SparkConfig(BaseSparkConfig):
             'value_options': [
                 jnp.float16,
                 jnp.float32,
-                jnp.float64,
             ],
             'description': 'Dtype used for JAX dtype promotions.',
         })

@@ -8,7 +8,6 @@ import typing as tp
 from PySide6 import QtWidgets, QtCore, QtGui
 import PySide6QtAds as ads
 
-from spark.graph_editor.widgets.title_bar import DockTitleBar
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 
 # NOTE: Small workaround to at least have base autocompletion.
