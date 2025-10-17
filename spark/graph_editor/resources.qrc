@@ -3,6 +3,7 @@
 <qresource>
     <file>icons/node_icon.png</file>
     <file>icons/link_icon.png</file>
-    <file>icons/unlink_icon.png</file>
+    <file>icons/dot_icon.png</file>
+    <file>icons/lock_icon.png</file>
 </qresource>
 </RCC>

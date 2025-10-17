@@ -12,11 +12,12 @@ from PySide6 import QtWidgets, QtCore, QtGui
 import PySide6QtAds as ads
 
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
+from spark.graph_editor.models.graph import AbstractNode
 from spark.graph_editor.ui.menu_bar import MenuBar
 from spark.graph_editor.ui.status_bar import StatusBar
 from spark.graph_editor.ui.graph_panel import GraphPanel
-from spark.graph_editor.widgets.dock_panel import QDockPanel
-
+from spark.graph_editor.ui.console_panel import ConsolePanel
+from spark.graph_editor.ui.nodes_panel import NodesPanel
 from spark.graph_editor.ui.inspector_panel import InspectorPanel
 
 # NOTE: Small workaround to at least have base autocompletion.
@@ -76,9 +77,21 @@ class EditorWindow(QtWidgets.QMainWindow):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class EditorEventsManager(QtWidgets.QWidget):
+    """
+        Base QWidget class for the graph editor attributes.
+    """
+
+    nodeSelectionUpdate = QtCore.Signal(AbstractNode)
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class SparkGraphEditor:
 
-    def __init__(self):
+    def __init__(self) -> None:
         # QApplication instance.
         self.app = QtWidgets.QApplication.instance()
         if self.app is None:
@@ -93,6 +106,7 @@ class SparkGraphEditor:
             except Exception:
                 # some rare IPython shells may not support enable_gui; ignore
                 pass
+        self.events_manager = EditorEventsManager()
 
     def launch(self) -> None:
         """
@@ -149,20 +163,17 @@ class SparkGraphEditor:
         # Main panel
         self.graph_panel = GraphPanel(parent=self.window)
         self.window.dock_manager.setCentralWidget(self.graph_panel)
+        self.graph = self.graph_panel.graph
         self.graph_panel._debug_model()
         # Menu bar
         self.menu_bar = MenuBar()
         self.window.setMenuBar(self.menu_bar)
         # Console panel
-        console_panel = QDockPanel('Console', parent=self.window)
-        self.window.add_dock_widget(GRAPH_EDITOR_CONFIG.console_panel_pos, console_panel)
+        self.console_panel = ConsolePanel(parent=self.window)
+        self.window.add_dock_widget(GRAPH_EDITOR_CONFIG.console_panel_pos, self.console_panel)
         # Nodes
-        self.nodes_panel = QDockPanel('Nodes', parent=self.window)
-        left_panel = self.window.add_dock_widget(GRAPH_EDITOR_CONFIG.nodes_panel_pos, self.nodes_panel)
-        # Parameters
-        self.parameters_panel = QDockPanel('Parameters', parent=self.window)
-        left_panel.addDockWidget(self.parameters_panel)
-        left_panel.setCurrentIndex(0)
+        self.nodes_panel = NodesPanel(self.graph, parent=self.window)
+        self.window.add_dock_widget(GRAPH_EDITOR_CONFIG.nodes_panel_pos, self.nodes_panel)
         # Inspector
         self.inspector_panel = InspectorPanel(parent=self.window)
         self.window.add_dock_widget(GRAPH_EDITOR_CONFIG.inspector_panel_pos, self.inspector_panel)
@@ -172,11 +183,11 @@ class SparkGraphEditor:
         # Setup events
         self._setup_events()
 
-    def _setup_events(self,):
-        self.graph_panel.graph.node_selection_changed.connect(self.inspector_panel.on_graph_selection_update)
+    def _setup_events(self,) -> None:
+        self.graph_panel.graph.node_selection_changed.connect(self.inspector_panel.on_selection_update)
+        self.inspector_panel.broadcast_message.connect(self.console_panel.publish_message)
 
-
-    def _get_styles(self,):
+    def _get_styles(self,) -> str:
         import os
         import pathlib as pl
         import glob

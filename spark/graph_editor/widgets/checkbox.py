@@ -42,16 +42,28 @@ class WarningFlag(QtWidgets.QPushButton):
         self.setCheckable(True) 
         self.setIcon(self.toggle_icon)
         self.setChecked(value)
-        
+        self.toolTipDuration()
         self.setStyleSheet(
             f"""
                 QPushButton {{
                     background-color: transparent; 
                     border: none; 
                 }}
+                QToolTip {{
+                    background-color: {GRAPH_EDITOR_CONFIG.primary_bg_color};
+                    color: {GRAPH_EDITOR_CONFIG.default_font_color};
+                    border-radius: 4px;
+                }}
             """
         )
 
+    def set_error_status(self, messages: list[str]):
+        if len(messages) > 0:
+            self.setChecked(True)
+            self.tooltip_message = '\n'.join(messages)
+        else:
+            self.setChecked(False)
+            self.tooltip_message = None
 
     # Ignore mouse events.
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -60,6 +72,14 @@ class WarningFlag(QtWidgets.QPushButton):
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         return
 
+    def enterEvent(self, event: QtCore.QEvent):
+        # Show the tooltip immediately at the current cursor position
+        if self.tooltip_message:
+            QtWidgets.QToolTip.showText(self.mapToGlobal(self.pos()), self.tooltip_message, self) 
+
+    def leaveEvent(self, event: QtCore.QEvent):
+        # Hide the tooltip
+        QtWidgets.QToolTip.hideText()
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class InheritToggleButton(QtWidgets.QPushButton):
@@ -69,12 +89,13 @@ class InheritToggleButton(QtWidgets.QPushButton):
     def __init__(
             self, 
             value: bool = False,
+            interactable: bool = True,
             parent: QtWidgets.QWidget = None,
         ) -> None:
         super().__init__(None, parent)
         # Icons
         self.link_icon = QtGui.QPixmap(':/icons/link_icon.png')
-        #self.unlink_icon = QtGui.QPixmap(':/icons/unlink_icon.png')
+        self.lock_icon = QtGui.QPixmap(':/icons/lock_icon.png')
         empty_pixmap = QtGui.QPixmap(QtCore.QSize(12, 12))
         empty_pixmap.fill(QtGui.QColor(0, 0, 0, 0))
         self.unlink_icon = empty_pixmap
@@ -88,18 +109,36 @@ class InheritToggleButton(QtWidgets.QPushButton):
         self.setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
         self.setIconSize(QtCore.QSize(12, 12))
         # Initialize button
-        self.setCheckable(True) 
+        self.setCheckable(interactable) 
         self.setIcon(self.toggle_icon)
         self.setChecked(value)
 
-        self.setStyleSheet(
-            f"""
-                QPushButton {{
-                    background-color: {GRAPH_EDITOR_CONFIG.input_field_bg_color};
-                    border-radius: {GRAPH_EDITOR_CONFIG.input_field_border_radius}px;
-                }}
-            """
-        )
+        if interactable:
+            self.setStyleSheet(
+                f"""
+                    QPushButton {{
+                        background-color: {GRAPH_EDITOR_CONFIG.input_field_bg_color};
+                        border-radius: {GRAPH_EDITOR_CONFIG.input_field_border_radius}px;
+                    }}
+                """
+            )
+        else:
+            self.setStyleSheet(
+                f"""
+                    QPushButton {{
+                        background-color: {GRAPH_EDITOR_CONFIG.primary_bg_color};
+                        border-radius: {GRAPH_EDITOR_CONFIG.input_field_border_radius}px;
+                    }}
+                """
+            )
+
+    def _set_virtual_icon_state(self, state: bool = True) -> None:
+        """
+            Set the current icon to the icon associated with state.
+
+            Internal method for visual feedback that avoids triggering events.
+        """
+        self.setIcon(QtGui.QIcon(self.lock_icon if state else self.unlink_icon))
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

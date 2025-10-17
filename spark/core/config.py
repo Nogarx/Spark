@@ -116,7 +116,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
     __config_delimiter__: str = '__'
     __shared_config_delimiter__: str = '_s_'
-    __graph_editor_metadata__ = {}
+    __graph_editor_metadata__: dict = dc.field(default_factory=dict)
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -284,7 +284,6 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     setattr(self, field_name, field_config)
                 elif field.default_factory is not dc.MISSING:
                     # Use default factory if provided
-                    print(field_name)
                     setattr(self, field_name, field.default_factory(**{**subconfig, **prefixed_shared_partial}))
                 else:
                     # Use type class otherwise
@@ -366,6 +365,28 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             for validator in field.metadata.get('validators', []):
                 validator_instance = validator(field)
                 validator_instance.validate(getattr(self, field.name))
+
+
+
+    def get_field_errors(self, field_name: str) -> list[str]:
+        """
+            Validates all fields in the configuration class.
+        """
+        # Validate field
+        field: dc.Field = getattr(self, '__dataclass_fields__').get(field_name, None)
+        if field is None:
+            raise KeyError(
+                f'SparkConfig \"{self.__class__}\" does not define a field with name \"{field_name}\".'
+            )
+        # Try to validate field
+        errors = []
+        for validator in field.metadata.get('validators', []):
+            validator_instance = validator(field)
+            try:
+                validator_instance.validate(getattr(self, field.name))
+            except Exception as e:
+                errors.append(f'{validator.__name__}: {e}')
+        return errors
 
 
 

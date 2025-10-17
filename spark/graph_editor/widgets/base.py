@@ -43,7 +43,7 @@ class SparkQWidget(QtWidgets.QWidget):
         """
         raise NotImplementedError()
 
-    def _on_update(self):
+    def _on_update(self) -> None:
         self.on_update.emit(self.get_value())
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -54,6 +54,7 @@ class QField(QtWidgets.QWidget):
     """
 
     inheritance_toggled = QtCore.Signal(bool)
+    field_updated = QtCore.Signal(tp.Any)
 
     def __init__(
             self, 
@@ -61,6 +62,7 @@ class QField(QtWidgets.QWidget):
             attr_widget: SparkQWidget,
             warning_value: bool = False,
             inheritance_box: bool = False,
+            inheritance_interactable: bool = True,
             inheritance_value: bool = False,
             parent: QtWidgets.QWidget | None = None,
             **kwargs
@@ -75,7 +77,11 @@ class QField(QtWidgets.QWidget):
         layout.addWidget(self.warning_flag)    
         # Inheritance checkbox.
         if inheritance_box:
-            self.inheritance_checkbox = InheritToggleButton(value=inheritance_value, parent=self)
+            self.inheritance_checkbox = InheritToggleButton(
+                value=inheritance_value, 
+                interactable=inheritance_interactable,
+                parent=self
+            )
             self.inheritance_checkbox.toggled.connect(self.on_inheritance_toggled)
             layout.addWidget(self.inheritance_checkbox)
         else:
@@ -98,13 +104,17 @@ class QField(QtWidgets.QWidget):
         #        f'Expected \"attr_widget\" to be of type \"SparkQWidget\", but got \"{attr_widget.__class__}\".'
         #    )
         self.widget = attr_widget
+        self.widget.on_update.connect(self.on_field_update)
         self.widget.setParent(self)
         layout.addWidget(self.widget)  
         # Set layout
         self.setLayout(layout)
 
-    def on_inheritance_toggled(self, state: bool):
+    def on_inheritance_toggled(self, state: bool) -> None:
         self.inheritance_toggled.emit(state)
+
+    def on_field_update(self, value: tp.Any) -> None:
+        self.field_updated.emit(value)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

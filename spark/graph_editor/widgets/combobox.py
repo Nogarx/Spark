@@ -95,10 +95,10 @@ class QDtype(SparkQWidget):
         layout.addWidget(self._dtype_edit)
         self.setLayout(layout)
 
-    def get_value(self):
+    def get_value(self) -> jnp.dtype:
         return self._dtype_edit.get_value()
     
-    def set_value(self, value: jnp.dtype):
+    def set_value(self, value: jnp.dtype) -> None:
         return self._dtype_edit.set_value(value)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -125,10 +125,10 @@ class QBool(SparkQWidget):
         layout.addWidget(self._bool_edit)
         self.setLayout(layout)
 
-    def get_value(self):
+    def get_value(self) -> bool:
         return self._bool_edit.get_value()
     
-    def set_value(self, value: bool):
+    def set_value(self, value: bool) -> None:
         return self._bool_edit.set_value(value)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -157,10 +157,10 @@ class QGenericComboBox(SparkQWidget):
         layout.addWidget(self._value_edit)
         self.setLayout(layout)
 
-    def get_value(self):
+    def get_value(self) -> tp.Any:
         return self._value_edit.get_value()
     
-    def set_value(self, value: tp.Any):
+    def set_value(self, value: tp.Any) -> None:
         return self._value_edit.set_value(value)
 
 #################################################################################################################################################

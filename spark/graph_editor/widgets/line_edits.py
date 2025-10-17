@@ -24,7 +24,8 @@ class QStrLineEdit(QtWidgets.QLineEdit):
             parent: QtWidgets.QWidget | None = None,
             **kwargs,
         ) -> None:
-        super().__init__(str(initial_value), parent=parent)
+        initial_value = str(initial_value) if initial_value is not None else ''
+        super().__init__(initial_value, parent=parent)
         self.setPlaceholderText(placeholder)
         self.setTextMargins(GRAPH_EDITOR_CONFIG.input_field_margin)
         self.setStyleSheet(
@@ -65,9 +66,9 @@ class QString(SparkQWidget):
     def get_value(self) -> str:
         return self._line_edit.text()
 
-    def set_value(self, value: str):
+    def set_value(self, value: str) -> None:
         return self._line_edit.setText(value)
-    
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class QIntLineEdit(QtWidgets.QLineEdit):
@@ -82,12 +83,14 @@ class QIntLineEdit(QtWidgets.QLineEdit):
             parent: QtWidgets.QWidget = None,
             **kwargs,
         ) -> None:
-        super().__init__(str(initial_value), parent=parent)
+        initial_value = str(initial_value) if initial_value is not None else ''
+        super().__init__(initial_value, parent=parent)
         validator = QtGui.QIntValidator()
         if bottom_value:
             validator.setBottom(bottom_value)
         self.setValidator(validator)
         self.setPlaceholderText(placeholder)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.setTextMargins(GRAPH_EDITOR_CONFIG.input_field_margin)
         self.setStyleSheet(
             f"""
@@ -129,8 +132,8 @@ class QInt(SparkQWidget):
     def get_value(self) -> int:
         return int(self._line_edit.text())
 
-    def set_value(self, value: int):
-        return self._line_edit.setText(value)
+    def set_value(self, value: int) -> None:
+        return self._line_edit.setText(str(value))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -146,7 +149,8 @@ class QFloatLineEdit(QtWidgets.QLineEdit):
             parent: QtWidgets.QWidget = None,
             **kwargs,
         ) -> None:
-        super().__init__(str(initial_value), parent=parent)
+        initial_value = str(initial_value) if initial_value is not None else ''
+        super().__init__(initial_value, parent=parent)
         validator = QtGui.QDoubleValidator()
         validator.setNotation(QtGui.QDoubleValidator.Notation.ScientificNotation)
         if bottom_value:
@@ -194,9 +198,9 @@ class QFloat(SparkQWidget):
     def get_value(self) -> float:
         return float(self._line_edit.text())
 
-    def set_value(self, value: float):
-        return self._line_edit.setText(value)
-    
+    def set_value(self, value: float) -> None:
+        return self._line_edit.setText(str(value))
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class NodeNameWidget(SparkQWidget):
@@ -237,7 +241,7 @@ class NodeNameWidget(SparkQWidget):
     def get_value(self) -> str:
         return self._line_edit.text()
 
-    def set_value(self, value: str):
+    def set_value(self, value: str) -> None:
         return self._line_edit.setText(value)
 
 #################################################################################################################################################

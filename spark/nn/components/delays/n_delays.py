@@ -61,7 +61,7 @@ class NDelays(Delays):
                  neuron B fires, every neuron that listens to B recieves its spikes L timesteps later.
 
         Init:
-            max_delay: int
+            max_delay: float
             delay_initializer: DelayInitializerConfig
 
         Input:

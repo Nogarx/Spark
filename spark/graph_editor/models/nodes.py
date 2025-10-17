@@ -9,6 +9,8 @@ if TYPE_CHECKING:
     from spark.core.config import BaseSparkConfig
     from spark.graph_editor.models.graph import SparkNodeGraph
 
+from PySide6 import QtWidgets, QtCore, QtGui
+
 import abc
 import logging
 import jax.numpy as jnp
@@ -35,7 +37,7 @@ class AbstractNode(BaseNode, abc.ABC):
     output_specs: dict[str, OutputSpec] = {}
     _graph: SparkNodeGraph
 
-    def __init__(self,):
+    def __init__(self,) -> None:
         super().__init__()
         # Name edition is handle through the inspector
         self._view._text_item.set_locked(True)
@@ -78,12 +80,12 @@ class AbstractNode(BaseNode, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def config_metadata(self,):
+    def node_config_metadata(self,) -> dict:
         pass
     
     def _update_graph_metadata(self,):
         # Update metadata for model graph editor model reconstruction.
-        self.config_metadata['pos'] = self.pos()
+        self.node_config_metadata['pos'] = self.pos()
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -94,7 +96,7 @@ class SourceNode(AbstractNode):
     """
     NODE_NAME = 'Source Node'
 
-    def __init__(self,):
+    def __init__(self,) -> None:
         super().__init__()
         # Delay specs definition for better control.
         self.output_specs = {
@@ -115,7 +117,7 @@ class SourceNode(AbstractNode):
             )
         
     @property
-    def config_metadata(self,):
+    def node_config_metadata(self,) -> dict:
         return None
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -127,7 +129,7 @@ class SinkNode(AbstractNode):
     """
     NODE_NAME = 'Sink Node'
 
-    def __init__(self,):
+    def __init__(self,) -> None:
         super().__init__()
         # Delay specs definition for better control.
         self.input_specs = {
@@ -149,7 +151,7 @@ class SinkNode(AbstractNode):
             )
 
     @property
-    def config_metadata(self,):
+    def node_config_metadata(self,) -> dict:
         return None
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -163,7 +165,7 @@ class SparkModuleNode(AbstractNode, abc.ABC):
     module_cls: type[SparkModule]
     node_config: BaseSparkConfig
 
-    def __init__(self,):
+    def __init__(self,) -> None:
         # Init super
         super().__init__()
         # Add input ports.
@@ -191,7 +193,7 @@ class SparkModuleNode(AbstractNode, abc.ABC):
         self.node_config = node_config_type._create_partial(_s_units=utils.validate_shape(1,), _s_async_spikes=True, _s_num_outputs=1)
 
     @property
-    def config_metadata(self,):
+    def node_config_metadata(self,) -> dict:
         return self.node_config.__graph_editor_metadata__
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

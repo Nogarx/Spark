@@ -19,7 +19,8 @@ class GraphEditorConfig:
     secondary_bg_color: str = '#404040'
     tertiary_bg_color: str = '#5A5A5A'
     border_color: str = '#2A2A2A'
-    primary_header_bg_color: str = "#313246"
+    hover_color: str = "#444958"
+    selected_color: str = "#515E86"
     # Font
     small_font_size: int = 12
     medium_font_size: int = 14
@@ -27,7 +28,7 @@ class GraphEditorConfig:
     header_font_size: int = 16
     default_font_color: str = "#E4E4E4"
     # Docks
-    dock_min_width : int = 300 
+    dock_min_width : int = 350 
     dock_min_height : int = 150 
     dock_layout_spacing: int = 2
     dock_layout_margins: QtCore.QMargins = dc.field(default_factory = lambda: QtCore.QMargins(0, 4, 0, 4))

@@ -51,7 +51,7 @@ class N2NDelays(Delays):
 
         Init:
             units: tuple[int, ...]
-            max_delay: int
+            max_delay: float
             delay_kernel_initializer: Initializer
 
         Input:
