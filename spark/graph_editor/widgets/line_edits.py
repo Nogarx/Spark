@@ -201,49 +201,6 @@ class QFloat(SparkQWidget):
     def set_value(self, value: float) -> None:
         return self._line_edit.setText(str(value))
 
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-class NodeNameWidget(SparkQWidget):
-    """
-        QWidget used for the name of nodes in the SparkGraphEditor's Inspector.
-    """
-
-    def __init__(
-            self, 
-            initial_value: str, 
-            parent: QtWidgets.QWidget | None = None,
-            **kwargs
-        ) -> None:
-        super().__init__(parent=parent)
-        # Add layout
-        layout = QtWidgets.QHBoxLayout()
-        layout.setContentsMargins(QtCore.QMargins(4, 8, 4, 8))
-        # Add icon. The icon makes it look more professional c:
-        _icon = QtGui.QPixmap(':/icons/node_icon.png')
-        self._icon_label = QtWidgets.QLabel(parent=self)
-        self._icon_label.setPixmap(_icon)
-        self._icon_label.setScaledContents(True)
-        self._icon_label.setMaximumWidth(32)
-        self._icon_label.setMaximumHeight(32)
-        layout.addWidget(self._icon_label)
-        # Add QLineEdit
-        self._line_edit = QStrLineEdit(
-            initial_value, 
-            parent=self,
-            **kwargs,
-        )
-        # Setup callback
-        self._line_edit.editingFinished.connect(self._on_update)
-        # Finalize
-        layout.addWidget(self._line_edit)
-        self.setLayout(layout)
-
-    def get_value(self) -> str:
-        return self._line_edit.text()
-
-    def set_value(self, value: str) -> None:
-        return self._line_edit.setText(value)
-
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

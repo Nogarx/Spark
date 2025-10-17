@@ -15,11 +15,11 @@ from PySide6 import QtWidgets, QtCore, QtGui
 import spark.core.utils as utils
 from functools import partial
 from spark.core.config import BaseSparkConfig
+from spark.graph_editor.editor import GRAPH_EDITOR_CONFIG
 from spark.nn.initializers.base import InitializerConfig
 from spark.graph_editor.models.nodes import AbstractNode, SparkModuleNode, SourceNode, SinkNode
 from spark.graph_editor.widgets.dock_panel import QDockPanel
-from spark.graph_editor.widgets.inspector_idle import InspectorIdleWidget
-from spark.graph_editor.widgets.line_edits import NodeNameWidget, QString, QInt, QFloat
+from spark.graph_editor.widgets.line_edits import QStrLineEdit, QString, QInt, QFloat
 from spark.graph_editor.widgets.separators import QHLine
 from spark.graph_editor.widgets.base import SparkQWidget, QField, QMissing
 from spark.graph_editor.widgets.collapsible import QCollapsible
@@ -46,7 +46,9 @@ class InspectorPanel(QDockPanel):
         ) -> None:
         super().__init__(name, parent=parent, **kwargs)
         self._target_node = None
+        self._multi_selection = False
         self._node_config_widget = None
+        self.set_node(None)
 
 
     def on_selection_update(self, new_selection: list[AbstractNode], previous_selection: list[AbstractNode]) -> None:
@@ -55,10 +57,14 @@ class InspectorPanel(QDockPanel):
         """ 
         if len(new_selection) == 1:
             self.set_node(new_selection[0])
+            self._multi_selection = False
         elif len(new_selection) == 0:
             # Keep the current interface state if the user didn't selected anything.
-            pass
+            if self._multi_selection:
+                self._multi_selection = False
+                self.set_node(None)
         else: 
+            self._multi_selection = True
             self.set_node(None)
 
     def set_node(self, node: AbstractNode | None):
@@ -75,7 +81,7 @@ class InspectorPanel(QDockPanel):
                 self._target_node.node_config_metadata['inheritance_tree'] = self._node_config_widget._inheritance_tree.to_dict()
 
         # Update node selection
-        if self._target_node is node:
+        if self._target_node is not None and self._target_node is node:
             return
         self._target_node = node
         
@@ -85,15 +91,17 @@ class InspectorPanel(QDockPanel):
                 self._node_config_widget = QNodeConfig(self._target_node)
                 self._node_config_widget.error_detected.connect(self.on_error_message)
             elif isinstance(self._target_node, (SinkNode, SourceNode)):
-                self._node_config_widget = InspectorIdleWidget()
+                self._node_config_widget = InspectorIdleWidget('IO.')
             else: 
-                self._node_config_widget = InspectorIdleWidget()
+                self._node_config_widget = InspectorIdleWidget('Node type not supported.')
             self.setContent(
                 self._node_config_widget
             )
         else:
             self.setContent(
-                InspectorIdleWidget()
+                InspectorIdleWidget(
+                    'Select a node to Inspect' if not self._multi_selection else 'Multi-selection not supported.'
+                )
             )
 
     def on_error_message(self, message: str) -> None:
@@ -157,10 +165,13 @@ class QNodeConfig(QtWidgets.QWidget):
         self.content.layout().addWidget(widget)
 
     def _setup_layout(self,) -> None:
-
+        # Get config
+        node_config: BaseSparkConfig = getattr(self._target_node, 'node_config', None)
         # Add name widget
-        name_widget = NodeNameWidget(
-            initial_value=self._target_node.NODE_NAME,
+        name_widget = NodeHeaderWidget(
+            name=self._target_node.NODE_NAME,
+            node_cls=getattr(self._target_node, 'module_cls', None).__name__,
+            config_tree=node_config.get_tree_structure(),
             parent=self,
         )
         name_widget.on_update.connect(
@@ -169,7 +180,6 @@ class QNodeConfig(QtWidgets.QWidget):
         self.addWidget(name_widget)
         self.addWidget(QHLine())
         # Add configs recurrently
-        node_config: BaseSparkConfig = getattr(self._target_node, 'node_config', None)
         if node_config:
             self._add_config_recurrently('Main', node_config, ['main'])
         # Execute callbacks
@@ -413,6 +423,155 @@ class QNodeConfig(QtWidgets.QWidget):
         # Broadcast errors
         for e in errors:
             self.error_detected.emit(e)
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+class InspectorIdleWidget(QtWidgets.QWidget):
+    """
+        Constructs the UI shown when no valid node is selected.
+    """
+
+    def __init__(self, message: str, parent: QtWidgets.QWidget = None, **kwargs):
+        super().__init__(parent=parent, **kwargs)
+        # Horizontal layout for message
+        _message_widget = self._message(message)
+        # Vertical layout for Widget
+        layout = QtWidgets.QVBoxLayout()
+        layout.addStretch()
+        layout.addWidget(_message_widget)
+        layout.addStretch()
+        self.setLayout(layout)
+
+    def _message(self, message: str) -> QtWidgets.QWidget:
+        # Create new widget for message
+        _message_widget = QtWidgets.QWidget()
+        # Horizontal layout for the icon and label
+        h_layout = QtWidgets.QHBoxLayout(self)
+        icon_label = QtWidgets.QLabel()
+        icon = self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_FileDialogInfoView)
+        icon_label.setPixmap(icon.pixmap(15, 15))
+        label = QtWidgets.QLabel(message)
+        # Horizontally center the content
+        h_layout.addStretch()
+        h_layout.addWidget(icon_label)
+        h_layout.addWidget(label)
+        h_layout.addStretch()
+        # Set widget layout
+        _message_widget.setLayout(h_layout)
+        return _message_widget
+    
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class NodeHeaderWidget(SparkQWidget):
+    """
+        QWidget used for the name of nodes in the SparkGraphEditor's Inspector.
+    """
+
+    def __init__(
+            self, 
+            name: str, 
+            node_cls: str,
+            config_tree: str,
+            parent: QtWidgets.QWidget | None = None,
+            **kwargs
+        ) -> None:
+        super().__init__(parent=parent)
+        # Add layout
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(QtCore.QMargins(4, 8, 4, 8))
+        # Add name
+        self.name_widget = NodeNameWidget(name, parent=self, **kwargs)
+        self.name_widget.on_update.connect(self._on_update)
+        # Class
+        self.class_label = QtWidgets.QLabel(node_cls, parent=self)
+        self.class_label.setContentsMargins(QtCore.QMargins(16, 0,0,0))
+        # Config tree description
+        print(config_tree)
+        self.tree_label = TreeDisplay(config_tree, parent=self)
+        # Finalize
+        layout.addWidget(self.name_widget)
+        layout.addWidget(self.class_label)
+        layout.addWidget(self.tree_label)
+        self.setLayout(layout)
+
+        self.setFixedHeight(
+            self.name_widget.size().height() + self.class_label.size().height() + self.tree_label.size().height()
+        )
+
+    def get_value(self) -> str:
+        return self.name_widget.get_value()
+
+    def set_value(self, value: str) -> None:
+        return self.name_widget.get_value(value)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class NodeNameWidget(SparkQWidget):
+    """
+        QWidget used for the name of nodes in the SparkGraphEditor's Inspector.
+    """
+
+    def __init__(
+            self, 
+            name: str, 
+            parent: QtWidgets.QWidget | None = None,
+            **kwargs
+        ) -> None:
+        super().__init__(parent=parent)
+        # Add layout
+        layout = QtWidgets.QHBoxLayout()
+        #layout.setContentsMargins(QtCore.QMargins(4, 8, 4, 8))
+        # Add icon. The icon makes it look more professional c:
+        _icon = QtGui.QPixmap(':/icons/node_icon.png')
+        self._icon_label = QtWidgets.QLabel(parent=self)
+        self._icon_label.setPixmap(_icon)
+        self._icon_label.setScaledContents(True)
+        self._icon_label.setMaximumWidth(32)
+        self._icon_label.setMaximumHeight(32)
+        layout.addWidget(self._icon_label)
+        # Add QLineEdit
+        self._line_edit = QStrLineEdit(name, parent=self, **kwargs)
+        # Setup callback
+        self._line_edit.editingFinished.connect(self._on_update)
+        # Finalize
+        layout.addWidget(self._line_edit)
+        self.setLayout(layout)
+
+    def get_value(self) -> str:
+        return self._line_edit.text()
+
+    def set_value(self, value: str) -> None:
+        return self._line_edit.setText(value)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TreeDisplay(QtWidgets.QPlainTextEdit):
+    def __init__(self, tree: str, parent=None) -> None:
+        super().__init__(parent=parent)
+        # QPlainTextEdit preserves formatting and monospacing
+        self.setPlainText(tree)
+        self.setReadOnly(True)
+        self.setLineWrapMode(QtWidgets.QPlainTextEdit.LineWrapMode.NoWrap)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
+        self.setStyleSheet(
+            f"""
+                QPlainTextEdit {{
+                    border: none;
+                    background-color: coral;
+                    color: {GRAPH_EDITOR_CONFIG.default_font_color};
+                    font-family: Courier;
+                    margin: 0px;
+                    padding: 0px;
+                }}
+            """
+        )
+        rows_space = len(tree.split('\n')) * self.fontMetrics().boundingRect('M').height() * 1.0
+        line_space = len(tree.split('\n')) * 7 # ¯\_(ツ)_/¯
+        self.setFixedHeight(rows_space + line_space)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

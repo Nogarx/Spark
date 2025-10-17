@@ -83,6 +83,8 @@ class QNodeList(QtWidgets.QWidget):
         # Events
         self._node_graph.node_selection_changed.connect(self.on_selection_update)
         self._node_graph.viewer().node_name_changed.connect(self.on_node_name_update)
+        self._node_graph.nodes_deleted.connect(self.on_nodes_deletion)
+        self._node_graph.node_created.connect(self.on_node_created)
 
     def addWidget(self, widget: QtWidgets.QWidget) -> None:
         """
@@ -93,12 +95,23 @@ class QNodeList(QtWidgets.QWidget):
 
     def _setup_layout(self,) -> None:
         for node in self._node_graph.all_nodes():
-            # Add widget
-            entry = ListEntry(node.id, node.NODE_NAME, parent=self)
-            entry.clicked.connect(self.on_entry_clicked)
-            self.addWidget(entry)
-            # Add to registry
-            self._node_widget_map[node.id] = entry
+            self._add_widget_from_node(node)
+
+    def _add_widget_from_node(self, node: AbstractNode) -> None:
+        # Add widget
+        entry = ListEntry(node.id, node.NODE_NAME, parent=self)
+        entry.clicked.connect(self.on_entry_clicked)
+        self.addWidget(entry)
+        # Add to registry
+        self._node_widget_map[node.id] = entry
+
+    def on_nodes_deletion(self, nodes_ids: list[str]) -> None:
+        for n in nodes_ids:
+            widget = self._node_widget_map.pop(n)
+            widget.deleteLater()
+
+    def on_node_created(self, node: AbstractNode) -> None:
+        self._add_widget_from_node(node)
 
     def on_entry_clicked(self, node_id: str) -> None:
         # Check if selected to avoid wasted broadcasting
@@ -112,6 +125,15 @@ class QNodeList(QtWidgets.QWidget):
                     self._node_graph.get_node_by_id(node_id).set_selected(False)
                 # Broadcast selection
                 self._node_graph._on_node_selection_changed([node.id], self._current_selection)
+            else:
+                if len(self._current_selection) > 1:
+                    # Unselect other nodes
+                    for node_id in self._current_selection:
+                        if node.id == node_id:
+                            continue
+                        self._node_graph.get_node_by_id(node_id).set_selected(False)
+                    # Broadcast selection
+                    self._node_graph._on_node_selection_changed([node.id], self._current_selection)
 
     def on_selection_update(self, new_selection: list[AbstractNode], prev_selection: list[AbstractNode]) -> None:
         # Remove previous selection

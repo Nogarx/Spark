@@ -14,6 +14,7 @@ import typing as tp
 import copy
 import json
 import pathlib as pl
+import spark.core.utils as utils
 from jax.typing import DTypeLike
 from spark.core.validation import _is_config_instance
 from spark.core.registry import REGISTRY, register_config
@@ -571,6 +572,20 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
             # Yield the field name and its corresponding value
             yield (f.name, f, getattr(self, f.name))
+
+
+    def get_tree_structure(self,) -> str:
+        return utils.ascii_tree(self._parse_tree_structure(0))
+
+    def _parse_tree_structure(self, current_depth: int) -> str:
+        """
+            Parses the tree with to produce a string with the appropiate format for the ascii_tree method.
+        """
+        rep = current_depth * ' ' + f'{utils.to_human_readable(self.__class__.__name__, capitalize_all=True)}\n'
+        for name, field, value in self:
+            if isinstance(value, BaseSparkConfig):
+                rep += value._parse_tree_structure(current_depth+1)
+        return rep
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

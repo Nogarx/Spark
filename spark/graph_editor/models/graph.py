@@ -44,11 +44,12 @@ class SparkNodeGraph(NodeGraph):
         NodeGraphQt object for building/managing Spark models.
     """
 
+    context_menu_prompt = QtCore.Signal(object, object)
     stateChanged = QtCore.Signal() 
     _is_modified = False
 
     def __init__(self, parent=None, **kwargs):
-        super().__init__(parent, **kwargs, viewer=SparkNodeViewer())
+        super().__init__(parent, **kwargs, )#viewer=SparkNodeViewer())
         # Enable recurrence
         self.set_acyclic(False)
 
@@ -70,7 +71,29 @@ class SparkNodeGraph(NodeGraph):
         self.data_dropped.connect(self._on_state_changed)
         self.session_changed.connect(self._on_state_changed)
 
-    context_menu_prompt = QtCore.Signal(object, object)
+        self.node_selection_changed.connect(self._bugfix_on_node_selection_changed)
+        self._bugfix_prev_selection = []
+    
+
+    # NOTE: This is a simple workaround to fix a bug that happens when cliking an already selected node in the graph.
+    def _bugfix_on_node_selection_changed(self, new_selection: list[AbstractNode], prev_selection: list[AbstractNode]) -> None:
+        # Check if bug happend.
+        if len(new_selection) == 0 and len(prev_selection) == 0:
+            QtCore.QTimer.singleShot(1, self._bugfix_on_node_selection_changed_after_wait)
+        else:
+            # Cache previous selection.
+            self._bugfix_prev_selection = [n.id for n in new_selection]
+    def _bugfix_on_node_selection_changed_after_wait(self) -> None:
+        # Find selected node
+        selected = None
+        for node in self.all_nodes():
+            if node.selected():
+                selected = node.id
+        # Remove selected from list
+        self._bugfix_prev_selection.remove(selected)
+        # Broadcast correct selection
+        self._on_node_selection_changed([selected], self._bugfix_prev_selection)
+    
 
     def _on_state_changed(self):
         self._is_modified = True

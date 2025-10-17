@@ -186,6 +186,7 @@ class SparkGraphEditor:
     def _setup_events(self,) -> None:
         self.graph_panel.graph.node_selection_changed.connect(self.inspector_panel.on_selection_update)
         self.inspector_panel.broadcast_message.connect(self.console_panel.publish_message)
+        self.graph_panel.broadcast_message.connect(self.console_panel.publish_message)
 
     def _get_styles(self,) -> str:
         import os

@@ -70,7 +70,7 @@ class Console(QtWidgets.QWidget):
         # Widget layout
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(QtCore.QMargins(8, 4, 8, 8))
-        layout.setSpacing(4)
+        layout.setSpacing(0)
         self.setLayout(layout)
         # Scroll area
         scroll_area = QtWidgets.QScrollArea()
@@ -96,6 +96,7 @@ class Console(QtWidgets.QWidget):
         content_layout = QtWidgets.QVBoxLayout(self.content)
         content_layout.setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
         content_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
+        content_layout.setSpacing(0)
         # Top button bar
         self._btn_info = self._make_filter_button("Info", MessageLevel.INFO)
         self._btn_success = self._make_filter_button("Success", MessageLevel.SUCCESS)
@@ -162,7 +163,7 @@ class Console(QtWidgets.QWidget):
             widget = item.widget()
             if widget is not None:
                 widget.deleteLater()
-        self.content.layout().addStretch(1)
+        #self.content.layout().addStretch(1)
 
 
     def _make_filter_button(self, label: str, level: MessageLevel) -> QtWidgets.QPushButton:
@@ -207,7 +208,7 @@ class _MessageWidget(QtWidgets.QWidget):
         icon_label.setFixedWidth(18)
         icon_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop | QtCore.Qt.AlignmentFlag.AlignHCenter)
         # Visual queues for the messages
-        pix = QtGui.QPixmap(12, 12)
+        pix = QtGui.QPixmap(18, 18)
         pix.fill(QtCore.Qt.GlobalColor.transparent)
         p = QtGui.QPainter(pix)
         p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
@@ -220,7 +221,7 @@ class _MessageWidget(QtWidgets.QWidget):
         color = color_map.get(level, QtGui.QColor(150, 150, 150))
         p.setBrush(color)
         p.setPen(QtCore.Qt.PenStyle.NoPen)
-        p.drawEllipse(0, 0, 12, 12)
+        p.drawEllipse(6, 3, 6, 6)
         p.end()
         icon_label.setPixmap(pix)
         # Text content
@@ -228,12 +229,13 @@ class _MessageWidget(QtWidgets.QWidget):
         text_label.setWordWrap(True)
         text_label.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.NoTextInteraction)
         text_label.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
+        text_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
         # Layout
         layout = QtWidgets.QHBoxLayout(self)
-        layout.setContentsMargins(6, 4, 6, 4)
-        layout.setSpacing(8)
-        layout.addWidget(icon_label, 0)
-        layout.addWidget(text_label, 1)
+        layout.setContentsMargins(0,0,0,0)
+        layout.setSpacing(2)
+        layout.addWidget(icon_label)
+        layout.addWidget(text_label)
         # Style
         self.setStyleSheet(
             f"""

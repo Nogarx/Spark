@@ -42,7 +42,7 @@ def normalize_str(s: str) -> str:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def to_human_readable(s: str) -> str:
+def to_human_readable(s: str, capitalize_all: bool = False) -> str:
     """
         Converts a string from various programming cases into a human-readable format.
 
@@ -62,7 +62,10 @@ def to_human_readable(s: str) -> str:
     # Replace any spaces or hyphens with a single underscore.
     s = re.sub(r'[-\s]+', '_', s)
     # Replace all underscores with spaces.
-    return s.replace('_', ' ').capitalize()
+    if capitalize_all:
+        return ' '.join([w.capitalize() for w in s.replace('_', ' ').split(' ')])
+    else:
+        return s.replace('_', ' ').capitalize()
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

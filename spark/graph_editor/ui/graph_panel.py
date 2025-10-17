@@ -5,13 +5,14 @@
 from __future__ import annotations
     
 import typing as tp
-import NodeGraphQt
 from PySide6 import QtCore, QtWidgets, QtGui
 import PySide6QtAds as ads
+
 from spark.core.registry import REGISTRY
 from spark.graph_editor.models.graph import SparkNodeGraph
 from spark.graph_editor.models.graph_menu_tree import HierarchicalMenuTree
 from spark.graph_editor.models.nodes import SourceNode, SinkNode, AbstractNode, module_to_nodegraph
+from spark.graph_editor.ui.console_panel import MessageLevel
 
 # NOTE: Small workaround to at least have base autocompletion.
 if tp.TYPE_CHECKING:
@@ -28,6 +29,7 @@ class GraphPanel(CDockWidget):
         Container for the NodeGraphQt object.
     """
 
+    broadcast_message = QtCore.Signal(MessageLevel, str)
     onWidgetUpdate = QtCore.Signal(str, tp.Any)
 
     def __init__(self, parent = None, **kwargs):
@@ -69,9 +71,19 @@ class GraphPanel(CDockWidget):
             )
 
         # Base commands
-        #context_menu.graph_menu_ref.add_separator()
+        context_menu.graph_menu_ref.add_separator()
         #context_menu.add_command('Validate Topology', self.validate_graph)
-        #context_menu.add_command('Delete Selected', self.delete_selected, shortcut='del')
+        context_menu.add_command('Delete Selected', self.delete_selected, shortcut='del')
+
+    def delete_selected(self,) -> None:
+        try:
+            nodes = self.graph.selected_nodes()
+            nodes_names = [n.NODE_NAME for n in nodes]
+            self.graph.delete_nodes(nodes)
+            for n in nodes_names:
+                self.broadcast_message.emit(MessageLevel.INFO, f'Node {n} deleted sucessfully.')
+        except Exception as e:
+            self.broadcast_message.emit(MessageLevel.ERROR, f'Encounter an error while trying to delete nodes: {e}')
 
     def maybe_create_node(self, *args, nodegraph_cls: AbstractNode)  -> None:
         """
