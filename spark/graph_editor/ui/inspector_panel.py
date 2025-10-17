@@ -15,15 +15,17 @@ from PySide6 import QtWidgets, QtCore, QtGui
 import spark.core.utils as utils
 from functools import partial
 from spark.core.config import BaseSparkConfig
-from spark.graph_editor.editor import GRAPH_EDITOR_CONFIG
+from spark.core.payloads import SparkPayload, FloatArray
+from spark.core.registry import REGISTRY
 from spark.nn.initializers.base import InitializerConfig
+from spark.graph_editor.editor import GRAPH_EDITOR_CONFIG
 from spark.graph_editor.models.nodes import AbstractNode, SparkModuleNode, SourceNode, SinkNode
 from spark.graph_editor.widgets.dock_panel import QDockPanel
 from spark.graph_editor.widgets.line_edits import QStrLineEdit, QString, QInt, QFloat
 from spark.graph_editor.widgets.separators import QHLine
 from spark.graph_editor.widgets.base import SparkQWidget, QField, QMissing
 from spark.graph_editor.widgets.collapsible import QCollapsible
-from spark.graph_editor.widgets.combobox import QDtype, QBool
+from spark.graph_editor.widgets.combobox import QDtype, QBool, QGenericComboBox
 from spark.graph_editor.widgets.shape import QShape
 from spark.graph_editor.ui.console_panel import MessageLevel
 
@@ -45,6 +47,7 @@ class InspectorPanel(QDockPanel):
             **kwargs
         ) -> None:
         super().__init__(name, parent=parent, **kwargs)
+        self.setMinimumWidth(GRAPH_EDITOR_CONFIG.inspector_panel_min_width)
         self._target_node = None
         self._multi_selection = False
         self._node_config_widget = None
@@ -91,7 +94,7 @@ class InspectorPanel(QDockPanel):
                 self._node_config_widget = QNodeConfig(self._target_node)
                 self._node_config_widget.error_detected.connect(self.on_error_message)
             elif isinstance(self._target_node, (SinkNode, SourceNode)):
-                self._node_config_widget = InspectorIdleWidget('IO.')
+                self._node_config_widget = QNodeIO(node, parent=self)
             else: 
                 self._node_config_widget = InspectorIdleWidget('Node type not supported.')
             self.setContent(
@@ -187,9 +190,9 @@ class QNodeConfig(QtWidgets.QWidget):
             f()
 
     def name_update(self, node: AbstractNode, name: str) -> None:
-       node.graph.viewer().node_name_changed.emit(node.id, name)
-       # NOTE: The above line should be enough but it does not propagate to the node widget properly.
-       node.set_name(name)
+        node.graph.viewer().node_name_changed.emit(node.id, name)
+        # NOTE: The above line should be enough but it does not propagate to the node widget properly.
+        node.set_name(name)
 
     def _add_config_recurrently(self, config_name: str, config: BaseSparkConfig, path: list[str] = []) -> None:
         # Create new QCollapsible
@@ -428,6 +431,179 @@ class QNodeConfig(QtWidgets.QWidget):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+class QNodeIO(QtWidgets.QWidget):
+    """
+        Constructs the UI to modify the SparkConfig associated with the a inputs and outpus.
+    """
+
+    error_detected = QtCore.Signal(str)
+
+    def __init__(self, node: AbstractNode, parent: QtWidgets.QWidget = None, **kwargs):
+        super().__init__(parent=parent, **kwargs)
+        # Node reference
+        self._target_node = node
+        self._is_source = isinstance(node, SourceNode)
+        # Widget layout
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
+        self.setLayout(layout)
+        # Scroll area
+        scroll_area = QtWidgets.QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        self.layout().addWidget(scroll_area)
+        scroll_area.setStyleSheet(
+            """
+                QScrollArea { 
+                    background: transparent; 
+                }
+            """
+        )
+        # Content widget
+        self.content = QtWidgets.QWidget()
+        self.content.setStyleSheet(
+            """
+                QWidget { 
+                    background: transparent; 
+                }
+            """
+        )
+        scroll_area.setWidget(self.content)
+        content_layout = QtWidgets.QVBoxLayout(self.content)
+        content_layout.setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
+        content_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
+        # Setup layout
+        self._setup_layout()
+
+
+    def addWidget(self, widget: QtWidgets.QWidget) -> None:
+        """
+            Add a widget to the central content widget's layout.
+        """
+        widget.installEventFilter(self)
+        self.content.layout().addWidget(widget)
+
+    def _setup_layout(self,) -> None:
+        # Add name widget
+        name_widget = NodeHeaderWidget(
+            name=self._target_node.NODE_NAME,
+            node_cls=self._target_node.__class__.__name__,
+            config_tree=None,
+            parent=self,
+        )
+        name_widget.on_update.connect(
+            partial(lambda node_var, name_var: self.name_update(node_var, name_var), self._target_node)
+        )
+        self.addWidget(name_widget)
+        self.addWidget(QHLine())
+
+        # Container to maintain visual consistency
+        collapsible = QCollapsible(utils.to_human_readable('Main'), parent=self)
+        spec_model = self._target_node.output_specs['value'] if self._is_source else self._target_node.input_specs['value']
+        port_name = 'value'
+        target_spec = 'output' if self._is_source else 'input'
+
+        # Add shape widget to collapsible
+        shape_widget = QShape(
+            spec_model.shape if spec_model.shape is not None else (1,), 
+            parent=self
+        )
+        shape_widget.setEnabled(self._is_source)
+        if self._is_source:
+            shape_widget.on_update.connect(
+                lambda shape_var: self._target_node.update_io_spec(spec=target_spec, port_name=port_name, shape=shape_var)
+            )
+        # Construct QField
+        self.shape_field = QField(
+            utils.to_human_readable('Shape'),
+            shape_widget,
+            warning_value = False,
+            inheritance_box = False,
+            parent= self
+        )
+        # Scan for errors
+        # ?
+
+        # Add dtype widget to collapsible
+        dtype_widget = QDtype(
+            spec_model.dtype if spec_model.dtype is not None else jnp.float16, 
+            values_options=self._get_dtype_options(),
+            parent=self
+        )
+        dtype_widget.setEnabled(self._is_source)
+        if self._is_source:
+            dtype_widget.on_update.connect(
+                lambda dtype_var: self._target_node.update_io_spec(spec=target_spec, port_name=port_name, dtype=dtype_var)
+            )
+        # Construct QField
+        self.dtype_field = QField(
+            utils.to_human_readable('Dtype'),
+            dtype_widget,
+            warning_value = False,
+            inheritance_box = False,
+            parent= self
+        )
+        # Scan for errors
+        # ?
+
+        # Add dtype widget to collapsible
+        payload_type_init = spec_model.payload_type if spec_model.payload_type is not None else FloatArray
+        payload_widget = QGenericComboBox(
+            utils.to_human_readable(payload_type_init), 
+            values_options=self._get_payload_options(),
+            parent=self
+        )
+        payload_widget.setEnabled(self._is_source)
+        if self._is_source:
+            payload_widget.on_update.connect(
+                lambda dtype_var: self._target_node.update_io_spec(spec=target_spec, port_name=port_name, dtype=dtype_var)
+            )
+        # Construct QField
+        self.payload_field = QField(
+            utils.to_human_readable('Dtype'),
+            payload_widget,
+            warning_value = False,
+            inheritance_box = False,
+            parent= self
+        )
+        # Scan for errors
+        # ?
+
+        # Add widgets
+        collapsible.addWidget(self.dtype_field)
+        self.addWidget(collapsible)
+
+    def name_update(self, node: AbstractNode, name: str) -> None:
+        node.graph.viewer().node_name_changed.emit(node.id, name)
+        # NOTE: The above line should be enough but it does not propagate to the node widget properly.
+        node.set_name(name)
+
+    def _get_payload_options(self, ) -> list[tuple[int, SparkPayload]]:
+        options = []
+        for name, entry in REGISTRY.PAYLOADS.items():
+            options.append(utils.to_human_readable(entry.class_ref.__name__), entry.class_ref)
+        return options
+
+    def _get_dtype_options(self, ) -> list[tuple[int, SparkPayload]]:
+        raw_options = [                
+            jnp.uint8,
+            jnp.uint16,
+            jnp.uint32,
+            jnp.int8,
+            jnp.int16,
+            jnp.int32,
+            jnp.float16,
+            jnp.float32,
+            jnp.bool,
+        ]
+        options = []
+        for d in raw_options:
+            options.append(utils.to_human_readable(d.__name__), d)
+        return options
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
 class InspectorIdleWidget(QtWidgets.QWidget):
     """
         Constructs the UI shown when no valid node is selected.
@@ -473,32 +649,36 @@ class NodeHeaderWidget(SparkQWidget):
             self, 
             name: str, 
             node_cls: str,
-            config_tree: str,
+            config_tree: str | None = None,
             parent: QtWidgets.QWidget | None = None,
             **kwargs
         ) -> None:
         super().__init__(parent=parent)
         # Add layout
         layout = QtWidgets.QVBoxLayout()
-        layout.setContentsMargins(QtCore.QMargins(4, 8, 4, 8))
+        layout.setSpacing(2)
         # Add name
         self.name_widget = NodeNameWidget(name, parent=self, **kwargs)
         self.name_widget.on_update.connect(self._on_update)
+        layout.addWidget(self.name_widget)
         # Class
         self.class_label = QtWidgets.QLabel(node_cls, parent=self)
-        self.class_label.setContentsMargins(QtCore.QMargins(16, 0,0,0))
-        # Config tree description
-        print(config_tree)
-        self.tree_label = TreeDisplay(config_tree, parent=self)
-        # Finalize
-        layout.addWidget(self.name_widget)
+        self.class_label.setContentsMargins(QtCore.QMargins(16, 0, 0, 4))
+        self.class_label.setFixedHeight(24)
         layout.addWidget(self.class_label)
-        layout.addWidget(self.tree_label)
+        # Config tree description
+        if config_tree:
+            self.tree_label = TreeDisplay(config_tree, parent=self)
+            layout.addWidget(self.tree_label)
+        # Finalize
         self.setLayout(layout)
+        if config_tree:
+            self._target_height = self.name_widget.size().height() + self.class_label.size().height() + self.tree_label.size().height()
+        else:
+            self._target_height = self.name_widget.size().height() + self.class_label.size().height()
 
-        self.setFixedHeight(
-            self.name_widget.size().height() + self.class_label.size().height() + self.tree_label.size().height()
-        )
+    def sizeHint(self):
+        return QtCore.QSize(super().sizeHint().width(), self._target_height)
 
     def get_value(self) -> str:
         return self.name_widget.get_value()
@@ -522,7 +702,6 @@ class NodeNameWidget(SparkQWidget):
         super().__init__(parent=parent)
         # Add layout
         layout = QtWidgets.QHBoxLayout()
-        #layout.setContentsMargins(QtCore.QMargins(4, 8, 4, 8))
         # Add icon. The icon makes it look more professional c:
         _icon = QtGui.QPixmap(':/icons/node_icon.png')
         self._icon_label = QtWidgets.QLabel(parent=self)
@@ -538,6 +717,13 @@ class NodeNameWidget(SparkQWidget):
         # Finalize
         layout.addWidget(self._line_edit)
         self.setLayout(layout)
+        # CSS-ing is hard ¯\_(ツ)_/¯
+        self._target_height = 64
+        self.setFixedHeight(self._target_height)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+
+    def sizeHint(self):
+        return QtCore.QSize(super().sizeHint().width(), self._target_height)
 
     def get_value(self) -> str:
         return self._line_edit.text()
@@ -548,7 +734,7 @@ class NodeNameWidget(SparkQWidget):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class TreeDisplay(QtWidgets.QPlainTextEdit):
-    def __init__(self, tree: str, parent=None) -> None:
+    def __init__(self, tree: str, parent: QtWidgets.QWidget = None) -> None:
         super().__init__(parent=parent)
         # QPlainTextEdit preserves formatting and monospacing
         self.setPlainText(tree)
@@ -561,17 +747,24 @@ class TreeDisplay(QtWidgets.QPlainTextEdit):
             f"""
                 QPlainTextEdit {{
                     border: none;
-                    background-color: coral;
                     color: {GRAPH_EDITOR_CONFIG.default_font_color};
                     font-family: Courier;
-                    margin: 0px;
+                    font-size: {GRAPH_EDITOR_CONFIG.small_font_size}px;
+                    margin: 0px 0px 0px 8px;
                     padding: 0px;
                 }}
             """
         )
-        rows_space = len(tree.split('\n')) * self.fontMetrics().boundingRect('M').height() * 1.0
-        line_space = len(tree.split('\n')) * 7 # ¯\_(ツ)_/¯
-        self.setFixedHeight(rows_space + line_space)
+        # CSS-ing is hard ¯\_(ツ)_/¯
+        rows_space = len(tree.split('\n')) * self.fontMetrics().boundingRect('M').height() * 1
+        line_space = len(tree.split('\n')) * 2
+        self._target_height = rows_space + line_space + 10
+        self.setFixedHeight(self._target_height)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.setContentsMargins(QtCore.QMargins(16, 0, 0, 4))
+
+    def sizeHint(self):
+        return QtCore.QSize(super().sizeHint().width(), self._target_height)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

@@ -71,6 +71,7 @@ class QField(QtWidgets.QWidget):
         # Widget layout
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(GRAPH_EDITOR_CONFIG.field_margin)
+        layout.setContentsMargins(QtCore.QMargins(0, 4, 12, 0))
         layout.setSpacing(4)
         # Warning icon
         self.warning_flag = WarningFlag(value=warning_value, parent=self)

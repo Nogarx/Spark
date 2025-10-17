@@ -12,8 +12,8 @@ from PySide6 import QtCore
 from NodeGraphQt import NodeGraph, Port, BaseNode
 from NodeGraphQt.widgets.viewer import NodeViewer
 from spark.core.specs import PortMap
-from spark.graph_editor.models.nodes import SourceNode, SinkNode, AbstractNode, module_to_nodegraph
-from spark.graph_editor.models.graph_menu_tree import HierarchicalMenuTree
+from spark.graph_editor.models.nodes import SourceNode, SinkNode, AbstractNode
+from spark.graph_editor.ui.console_panel import MessageLevel
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -45,6 +45,7 @@ class SparkNodeGraph(NodeGraph):
     """
 
     context_menu_prompt = QtCore.Signal(object, object)
+    broadcast_message = QtCore.Signal(MessageLevel, str)
     stateChanged = QtCore.Signal() 
     _is_modified = False
 
@@ -72,7 +73,7 @@ class SparkNodeGraph(NodeGraph):
         self.session_changed.connect(self._on_state_changed)
 
         self.node_selection_changed.connect(self._bugfix_on_node_selection_changed)
-        self._bugfix_prev_selection = []
+        self._prev_selection = []
     
 
     # NOTE: This is a simple workaround to fix a bug that happens when cliking an already selected node in the graph.
@@ -82,7 +83,7 @@ class SparkNodeGraph(NodeGraph):
             QtCore.QTimer.singleShot(1, self._bugfix_on_node_selection_changed_after_wait)
         else:
             # Cache previous selection.
-            self._bugfix_prev_selection = [n.id for n in new_selection]
+            self._prev_selection = [n.id for n in new_selection]
     def _bugfix_on_node_selection_changed_after_wait(self) -> None:
         # Find selected node
         selected = None
@@ -90,9 +91,9 @@ class SparkNodeGraph(NodeGraph):
             if node.selected():
                 selected = node.id
         # Remove selected from list
-        self._bugfix_prev_selection.remove(selected)
+        self._prev_selection.remove(selected)
         # Broadcast correct selection
-        self._on_node_selection_changed([selected], self._bugfix_prev_selection)
+        self._on_node_selection_changed([selected], self._prev_selection)
     
 
     def _on_state_changed(self):
@@ -160,6 +161,8 @@ class SparkNodeGraph(NodeGraph):
     def create_node(self, node_type, name=None, selected=True, color=None, text_color=None, pos=None, push_undo=True) -> AbstractNode:
         node: BaseNode = super().create_node(node_type, name, selected, color, text_color, pos, push_undo)
         self._node_registry[node.id] = node.NODE_NAME
+        # Graph automatically selects the new node. We need to trigger the event to keep it consistent.
+        self._on_node_selection_changed([node.id], self._prev_selection)
         return node
     
     def delete_node(self, node, push_undo=True):

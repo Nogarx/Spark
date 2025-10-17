@@ -29,6 +29,7 @@ class NodesPanel(QDockPanel):
             **kwargs
         ) -> None:
         super().__init__(name, parent=parent, **kwargs)
+        self.setMinimumWidth(GRAPH_EDITOR_CONFIG.nodes_panel_min_width)
         self._target_node = None
         self.node_list = QNodeList(node_graph, parent=self)
         self.setContent(self.node_list)

@@ -28,6 +28,8 @@ class GraphEditorConfig:
     header_font_size: int = 16
     default_font_color: str = "#E4E4E4"
     # Docks
+    inspector_panel_min_width : int = 350 
+    nodes_panel_min_width : int = 200 
     dock_min_width : int = 350 
     dock_min_height : int = 150 
     dock_layout_spacing: int = 2

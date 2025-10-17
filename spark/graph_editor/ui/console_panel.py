@@ -86,10 +86,10 @@ class Console(QtWidgets.QWidget):
         # Content widget
         self.content = QtWidgets.QWidget()
         self.content.setStyleSheet(
-            """
-                QWidget { 
+            f"""
+                QWidget {{ 
                     background: transparent; 
-                }
+                }}
             """
         )
         scroll_area.setWidget(self.content)
