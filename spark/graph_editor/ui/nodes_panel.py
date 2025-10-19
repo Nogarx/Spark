@@ -86,6 +86,7 @@ class QNodeList(QtWidgets.QWidget):
         self._node_graph.viewer().node_name_changed.connect(self.on_node_name_update)
         self._node_graph.nodes_deleted.connect(self.on_nodes_deletion)
         self._node_graph.node_created.connect(self.on_node_created)
+        self._node_graph.session_changed.connect(self.on_session_changed)
 
     def addWidget(self, widget: QtWidgets.QWidget) -> None:
         """
@@ -107,9 +108,26 @@ class QNodeList(QtWidgets.QWidget):
         self._node_widget_map[node.id] = entry
 
     def on_nodes_deletion(self, nodes_ids: list[str]) -> None:
+        # NOTE: There is another method also deleting nodes so they may not exist when this event gets triggered.
+        # on_session_changed handles the extreme case.
         for n in nodes_ids:
-            widget = self._node_widget_map.pop(n)
-            widget.deleteLater()
+            try:
+                widget = self._node_widget_map.pop(n)
+                widget.deleteLater()
+            except:
+                pass
+
+    def on_session_changed(self,) -> None:
+        # Clear list.
+        for widget in self._node_widget_map.values():
+            try:
+                widget.deleteLater()
+            except:
+                pass
+        # Repopulate list
+        self._node_widget_map = {}
+        for node in self._node_graph.all_nodes():
+            self._add_widget_from_node(node)
 
     def on_node_created(self, node: AbstractNode) -> None:
         self._add_widget_from_node(node)
@@ -139,14 +157,16 @@ class QNodeList(QtWidgets.QWidget):
     def on_selection_update(self, new_selection: list[AbstractNode], prev_selection: list[AbstractNode]) -> None:
         # Remove previous selection
         for node in prev_selection:
-            self._node_widget_map[node.id].set_selection(False)
+            if node:
+                self._node_widget_map[node.id].set_selection(False)
         # Add new slection
         self._current_selection = []
         for node in new_selection:
-            self._node_widget_map[node.id].set_selection(True)
+            if node:
+                self._node_widget_map[node.id].set_selection(True)
             self._current_selection.append(node.id)
 
-    def on_node_name_update(self, node_id: str, name: str):
+    def on_node_name_update(self, node_id: str, name: str) -> None:
         self._node_widget_map[node_id].label.setText(name)
     
 
@@ -180,9 +200,11 @@ class ListEntry(QtWidgets.QWidget):
         layout.setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
         # Add QLineEdit
         self.label = QtWidgets.QLabel(node_name, parent=self)
-        self.label.setFixedHeight(32)
+        self.label.setFixedHeight(24)
         self.label.setStyleSheet(
-            """
+            f"""
+                color: {GRAPH_EDITOR_CONFIG.default_font_color};
+                font-size: {GRAPH_EDITOR_CONFIG.small_font_size}px;
                 padding: 2px
             """
         )

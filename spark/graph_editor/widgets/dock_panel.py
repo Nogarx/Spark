@@ -24,6 +24,7 @@ class QDockPanel(CDockWidget):
     """
         Generic dockable panel.
     """
+    #visibilityChanged = QtCore.Signal(bool)
 
     def __init__(self, name: str, parent: QtWidgets.QWidget = None, **kwargs):
         super().__init__(name, parent=parent, **kwargs)
@@ -36,12 +37,13 @@ class QDockPanel(CDockWidget):
         _layout.addStretch()
         _content = QtWidgets.QWidget()
         _content.setLayout(_layout)
+        self._in_hierarchy = True
         self.setContent(_content)
         self.setMinimumWidth(GRAPH_EDITOR_CONFIG.dock_min_width)
         self.setMinimumHeight(GRAPH_EDITOR_CONFIG.dock_min_height)
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.MinimumExpanding)
 
-    def minimumSizeHint(self):
+    def minimumSizeHint(self) -> QtCore.QSize:
         return QtCore.QSize(self.minimumWidth(), self.minimumHeight())
 
 
@@ -76,7 +78,7 @@ class QDockPanel(CDockWidget):
         self._content.layout().removeWidget(widget)
         widget.removeEventFilter(self)
 
-    def clearWidgets(self,):
+    def clearWidgets(self,) -> None:
         """
             Removes all widget from the central content widget's layout.
         """
@@ -86,6 +88,37 @@ class QDockPanel(CDockWidget):
             if widget:
                 widget.deleteLater()
         _layout.addStretch()
+
+    # TODO: Fix this method. It kinda works except when it doesnt, most of the time just looks like a gigantic bug.
+    def toggleView(self, dock_manager: ads.CDockManager) -> None:
+        if self._in_hierarchy:
+            if len(self.parent().dockWidgets()) > 1:
+                super().toggleView(False)
+            else:
+                self.parent().toggleView(False)
+            self.setVisible(False)
+            self._in_hierarchy = False
+        else:
+            if not self.parent():
+                dock_manager.addDockWidget(ads.NoDockWidgetArea, self)
+                self.parent().toggleView(True)
+            else:
+                self.parent().toggleView(True)
+            self.setVisible(True)
+            self._in_hierarchy = True
+        self.visibilityChanged.emit(self._in_hierarchy)
+        
+    def showEvent(self, event) -> None:
+        self._in_hierarchy = True
+        self.visibilityChanged.emit(self._in_hierarchy)
+        super().showEvent(event)
+
+    def hideEvent(self, event) -> None:
+        self._in_hierarchy = True if len(self.parent().dockWidgets()) > 1 else False
+        self.visibilityChanged.emit(self._in_hierarchy)
+        super().hideEvent(event)
+
+
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

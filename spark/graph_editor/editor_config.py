@@ -35,7 +35,6 @@ class GraphEditorConfig:
     dock_layout_spacing: int = 2
     dock_layout_margins: QtCore.QMargins = dc.field(default_factory = lambda: QtCore.QMargins(0, 4, 0, 4))
     inspector_panel_pos = ads.RightDockWidgetArea
-    parameters_panel_pos = ads.LeftDockWidgetArea
     nodes_panel_pos = ads.LeftDockWidgetArea
     console_panel_pos = ads.BottomDockWidgetArea
 

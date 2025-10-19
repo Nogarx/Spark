@@ -93,23 +93,16 @@ class PortSpecs:
 class InputSpec(PortSpecs):
     """
         Specification for an input port of an SparkModule.
-    """
-    is_optional: bool                 
+    """         
 
     def __init__(
             self, 
             payload_type: type[SparkPayload] | None, 
             shape: tuple[int, ...] | list[tuple[int, ...]] | None, 
             dtype: DTypeLike | None, 
-            is_optional: bool = False, 
             description: str | None = None
         ) -> None:
         super().__init__(payload_type=payload_type, shape=shape, dtype=dtype, description=description)
-        if not isinstance(is_optional, bool):
-            raise ValueError(
-                f'Expected \"is_optional\" to be of type \"bool\" but got \"{type(is_optional).__name__}\".'
-            )
-        self.is_optional = is_optional
 
     def to_dict(self) -> dict[str, tp.Any]:
         """
@@ -123,7 +116,6 @@ class InputSpec(PortSpecs):
             'shape': self.shape,
             'dtype': self.dtype,
             'description': self.description,
-            'is_optional': self.is_optional,
         }
 
     @classmethod
@@ -275,18 +267,18 @@ class ModuleSpecs:
                 f'Expected \"name\" to be of type \"str\", but got \"{name}\".'
             )
         module_cls: type[SparkModule] | None = dct.get('module_cls', None)
-        if not module_cls or not issubclass(module_cls, SparkModule):
+        if not module_cls or not validation._is_module_type(module_cls):
             raise TypeError(
                 f'Expected \"module_cls\" to be of type \"type[SparkModule]\", but got \"{module_cls}\".'
             )
         config: BaseSparkConfig | dict | None = dct.get('config', None)
-        if not config or not isinstance(config, (dict, BaseSparkConfig)):
+        if not config or not (isinstance(config, dict) or validation._is_config_instance(config)):
             raise TypeError(
                 f'Expected \"config\" to be of type \"type[BaseSparkConfig]\" | dict, but got \"{config}\".'
             )
         config = module_cls.get_config_spec()(**config) if isinstance(config, dict) else config
         inputs: dict | None = dct.get('inputs', None)
-        if not inputs or not isinstance(config, dict):
+        if not inputs or not isinstance(inputs, dict):
             raise TypeError(
                 f'Expected \"inputs\" to be of type \"dict\", but got \"{inputs}\".'
             )
@@ -297,7 +289,7 @@ class ModuleSpecs:
             config=config,
             inputs=inputs,
         )
-
+        
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

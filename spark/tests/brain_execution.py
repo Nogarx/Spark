@@ -68,7 +68,6 @@ def test_brain_config() -> spark.nn.BrainConfig:
             payload_type=spark.FloatArray, 
             shape=(4,), 
             dtype=jnp.float16,
-            is_optional=False,
         )
     }
     output_map = {

@@ -117,7 +117,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
     __config_delimiter__: str = '__'
     __shared_config_delimiter__: str = '_s_'
-    __graph_editor_metadata__: dict = dc.field(default_factory=dict)
+    __graph_editor_metadata__: dict = dc.field(default_factory = lambda: {})
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -129,6 +129,8 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         # Set attributes programatically
         self._set_partial_attributes(kwargs_fold, shared_partial)
         self.__post_init__()
+        # TODO: __graph_editor_metadata__ is not being set automatically
+        self.__graph_editor_metadata__ = kwargs['__graph_editor_metadata__'] if '__graph_editor_metadata__' in kwargs else {}
 
     @classmethod
     def _create_partial(cls, **kwargs):
@@ -537,10 +539,11 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 from spark.core.serializer import SparkJSONDecoder
                 try:
                     obj = json.load(json_file, cls=SparkJSONDecoder) 
-                except:
+                except Exception as e:
                     raise RuntimeError(
                         f'An unexpected error ocurred when trying to decode... '
                         f'418 I\'m a teapot.'
+                        f'Error: {e}'
                     )
                 if not _is_config_instance(obj):
                     raise TypeError(
@@ -581,7 +584,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         """
             Parses the tree with to produce a string with the appropiate format for the ascii_tree method.
         """
-        rep = current_depth * ' ' + f'{utils.to_human_readable(self.__class__.__name__, capitalize_all=True)}\n'
+        rep = current_depth * ' ' + f'{self.__class__.__name__}\n'
         for name, field, value in self:
             if isinstance(value, BaseSparkConfig):
                 rep += value._parse_tree_structure(current_depth+1)

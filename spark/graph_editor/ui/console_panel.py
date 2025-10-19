@@ -43,6 +43,9 @@ class ConsolePanel(QDockPanel):
         self.console = Console()
         self.setContent(self.console)
 
+    def clear(self,) -> None:
+        self.console.clear()
+
     def publish_message(self, level: MessageLevel, message: str) -> None:
         self.console.add_message(level, message)
 

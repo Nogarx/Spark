@@ -10,8 +10,13 @@ if TYPE_CHECKING:
     from spark.graph_editor.models.graph import SparkNodeGraph
     from spark.core.payloads import SparkPayload
 
-from PySide6 import QtWidgets, QtCore, QtGui
+# GPU is not required in the editor
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = ''     
+os.environ['XLA_FLAGS'] = '--xla_force_host_platform_device_count=1'
 
+from PySide6 import QtWidgets, QtCore, QtGui
+from NodeGraphQt import Port
 import abc
 import logging
 import jax.numpy as jnp
@@ -23,7 +28,7 @@ from spark.core.registry import REGISTRY, RegistryEntry
 from spark.core.payloads import FloatArray
 from spark.core.specs import InputSpec, OutputSpec
 import spark.core.validation as validation 
-from spark.graph_editor.painter import DEFAULT_PALLETE
+from spark.graph_editor.style.painter import DEFAULT_PALLETE
 from spark.graph_editor.ui.console_panel import MessageLevel
 
 #################################################################################################################################################
@@ -86,44 +91,60 @@ class AbstractNode(BaseNode, abc.ABC):
                 getattr(self, target_spec)[port_name].payload_type = payload_type
                 info.append(f'Updated {spec} port \"{port_name}\" payload_type to \"{payload_type}\".')
             except Exception as e:
-                errors.append(e)
+                errors.append(f'Failed to update {spec} port \"{port_name}.payload_type\". Error: {e}')
         if shape:
             try:
                 shape = utils.validate_shape(shape)
                 getattr(self, target_spec)[port_name].shape = shape
                 info.append(f'Updated {spec} port \"{port_name}\" shape to \"{shape}\".')
             except Exception as e:
-                errors.append(e)
+                errors.append(f'Failed to update {spec} port \"{port_name}.shape\". Error: {e}')
         if dtype:
             try:
-                dtype = utils.validate_shape(dtype)
+                if not utils.is_dtype(dtype):
+                    raise TypeError(
+                        f'Expected \"dtype\" to be of type \"DTypeLike\", but got {dtype}.'
+                    )
                 getattr(self, target_spec)[port_name].dtype = dtype
                 info.append(f'Updated {spec} port \"{port_name}\" dtype to \"{dtype}\".')
             except Exception as e:
-                errors.append(e)
+                errors.append(f'Failed to update {spec} port \"{port_name}.dtype\". Error: {e}')
         if description:
             try:
                 getattr(self, target_spec)[port_name].description = description
                 info.append(f'Updated {spec} port \"{port_name}\" description.')
             except Exception as e:
-                errors.append(e)
+                errors.append(f'Failed to update {spec} port \"{port_name}.description\". Error: {e}')
         # Broadcast
         for e in errors:
             self.graph.broadcast_message.emit(
-                MessageLevel.ERROR, f'{self.NODE_NAME} - Failed to update {spec} port \"{port_name}\". Error: {e}.'
+                MessageLevel.ERROR, f'{self.NODE_NAME} - {e}.'
             )
         for i in info:
             self.graph.broadcast_message.emit(
-                MessageLevel.ERROR, f'{self.NODE_NAME} - {i}.'
+                MessageLevel.INFO, f'{self.NODE_NAME} - {i}.'
             )
-        #self.graph.property_changed.emit(self, f'{self.id}.input_port.{port_name}', value)
+        # Update connected sink nodes.
+        if spec == 'output':
+            output_port: Port = self.get_output(port_name)
+            for target_ports in output_port.connected_ports():
+                connected_node: AbstractNode = target_ports.node()
+                if isinstance(connected_node, SinkNode):
+                    connected_node.update_io_spec(
+                        'input', 
+                        'value', 
+                        payload_type=payload_type, 
+                        shape=shape, 
+                        dtype=dtype, 
+                        description=description
+                    )
 
     @property
     @abc.abstractmethod
     def node_config_metadata(self,) -> dict:
         pass
     
-    def _update_graph_metadata(self,):
+    def _update_graph_metadata(self,) -> None:
         # Update metadata for model graph editor model reconstruction.
         self.node_config_metadata['pos'] = self.pos()
 
@@ -142,7 +163,7 @@ class SourceNode(AbstractNode):
         self.output_specs = {
             'value': OutputSpec(
                 payload_type=FloatArray,
-                shape=None,
+                shape=(1,),
                 dtype=jnp.float16,
                 description='Model input port.'
                 )
@@ -175,9 +196,8 @@ class SinkNode(AbstractNode):
         self.input_specs = {
             'value': InputSpec(
                 payload_type=FloatArray,
-                shape=None,
+                shape=(1,),
                 dtype=jnp.float16,
-                is_optional=False,
                 description='Model output port.'
             )
         }

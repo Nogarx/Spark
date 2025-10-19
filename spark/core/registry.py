@@ -67,7 +67,9 @@ class SubRegistry(Mapping):
         else:
             # Delay registration until all default objects were identified.
             if name in self._raw_registry:
-                raise NameError(f'{self._registry_base_type} name "{name}" is already queued to be register.')
+                raise NameError(
+                    f'{self._registry_base_type} name \"{name}\" is already queued to be register.'
+                )
             self._raw_registry[name] = cls
 
     def _register(self, name: str, cls: type[object], path: list[str] | None = None):

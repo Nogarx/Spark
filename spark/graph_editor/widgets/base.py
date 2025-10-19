@@ -104,10 +104,10 @@ class QField(QtWidgets.QWidget):
         #    raise TypeError(
         #        f'Expected \"attr_widget\" to be of type \"SparkQWidget\", but got \"{attr_widget.__class__}\".'
         #    )
-        self.widget = attr_widget
-        self.widget.on_update.connect(self.on_field_update)
-        self.widget.setParent(self)
-        layout.addWidget(self.widget)  
+        self.attr_widget = attr_widget
+        self.attr_widget.on_update.connect(self.on_field_update)
+        self.attr_widget.setParent(self)
+        layout.addWidget(self.attr_widget)  
         # Set layout
         self.setLayout(layout)
 

@@ -7,7 +7,7 @@ from __future__ import annotations
 import typing as tp
 from PySide6 import QtWidgets, QtCore, QtGui
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
-import spark.graph_editor.resources_rc
+import spark.graph_editor.style.resources_rc
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -26,6 +26,7 @@ class WarningFlag(QtWidgets.QPushButton):
         # Warning icon
         warning_pixmap = self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MessageBoxWarning)
         self.warning_icon = warning_pixmap.pixmap(12, 12)
+        self.tooltip_message = None
         # Empty icon
         empty_pixmap = QtGui.QPixmap(QtCore.QSize(12, 12))
         empty_pixmap.fill(QtGui.QColor(0, 0, 0, 0))
@@ -72,12 +73,12 @@ class WarningFlag(QtWidgets.QPushButton):
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         return
 
-    def enterEvent(self, event: QtCore.QEvent):
+    def enterEvent(self, event: QtCore.QEvent) -> None:
         # Show the tooltip immediately at the current cursor position
         if self.tooltip_message:
             QtWidgets.QToolTip.showText(self.mapToGlobal(self.pos()), self.tooltip_message, self) 
 
-    def leaveEvent(self, event: QtCore.QEvent):
+    def leaveEvent(self, event: QtCore.QEvent) -> None:
         # Hide the tooltip
         QtWidgets.QToolTip.hideText()
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

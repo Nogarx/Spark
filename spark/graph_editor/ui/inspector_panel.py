@@ -4,6 +4,11 @@
 
 from __future__ import annotations
 
+# GPU is not required in the editor
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = ''     
+os.environ['XLA_FLAGS'] = '--xla_force_host_platform_device_count=1'
+
 from mailbox import Message
 import typing as tp
 import jax
@@ -13,6 +18,7 @@ from jax.typing import DTypeLike
 from PySide6 import QtWidgets, QtCore, QtGui
 
 import spark.core.utils as utils
+from NodeGraphQt import Port
 from functools import partial
 from spark.core.config import BaseSparkConfig
 from spark.core.payloads import SparkPayload, FloatArray
@@ -232,7 +238,7 @@ class QNodeConfig(QtWidgets.QWidget):
                 inheritance_box = leaf.can_inherit() or leaf.can_receive(),
                 inheritance_interactable = leaf.can_inherit(),
                 inheritance_value = leaf.is_inheriting(),
-                parent= self
+                parent = self,
             )
             # Scan for errors
             self._validate_fields(config, name, field_widget, None)
@@ -393,10 +399,10 @@ class QNodeConfig(QtWidgets.QWidget):
                 # Disable child widget interaction.
                 child_widget.inheritance_checkbox._set_virtual_icon_state(True)
                 child_widget.inheritance_checkbox.setCheckable(False)
-                child_widget.widget.setEnabled(False)
+                child_widget.attr_widget.setEnabled(False)
                 # Link widgets updates.
-                leaf_widget.field_updated.connect(child_widget.widget.set_value)
-                leaf_widget.field_updated.connect(child_widget.widget.on_update.emit)
+                leaf_widget.field_updated.connect(child_widget.attr_widget.set_value)
+                leaf_widget.field_updated.connect(child_widget.attr_widget.on_update.emit)
         else:
             # Set leaf flags.
             leaf.flags = leaf.flags & ~utils.InheritanceFlags.IS_INHERITING
@@ -413,10 +419,10 @@ class QNodeConfig(QtWidgets.QWidget):
                 # Disable child widget interaction.
                 child_widget.inheritance_checkbox._set_virtual_icon_state(False)
                 child_widget.inheritance_checkbox.setCheckable(True)
-                child_widget.widget.setEnabled(True)
+                child_widget.attr_widget.setEnabled(True)
                 # Unlink widgets updates.
-                leaf_widget.field_updated.disconnect(child_widget.widget.set_value)
-                leaf_widget.field_updated.disconnect(child_widget.widget.on_update.emit)
+                leaf_widget.field_updated.disconnect(child_widget.attr_widget.set_value)
+                leaf_widget.field_updated.disconnect(child_widget.attr_widget.on_update.emit)
 
     def _validate_fields(self, config: BaseSparkConfig, field_name:str, q_field: QField, value: tp.Any) -> None:
         # Scan for errors
@@ -504,7 +510,7 @@ class QNodeIO(QtWidgets.QWidget):
 
         # Add shape widget to collapsible
         shape_widget = QShape(
-            spec_model.shape if spec_model.shape is not None else (1,), 
+            spec_model.shape, 
             parent=self
         )
         shape_widget.setEnabled(self._is_source)
@@ -520,12 +526,10 @@ class QNodeIO(QtWidgets.QWidget):
             inheritance_box = False,
             parent= self
         )
-        # Scan for errors
-        # ?
 
         # Add dtype widget to collapsible
         dtype_widget = QDtype(
-            spec_model.dtype if spec_model.dtype is not None else jnp.float16, 
+            spec_model.dtype, 
             values_options=self._get_dtype_options(),
             parent=self
         )
@@ -542,48 +546,63 @@ class QNodeIO(QtWidgets.QWidget):
             inheritance_box = False,
             parent= self
         )
-        # Scan for errors
-        # ?
+        self.addWidget(self.dtype_field)
 
         # Add dtype widget to collapsible
-        payload_type_init = spec_model.payload_type if spec_model.payload_type is not None else FloatArray
         payload_widget = QGenericComboBox(
-            utils.to_human_readable(payload_type_init), 
+            spec_model.payload_type, 
             values_options=self._get_payload_options(),
             parent=self
         )
         payload_widget.setEnabled(self._is_source)
         if self._is_source:
             payload_widget.on_update.connect(
-                lambda dtype_var: self._target_node.update_io_spec(spec=target_spec, port_name=port_name, dtype=dtype_var)
+                lambda payload_widget_var: self._target_node.update_io_spec(
+                    spec=target_spec, port_name=port_name, payload_type=payload_widget_var)
             )
         # Construct QField
         self.payload_field = QField(
-            utils.to_human_readable('Dtype'),
+            utils.to_human_readable('PayloadType'),
             payload_widget,
             warning_value = False,
             inheritance_box = False,
             parent= self
         )
-        # Scan for errors
-        # ?
-
         # Add widgets
+        collapsible.addWidget(self.payload_field)
+        collapsible.addWidget(self.shape_field)
         collapsible.addWidget(self.dtype_field)
         self.addWidget(collapsible)
+        collapsible.expand()
+        # Add live updates for sink nodes.
+        if not self._is_source:
+            self._target_node.graph.port_connected.connect(self._live_sink_update)
 
+    def _live_sink_update(self, input_port: Port, output_port: Port) -> None:
+        # Get node info
+        input_node: AbstractNode = input_port.node()
+        # Update sink node specs
+        if isinstance(input_node, SinkNode):
+            output_specs = output_port.node().output_specs[output_port.name()]
+            if output_specs.payload_type:
+                self.payload_field.attr_widget.set_value(output_specs.payload_type)
+            if output_specs.shape:
+                self.shape_field.attr_widget.set_value(output_specs.shape)
+            if output_specs.dtype:
+                self.dtype_field.attr_widget.set_value(output_specs.dtype)
+        
     def name_update(self, node: AbstractNode, name: str) -> None:
         node.graph.viewer().node_name_changed.emit(node.id, name)
         # NOTE: The above line should be enough but it does not propagate to the node widget properly.
         node.set_name(name)
 
-    def _get_payload_options(self, ) -> list[tuple[int, SparkPayload]]:
-        options = []
+    def _get_payload_options(self, ) -> list[tuple[str, SparkPayload]]:
+        options = {}
         for name, entry in REGISTRY.PAYLOADS.items():
-            options.append(utils.to_human_readable(entry.class_ref.__name__), entry.class_ref)
+            options[utils.to_human_readable(name, capitalize_all=True)] = entry.class_ref
         return options
 
-    def _get_dtype_options(self, ) -> list[tuple[int, SparkPayload]]:
+    def _get_dtype_options(self, ) -> list[jnp.dtype]:
         raw_options = [                
             jnp.uint8,
             jnp.uint16,
@@ -597,7 +616,7 @@ class QNodeIO(QtWidgets.QWidget):
         ]
         options = []
         for d in raw_options:
-            options.append(utils.to_human_readable(d.__name__), d)
+            options.append(d)
         return options
 
 #################################################################################################################################################
@@ -657,25 +676,36 @@ class NodeHeaderWidget(SparkQWidget):
         # Add layout
         layout = QtWidgets.QVBoxLayout()
         layout.setSpacing(2)
+        self._target_height = 0
         # Add name
         self.name_widget = NodeNameWidget(name, parent=self, **kwargs)
         self.name_widget.on_update.connect(self._on_update)
         layout.addWidget(self.name_widget)
+        self._target_height += self.name_widget.size().height()
         # Class
         self.class_label = QtWidgets.QLabel(node_cls, parent=self)
-        self.class_label.setContentsMargins(QtCore.QMargins(16, 0, 0, 4))
-        self.class_label.setFixedHeight(24)
+        self.class_label.setContentsMargins(QtCore.QMargins(16, 0, 0, 12))
+        self.class_label.setFixedHeight(32)
         layout.addWidget(self.class_label)
+        self._target_height += self.class_label.size().height()
         # Config tree description
         if config_tree:
+            # Config tree label
+            self.config_tree_label = QtWidgets.QLabel('Configuration Tree', parent=self)
+            self.config_tree_label.setContentsMargins(QtCore.QMargins(16, 8, 0, 4))
+            self.config_tree_label.setFixedHeight(24)
+            self.config_tree_label.setStyleSheet(
+                f"""
+                    font-size: {GRAPH_EDITOR_CONFIG.small_font_size}px;
+                """
+            )
+            layout.addWidget(self.config_tree_label)
             self.tree_label = TreeDisplay(config_tree, parent=self)
             layout.addWidget(self.tree_label)
+            self._target_height += self.config_tree_label.size().height()
+            self._target_height += self.tree_label.size().height()
         # Finalize
         self.setLayout(layout)
-        if config_tree:
-            self._target_height = self.name_widget.size().height() + self.class_label.size().height() + self.tree_label.size().height()
-        else:
-            self._target_height = self.name_widget.size().height() + self.class_label.size().height()
 
     def sizeHint(self):
         return QtCore.QSize(super().sizeHint().width(), self._target_height)

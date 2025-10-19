@@ -306,10 +306,9 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             # Check if missing key is optional.
             set_diff = set(input_specs.keys()).difference(abc_args.keys())
             for key in set_diff:
-                if not input_specs[key].is_optional:
-                    raise ValueError(
-                        f'Module \"{self.name}\" expects non-optional variable \"{key}\" but it was not provided.'
-                    )
+                raise ValueError(
+                    f'Module \"{self.name}\" expects variable \"{key}\" but it was not provided.'
+                )
             # Check if extra keys are provided.
             set_diff = set(abc_args.keys()).difference(input_specs.keys())
             for key in set_diff:
@@ -332,7 +331,6 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                 payload_type=payload_type,
                 shape=shape,
                 dtype=dtype,
-                is_optional=input_specs[key].is_optional,
                 description=f'Auto-generated input spec for input \"{key}\" of module \"{self.name}\".',
             )
         return input_specs

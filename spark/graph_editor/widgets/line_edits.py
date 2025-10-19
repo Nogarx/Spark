@@ -7,7 +7,7 @@ from __future__ import annotations
 from PySide6 import QtWidgets, QtGui, QtCore
 from spark.graph_editor.widgets.base import SparkQWidget
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
-import spark.graph_editor.resources_rc
+import spark.graph_editor.style.resources_rc
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
