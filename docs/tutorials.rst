@@ -12,3 +12,4 @@ Welcome to the tutorials section! Here you can find guides on the basics of Spar
    tutorials/modules_components
    tutorials/execution
    tutorials/brains
+   tutorials/graph_editor
