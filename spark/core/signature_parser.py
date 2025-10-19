@@ -43,7 +43,6 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, InputSpec]:
             continue
 
         # Scrap parameter.
-        is_optional = parameter.default is not inspect.Parameter.empty
         if tp.get_origin(signature_type_hints[parameter.name]) is list:
             payload_type = tp.get_args(signature_type_hints[parameter.name])[0]
         else:
@@ -65,7 +64,6 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, InputSpec]:
             payload_type=payload_type,
             shape=None,
             dtype=None,
-            is_optional=is_optional,
             description=f'Input port for {parameter.name}',
         )
     return input_specs

@@ -63,7 +63,7 @@ class TracedSynapses(LinearSynapses):
         Output currents are computed as the trace of the dot product of the kernel with the input spikes.
 
         Init:
-            units: Shape
+            units: tuple[int, ...]
             async_spikes: bool
             kernel_initializer: KernelInitializerConfig
             tau: float | jax.Array
@@ -180,7 +180,7 @@ class DoubleTracedSynapses(LinearSynapses):
         Output currents are computed as the trace of the dot product of the kernel with the input spikes.
 
         Init:
-            units: Shape
+            units: tuple[int, ...]
             async_spikes: bool
             kernel_initializer: KernelInitializerConfig
             tau_1: float | jax.Array

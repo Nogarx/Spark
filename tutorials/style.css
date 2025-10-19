@@ -3,3 +3,7 @@ div.tutorial-text {
     width: 100ch !important;
     font-size: 18px;
 }
+
+div.tutorial-image {
+    width: 100ch !important; 
+}

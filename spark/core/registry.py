@@ -3,19 +3,13 @@
 #################################################################################################################################################
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from spark.core.module import SparkModule
-    from spark.core.payloads import SparkPayload
-    from spark.nn.initializers.base import Initializer
-    from spark.core.config import BaseSparkConfig
-    from spark.core.config_validation import ConfigurationValidator
-    from spark.core.config import BaseSparkConfig
+
 import logging
 import dataclasses as dc
 import typing as tp
+import copy
 from collections.abc import Mapping, ItemsView
-from spark.core.utils import normalize_name
+import spark.core.utils as utils
 import spark.core.validation as validation
 
 #################################################################################################################################################
@@ -49,7 +43,7 @@ class SubRegistry(Mapping):
     def __getitem__(self, key: str) -> RegistryEntry:
         if not self.__built__:
             raise RuntimeError('Registry is not build yet.')
-        return self._registry[key]
+        return copy.deepcopy(self._registry[key])
 
     def __iter__(self) -> tp.Iterator[str]:
         if not self.__built__:
@@ -73,7 +67,9 @@ class SubRegistry(Mapping):
         else:
             # Delay registration until all default objects were identified.
             if name in self._raw_registry:
-                raise NameError(f'{self._registry_base_type} name "{name}" is already queued to be register.')
+                raise NameError(
+                    f'{self._registry_base_type} name \"{name}\" is already queued to be register.'
+                )
             self._raw_registry[name] = cls
 
     def _register(self, name: str, cls: type[object], path: list[str] | None = None):
@@ -81,7 +77,7 @@ class SubRegistry(Mapping):
             Validate and register new item.
         """
         if self._registry_base_type == validation.DEFAULT_INITIALIZER_PATH:
-            if not validation._is_initializer(cls):
+            if not validation._is_initializer_type(cls):
                 raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
                                 f'"{cls.__name__}" is not a valid Initializer.')
         else:
@@ -98,7 +94,7 @@ class SubRegistry(Mapping):
                 if not isinstance(p, str):
                     raise TypeError(f'Expect path to be a list of str but found item of type {type(p).__name__}.')
         # Register
-        name = normalize_name(name)
+        name = utils.normalize_str(name)
         path = self._get_default_path(cls) if path is None else path
         self._leaf_class.add(cls.__name__)
         self._registry[name] = RegistryEntry(name=name, class_ref=cls, path=path)
@@ -123,7 +119,7 @@ class SubRegistry(Mapping):
             Safely retrieves a component entry by name.
         """
         if self.__built__:
-            return self._registry.get(normalize_name(name), default)
+            return self._registry.get(utils.normalize_str(name), default)
         else: 
             raise RuntimeError(f'Registry is not yet built. Registry must be built first before trying to access it.')
 
@@ -186,7 +182,7 @@ class Registry():
         self.MODULES = SubRegistry(registry_base_type=validation.DEFAULT_SPARKMODULE_PATH)
         self.PAYLOADS = SubRegistry(registry_base_type=validation.DEFAULT_PAYLOAD_PATH)
         self.INITIALIZERS = SubRegistry(registry_base_type=validation.DEFAULT_INITIALIZER_PATH)
-        self.CONFIG = SubRegistry(registry_base_type=validation.DEFAULT_INITIALIZER_PATH)
+        self.CONFIG = SubRegistry(registry_base_type=validation.DEFAULT_CONFIG_PATH)
         self.CFG_VALIDATORS = SubRegistry(registry_base_type=validation.DEFAULT_CFG_VALIDATOR_PATH)
 
     def _build(self,):

@@ -10,10 +10,8 @@ import jax
 import jax.numpy as jnp
 import typing as tp
 import dataclasses as dc
-from spark.core.shape import Shape
 from jax.typing import DTypeLike
-
-# TODO: Several parts of this code need to be further validated. 
+from spark.core.registry import register_payload
 
 # NOTE: Direct jax.Array subclassing is not supported. Currently the best approach is to define __jax_array__ 
 # (https://docs.jax.dev/en/latest/jep/28661-jax-array-protocol.html). However it is probable that such approach will be deprecated
@@ -30,7 +28,7 @@ from jax.typing import DTypeLike
 #################################################################################################################################################
 
 @jax.tree_util.register_dataclass
-@dc.dataclass(frozen=True)
+@dc.dataclass
 class SparkPayload(abc.ABC):
     """
         Abstract payload definition to validate exchanges between SparkModule's.
@@ -44,11 +42,11 @@ class SparkPayload(abc.ABC):
     @property
     def dtype(self) -> tp.Any:
         pass
-    
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.tree_util.register_dataclass
-@dc.dataclass(frozen=True)
+@dc.dataclass
 class ValueSparkPayload(SparkPayload, abc.ABC):
     """
         Abstract payload definition to single value payloads.
@@ -62,8 +60,8 @@ class ValueSparkPayload(SparkPayload, abc.ABC):
         return np.array(self.value).astype(dtype if dtype else self.value.dtype)
 
     @property
-    def shape(self) -> Shape:
-        return Shape(self.value.shape)
+    def shape(self) -> tuple[int, ...]:
+        return self.value.shape
 
     @property
     def dtype(self) -> DTypeLike:
@@ -71,14 +69,9 @@ class ValueSparkPayload(SparkPayload, abc.ABC):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# Delay registry import to prevent circular import.
-from spark.core.registry import register_payload
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
 @register_payload
 @jax.tree_util.register_dataclass
-@dc.dataclass(frozen=True)
+@dc.dataclass
 class SpikeArray(ValueSparkPayload):
     """
         Representation of a collection of spike events.
@@ -89,7 +82,7 @@ class SpikeArray(ValueSparkPayload):
 
 @register_payload
 @jax.tree_util.register_dataclass
-@dc.dataclass(frozen=True)
+@dc.dataclass
 class CurrentArray(ValueSparkPayload):
     """
         Representation of a collection of currents.
@@ -100,7 +93,7 @@ class CurrentArray(ValueSparkPayload):
 
 @register_payload
 @jax.tree_util.register_dataclass
-@dc.dataclass(frozen=True)
+@dc.dataclass
 class PotentialArray(ValueSparkPayload):
     """
         Representation of a collection of membrane potentials.
@@ -111,7 +104,7 @@ class PotentialArray(ValueSparkPayload):
 
 @register_payload
 @jax.tree_util.register_dataclass
-@dc.dataclass(frozen=True)
+@dc.dataclass
 class BooleanMask(ValueSparkPayload):
     """
         Representation of an inhibitory boolean mask.
@@ -122,7 +115,7 @@ class BooleanMask(ValueSparkPayload):
 
 @register_payload
 @jax.tree_util.register_dataclass
-@dc.dataclass(frozen=True)
+@dc.dataclass
 class IntegerMask(ValueSparkPayload):
     """
         Representation of an integer mask.
@@ -133,7 +126,7 @@ class IntegerMask(ValueSparkPayload):
 
 @register_payload
 @jax.tree_util.register_dataclass
-@dc.dataclass(frozen=True)
+@dc.dataclass
 class FloatArray(ValueSparkPayload):
     """
         Representation of a float array.
@@ -144,7 +137,7 @@ class FloatArray(ValueSparkPayload):
 
 @register_payload
 @jax.tree_util.register_dataclass
-@dc.dataclass(frozen=True)
+@dc.dataclass
 class IntegerArray(ValueSparkPayload):
     """
         Representation of an integer array.
