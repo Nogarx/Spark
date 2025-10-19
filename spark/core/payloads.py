@@ -42,7 +42,7 @@ class SparkPayload(abc.ABC):
     @property
     def dtype(self) -> tp.Any:
         pass
-    
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @jax.tree_util.register_dataclass

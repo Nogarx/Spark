@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from Qt import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets, QtGui
 import spark.core.utils as utils
 from spark.graph_editor.widgets.line_edits import QIntLineEdit
 from spark.graph_editor.widgets.base import SparkQWidget
@@ -45,14 +45,12 @@ class QShapeEdit(QtWidgets.QWidget):
         min_dims: int = 1,
         max_dims: int = 8,
         max_shape: int = 1E9,
-        is_static: bool = False,
         parent: QtWidgets.QWidget = None
     ):
         super().__init__(parent)
         self.min_dims = min_dims
         self.max_dims = max_dims
         self.max_shape = int(max_shape)
-        self.is_static = is_static
 
         self._layout = QtWidgets.QHBoxLayout()
         self._layout.setContentsMargins(0, 0, 0, 0)
@@ -61,20 +59,27 @@ class QShapeEdit(QtWidgets.QWidget):
         self._dimension_edits: list[QtWidgets.QLineEdit] = []
 
         # --- Create Control Buttons ---
-        if not self.is_static:
-            self.removeButton = QPushButtonSquare("-")
-            self.removeButton.setFixedSize(20, 20)
-            self.removeButton.clicked.connect(self._remove_last_dimension)
-            self.removeButton.setStyleSheet(f'background-color: {GRAPH_EDITOR_CONFIG.button_bg_color};\
-                                              border-radius: {GRAPH_EDITOR_CONFIG.button_border_radius}px;')
-            self._layout.addWidget(self.removeButton)
+        self.removeButton = QPushButtonSquare("-")
+        self.removeButton.setFixedSize(20, 20)
+        self.removeButton.clicked.connect(self._remove_last_dimension)
+        self.removeButton.setStyleSheet(
+            f"""
+                background-color: {GRAPH_EDITOR_CONFIG.button_bg_color};
+                border-radius: {GRAPH_EDITOR_CONFIG.button_border_radius}px;
+            """
+        )
+        self._layout.addWidget(self.removeButton)
 
-            self.addButton = QPushButtonSquare("+")
-            self.addButton.setFixedSize(20, 20)
-            self.addButton.clicked.connect(lambda: self._add_dimension())
-            self.addButton.setStyleSheet(f'background-color: {GRAPH_EDITOR_CONFIG.button_bg_color};\
-                                           border-radius: {GRAPH_EDITOR_CONFIG.button_border_radius}px;')
-            self._layout.addWidget(self.addButton)
+        self.addButton = QPushButtonSquare("+")
+        self.addButton.setFixedSize(20, 20)
+        self.addButton.clicked.connect(lambda: self._add_dimension())
+        self.addButton.setStyleSheet(
+            f"""
+                background-color: {GRAPH_EDITOR_CONFIG.button_bg_color};
+                border-radius: {GRAPH_EDITOR_CONFIG.button_border_radius}px;
+            """
+        )
+        self._layout.addWidget(self.addButton)
 
         # Initialize with the provided shape
         self.set_shape(initial_shape if initial_shape else (1,) * self.min_dims)
@@ -82,8 +87,7 @@ class QShapeEdit(QtWidgets.QWidget):
         self._layout.addStretch()
         self.setLayout(self._layout)
 
-        if not self.is_static:
-            self._update_buttons()
+        self._update_buttons()
 
     def _add_dimension(self, value: int = 1):
         """
@@ -97,24 +101,17 @@ class QShapeEdit(QtWidgets.QWidget):
         line_edit.setSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed)
         line_edit.setAlignment(QtCore.Qt.AlignCenter)
 
-        if self.is_static:
-            line_edit.setReadOnly(True)
-            # Insert before the stretch
-            index = self._layout.count() - 1
-            self._layout.insertWidget(index, line_edit)
-        else:
-            line_edit.setValidator(QtGui.QIntValidator(1, self.max_shape))
-            line_edit.textChanged.connect(self._on_shape_changed)
-            line_edit.textChanged.connect(lambda: self._adjust_editor_width(line_edit))
-            # Insert before the remove button
-            index = self._layout.indexOf(self.removeButton)
-            self._layout.insertWidget(index, line_edit)
+        line_edit.setValidator(QtGui.QIntValidator(1, self.max_shape))
+        line_edit.textChanged.connect(self._on_shape_changed)
+        line_edit.textChanged.connect(lambda: self._adjust_editor_width(line_edit))
+        # Insert before the remove button
+        index = self._layout.indexOf(self.removeButton)
+        self._layout.insertWidget(index, line_edit)
 
         self._adjust_editor_width(line_edit)
         self._dimension_edits.append(line_edit)
 
-        if not self.is_static:
-            self._update_buttons()
+        self._update_buttons()
         self._on_shape_changed()
 
     def _remove_last_dimension(self):
@@ -143,11 +140,10 @@ class QShapeEdit(QtWidgets.QWidget):
         """
             Enable/disable the single add/remove buttons based on dimension count.
         """
-        if self.is_static:
-            return
-        num_dims = len(self._dimension_edits)
-        self.addButton.setEnabled(num_dims < self.max_dims)
-        self.removeButton.setEnabled(num_dims > self.min_dims)
+        if self.isEnabled():
+            num_dims = len(self._dimension_edits)
+            self.addButton.setEnabled(num_dims < self.max_dims)
+            self.removeButton.setEnabled(num_dims > self.min_dims)
 
     def _on_shape_changed(self):
         self.editingFinished.emit()
@@ -174,6 +170,12 @@ class QShapeEdit(QtWidgets.QWidget):
         min_width = 30
         editor.setFixedWidth(max(text_width, min_width))
 
+    def setEnabled(self, value: bool) -> None:
+        # Enable/disable buttons
+        self.addButton.setVisible(value)
+        self.removeButton.setVisible(value)
+        return super().setEnabled(value)
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class QShape(SparkQWidget):
@@ -181,33 +183,36 @@ class QShape(SparkQWidget):
         Custom QWidget used for integer fields in the SparkGraphEditor's Inspector.
     """
 
-    def __init__(self,
-                 label: str,
-                 initial_shape: tuple[int, ...] = (1,),
-                 min_dims: int = 1,
-                 max_dims: int = 8,
-                 max_shape: int = 1E9,
-                 is_static: bool = False,
-                 parent: QtWidgets.QWidget = None):
+    def __init__(
+            self,
+            initial_shape: tuple[int, ...] = (1,),
+            min_dims: int = 1,
+            max_dims: int = 8,
+            max_shape: int = 1E9,
+            parent: QtWidgets.QWidget = None
+        ) -> None:
         super().__init__(parent=parent)
 
         # Add layout
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        # Add label
-        self._label = QtWidgets.QLabel(label, minimumWidth=GRAPH_EDITOR_CONFIG.min_attr_label_size, parent=self)
-        self._label.setContentsMargins(GRAPH_EDITOR_CONFIG.label_field_margin)
-        layout.addWidget(self._label)
         # Add QShapeEdit
-        self._shape_edit = QShapeEdit(initial_shape, min_dims, max_dims, max_shape, is_static, self)
+        self._shape_edit = QShapeEdit(initial_shape, min_dims, max_dims, max_shape, self)
         # Update callback
         self._shape_edit.editingFinished.connect(self._on_update)
         # Finalize
         layout.addWidget(self._shape_edit)
         self.setLayout(layout)
 
-    def get_value(self):
+    def get_value(self) -> tuple[int, ...]:
         return self._shape_edit.get_shape()
+
+    def set_value(self, value: tuple[int, ...]):
+        return self._shape_edit.set_shape(value)
+    
+    def setEnabled(self, value: bool) -> None:
+        self._shape_edit.setEnabled(value)
+        return super().setEnabled(value)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

@@ -8,11 +8,13 @@ import os
 import abc
 import jax
 import jax.numpy as jnp
+import numpy as np
 import dataclasses as dc
 import typing as tp
 import copy
 import json
 import pathlib as pl
+import spark.core.utils as utils
 from jax.typing import DTypeLike
 from spark.core.validation import _is_config_instance
 from spark.core.registry import REGISTRY, register_config
@@ -115,6 +117,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
     __config_delimiter__: str = '__'
     __shared_config_delimiter__: str = '_s_'
+    __graph_editor_metadata__: dict = dc.field(default_factory = lambda: {})
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -126,6 +129,8 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         # Set attributes programatically
         self._set_partial_attributes(kwargs_fold, shared_partial)
         self.__post_init__()
+        # TODO: __graph_editor_metadata__ is not being set automatically
+        self.__graph_editor_metadata__ = kwargs['__graph_editor_metadata__'] if '__graph_editor_metadata__' in kwargs else {}
 
     @classmethod
     def _create_partial(cls, **kwargs):
@@ -149,19 +154,28 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             field_type = type_hints[field.name]
             if isinstance(type_hints[field.name], type) and issubclass(field_type, BaseSparkConfig):
                 # Field is another SparkConfig use create partial recursively.
-                # TODO: We need a way to distuinguish when to use the field_type and when to use the default_factory
                 try:
                     factory = field.default_factory
                     if not factory or factory is dc.MISSING:
                         raise ValueError(
                             f'Configuration class does not define a default_factory for Subconfig: \"{field.name}\".'
                         )
-                    if not isinstance(factory, type) or not issubclass(factory, BaseSparkConfig):
+                    is_config_cls = isinstance(factory, type) and issubclass(factory, BaseSparkConfig)
+                    is_callable = callable(factory)
+                    if not (is_callable or is_config_cls):
                         raise TypeError(
                             f'Configuration class defines default_factory for Subconfig: \"{field.name}\" '
-                            f'expected factory of type \"{BaseSparkConfig.__name__}\" but got {factory}.'
+                            f'expected factory of type \"{BaseSparkConfig.__name__} | tp.Callable" but got {factory}.'
                         )
-                    setattr(instance, field.name, factory._create_partial(**kwargs))
+                    if is_config_cls:
+                        field_config = factory._create_partial(**kwargs)
+                    else:
+                        field_config = factory(**kwargs)
+                    if not isinstance(field_config, BaseSparkConfig):
+                        raise TypeError(
+                            f'Expected factory output to be of type \"{BaseSparkConfig.__name__}\", but got \"{field_config.__class__}\".'
+                        )
+                    setattr(instance, field.name, field_config)
                 except:
                     setattr(instance, field.name, field_type._create_partial(**kwargs))
             elif field.default_factory is not dc.MISSING:
@@ -326,6 +340,26 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
+    def _get_type_hints(self,):
+        """
+            Returns a dict containing all type hints.
+        """
+        # Get type hints
+        type_hints = tp.get_type_hints(self.__class__)
+        for key in type_hints.keys():
+            if tp.get_origin(type_hints[key]): 
+                hints = list(tp.get_args(type_hints[key]))
+                process_hints = tuple([h for h in hints if h is not type(None)])
+                if np.dtype in process_hints or jnp.dtype in process_hints:
+                    type_hints[key] = (np.dtype,)
+                else:
+                    type_hints[key] = process_hints
+            else:
+                type_hints[key] = (type_hints[key],)
+        return type_hints
+    
+
+
     def validate(self,) -> None:
         """
             Validates all fields in the configuration class.
@@ -334,6 +368,28 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             for validator in field.metadata.get('validators', []):
                 validator_instance = validator(field)
                 validator_instance.validate(getattr(self, field.name))
+
+
+
+    def get_field_errors(self, field_name: str) -> list[str]:
+        """
+            Validates all fields in the configuration class.
+        """
+        # Validate field
+        field: dc.Field = getattr(self, '__dataclass_fields__').get(field_name, None)
+        if field is None:
+            raise KeyError(
+                f'SparkConfig \"{self.__class__}\" does not define a field with name \"{field_name}\".'
+            )
+        # Try to validate field
+        errors = []
+        for validator in field.metadata.get('validators', []):
+            validator_instance = validator(field)
+            try:
+                validator_instance.validate(getattr(self, field.name))
+            except Exception as e:
+                errors.append(f'{validator.__name__}: {e}')
+        return errors
 
 
 
@@ -483,10 +539,11 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 from spark.core.serializer import SparkJSONDecoder
                 try:
                     obj = json.load(json_file, cls=SparkJSONDecoder) 
-                except:
+                except Exception as e:
                     raise RuntimeError(
                         f'An unexpected error ocurred when trying to decode... '
                         f'418 I\'m a teapot.'
+                        f'Error: {e}'
                     )
                 if not _is_config_instance(obj):
                     raise TypeError(
@@ -498,6 +555,40 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             raise Exception(
                 f'ERROR: Could not read file \"{file_path}\". Reason: {e}'
             )
+
+
+
+    def __iter__(self) -> tp.Iterator[tuple[str, dc.Field, tp.Any]]:
+        """
+            Custom iterator to simplify SparkConfig inspection across the entire ecosystem.
+            This iterator excludes private fields.
+
+            Output:
+                field_name: str, field name 
+                field_value: tp.Any, field value
+        """
+        # Iterate over all defined fields of the dataclass
+        for f in dc.fields(self):
+            # Check for fields to skip
+            if f.name in ['__config_delimiter__', '__shared_config_delimiter__', '__class_ref__', '__graph_editor_metadata__']:
+                continue
+
+            # Yield the field name and its corresponding value
+            yield (f.name, f, getattr(self, f.name))
+
+
+    def get_tree_structure(self,) -> str:
+        return utils.ascii_tree(self._parse_tree_structure(0))
+
+    def _parse_tree_structure(self, current_depth: int) -> str:
+        """
+            Parses the tree with to produce a string with the appropiate format for the ascii_tree method.
+        """
+        rep = current_depth * ' ' + f'{self.__class__.__name__}\n'
+        for name, field, value in self:
+            if isinstance(value, BaseSparkConfig):
+                rep += value._parse_tree_structure(current_depth+1)
+        return rep
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -523,7 +614,6 @@ class SparkConfig(BaseSparkConfig):
             'value_options': [
                 jnp.float16,
                 jnp.float32,
-                jnp.float64,
             ],
             'description': 'Dtype used for JAX dtype promotions.',
         })

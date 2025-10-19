@@ -68,17 +68,20 @@ def test_brain_config() -> spark.nn.BrainConfig:
             payload_type=spark.FloatArray, 
             shape=(4,), 
             dtype=jnp.float16,
-            is_optional=False,
         )
     }
     output_map = {
-        'integrator': {
-            'signal': spark.OutputSpec(
-                payload_type=spark.FloatArray, 
-                shape=(2,), 
-                dtype=jnp.float16
-            )
-        }
+    'action': {
+        'input': spark.PortMap(
+            origin='integrator',
+            port='signal'
+		),
+        'spec': spark.OutputSpec(
+            payload_type=spark.FloatArray,
+            shape=(2,),
+            dtype=jnp.float16
+		)
+	}
     }
     modules_map = {
         'spiker': spiker_specs,
@@ -110,8 +113,8 @@ def test_jax_jit_split(
     }
     brain_model(**brain_inputs)
     spikes, brain_model = run_module_simplified(brain_model, brain_inputs)
-    assert isinstance(spikes['integrator.signal'], spark.FloatArray)
-    assert spikes['integrator.signal'].value.shape == (2,)
+    assert isinstance(spikes['action'], spark.FloatArray)
+    assert spikes['action'].value.shape == (2,)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -141,8 +144,8 @@ def test_jax_jit_split(
     brain_model(**brain_inputs)
     graph, state = spark.split((brain_model))
     spikes, state = run_module_split(graph, state, brain_inputs)
-    assert isinstance(spikes['integrator.signal'], spark.FloatArray)
-    assert spikes['integrator.signal'].value.shape == (2,)
+    assert isinstance(spikes['action'], spark.FloatArray)
+    assert spikes['action'].value.shape == (2,)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

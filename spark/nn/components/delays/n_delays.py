@@ -28,7 +28,7 @@ from spark.nn.components.delays.base import Delays, DelaysOutput, DelaysConfig
 @register_config
 class NDelaysConfig(DelaysConfig):
     """
-       NDelays configuration class.
+    NDelays configuration class.
     """
 
     max_delay: float = dc.field(
@@ -42,7 +42,7 @@ class NDelaysConfig(DelaysConfig):
             'description': 'Maximum synaptic delay. Note: Final max delay is computed as ⌈max/dt⌉.',
         })
     delay_initializer: InitializerConfig = dc.field(
-        default_factory = UniformInitializerConfig,
+        default_factory = lambda **kwargs: UniformInitializerConfig( **({'dtype': jnp.uint8, **kwargs}) ),
         metadata = {
             'validators': [
                 TypeValidator,
@@ -58,10 +58,10 @@ class NDelays(Delays):
         Data structure for spike storage and retrival for efficient neuron spike delay implementation.
         This synaptic delay model implements a generic conduction delay of the outputs spikes of neruons. 
         Example: Neuron A fires, every neuron that listens to A recieves its spikes K timesteps later,
-                 neuron B fires, every neuron that listens to B recieves its spikes L timesteps later.
+                neuron B fires, every neuron that listens to B recieves its spikes L timesteps later.
 
         Init:
-            max_delay: int
+            max_delay: float
             delay_initializer: DelayInitializerConfig
 
         Input:

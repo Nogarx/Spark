@@ -34,8 +34,8 @@ class SparkJSONEncoder(json.JSONEncoder):
 		}
 		return super().encode(wrapped)
 
-	def iterencode(self, o, _one_shot=False):
-		return super().iterencode(self._preprocess(o), _one_shot)
+	#def iterencode(self, o, _one_shot=False):
+	#	return super().iterencode(self._preprocess(o), _one_shot)
 
 	def default(self, obj):
 		# Encode jax arrays
@@ -179,11 +179,11 @@ class SparkJSONDecoder(json.JSONDecoder):
 		# Default handler
 		return obj
 	
-	def _decode_spec(self, type: type[T], obj: dict) -> T:
+	def _decode_spec(self, _type: type[T], obj: dict) -> T:
 		data = obj.get('__data__')
 		if not isinstance(data, dict):
 			raise TypeError(f'Expected \"__data__\" to be of type \"dict\", but got {data}')
-		return type(**data)
+		return _type.from_dict(data)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

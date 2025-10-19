@@ -3,32 +3,24 @@
 #################################################################################################################################################
 
 from __future__ import annotations
-
+    
+import typing as tp
+import dataclasses as dc
+import Qt
 from PySide6 import QtCore, QtWidgets, QtGui
-from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class QMissing(QtWidgets.QWidget):
+class StatusBar(QtWidgets.QStatusBar):
     """
-        A missing widget template to handle some error cases more gracefully.
+        Graph Editor status bar.
     """
-    def __init__(self, label: str, parent: QtWidgets.QWidget = None, **kwargs):
-        super().__init__(parent=parent)
 
-        # Add layout
-        layout = QtWidgets.QHBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        # Add label
-        self._label = QtWidgets.QLabel(label, minimumWidth=GRAPH_EDITOR_CONFIG.min_attr_label_size, parent=self)
-        layout.addWidget(self._label)
-        # Add QLineEdit
-        self._msg = QtWidgets.QLabel('🏗️ Widget not implemented.', parent=self)
-        # Finalize
-        layout.addWidget(self._msg)
-        self.setLayout(layout)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        label = QtWidgets.QLabel('', parent=self)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

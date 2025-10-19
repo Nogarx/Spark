@@ -1,0 +1,9 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+<qresource>
+    <file>icons/node_icon.png</file>
+    <file>icons/link_icon.png</file>
+    <file>icons/dot_icon.png</file>
+    <file>icons/lock_icon.png</file>
+</qresource>
+</RCC>

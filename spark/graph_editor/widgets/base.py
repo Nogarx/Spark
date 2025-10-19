@@ -6,19 +6,20 @@ from __future__ import annotations
 
 import abc
 import typing as tp
-from Qt import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
+from spark.graph_editor.widgets.checkbox import InheritToggleButton, WarningFlag
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class SparkQWidgetMeta(type(QtWidgets.QWidget), abc.ABCMeta):
-    pass
+#class SparkQWidgetMeta(type(QtWidgets.QWidget), abc.ABCMeta):
+#    pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class SparkQWidget(QtWidgets.QFrame, abc.ABC, metaclass=SparkQWidgetMeta):
+class SparkQWidget(QtWidgets.QWidget):
     """
         Base QWidget class for the graph editor attributes.
     """
@@ -27,21 +28,128 @@ class SparkQWidget(QtWidgets.QFrame, abc.ABC, metaclass=SparkQWidgetMeta):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Style
-        self.setContentsMargins(GRAPH_EDITOR_CONFIG.field_margin)
-        self.setStyleSheet(f'background-color: {GRAPH_EDITOR_CONFIG.field_bg_color};\
-                             border-radius: {GRAPH_EDITOR_CONFIG.field_border_radius}px;')
 
-    @abc.abstractmethod
+    #@abc.abstractmethod
     def get_value(self,) -> tp.Any:
         """
             Returns the widget value.
         """
-        pass
+        raise NotImplementedError()
 
-    def _on_update(self):
+    #@abc.abstractmethod
+    def set_value(self, value: tp.Any) -> tp.Any:
+        """
+            Returns the widget value.
+        """
+        raise NotImplementedError()
+
+    def _on_update(self) -> None:
         self.on_update.emit(self.get_value())
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class QField(QtWidgets.QWidget):
+    """
+        Base QWidget class for the graph editor attributes.
+    """
+
+    inheritance_toggled = QtCore.Signal(bool)
+    field_updated = QtCore.Signal(tp.Any)
+
+    def __init__(
+            self, 
+            attr_label: str,
+            attr_widget: SparkQWidget,
+            warning_value: bool = False,
+            inheritance_box: bool = False,
+            inheritance_interactable: bool = True,
+            inheritance_value: bool = False,
+            parent: QtWidgets.QWidget | None = None,
+            **kwargs
+        ) -> None:
+        super().__init__(parent=parent, **kwargs)
+        # Widget layout
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(GRAPH_EDITOR_CONFIG.field_margin)
+        layout.setContentsMargins(QtCore.QMargins(0, 4, 12, 0))
+        layout.setSpacing(4)
+        # Warning icon
+        self.warning_flag = WarningFlag(value=warning_value, parent=self)
+        layout.addWidget(self.warning_flag)    
+        # Inheritance checkbox.
+        if inheritance_box:
+            self.inheritance_checkbox = InheritToggleButton(
+                value=inheritance_value, 
+                interactable=inheritance_interactable,
+                parent=self
+            )
+            self.inheritance_checkbox.toggled.connect(self.on_inheritance_toggled)
+            layout.addWidget(self.inheritance_checkbox)
+        else:
+            dummy_widget = QtWidgets.QWidget(parent=self)
+            dummy_widget.setFixedSize(QtCore.QSize(16, 16))
+            self.inheritance_checkbox = dummy_widget
+            layout.addWidget(self.inheritance_checkbox)
+        # Label.
+        self.label = QtWidgets.QLabel(attr_label, parent=self)
+        self.label.setMinimumWidth(GRAPH_EDITOR_CONFIG.min_attr_label_size)
+        self.label.setStyleSheet(
+            f"""
+                font-size: {GRAPH_EDITOR_CONFIG.medium_font_size}px;
+            """
+        )
+        layout.addWidget(self.label)  
+        # Attribute widget
+        #if not isinstance(attr_widget, SparkQWidget):
+        #    raise TypeError(
+        #        f'Expected \"attr_widget\" to be of type \"SparkQWidget\", but got \"{attr_widget.__class__}\".'
+        #    )
+        self.attr_widget = attr_widget
+        self.attr_widget.on_update.connect(self.on_field_update)
+        self.attr_widget.setParent(self)
+        layout.addWidget(self.attr_widget)  
+        # Set layout
+        self.setLayout(layout)
+
+    def on_inheritance_toggled(self, state: bool) -> None:
+        self.inheritance_toggled.emit(state)
+
+    def on_field_update(self, value: tp.Any) -> None:
+        self.field_updated.emit(value)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class QMissing(SparkQWidget):
+    """
+        Custom QWidget used for int fields in the SparkGraphEditor's Inspector.
+    """
+
+    def __init__(
+            self, 
+            parent: QtWidgets.QWidget = None
+        ) -> None:
+        super().__init__(parent=parent)
+        # Add layout
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
+        # Add QLineEdit
+        self._label = QtWidgets.QLabel('🏗️ Widget not implemented.', parent=self)
+        self._label.setFixedHeight(20)
+        self._label.setStyleSheet(
+            f"""
+                font-size: {GRAPH_EDITOR_CONFIG.medium_font_size}px;
+                padding: 0px;
+                margin: 0px;
+            """
+        )
+        layout.addWidget(self._label)
+        # Finalize
+        self.setLayout(layout)
+
+    def get_value(self) -> str:
+        raise TypeError(
+            f'QMissing widget is a debug widget and cannot return a value.'
+        )
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

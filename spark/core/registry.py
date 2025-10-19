@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 import dataclasses as dc
 import typing as tp
+import copy
 from collections.abc import Mapping, ItemsView
 import spark.core.utils as utils
 import spark.core.validation as validation
@@ -42,7 +43,7 @@ class SubRegistry(Mapping):
     def __getitem__(self, key: str) -> RegistryEntry:
         if not self.__built__:
             raise RuntimeError('Registry is not build yet.')
-        return self._registry[key]
+        return copy.deepcopy(self._registry[key])
 
     def __iter__(self) -> tp.Iterator[str]:
         if not self.__built__:
@@ -66,7 +67,9 @@ class SubRegistry(Mapping):
         else:
             # Delay registration until all default objects were identified.
             if name in self._raw_registry:
-                raise NameError(f'{self._registry_base_type} name "{name}" is already queued to be register.')
+                raise NameError(
+                    f'{self._registry_base_type} name \"{name}\" is already queued to be register.'
+                )
             self._raw_registry[name] = cls
 
     def _register(self, name: str, cls: type[object], path: list[str] | None = None):

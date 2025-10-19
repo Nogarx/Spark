@@ -5,207 +5,140 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.nn.brain import BrainConfig
-    from spark.graph_editor.inspector import NodeInspectorWidget
+    from spark.graph_editor.widgets.dock_panel import QDockPanel
 
 import os
 import sys
-import json
-import logging
-import networkx as nx
-import jax.numpy as jnp
+import enum
 import typing as tp
-from Qt import QtWidgets, QtCore, QtGui
-from NodeGraphQt import NodeGraph, Port
-from spark.core.specs import ModuleSpecs, InputSpec, OutputSpec, PortMap
+from PySide6 import QtWidgets, QtCore, QtGui
 from spark.nn.brain import BrainConfig
-from spark.graph_editor.utils import MenuTree, JsonEncoder
-from spark.graph_editor.nodes import module_to_nodegraph, SourceNode, SinkNode, AbstractNode, SparkModuleNode
-from spark.graph_editor.graph import SparkNodeGraph
-from spark.graph_editor.inspector import NodeInspectorWidget
+from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
+from spark.graph_editor.ui.menu_bar import MenuBar
+from spark.graph_editor.ui.status_bar import StatusBar
+
+# NOTE: All code that uses PySide6-QtAds must be wrapped in another script.
+# Any direct import of the package in this file leads to a segmentation fault error
+# due keyboard events propagation from CDockWidget to libxkbcommon since the 
+# application is not properly initialized and so is XKB keymap.
+# Wrapping the code avoids this due to python being lazy c:
+from spark.graph_editor.window import EditorWindow
+from spark.graph_editor.ui.graph_panel import GraphPanel
+from spark.graph_editor.ui.nodes_panel import NodesPanel
+from spark.graph_editor.ui.inspector_panel import InspectorPanel
+from spark.graph_editor.ui.console_panel import ConsolePanel, MessageLevel
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+class DockPanels(enum.Enum):
+    GRAPH = enum.auto()
+    INSPECTOR = enum.auto()
+    NODES = enum.auto()
+    CONSOLE = enum.auto()
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class SparkGraphEditor:
 
-    # Singletons.
-    app = None
-    window = None
-    graph = None
-    inspector = None
-    _current_session_path = None
-    _current_model_path = None
+    def __init__(self) -> None:
 
-    def __init__(self):
+        # Check if the editor was launched in the CLI or is using IPykernel
+        self._is_interactive = 'ipykernel' in sys.modules
+        if self._is_interactive:
+            # Integrate Qt event loop to avoid the %gui qt in the terminal
+            from IPython import get_ipython
+            get_ipython().enable_gui('qt')
+
         # QApplication instance.
-        if SparkGraphEditor.app is None:
-            SparkGraphEditor.app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
-
-        if SparkGraphEditor.window is None:
-            SparkGraphEditor.window, SparkGraphEditor.inspector = self._window_init()
-
-        # NodeGraph controller.
-        if SparkGraphEditor.graph is None:
-            SparkGraphEditor.graph = SparkNodeGraph()
-            placeholder_widget = QtWidgets.QWidget()
-            placeholder_widget.setStyleSheet("background-color: #333;")
-            layout = QtWidgets.QVBoxLayout(placeholder_widget)
-            layout.addWidget(SparkGraphEditor.graph.widget)
-            # TODO: Fix bug: Widget zooms in when resizing inspector.
-            SparkGraphEditor.window.setCentralWidget(placeholder_widget)
-            # Menus
-            context_menu = MenuTree(SparkGraphEditor.graph.get_context_menu('graph'))
-            nodes_menu = SparkGraphEditor.graph.get_context_menu('nodes')
-
-            # Register source/sink nodes.
-            SparkGraphEditor.graph.register_node(SourceNode)
-            context_menu['Interfaces'].add_command(
-                SourceNode.NODE_NAME, 
-                lambda *args, id='spark.SourceNode': self.create_node(*args, id=id)
-            )
-            SparkGraphEditor.graph.register_node(SinkNode)
-            context_menu['Interfaces'].add_command(
-                SinkNode.NODE_NAME, 
-                lambda *args, id='spark.SinkNode': self.create_node(*args, id=id)
-            )
-
-            # Register nodes and add them to the context menu.
-            from spark.core.registry import REGISTRY
-            for key, entry in REGISTRY.MODULES.items():
-                nodegraph_class = module_to_nodegraph(entry)
-                SparkGraphEditor.graph.register_node(nodegraph_class)
-                id = nodegraph_class.__identifier__ + f'._NG_{entry.class_ref.__name__}'
-                context_menu[entry.path].add_command(
-                    nodegraph_class.NODE_NAME, 
-                    lambda *args, id=id: self.create_node(*args, id=id)
-                )
-
-            # Base commands
-            context_menu.graph_menu_ref.add_separator()
-            context_menu.add_command('Validate Topology', self.validate_graph)
-            context_menu.add_command('Delete Selected', self.delete_selected, shortcut='del')
-
-            # Base node commands
-            nodes_menu.add_command('Inspect', self.delete_node, node_class=AbstractNode)
-            #nodes_menu.add_separator()
-            nodes_menu.add_command('Delete', self.delete_node, node_class=AbstractNode)
-
-            #----- DEBUG NODES -----#.
-            #----- DEBUG NODES -----#.
-            source = SparkGraphEditor.graph.create_node('spark.SourceNode', name='input_0', pos=[0,300])
-            sink = SparkGraphEditor.graph.create_node('spark.SinkNode', name='output_0', pos=[600,300])
-            spiker = SparkGraphEditor.graph.create_node('spark._NG_PoissonSpiker', name='PoissonSpiker_0', pos=[150,0])
-            neurons = SparkGraphEditor.graph.create_node('spark._NG_ALIFNeuron', name='ALIFNeuron_0', pos=[300,300])
-            integrator = SparkGraphEditor.graph.create_node('spark._NG_ExponentialIntegrator', name='ExponentialIntegrator_0', pos=[450,0])
-            source.set_output(0, spiker.input(0))
-            spiker.set_output(0, neurons.input(0))
-            neurons.set_output(0, integrator.input(0))
-            neurons.set_output(0, neurons.input(0))
-            integrator.set_output(0, sink.input(0))
-            SparkGraphEditor.graph.clear_selection()
-            SparkGraphEditor.graph.clear_undo_stack()
-            SparkGraphEditor.graph.center_on()
-            #----- DEBUG NODES -----#.
-            #----- DEBUG NODES -----#.
-
-            # Dynamic UI
-            SparkGraphEditor.graph.node_selection_changed.connect(self._update_inspector_selection)
-            SparkGraphEditor.graph.stateChanged.connect(self._update_ui_state)
-            self._update_ui_state()
-
-    def delete_node(self, graph: NodeGraph, node: AbstractNode) -> None:
-        graph.delete_node(node)
-
-    def delete_selected(self, graph: NodeGraph)  -> None:
-        nodes: list[AbstractNode] = graph.selected_nodes()
-        for node in nodes:
-            graph.delete_node(node)
-
-    def _validate_graph(self,) -> bool:
-        errors = []
-        nx_graph = SparkGraphEditor.graph.build_raw_graph()
-        connected_components = list(nx.weakly_connected_components(nx_graph))
-        # Check input/output exists.
-        node_types = nx.get_node_attributes(nx_graph, "node_type").values()
-        has_input = 'SourceNode' in node_types
-        has_output = 'SinkNode' in node_types
-        if not has_input:
-            errors.append(f'No source node was found.')
-        if not has_output:
-            errors.append(f'No sink node was found.')
-        # Check number of connected components.
-        if len(connected_components) > 1:
-            errors.append(f'Multiple connected components are not currently supported but found {len(connected_components)}.')
-        return errors
-
-    def validate_graph(self,) -> bool:
-        errors = self._validate_graph()
-        if len(errors) == 0: 
-            QtWidgets.QMessageBox.information(
-                SparkGraphEditor.graph.viewer(), 
-                'Sucess!', f'No error was detected during validation.'
-            )
-        else: 
-            QtWidgets.QMessageBox.warning(
-                SparkGraphEditor.graph.viewer(), 
-                'Invalid Model', 'The following errors were detected:\n\n  •  '+'\n\n  •  '.join(errors)+'\n'
-            )
-
-    def create_node(self, *args, id: str)  -> None:
-        """
-            Prompts the user for a node name using a dialog and then creates the node.
-        """
-        # TODO: Improve this dirty patch.
-        base = id.split('.')[-1]
-        it = 0
-        if base == 'SourceNode':
-            base = 'input'
-        elif base == 'SinkNode':
-            base = 'output'
-        else:
-            base = base.removeprefix('_NG_')
-        current_name_attempt = f'{base}_{it}'
-        while SparkGraphEditor.graph.name_exist(current_name_attempt):
-            current_name_attempt = f'{base}_{it}'
-            it +=1 
-        while True:
-            # Promt user for node's name
-            name, ok = QtWidgets.QInputDialog.getText(
-                SparkGraphEditor.graph.viewer(),
-                "Create Node",
-                f"Enter node's ID:",
-                QtWidgets.QLineEdit.EchoMode.Normal,
-                current_name_attempt)
-            
-            # Validate name
-            if SparkGraphEditor.graph.name_exist(name):
-                error_msg = f'The name "{name}" is already in use.'
-                if not name:
-                    error_msg = 'The name cannot be empty.'
-                QtWidgets.QMessageBox.warning(SparkGraphEditor.graph.viewer(), 'Invalid Name', error_msg)
-                current_name_attempt = name
-            # Create the node if the user clicked "OK" and the name is not empty.
-            elif ok and name:
-                mouse_pos = SparkGraphEditor.graph.cursor_pos()
-                SparkGraphEditor.graph.create_node(id, name=f'{name}', pos=mouse_pos, selected=True) 
-                logging.info(f'Created node with ID "{id}" and name "{name}" at {mouse_pos}.')
-                break
-            # User closed the window
-            elif not ok:
-                break
+        self.app = QtWidgets.QApplication.instance()
+        if self.app is None:
+            self.app = QtWidgets.QApplication(sys.argv)
+        self._panels: dict[DockPanels, QDockPanel] = {}
+        self._current_session_path = None
+        self._current_model_path = None
 
     def launch(self) -> None:
         """
             Creates and shows the editor window without blocking.
             This method is safe to call multiple times.
         """
-        if self.window.isVisible():
-            self.window.activateWindow()
-            self.window.raise_()
+        #if __name__ == "__main__":
+        # If a previous window exists, explicitly delete it (safe)
+        if getattr(self, 'window', None):
+            self.window.close()
+            self.window.deleteLater()
+            del self.window
+
+        # Create base window.
+        self.window = EditorWindow()
+        self.window.windowClosed.connect(self.exit_editor)
+        # Default layout
+        self._setup_layout()
+        # General style
+        self.window.setStyleSheet(
+            f"""
+                color: {GRAPH_EDITOR_CONFIG.default_font_color};
+            """
+        )
+        self.window.showMaximized()
+        # Start loop
+        self.app.exec_()
+
+    def exit_editor(self,) -> None:
+        """
+            Exit editor.
+        """
+        self.app.quit()
+
+    def closeEvent(self, event)-> None:
+        """
+            Overrides the default close event to check for unsaved changes.
+        """
+        if self._maybe_save():
+            event.accept()
         else:
-            self.window.show()
+            event.ignore()
+
+    def _setup_layout(self,) -> None:
+        """
+            Initialize the default window layout.
+        """
+        # Main panel
+        graph_panel = GraphPanel(parent=self.window)
+        self._panels[DockPanels.GRAPH] = graph_panel
+        self.window.dock_manager.setCentralWidget(graph_panel)
+        self.graph = graph_panel.graph
+        #graph_panel._debug_model()
+
+        # Console panel
+        console_panel = ConsolePanel(parent=self.window)
+        self._panels[DockPanels.CONSOLE] = console_panel
+        self.window.add_dock_widget(GRAPH_EDITOR_CONFIG.console_panel_pos, console_panel)
+        # Nodes panel
+        nodes_panel = NodesPanel(self.graph, parent=self.window)
+        self._panels[DockPanels.NODES] = nodes_panel
+        self.window.add_dock_widget(GRAPH_EDITOR_CONFIG.nodes_panel_pos, nodes_panel)
+        # Inspector panel
+        inspector_panel = InspectorPanel(parent=self.window)
+        self._panels[DockPanels.INSPECTOR] = inspector_panel
+        self.window.add_dock_widget(GRAPH_EDITOR_CONFIG.inspector_panel_pos, inspector_panel)
+
+        # Menu bar
+        self.menu_bar = MenuBar(self)
+        self.window.setMenuBar(self.menu_bar)
+        # Status bar
+        self.status_bar = StatusBar()
+        self.window.setStatusBar(self.status_bar)
+
+        # Setup events
+        inspector_panel.broadcast_message.connect(console_panel.publish_message)
+        graph_panel.broadcast_message.connect(console_panel.publish_message)
+        graph_panel.graph.broadcast_message.connect(console_panel.publish_message)
+        graph_panel.graph.node_selection_changed.connect(inspector_panel.on_selection_update)
+        graph_panel.graph.nodes_deleted.connect(lambda: inspector_panel.set_node(None))
+        graph_panel.graph.stateChanged.connect(lambda _: self._update_ui_state())
 
     def _maybe_save(self) -> bool:
         """
@@ -213,7 +146,7 @@ class SparkGraphEditor:
             Returns True if the operation should proceed (user saved or discarded),
             and False if the operation should be cancelled.
         """
-        if not SparkGraphEditor.graph._is_modified:
+        if self.graph._is_modified:
             return True
         
         msg_box = QtWidgets.QMessageBox(None)
@@ -239,10 +172,15 @@ class SparkGraphEditor:
             Clears the current session after checking for unsaved changes.
         """
         if self._maybe_save():
-            self.graph.clear_session()
-            self._current_session_path = None
-            SparkGraphEditor.graph._is_modified = False
-            self._update_ui_state()
+            self._clear_session()
+
+    def _clear_session(self,) -> None:
+        self.graph.clear_session()
+        self._current_session_path = None
+        self._current_model_path = None
+        self.graph._is_modified = False
+        self._update_ui_state()
+        self._panels[DockPanels.CONSOLE].clear()
 
     def save_session(self) -> bool:
         """
@@ -253,11 +191,19 @@ class SparkGraphEditor:
         else:
             try:
                 self.graph.save_session(self._current_session_path)
-                SparkGraphEditor.graph._is_modified = False
+                self.graph._is_modified = False
                 self._update_ui_state()
+                self._panels[DockPanels.CONSOLE].publish_message(
+                    MessageLevel.SUCCESS, 
+                    f'Session sucessfully saved to \"{self._current_session_path}\".'
+                )
                 return True
             except Exception as e:
                 QtWidgets.QMessageBox.critical(self, "Error", f"Could not save file:\n{e}")
+                self._panels[DockPanels.CONSOLE].publish_message(
+                    MessageLevel.ERROR, 
+                    f'Failed to save session to \"{self._current_session_path}\": {e}'
+                )
                 return False
 
     def save_session_as(self) -> bool:
@@ -281,6 +227,11 @@ class SparkGraphEditor:
                 if ret == QtWidgets.QMessageBox.StandardButton.No:
                     continue 
             self._current_session_path = path
+            # Try to also set the model_path
+            try:
+                self._current_model_path = f'{self._current_session_path.strip('.sge')}.scfg'
+            except:
+                pass
             return self.save_session()
         
         return False
@@ -299,15 +250,22 @@ class SparkGraphEditor:
         )
         if path:
             try:
+                self._clear_session()
                 self.graph.load_session(path)
                 self._current_session_path = path
-                SparkGraphEditor.graph._is_modified = False
+                self.graph._is_modified = False
+                self._panels[DockPanels.CONSOLE].publish_message(
+                    MessageLevel.SUCCESS, 
+                    f'Session loaded sucessfully from \"{self._current_session_path}\".'
+                )
                 self._update_ui_state()
             except Exception as e:
                 QtWidgets.QMessageBox.critical(self, "Error", f"Could not load file:\n{e}")
+                self._panels[DockPanels.CONSOLE].publish_message(
+                    MessageLevel.ERROR, 
+                    f'Failed to load session from \"{self._current_session_path}\": {e}'
+                )
 
-    # TODO: This function will not work without some extra metada inside the brain config or 
-    # some cleaver way to resolve node placemenet. The second option is prefered.
     def load_from_model(self) -> None:
         """
             Loads a graph state from a Spark configuration file after checking for unsaved changes.
@@ -322,14 +280,22 @@ class SparkGraphEditor:
         )
         if path:
             try:
-                # TODO: Add nodes dynamically
-                #self.graph.load_session(path)
-                self._current_session_path = path
-                SparkGraphEditor.graph._is_modified = False
+                self._clear_session()
+                self._current_model_path = path
+                config = BrainConfig.from_file(self._current_model_path)
+                self.graph.load_from_model(config)
+                self.graph._is_modified = False
+                self._panels[DockPanels.CONSOLE].publish_message(
+                    MessageLevel.SUCCESS, 
+                    f'Model loaded sucessfully from \"{self._current_model_path}\".'
+                )
                 self._update_ui_state()
             except Exception as e:
                 QtWidgets.QMessageBox.critical(self, "Error", f"Could not load file:\n{e}")
-
+                self._panels[DockPanels.CONSOLE].publish_message(
+                    MessageLevel.ERROR, 
+                    f'Failed to load model from \"{self._current_model_path}\": {e}'
+                )
 
     def export_model(self) -> bool:
         """
@@ -340,16 +306,25 @@ class SparkGraphEditor:
         else:
             #try:
                 # Validate model.
-                errors = self._validate_graph()
+                errors = self.graph.validate_graph()
                 if len(errors) > 0: 
                     QtWidgets.QMessageBox.warning(
-                        SparkGraphEditor.graph.viewer(), 
+                        self.graph.viewer(), 
                         'Invalid Model', 'The following errors were detected:\n\n  •  '+'\n\n  •  '.join(errors)+'\n'
                     )
+                    for e in errors:
+                        self._panels[DockPanels.CONSOLE].publish_message(
+                            MessageLevel.ERROR, 
+                            f'Failed to export model to \"{self._current_model_path}\": {e}'
+                        )
                     return 
                 
-                brain_config = self._build_brain_config()
+                brain_config = self.graph.build_brain_config()
                 brain_config.to_file(self._current_model_path)
+                self._panels[DockPanels.CONSOLE].publish_message(
+                    MessageLevel.SUCCESS, 
+                    f'Model exported sucessfully to \"{self._current_model_path}\".'
+                )
                 return True
             #except Exception as e:
             #    QtWidgets.QMessageBox.critical(None, 'Error', f'Could not save file:\n{e}')
@@ -370,163 +345,21 @@ class SparkGraphEditor:
                 ret = QtWidgets.QMessageBox.question(
                     None,
                     'Confirm Overwrite',
-                    f'The file "{os.path.basename(path)}" already exists.<br>Do you want to replace it?',
+                    f'The file \"{os.path.basename(path)}\" already exists.<br>Do you want to replace it?',
                     QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
                     QtWidgets.QMessageBox.StandardButton.No
                 )
                 if ret == QtWidgets.QMessageBox.StandardButton.No:
                     continue 
             self._current_model_path = path
+            # Try to also set the session_path
+            try:
+                self._current_session_path = self._current_model_path.strip('.scfg') + '.sge'
+            except:
+                pass
             return self.export_model()
         
         return False
-
-    def _build_brain_config(self,) -> BrainConfig:
-        """
-            Build the model from the graph state.
-        """
-        input_map: dict[str, InputSpec] = {}
-        output_map: dict[str, OutputSpec] = {}
-        modules_map: dict[str, ModuleSpecs] = {}
-        for node in SparkGraphEditor.graph.all_nodes():
-            if isinstance(node, SourceNode):
-                # Source nodes had a single output of the appropiate type
-                input_map[node.NODE_NAME] = InputSpec(
-                    payload_type=node.output_specs['value'].payload_type,
-                    shape=node.output_specs['value'].shape if node.output_specs['value'].shape else (1,),
-                    dtype=node.output_specs['value'].dtype if node.output_specs['value'].dtype else jnp.float16,
-                    is_optional=False,
-                    description=node.output_specs['value'].description,
-                )
-            elif isinstance(node, SinkNode):
-                # Sink nodes are virtual nodes, we need to get the origin of its input to resolve the output_map entry. 
-                # NOTE: Sink nodes are only allowed a single input so its safe to resolve it this way.
-                input_port: Port = node.input_ports()[0]
-                origin_port: Port = input_port.connected_ports()[0]
-                origin_node: AbstractNode = origin_port.node()
-                if isinstance(origin_node, SourceNode):
-                    origin_name = '__call__'
-                    port_name = origin_node.NODE_NAME
-                else:
-                    origin_name = origin_node.NODE_NAME
-                    port_name = origin_port.name()
-                #origin_node: AbstractNode = SparkGraphEditor.graph.get_node_by_name(
-                #    output_map[node.NODE_NAME]['port_maps'][0]['origin']
-                #)
-                # Register node in output_map if not present
-                if not (origin_name in output_map):
-                     output_map[origin_name] = {}
-                # Create OutputSpec
-                output_map[origin_name][port_name] = OutputSpec(
-                    payload_type=origin_node.output_specs[port_name].payload_type,
-                    shape=origin_node.output_specs[port_name].shape if origin_node.output_specs[port_name].shape else (1,),
-                    dtype=origin_node.output_specs[port_name].dtype if origin_node.output_specs[port_name].dtype else jnp.float16,
-                    description=origin_node.output_specs[port_name].description,
-                )
-            elif isinstance(node, SparkModuleNode):
-                # Gather input maps
-                inputs = {}
-                for key, input_spec in node.input_specs.items():
-                    port_maps = []
-                    for p_m in input_spec.port_maps:
-                        # Tranform origin id to name
-                        origin_node: AbstractNode = SparkGraphEditor.graph.get_node_by_id(p_m.origin)
-                        if isinstance(origin_node, SourceNode):
-                            origin_name = '__call__'
-                            port_name = origin_node.NODE_NAME
-                        else:
-                            origin_name = origin_node.NODE_NAME
-                            port_name = p_m.port
-                        port_maps.append(PortMap(origin=origin_name, port=port_name))
-                    inputs[key] = port_maps
-                # Build module spec
-                modules_map[node.NODE_NAME] = ModuleSpecs(
-                    name = node.NODE_NAME,
-                    module_cls = node.module_cls,
-                    inputs = inputs,
-                    config = node.node_config,
-                )
-        # Construct brain config.
-        brain_config = BrainConfig(
-            input_map=input_map, 
-            output_map=output_map, 
-            modules_map=modules_map
-        )
-        return brain_config
-
-
-    def closeEvent(self, event)-> None:
-        """
-            Overrides the default close event to check for unsaved changes.
-        """
-        if self._maybe_save():
-            event.accept()
-        else:
-            event.ignore()
-
-    def _window_init(self,) -> tuple[QtWidgets.QMainWindow, NodeInspectorWidget]:
-        # Create base window.
-        window = QtWidgets.QMainWindow()
-        window.setWindowTitle('Spark Graph Editor')
-        window.resize(1366, 768)
-
-        # --- Toolbar Setup ---
-        menu_bar = window.menuBar()
-        file_menu = menu_bar.addMenu('File')
-        
-        # Add actions to the menu.
-        new_action = file_menu.addAction('New')
-        new_action.triggered.connect(self.new_session)
-        file_menu.addSeparator()
-        load_action = file_menu.addAction('Load')
-        load_action.triggered.connect(self.load_session)
-        #load_from_model_action = file_menu.addAction('Load from model')
-        #load_from_model_action.triggered.connect(self.load_from_model)
-        file_menu.addSeparator()
-        save_action = file_menu.addAction('Save')
-        save_action.triggered.connect(self.save_session)
-        save_as_action = file_menu.addAction('Save as ...')
-        save_as_action.triggered.connect(self.save_session)
-        file_menu.addSeparator()
-        export_action = file_menu.addAction('Export model')
-        export_action.triggered.connect(self.export_model)
-        export_as_action = file_menu.addAction('Export model as...')
-        export_as_action.triggered.connect(self.export_model_as)
-        file_menu.addSeparator()
-        exit_action = file_menu.addAction('Exit')
-
-        # Get references to dynamic actions
-        self.save_action = save_action
-        self.export_action = export_action
-
-        # --- Edit Menu ---
-        # Add the second menu. The menu bar will handle the interaction between them.
-        edit_menu = menu_bar.addMenu('Edit')
-        undo_action = edit_menu.addAction('Undo')
-        redo_action = edit_menu.addAction('Redo')
-
-        # Add Bottom Toolbar
-        bottom_toolbar = QtWidgets.QToolBar('Bottom Toolbar', window, movable=False)
-        window.addToolBar(QtCore.Qt.ToolBarArea.BottomToolBarArea, bottom_toolbar)
-        bottom_toolbar.addWidget(QtWidgets.QLabel('Status: Ready'))
-
-        # Add inspection dock
-        inspection_dock = QtWidgets.QDockWidget('', window,)
-        inspection_dock.setAllowedAreas(QtCore.Qt.DockWidgetArea.LeftDockWidgetArea | QtCore.Qt.DockWidgetArea.RightDockWidgetArea)
-        inspection_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable)
-        inspector = NodeInspectorWidget()
-        inspection_dock.setWidget(inspector)
-        window.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, inspection_dock)
-
-        # Default inspector size.
-        window.resizeDocks([inspection_dock], [1], QtCore.Qt.Orientation.Vertical)
-        return window, inspector
-
-    def _update_inspector_selection(self, new_selection: list[AbstractNode], previous_selection: list[AbstractNode]) -> None:
-        if len(new_selection) == 1:
-            SparkGraphEditor.inspector.set_node(new_selection[0])
-        else: 
-            SparkGraphEditor.inspector.set_node(None)
 
     def _update_ui_state(self) -> None:
         """
@@ -536,20 +369,12 @@ class SparkGraphEditor:
         base_title = 'Spark Graph Editor'
         if self._current_session_path:
             file_name = os.path.basename(self._current_session_path)
-            modified_marker = ' *' if SparkGraphEditor.graph._is_modified else ''
-            SparkGraphEditor.window.setWindowTitle(f'{base_title} - Untitled{modified_marker}')
+            modified_marker = ' *' if self.graph._is_modified else ''
+            self.window.setWindowTitle(f'{base_title} - {file_name if file_name else 'Untitled'}{modified_marker}')
         else:
-            modified_marker = ' *' if SparkGraphEditor.graph._is_modified else ''
-            SparkGraphEditor.window.setWindowTitle(f'{base_title} - Untitled{modified_marker}')
-        
-        # Update 'Save' action text and enabled state
-        self.save_action.setEnabled(SparkGraphEditor.graph._is_modified)
-        
-        # Update 'Export' action text
-        if self._current_model_path:
-            self.export_action.setText(f"Export '{os.path.basename(self._current_model_path)}'...")
-        else:
-            self.export_action.setText("Export Model...")
+            modified_marker = ' *' if self.graph._is_modified else ''
+            self.window.setWindowTitle(f'{base_title} - Untitled{modified_marker}')
+        self.menu_bar._on_graph_modified(self.graph._is_modified, self._current_model_path)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
