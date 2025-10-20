@@ -72,12 +72,12 @@ class LIFNeuronConfig(NeuronConfig):
         metadata = {
             'description': 'Synapses configuration.',
         })
-    delays_config: DelaysConfig = dc.field(
+    delays_config: DelaysConfig | None = dc.field(
         default_factory = N2NDelaysConfig,
         metadata = {
             'description': 'Delays configuration.',
         })
-    learning_rule_config: LearningRuleConfig = dc.field(
+    learning_rule_config: LearningRuleConfig | None = dc.field(
         default_factory = ZenkeRuleConfig,
         metadata = {
             'description': 'Learning configuration.',
@@ -117,24 +117,31 @@ class LIFNeuron(Neuron):
         # Soma model.
         self.soma = LeakySoma(config=self.config.soma_config)
         # Delays model.
-        self.delays = self.config.delays_config.class_ref(config=self.config.delays_config) if self.async_spikes else DummyDelays()
+        self._delays_active = self.config.learning_rule_config is not None
+        if self._delays_active:
+            self.delays = self.config.delays_config.class_ref(config=self.config.delays_config, async_spikes=self._delays_active)
         # Synaptic model.
         self.synapses = self.config.synapses_config.class_ref(config=self.config.synapses_config)
         # Learning rule model.
-        self.learning_rule = self.config.learning_rule_config.class_ref(config=self.config.learning_rule_config)
+        self._learning_active = self.config.learning_rule_config is not None
+        if self._learning_active:
+            self.learning_rule = self.config.learning_rule_config.class_ref(config=self.config.learning_rule_config)
 
     def __call__(self, in_spikes: SpikeArray) -> NeuronOutput:
         """
             Update neuron's states and compute spikes.
         """
         # Inference
-        delays_output = self.delays(in_spikes)
-        synapses_output = self.synapses(delays_output['out_spikes'])
+        if self._delays_active:
+            delays_output = self.delays(in_spikes)
+            synapses_output = self.synapses(delays_output['out_spikes'])
+        else: 
+            synapses_output = self.synapses(in_spikes)
         soma_output = self.soma(synapses_output['currents'])
         # Learning
-        learning_rule_output = self.learning_rule(delays_output['out_spikes'], soma_output['spikes'], self.synapses.get_kernel())
-        self.synapses.set_kernel(learning_rule_output['kernel'])
-        #self.synapses.kernel.value = learning_rule_output['kernel'].value
+        if self._learning_active:
+            learning_rule_output = self.learning_rule(delays_output['out_spikes'], soma_output['spikes'], self.synapses.get_kernel())
+            self.synapses.set_kernel(learning_rule_output['kernel'])
         # Signed spikes
         return {
             'out_spikes': SpikeArray(soma_output['spikes'].value * self._inhibition_mask)
