@@ -119,9 +119,13 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
     __shared_config_delimiter__: str = '_s_'
     __graph_editor_metadata__: dict = dc.field(default_factory = lambda: {})
 
+
+
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        dc.dataclass(cls, init=False, kw_only=True)
+        dc.dataclass(cls, init=False, kw_only=True, repr=False)
+
+
 
     def __init__(self, **kwargs):
         # Fold kwargs
@@ -131,6 +135,8 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         self.__post_init__()
         # TODO: __graph_editor_metadata__ is not being set automatically
         self.__graph_editor_metadata__ = kwargs['__graph_editor_metadata__'] if '__graph_editor_metadata__' in kwargs else {}
+
+
 
     @classmethod
     def _create_partial(cls, **kwargs):
@@ -155,26 +161,30 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             if isinstance(type_hints[field.name], type) and issubclass(field_type, BaseSparkConfig):
                 # Field is another SparkConfig use create partial recursively.
                 try:
-                    factory = field.default_factory
-                    if not factory or factory is dc.MISSING:
-                        raise ValueError(
-                            f'Configuration class does not define a default_factory for Subconfig: \"{field.name}\".'
-                        )
-                    is_config_cls = isinstance(factory, type) and issubclass(factory, BaseSparkConfig)
-                    is_callable = callable(factory)
-                    if not (is_callable or is_config_cls):
-                        raise TypeError(
-                            f'Configuration class defines default_factory for Subconfig: \"{field.name}\" '
-                            f'expected factory of type \"{BaseSparkConfig.__name__} | tp.Callable" but got {factory}.'
-                        )
-                    if is_config_cls:
-                        field_config = factory._create_partial(**kwargs)
-                    else:
-                        field_config = factory(**kwargs)
-                    if not isinstance(field_config, BaseSparkConfig):
-                        raise TypeError(
-                            f'Expected factory output to be of type \"{BaseSparkConfig.__name__}\", but got \"{field_config.__class__}\".'
-                        )
+                    # Check if kwargs already defines an instance of config
+                    field_config = kwargs.get(field.name, None)
+                    if field_config is None or not issubclass(field_config, BaseSparkConfig):
+                        # Construct config dynamically
+                        factory = field.default_factory
+                        if not factory or factory is dc.MISSING:
+                            raise ValueError(
+                                f'Configuration class does not define a default_factory for Subconfig: \"{field.name}\".'
+                            )
+                        is_config_cls = isinstance(factory, type) and issubclass(factory, BaseSparkConfig)
+                        is_callable = callable(factory)
+                        if not (is_callable or is_config_cls):
+                            raise TypeError(
+                                f'Configuration class defines default_factory for Subconfig: \"{field.name}\" '
+                                f'expected factory of type \"{BaseSparkConfig.__name__} | tp.Callable" but got {factory}.'
+                            )
+                        if is_config_cls:
+                            field_config = factory._create_partial(**kwargs)
+                        else:
+                            field_config = factory(**kwargs)
+                        if not isinstance(field_config, BaseSparkConfig):
+                            raise TypeError(
+                                f'Expected factory output to be of type \"{BaseSparkConfig.__name__}\", but got \"{field_config.__class__}\".'
+                            )
                     setattr(instance, field.name, field_config)
                 except:
                     setattr(instance, field.name, field_type._create_partial(**kwargs))
@@ -254,11 +264,18 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             Method to recursively set/override the attributes of the configuration instance from a dictionary of values.
         """
         # Get type hints
-        type_hints = tp.get_type_hints(self.__class__)
-        for key in type_hints.keys():
-            if tp.get_origin(type_hints[key]): 
-                hints = list(tp.get_args(type_hints[key]))
-                type_hints[key] = (h for h in hints if h is not type(None))
+        raw_type_hints = tp.get_type_hints(self.__class__)
+        type_hints, optional_attrs = {}, {}
+        for key in raw_type_hints.keys():
+            if tp.get_origin(raw_type_hints[key]): 
+                hints = list(tp.get_args(raw_type_hints[key]))
+                type_hints[key] = tuple([h for h in hints if h is not type(None)])
+                optional_attrs[key] = len(tuple([h for h in hints if h is type(None)])) > 0
+            else:
+                type_hints[key] = tuple([raw_type_hints[key]])
+                optional_attrs[key] = False
+
+
 
         # Set attributes programatically
         prefixed_shared_partial = {f'{self.__shared_config_delimiter__}{k}':v for k,v in shared_partial.items()}
@@ -270,27 +287,45 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             else:
                 field_name = field.name
 
+            # Check if attribute is optional and the user manually set it to None. 
+            if optional_attrs[field_name] and field_name in kwargs_fold.keys() and isinstance(kwargs_fold[field_name], type(None)):
+                # Unfortunately, the user is correct in this one, set the parameter to None and move on.
+                setattr(self, field_name, None)
+                continue
+
             # Nested config need to be treated differently, propagating kwargs if necessary
             field_type = type_hints[field_name]
             field_value = getattr(self, field_name, None)
-            if isinstance(field_type, type) and issubclass(field_type, BaseSparkConfig):
-                # Attribute is another SparkConfig
+            if any([isinstance(t, type) and issubclass(t, BaseSparkConfig) for t in field_type]):
+                # Check if user manually set this attribute and is a SparkConfig
                 subconfig = kwargs_fold.get(field_name, {})
-                if isinstance(field_value, BaseSparkConfig):
-                    # Use current config 
-                    field_value.merge(partial={**subconfig, **prefixed_shared_partial})
-                    setattr(self, field_name, field_value)
-                elif isinstance(subconfig, BaseSparkConfig):
-                    # Argument is a config. Copy subconfig to avoid weird overwrittings.
+                if isinstance(subconfig, BaseSparkConfig):
+                    # User set a config. Copy subconfig to avoid weird overwrittings.
                     field_config = copy.deepcopy(subconfig)
                     field_config.merge(partial={**prefixed_shared_partial})
                     setattr(self, field_name, field_config)
+                # Check if parent config set this attribute and is a SparkConfig
+                elif isinstance(field_value, BaseSparkConfig):
+                    # Use current config 
+                    field_value.merge(partial={**subconfig, **prefixed_shared_partial})
+                    setattr(self, field_name, field_value)
+                # Use default factory if provided
                 elif field.default_factory is not dc.MISSING:
-                    # Use default factory if provided
                     setattr(self, field_name, field.default_factory(**{**subconfig, **prefixed_shared_partial}))
+                # Use type class otherwise
                 else:
-                    # Use type class otherwise
-                    setattr(self, field_name, field_type(**{**subconfig, **prefixed_shared_partial}))
+                    # TODO: It is not clear how to fully resolve multiple BaseSparkConfig types. We currently select the first one.
+                    valid_types = [isinstance(t, type) and issubclass(t, BaseSparkConfig) for t in field_type]
+                    if sum(valid_types) > 1:
+                        raise TypeError(
+                            f'Multiple SparkConfig types for field \"{field_name}\" in \"{self.__class__.__name__}\" were assigned. '\
+                            f'It is not possible to automatically resolve config initialization. ' \
+                            f'Only one SparkConfig class per field annotation can be used to allow for automatic initialization. ' \
+                            f'If this is inteded, define a default_factory or provide a SparkConfig to the parent initializer. '
+                        )
+                    # Recover instance
+                    valid_field_type = field_type[valid_types.index(True)]
+                    setattr(self, field_name, valid_field_type(**{**subconfig, **prefixed_shared_partial}))
             elif field_name in kwargs_fold:
                 # Use kwargs attribute if provided
                 setattr(self, field_name, kwargs_fold[field_name])
@@ -364,7 +399,21 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         """
             Validates all fields in the configuration class.
         """
+        # Get type hints
+        raw_type_hints = tp.get_type_hints(self.__class__)
+        optional_attrs = {}
+        for key in raw_type_hints.keys():
+            if tp.get_origin(raw_type_hints[key]): 
+                hints = list(tp.get_args(raw_type_hints[key]))
+                optional_attrs[key] = len(tuple([h for h in hints if h is type(None)])) > 0
+            else:
+                optional_attrs[key] = False
+        # Iterate over fields
         for field in dc.fields(self):
+            # Skip optional fields
+            if optional_attrs[field.name] and getattr(self, field.name, None):
+                continue
+            # Validate field
             for validator in field.metadata.get('validators', []):
                 validator_instance = validator(field)
                 validator_instance.validate(getattr(self, field.name))
@@ -577,17 +626,36 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             yield (f.name, f, getattr(self, f.name))
 
 
-    def get_tree_structure(self,) -> str:
-        return utils.ascii_tree(self._parse_tree_structure(0))
 
-    def _parse_tree_structure(self, current_depth: int) -> str:
+    def __repr__(self,):
+        return f'{self.__class__.__name__}(...)'
+
+
+
+    def summary(self,):
+        return utils.ascii_tree(self._parse_tree_structure(0, simplified=False))
+
+
+
+    def get_tree_structure(self,) -> str:
+        return utils.ascii_tree(self._parse_tree_structure(0, simplified=True))
+
+
+
+    def _parse_tree_structure(self, current_depth: int, simplified: bool = False) -> str:
         """
             Parses the tree with to produce a string with the appropiate format for the ascii_tree method.
         """
         rep = current_depth * ' ' + f'{self.__class__.__name__}\n'
         for name, field, value in self:
-            if isinstance(value, BaseSparkConfig):
-                rep += value._parse_tree_structure(current_depth+1)
+            if not simplified:
+                if isinstance(value, BaseSparkConfig):
+                    rep += value._parse_tree_structure(current_depth+1, simplified=simplified)
+                else:
+                    rep += (current_depth+1) * ' ' + f'{name}: {field.type} <- {str(value).strip('\n')}\n'
+            else:
+                if isinstance(value, BaseSparkConfig):
+                    rep += value._parse_tree_structure(current_depth+1, simplified=simplified)
         return rep
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
