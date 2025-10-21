@@ -123,7 +123,7 @@ class N2NDelays(Delays):
         delay_idx = (self._current_idx.value - self.delay_kernel.value - 1) % self._buffer_size
         selected_bytes = self._bitmask.value[delay_idx, byte_indices]
         selected_bits = (selected_bytes >> bit_indices) & 1
-        return SpikeArray(selected_bits.astype(self._dtype).reshape(self.output_shape+self._in_shape) * sign)
+        return SpikeArray(selected_bits.astype(self._dtype).reshape(self.output_shape+self._in_shape) * sign, async_spikes=True)
 
     def get_dense(self,) -> jax.Array:
         """

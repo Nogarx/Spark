@@ -1,5 +1,6 @@
 notebooks/
 .env2/
+_run_tests.py
 .env_docs/
 .env_benchmarks/
 # Byte-compiled / optimized / DLL files

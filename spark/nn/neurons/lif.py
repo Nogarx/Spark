@@ -16,7 +16,6 @@ from spark.core.variables import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator, ZeroOneValidator
 
-from spark.nn.components.delays.dummy import DummyDelays
 from spark.nn.components.somas.leaky import LeakySoma, LeakySomaConfig
 from spark.nn.components.delays.base import Delays, DelaysConfig
 from spark.nn.components.delays.n2n_delays import N2NDelaysConfig
@@ -54,14 +53,6 @@ class LIFNeuronConfig(NeuronConfig):
                 ZeroOneValidator,
             ],
             'description': '',
-        })
-    async_spikes: bool = dc.field(
-        metadata = {
-            'validators': [
-                TypeValidator,
-            ],
-            'description': 'Use asynchronous spikes. This parameter should be True if the incomming spikes are \
-                            intercepted by a delay component and False otherwise.',
         })
     soma_config: LeakySomaConfig = dc.field(
         metadata = {
@@ -103,7 +94,6 @@ class LIFNeuron(Neuron):
         # Main attributes
         self.max_delay = self.config.max_delay
         self.inhibitory_rate = self.config.inhibitory_rate
-        self.async_spikes = self.config.async_spikes
         # Set output shapes earlier to allow cycles.
         self.set_recurrent_shape_contract(shape=self.units)
 
@@ -115,11 +105,11 @@ class LIFNeuron(Neuron):
         inhibition_mask = inhibition_mask.at[indices].set(-1).reshape(self.units)
         self._inhibition_mask = Constant(inhibition_mask, dtype=jnp.float16)
         # Soma model.
-        self.soma = LeakySoma(config=self.config.soma_config)
+        self.soma = self.config.soma_config.class_ref(config=self.config.soma_config)
         # Delays model.
         self._delays_active = self.config.learning_rule_config is not None
         if self._delays_active:
-            self.delays = self.config.delays_config.class_ref(config=self.config.delays_config, async_spikes=self._delays_active)
+            self.delays = self.config.delays_config.class_ref(config=self.config.delays_config)
         # Synaptic model.
         self.synapses = self.config.synapses_config.class_ref(config=self.config.synapses_config)
         # Learning rule model.

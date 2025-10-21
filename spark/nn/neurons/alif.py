@@ -16,7 +16,6 @@ from spark.core.variables import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator, ZeroOneValidator
 
-from spark.nn.components.delays.dummy import DummyDelays
 from spark.nn.components.somas.leaky import AdaptiveLeakySoma, AdaptiveLeakySomaConfig
 from spark.nn.components.delays.base import Delays, DelaysConfig
 from spark.nn.components.delays.n2n_delays import N2NDelaysConfig
@@ -54,14 +53,6 @@ class ALIFNeuronConfig(NeuronConfig):
                 ZeroOneValidator,
             ],
             'description': '',
-        })
-    async_spikes: bool = dc.field(
-        metadata = {
-            'validators': [
-                TypeValidator,
-            ],
-            'description': 'Use asynchronous spikes. This parameter should be True if the incomming spikes are \
-                            intercepted by a delay component and False otherwise.',
         })
     soma_config: AdaptiveLeakySomaConfig = dc.field(
         metadata = {
@@ -103,7 +94,6 @@ class ALIFNeuron(Neuron):
         # Main attributes
         self.max_delay = self.config.max_delay
         self.inhibitory_rate = self.config.inhibitory_rate
-        self.async_spikes = self.config.async_spikes
         # Set output shapes earlier to allow cycles.
         self.set_recurrent_shape_contract(shape=self.units)
 
@@ -117,7 +107,7 @@ class ALIFNeuron(Neuron):
         # Soma model.
         self.soma = AdaptiveLeakySoma(config=self.config.soma_config)
         # Delays model.
-        self.delays = self.config.delays_config.class_ref(config=self.config.delays_config) if self.async_spikes else DummyDelays()
+        self.delays = self.config.delays_config.class_ref(config=self.config.delays_config) if self.config.delays_config is not None else None
         # Synaptic model.
         self.synapses = self.config.synapses_config.class_ref(config=self.config.synapses_config)
         # Learning rule model.

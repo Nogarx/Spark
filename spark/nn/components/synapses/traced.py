@@ -64,7 +64,6 @@ class TracedSynapses(LinearSynapses):
 
         Init:
             units: tuple[int, ...]
-            async_spikes: bool
             kernel_initializer: KernelInitializerConfig
             tau: float | jax.Array
             scale: float | jax.Array
@@ -181,7 +180,6 @@ class DoubleTracedSynapses(LinearSynapses):
 
         Init:
             units: tuple[int, ...]
-            async_spikes: bool
             kernel_initializer: KernelInitializerConfig
             tau_1: float | jax.Array
             scale_1: float | jax.Array

@@ -30,14 +30,6 @@ class HebbianRuleConfig(LearningRuleConfig):
        HebbianRule configuration class.
     """
 
-    async_spikes: bool = dc.field(
-        metadata = {
-            'validators': [
-                TypeValidator,
-            ], 
-            'description': 'Use asynchronous spikes. This parameter should be True if the incomming spikes are \
-                            intercepted by a delay component and False otherwise.',
-        })
     pre_tau: float | jax.Array = dc.field(
         default = 20.0, 
         metadata = {
@@ -75,7 +67,6 @@ class HebbianRule(LearningRule):
         Hebbian plasticy rule model.
 
         Init:
-            async_spikes: bool
             pre_tau: float | jax.Array
             post_tau: float | jax.Array
             gamma: float | jax.Array
@@ -93,10 +84,10 @@ class HebbianRule(LearningRule):
     def __init__(self, config: HebbianRuleConfig | None = None, **kwargs):
         # Initialize super.
         super().__init__(config=config, **kwargs)
-        # Initialize varibles
-        self._async_spikes = self.config.async_spikes
 
     def build(self, input_specs: dict[str, InputSpec]):
+        self.async_spikes = input_specs['pre_spikes'].async_spikes
+        self.async_spikes = self.async_spikes if self.async_spikes is not None else False
         # Initialize shapes
         input_shape = input_specs['pre_spikes'].shape
         output_shape = input_specs['post_spikes'].shape
@@ -109,7 +100,7 @@ class HebbianRule(LearningRule):
         out_labels = get_einsum_labels(len(output_shape))
         in_labels = get_einsum_labels(len(input_shape), len(output_shape))
         ker_labels = get_einsum_labels(len(kernel_shape))
-        self._post_pre_prod = f'{out_labels},{ker_labels if self._async_spikes else in_labels}->{ker_labels}'
+        self._post_pre_prod = f'{out_labels},{ker_labels if self.async_spikes else in_labels}->{ker_labels}'
         self._ker_post_prod = f'{ker_labels},{out_labels}->{ker_labels}' 
             
     def reset(self) -> None:
@@ -164,7 +155,6 @@ class OjaRule(HebbianRule):
         Oja's plasticy rule model.
 
         Init:
-            async_spikes: bool
             pre_tau: float | jax.Array
             post_tau: float | jax.Array
             gamma: float | jax.Array

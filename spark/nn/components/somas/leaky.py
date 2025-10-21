@@ -231,6 +231,55 @@ class RefractoryLeakySoma(LeakySoma):
 #################################################################################################################################################
 
 @register_config
+class StrictRefractoryLeakySomaConfig(RefractoryLeakySomaConfig):
+    """
+        StrictRefractoryLeakySoma model configuration class.
+    """
+    pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_module
+class StrictRefractoryLeakySoma(RefractoryLeakySoma):
+    """
+        Leaky soma with strict refractory time model. 
+        Note: This model is here mostly for didactic/historical reasons.
+
+        Init:
+            units: tuple[int, ...]
+            potential_rest: float | jax.Array
+            potential_reset: float | jax.Array
+            potential_tau: float | jax.Array
+            resistance: float | jax.Array
+            threshold: float | jax.Array
+            cooldown: float | jax.Array
+
+        Input:
+            in_spikes: SpikeArray
+            
+        Output:
+            out_spikes: SpikeArray
+
+        Reference: 
+            Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition. 
+            Gerstner W, Kistler WM, Naud R, Paninski L. 
+            Chapter 1.3 Integrate-And-Fire Models
+            https://neuronaldynamics.epfl.ch/online/Ch1.S3.html
+    """
+    config: StrictRefractoryLeakySomaConfig
+
+    def _update_states(self, current: CurrentArray) -> None:
+        """
+            Update neuron's soma states variables.
+        """
+        is_ready = jnp.greater_equal(self.refractory.value, self.cooldown).astype(self._dtype)
+        self._potential.value += is_ready * self.potential_scale * (-self._potential.value + self.resistance * current.value)
+    
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+@register_config
 class AdaptiveLeakySomaConfig(RefractoryLeakySomaConfig):
     """
         AdaptiveLeakySoma model configuration class.

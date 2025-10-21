@@ -94,15 +94,22 @@ class InputSpec(PortSpecs):
     """
         Specification for an input port of an SparkModule.
     """         
+    # Auxiliary metadata only used at model build time.
+    async_spikes: bool | None = None,
+    in_ex_mask: bool | None = None,
 
     def __init__(
             self, 
             payload_type: type[SparkPayload] | None, 
             shape: tuple[int, ...] | list[tuple[int, ...]] | None, 
             dtype: DTypeLike | None, 
-            description: str | None = None
+            description: str | None = None,
+            async_spikes: bool | None = None,
+            in_ex_mask: bool | None = None
         ) -> None:
         super().__init__(payload_type=payload_type, shape=shape, dtype=dtype, description=description)
+        self.async_spikes = async_spikes
+        self.in_ex_mask = in_ex_mask
 
     def to_dict(self) -> dict[str, tp.Any]:
         """

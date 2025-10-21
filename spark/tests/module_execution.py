@@ -62,11 +62,6 @@ data_test = [
     ),
     # Delays
     (
-        spark.nn.delays.DummyDelays, 
-        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,4) < 0.5, dtype=jnp.float16)),}, 
-        {}
-    ),
-    (
         spark.nn.delays.NDelays, 
         {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,4) < 0.5, dtype=jnp.float16)),}, 
         {'max_delay':5,}
@@ -79,33 +74,33 @@ data_test = [
     # Synapses
     (
         spark.nn.synapses.LinearSynapses, 
-        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'units':(2,3), 'async_spikes':False,}
+        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16), async_spikes=False),}, 
+        {'units':(2,3),}
     ),
     (
         spark.nn.synapses.LinearSynapses, 
-        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'units':(2,3), 'async_spikes':True,}
+        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16), async_spikes=True),}, 
+        {'units':(2,3),}
     ),
     (
         spark.nn.synapses.TracedSynapses, 
-        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'units':(2,3), 'async_spikes':False,}
+        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16), async_spikes=False),}, 
+        {'units':(2,3),}
     ),
     (
         spark.nn.synapses.TracedSynapses, 
-        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'units':(2,3), 'async_spikes':True,}
+        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16), async_spikes=True),}, 
+        {'units':(2,3),}
     ),
     (
         spark.nn.synapses.DoubleTracedSynapses, 
-        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'units':(2,3), 'async_spikes':False,}
+        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16), async_spikes=False),}, 
+        {'units':(2,3),}
     ),
     (
         spark.nn.synapses.DoubleTracedSynapses, 
-        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'units':(2,3), 'async_spikes':True,}
+        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16), async_spikes=True),}, 
+        {'units':(2,3),}
     ),
     # Somas
     (
@@ -147,77 +142,77 @@ data_test = [
     (
         spark.nn.learning_rules.HebbianRule, 
         {
-            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16), async_spikes=False),
             'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5, dtype=jnp.float16)),
             'current_kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
         }, 
-        {'units':(2,3), 'async_spikes':False,}
+        {'units':(2,3),}
     ),
     (
         spark.nn.learning_rules.HebbianRule, 
         {
-            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16), async_spikes=True),
             'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5, dtype=jnp.float16)),
             'current_kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
         }, 
-        {'units':(2,3), 'async_spikes':True,}
+        {'units':(2,3),}
     ),
     (
     spark.nn.learning_rules.OjaRule, 
         {
-            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16), async_spikes=False),
             'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5, dtype=jnp.float16)),
             'current_kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
         }, 
-        {'units':(2,3), 'async_spikes':False,}
+        {'units':(2,3),}
     ),
     (
     spark.nn.learning_rules.OjaRule, 
         {
-            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16), async_spikes=True),
             'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5, dtype=jnp.float16)),
             'current_kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
         }, 
-        {'units':(2,3), 'async_spikes':True,}
+        {'units':(2,3),}
     ),
     (
     spark.nn.learning_rules.ZenkeRule, 
         {
-            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16), async_spikes=False),
             'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5, dtype=jnp.float16)),
             'current_kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
         }, 
-        {'units':(2,3), 'async_spikes':False,}
+        {'units':(2,3),}
     ),
     (
     spark.nn.learning_rules.ZenkeRule, 
         {
-            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16), async_spikes=True),
             'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5, dtype=jnp.float16)),
             'current_kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
         }, 
-        {'units':(2,3), 'async_spikes':True,}
+        {'units':(2,3),}
     ),
     # Neurons
     (
         spark.nn.neurons.LIFNeuron, 
-        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'_s_units':(2,3), '_s_async_spikes':False,}
+        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16), async_spikes=False),}, 
+        {'_s_units':(2,3),}
     ),
     (
         spark.nn.neurons.LIFNeuron, 
-        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'_s_units':(2,3), '_s_async_spikes':True,}
+        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16), async_spikes=False),}, 
+        {'_s_units':(2,3),}
     ),
     (
         spark.nn.neurons.ALIFNeuron, 
-        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'_s_units':(2,3), '_s_async_spikes':False,}
+        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16), async_spikes=False),}, 
+        {'_s_units':(2,3),}
     ),
     (
         spark.nn.neurons.ALIFNeuron, 
-        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'_s_units':(2,3), '_s_async_spikes':True,}
+        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16), async_spikes=False),}, 
+        {'_s_units':(2,3),}
     ),
 ]
 

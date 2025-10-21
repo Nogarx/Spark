@@ -316,6 +316,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                     f'Module \"{self.name}\" received an extra variable \"{key}\" but it is not part of the specification.'
                 )
         # Finish specs, use abc_args to skip optional missing keys.
+        from spark.core.payloads import SpikeArray
         for key, payload in abc_args.items():
             # NOTE: This is a particular case for modules that expect abstract variadic positional arguments. 
             # I am looking at you Concat (╯°□°）╯︵ ┻━┻.
@@ -332,6 +333,8 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                 shape=shape,
                 dtype=dtype,
                 description=f'Auto-generated input spec for input \"{key}\" of module \"{self.name}\".',
+                # Payload specific build metadata
+                async_spikes=payload.async_spikes if isinstance(payload, SpikeArray) else None
             )
         return input_specs
 

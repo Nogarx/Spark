@@ -37,14 +37,6 @@ class LinearSynapsesConfig(SynanpsesConfig):
             ], 
             'description': 'tuple[int, ...] of the postsynaptic pool of neurons.',
         })
-    async_spikes: bool = dc.field(
-        metadata = {
-            'validators': [
-                TypeValidator,
-            ], 
-            'description': 'Use asynchronous spikes. This parameter should be True if the incomming spikes are \
-                            intercepted by a delay component and False otherwise.',
-        })
     kernel_initializer: InitializerConfig = dc.field(
         default_factory = NormalizedSparseUniformInitializerConfig,
         metadata = {
@@ -64,7 +56,6 @@ class LinearSynapses(Synanpses):
 
         Init:
             units: tuple[int, ...]
-            async_spikes: bool
             kernel_initializer: KernelInitializerConfig
 
         Input:
@@ -87,12 +78,12 @@ class LinearSynapses(Synanpses):
         super().__init__(config=config, **kwargs)
         # Initialize shapes
         self._output_shape = utils.validate_shape(self.config.units)
-        # Initialize varibles
-        self.async_spikes = self.config.async_spikes
         
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
+        self.async_spikes = input_specs['spikes'].async_spikes
+        self.async_spikes = self.async_spikes if self.async_spikes is not None else False
         self._input_shape = utils.validate_shape(input_specs['spikes'].shape)
         self._real_input_shape = self._input_shape[len(self._output_shape):] if self.async_spikes else self._input_shape
         self._sum_axes = tuple(range(len(self._output_shape), len(self._output_shape)+len(self._real_input_shape)))

@@ -75,8 +75,12 @@ class ValueSparkPayload(SparkPayload, abc.ABC):
 class SpikeArray(ValueSparkPayload):
     """
         Representation of a collection of spike events.
+
+        The async_spikes flag is automatically set True by delay mechanisms that perform neuron-to-neuron specific delays.
+        Note that when async_spikes is True the shape of the spikes changes from (origin_units,) to (origin_units, target_units).
+        This is important when implementing new synaptic models, since fully valid synaptic models should be able to handle both cases. 
     """
-    pass
+    async_spikes: bool = False
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
