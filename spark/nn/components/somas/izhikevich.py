@@ -137,7 +137,7 @@ class IzhikevichSoma(Soma):
         # Membrane. Substract potential_rest to potential related terms to rebase potential at zero.
         self.potential_reset = Constant(self.config.potential_reset - self.config.potential_rest, dtype=self._dtype)
         # Recovery
-        self.recovery = Variable(jnp.zeros(self._shape, dtype=self._dtype), dtype=self._dtype)
+        self.recovery = Variable(jnp.zeros(self.units, dtype=self._dtype), dtype=self._dtype)
         self.recovery_update = Constant(self.config.recovery_update, dtype=self._dtype)
         self.recovery_timescale = Constant(self.config.recovery_timescale, dtype=self._dtype)
         self.recovery_sensitivity = Constant(self.config.recovery_sensitivity, dtype=self._dtype)
@@ -151,18 +151,18 @@ class IzhikevichSoma(Soma):
             Resets component state.
         """
         super().reset()
-        self.recovery.value = jnp.zeros(self._shape, dtype=self._dtype)
+        self.recovery.value = jnp.zeros(self.units, dtype=self._dtype)
 
     def _update_states(self, current: CurrentArray) -> None:
         """
             Update neuron's soma states variables.
         """
-        potential_delta = 0.04 * (self._potential.value - self.config.potential_rest)**2 + \
-            5 * (self._potential.value - self.config.potential_rest) + \
+        potential_delta = 0.04 * (self.potential.value - self.config.potential_rest)**2 + \
+            5 * (self.potential.value - self.config.potential_rest) + \
             140 - self.resistance * self.recovery.value + self.resistance * current.value
-        self._potential.value += self._dt * potential_delta
+        self.potential.value += self._dt * potential_delta
         recovery_delta = self.recovery_timescale * (
-            self.recovery_sensitivity * (self._potential.value - self.config.potential_rest) - self.recovery.value)
+            self.recovery_sensitivity * (self.potential.value - self.config.potential_rest) - self.recovery.value)
         self.recovery.value += self._dt * recovery_delta
 
     def _compute_spikes(self,) -> SpikeArray:
@@ -170,9 +170,9 @@ class IzhikevichSoma(Soma):
             Compute neuron's spikes.
         """
         # Compute spikes.
-        spikes = jnp.greater(self._potential.value, self.threshold.value).astype(self._dtype)
+        spikes = jnp.greater(self.potential.value, self.threshold.value).astype(self._dtype)
         # Reset neurons.
-        self._potential.value = spikes * self.potential_reset + (1 - spikes) * self._potential.value
+        self.potential.value = spikes * self.potential_reset + (1 - spikes) * self.potential.value
         # Update recovery.
         self.recovery.value = spikes * (self.recovery.value + self.recovery_update) + (1 - spikes) * self.recovery.value
         return SpikeArray(spikes)

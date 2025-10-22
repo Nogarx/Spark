@@ -4,17 +4,10 @@
 
 from __future__ import annotations
 
-# GPU is not required in the editor
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = ''     
-os.environ['XLA_FLAGS'] = '--xla_force_host_platform_device_count=1'
-
 from mailbox import Message
 import typing as tp
-import jax
-import jax.numpy as jnp
 import numpy as np
-from jax.typing import DTypeLike
+from numpy.typing import ArrayLike, DTypeLike
 from PySide6 import QtWidgets, QtCore, QtGui
 
 import spark.core.utils as utils
@@ -318,15 +311,16 @@ class QNodeConfig(QtWidgets.QWidget):
             'np.dtype': QDtype,
             'jnp.dtype': QDtype,
             'DTypeLike': QDtype,
+            'ArrayLike': QFloat,
             # Type-based support
             bool: QBool,
             int: QInt,
             float: QFloat,
-            jax.Array: QFloat,
+            ArrayLike: QFloat,
             str: QString,
             tuple[int, ...]: QShape,
             np.dtype: QDtype,
-            jnp.dtype: QDtype,
+            np.dtype: QDtype,
             DTypeLike: QDtype,
         }
         for t in attr_type:
@@ -602,17 +596,17 @@ class QNodeIO(QtWidgets.QWidget):
             options[utils.to_human_readable(name, capitalize_all=True)] = entry.class_ref
         return options
 
-    def _get_dtype_options(self, ) -> list[jnp.dtype]:
+    def _get_dtype_options(self, ) -> list[np.dtype]:
         raw_options = [                
-            jnp.uint8,
-            jnp.uint16,
-            jnp.uint32,
-            jnp.int8,
-            jnp.int16,
-            jnp.int32,
-            jnp.float16,
-            jnp.float32,
-            jnp.bool,
+            np.uint8,
+            np.uint16,
+            np.uint32,
+            np.int8,
+            np.int16,
+            np.int32,
+            np.float16,
+            np.float32,
+            np.bool,
         ]
         options = []
         for d in raw_options:

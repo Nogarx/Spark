@@ -4,12 +4,7 @@
 
 from __future__ import annotations
 
-# GPU is not required in the editor
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = ''     
-os.environ['XLA_FLAGS'] = '--xla_force_host_platform_device_count=1'
-
-import jax.numpy as jnp
+import numpy as np
 import typing as tp
 from PySide6 import QtCore, QtWidgets, QtGui
 import spark.core.utils as utils
@@ -29,7 +24,7 @@ class QComboBoxEdit(QtWidgets.QComboBox):
 
     def __init__(
             self, 
-            initial_value: jnp.dtype, 
+            initial_value: np.dtype, 
             options_list: list[tuple[str, tp.Any]], 
             parent: QtWidgets.QWidget = None
         ) -> None:
@@ -99,8 +94,8 @@ class QDtype(SparkQWidget):
 
     def __init__(
             self,
-            initial_value: jnp.dtype,
-            values_options: list[jnp.dtype],
+            initial_value: np.dtype,
+            values_options: list[np.dtype],
             parent: QtWidgets.QWidget = None
         ) -> None:
         super().__init__(parent=parent)
@@ -116,10 +111,10 @@ class QDtype(SparkQWidget):
         layout.addWidget(self._dtype_edit)
         self.setLayout(layout)
 
-    def get_value(self) -> jnp.dtype:
+    def get_value(self) -> np.dtype:
         return self._dtype_edit.get_value()
     
-    def set_value(self, value: jnp.dtype) -> None:
+    def set_value(self, value: np.dtype) -> None:
         return self._dtype_edit.set_value(value)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

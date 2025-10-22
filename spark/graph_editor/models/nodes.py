@@ -10,16 +10,11 @@ if TYPE_CHECKING:
     from spark.graph_editor.models.graph import SparkNodeGraph
     from spark.core.payloads import SparkPayload
 
-# GPU is not required in the editor
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = ''     
-os.environ['XLA_FLAGS'] = '--xla_force_host_platform_device_count=1'
-
 from PySide6 import QtWidgets, QtCore, QtGui
 from NodeGraphQt import Port
 import abc
 import logging
-import jax.numpy as jnp
+import numpy as np
 from jax.typing import DTypeLike
 import typing as tp
 import spark.core.utils as utils
@@ -164,7 +159,7 @@ class SourceNode(AbstractNode):
             'value': OutputSpec(
                 payload_type=FloatArray,
                 shape=(1,),
-                dtype=jnp.float16,
+                dtype=np.float16,
                 description='Model input port.'
                 )
             }
@@ -197,7 +192,7 @@ class SinkNode(AbstractNode):
             'value': InputSpec(
                 payload_type=FloatArray,
                 shape=(1,),
-                dtype=jnp.float16,
+                dtype=np.float16,
                 description='Model output port.'
             )
         }

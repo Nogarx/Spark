@@ -124,16 +124,16 @@ class LeakySoma(Soma):
         """
             Update neuron's soma states variables.
         """
-        self._potential.value += self.potential_scale * (-self._potential.value + self.resistance * current.value)
+        self.potential.value += self.potential_scale * (-self.potential.value + self.resistance * current.value)
 
     def _compute_spikes(self,) -> SpikeArray:
         """
             Compute neuron's spikes.
         """
         # Compute spikes.
-        spikes = jnp.greater(self._potential.value, self.threshold.value).astype(self._dtype)
+        spikes = jnp.greater(self.potential.value, self.threshold.value).astype(self._dtype)
         # Reset neurons.
-        self._potential.value = spikes * self.potential_reset + (1 - spikes) * self._potential.value
+        self.potential.value = spikes * self.potential_reset + (1 - spikes) * self.potential.value
         return SpikeArray(spikes)
     
 #################################################################################################################################################
@@ -194,22 +194,24 @@ class RefractoryLeakySoma(LeakySoma):
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         super().build(input_specs)
         # Refractory period.
-        self.cooldown = Constant(self.config.cooldown, dtype=self._dtype)
-        self.refractory = Variable(jnp.array(self.cooldown), dtype=self._dtype)
+        self.cooldown = Constant(jnp.round(self.config.cooldown / self._dt).astype(jnp.uint16), dtype=jnp.uint16)
+        self.refractory = Variable(self.cooldown * jnp.ones(self.units), dtype=jnp.uint16)
+        self.is_ready = Variable(jnp.ones(self.units), dtype=jnp.bool)
 
     def reset(self) -> None:
         """
             Resets component state.
         """
         super().reset()
-        self.refractory.value = jnp.array(self.cooldown, dtype=self._dtype)
+        self.refractory.value = jnp.array(self.cooldown, dtype=jnp.uint16)
 
     def _update_states(self, current: CurrentArray) -> None:
         """
             Update neuron's soma states variables.
         """
-        is_ready = jnp.greater(self.refractory.value, self.cooldown).astype(self._dtype)
-        self._potential.value += self.potential_scale * (-self._potential.value + is_ready * self.resistance * current.value)
+        self.is_ready.value = jnp.greater(self.refractory.value, self.cooldown)
+        is_ready = self.is_ready.value.astype(self._dtype)
+        self.potential.value += self.potential_scale * (-self.potential.value + is_ready * self.resistance * current.value)
 
     def _compute_spikes(self,) -> SpikeArray:
         """
@@ -217,13 +219,13 @@ class RefractoryLeakySoma(LeakySoma):
         """
         # Compute spikes.
         spikes = jnp.logical_and(
-            jnp.greater(self._potential.value, self.threshold.value), 
-            jnp.greater(self.refractory.value, self.cooldown)
+            jnp.greater(self.potential.value, self.threshold.value), 
+            self.is_ready.value
         ).astype(self._dtype)
         # Reset neurons.
-        self._potential.value = spikes * self.potential_reset + (1 - spikes) * self._potential.value
+        self.potential.value = spikes * self.potential_reset + (1 - spikes) * self.potential.value
         # Set neuron refractory period.
-        self.refractory.value = (1 - spikes) * (self.refractory.value + self._dt)
+        self.refractory.value = (1 - spikes).astype(jnp.uint16) * (self.refractory.value + 1)
         return SpikeArray(spikes)
     
 #################################################################################################################################################
@@ -272,8 +274,9 @@ class StrictRefractoryLeakySoma(RefractoryLeakySoma):
         """
             Update neuron's soma states variables.
         """
-        is_ready = jnp.greater_equal(self.refractory.value, self.cooldown).astype(self._dtype)
-        self._potential.value += is_ready * self.potential_scale * (-self._potential.value + self.resistance * current.value)
+        self.is_ready.value = jnp.greater_equal(self.refractory.value, self.cooldown)
+        is_ready = self.is_ready.value.astype(self._dtype)
+        self.potential.value += is_ready * self.potential_scale * (-self.potential.value + self.resistance * current.value)
     
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -345,9 +348,8 @@ class AdaptiveLeakySoma(RefractoryLeakySoma):
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         super().build(input_specs)
         # Overwrite constant threshold with a tracer.
-        import flax.nnx as nnx
         self.threshold = data(Tracer(
-            self._shape,
+            self.units,
             tau=self.config.threshold_tau, 
             base=(self.config.threshold - self.config.potential_rest), 
             scale=self.config.threshold_delta, 

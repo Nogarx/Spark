@@ -46,25 +46,18 @@ class Soma(Component, tp.Generic[ConfigT]):
     def __init__(self, config: ConfigT | None = None, **kwargs):
         # Initialize super.
         super().__init__(config = config, **kwargs)
-
-    @property
-    def potential(self,) -> PotentialArray:
-        """
-            Returns the current soma potential.
-        """
-        return PotentialArray(self._potential.value)
     
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize shapes
-        self._shape = utils.validate_shape(input_specs['current'].shape)
+        self.units = utils.validate_shape(input_specs['current'].shape)
         # Initialize variables
-        self._potential = Variable(jnp.zeros(self._shape, dtype=self._dtype), dtype=self._dtype)
+        self.potential = Variable(jnp.zeros(self.units, dtype=self._dtype), dtype=self._dtype)
 
     def reset(self):
         """
             Resets neuron states to their initial values.
         """
-        self._potential.value = jnp.zeros(self._shape, dtype=self._dtype)
+        self.potential.value = jnp.zeros(self.units, dtype=self._dtype)
 
     @abc.abstractmethod
     def _update_states(self, current: CurrentArray) -> None:

@@ -17,6 +17,9 @@ from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 from spark.graph_editor.ui.menu_bar import MenuBar
 from spark.graph_editor.ui.status_bar import StatusBar
 
+# NOTE: We use numpy to  manage dtypes. Jax sometimes tries to move data (?) to the GPU,
+# which in turn slows down the editor unnecesarily.
+
 # NOTE: All code that uses PySide6-QtAds must be wrapped in another script.
 # Any direct import of the package in this file leads to a segmentation fault error
 # due keyboard events propagation from CDockWidget to libxkbcommon since the 
