@@ -57,9 +57,9 @@ class LeakySomaConfig(SomaConfig):
             'description': 'Membrane potential decay constant.',
         })
     resistance: float | jax.Array = dc.field(
-        default = 100.0,
+        default = 0.1,
         metadata = {
-            'units': 'MΩ', # [1/µS]
+            'units': 'GΩ', # [1/nS]
             'validators': [
                 TypeValidator,
             ], 
@@ -116,7 +116,7 @@ class LeakySoma(Soma):
         self.potential_reset = Constant(self.config.potential_reset - self.config.potential_rest, dtype=self._dtype)
         self.potential_scale = Constant(self._dt / self.config.potential_tau, dtype=self._dtype)
         # Conductance.
-        self.resistance = Constant(self.config.resistance / 1000.0, dtype=self._dtype) # Current is in pA for stability
+        self.resistance = Constant(self.config.resistance, dtype=self._dtype) # Current is in pA for stability
         # Threshold.
         self.threshold = Constant(self.config.threshold - self.config.potential_rest, dtype=self._dtype)
 

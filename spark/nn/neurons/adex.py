@@ -16,7 +16,7 @@ from spark.core.variables import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator, ZeroOneValidator
 
-from spark.nn.components.somas.leaky import LeakySoma, LeakySomaConfig
+from spark.nn.components.somas.exponential import AdaptiveExponentialSoma, AdaptiveExponentialSomaConfig
 from spark.nn.components.delays.base import Delays, DelaysConfig
 from spark.nn.components.delays.n2n_delays import N2NDelaysConfig
 from spark.nn.components.synapses.base import Synanpses, SynanpsesConfig
@@ -29,9 +29,9 @@ from spark.nn.components.learning_rules.hebbian_rule import HebbianRule
 #################################################################################################################################################
 
 @register_config
-class LIFNeuronConfig(NeuronConfig):
+class AdExNeuronConfig(NeuronConfig):
     """
-        LIFNeuron configuration class.
+        AdExNeuron configuration class.
     """
 
     inhibitory_rate: float = dc.field(
@@ -44,8 +44,8 @@ class LIFNeuronConfig(NeuronConfig):
             ],
             'description': '',
         })
-    soma_config: LeakySomaConfig = dc.field(
-        default_factory = LeakySomaConfig,
+    soma_config: AdaptiveExponentialSomaConfig = dc.field(
+        default_factory = AdaptiveExponentialSomaConfig,
         metadata = {
             'description': 'Soma configuration.',
         })
@@ -68,19 +68,19 @@ class LIFNeuronConfig(NeuronConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class LIFNeuron(Neuron):
+class AdExNeuron(Neuron):
     """
         Leaky Integrate and Fire neuronal model.
     """
-    config: LIFNeuronConfig
+    config: AdExNeuronConfig
 
     # Auxiliary type hints
-    soma: LeakySoma
+    soma: AdaptiveExponentialSoma
     delays: Delays
     synapses: Synanpses
     learning_rule: LearningRule
 
-    def __init__(self, config: LIFNeuronConfig | None = None, **kwargs):
+    def __init__(self, config: AdExNeuronConfig | None = None, **kwargs):
         super().__init__(config=config, **kwargs)
         # Set output shapes earlier to allow cycles.
         self.set_recurrent_shape_contract(shape=self.units)

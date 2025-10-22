@@ -24,8 +24,6 @@ from spark.core.config_validation import TypeValidator, PositiveValidator
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# TODO: Add some logic to the metadata for auto-inference of certain parameters when using GUI.
-# For example, some Shapes can be infered from the next/prev component in the graph.
 METADATA_TEMPLATE = {
     'units': None, 
     'valid_types': tp.Any, 
@@ -258,7 +256,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         return fold_partial, shared_partial
 
 
-
+    # TODO: We need to validate that whenever we set a config class it is a valid subclass for the field
     def _set_partial_attributes(self, kwargs_fold: dict[str, tp.Any], shared_partial: dict[str, tp.Any]) -> None:
         """
             Method to recursively set/override the attributes of the configuration instance from a dictionary of values.

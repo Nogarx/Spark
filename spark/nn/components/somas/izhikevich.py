@@ -47,9 +47,9 @@ class IzhikevichSomaConfig(SomaConfig):
                            'C parameter for the Izhikevich model.',
         })
     resistance: float | jax.Array = dc.field(
-        default = 100.0,
+        default = 0.1,
         metadata = {
-            'units': 'MΩ', # [1/µS]
+            'units': 'GΩ', # [1/nS]
             'validators': [
                 TypeValidator,
             ], 
@@ -142,7 +142,7 @@ class IzhikevichSoma(Soma):
         self.recovery_timescale = Constant(self.config.recovery_timescale, dtype=self._dtype)
         self.recovery_sensitivity = Constant(self.config.recovery_sensitivity, dtype=self._dtype)
         # Conductance.
-        self.resistance = Constant(self.config.resistance / 1000.0, dtype=self._dtype) # Current is in pA for stability
+        self.resistance = Constant(self.config.resistance, dtype=self._dtype) # Current is in pA for stability
         # Threshold.
         self.threshold = Constant(self.config.threshold - self.config.potential_rest, dtype=self._dtype)
 

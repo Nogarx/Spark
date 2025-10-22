@@ -40,10 +40,11 @@ class LinearSynapsesConfig(SynanpsesConfig):
     kernel_initializer: InitializerConfig = dc.field(
         default_factory = NormalizedSparseUniformInitializerConfig,
         metadata = {
+            'units': 'pA',
             'validators': [
                 TypeValidator,
             ], 
-            'description': 'Synaptic weights initializer method.',
+            'description': 'Synaptic weights initializer method. Note that we require the kernel entries to be in pA for numerical stability.',
         })
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -108,7 +109,7 @@ class LinearSynapses(Synanpses):
         self.kernel.value = new_kernel.value
 
     def _dot(self, spikes: SpikeArray) -> CurrentArray:
-        return CurrentArray(jnp.sum(self.kernel.value * spikes.value, axis=self._sum_axes))
+        return CurrentArray(jnp.sum(self.kernel.value * spikes.value, axis=self._sum_axes) * 1000.0)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
