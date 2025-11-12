@@ -125,94 +125,47 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def __init__(self, **kwargs):
+    def __init__(self, __skip_validation__: bool = False, **kwargs):
         # Fold kwargs
         kwargs_fold, shared_partial = self._fold_partial(self, kwargs)
         # Set attributes programatically
-        self._set_partial_attributes(kwargs_fold, shared_partial)
-        self.__post_init__()
+        self._set_partial_attributes(kwargs_fold, shared_partial,  __skip_validation__=__skip_validation__)
         # TODO: __graph_editor_metadata__ is not being set automatically
         self.__graph_editor_metadata__ = kwargs['__graph_editor_metadata__'] if '__graph_editor_metadata__' in kwargs else {}
+        # Validate
+        if not __skip_validation__:
+            self.__post_init__()
 
 
 
     @classmethod
-    def _create_partial(cls, **kwargs):
+    def _create_partial(cls, **kwargs) -> tp.Self:
         """
             Create an incomplete config for the SparkGraphEditor.
         """
         # Manually create an instance
         instance = cls.__new__(cls)
-
-        # Get type hints
-        type_hints = tp.get_type_hints(instance.__class__)
-        for key in type_hints.keys():
-            if tp.get_origin(type_hints[key]): 
-                hints = list(tp.get_args(type_hints[key]))
-                type_hints[key] = (h for h in hints if h is not type(None))
-
-        # Set attributes programatically
-        for field in dc.fields(instance):
-
-            # Nested config need to be treated differently, propagating kwargs if necessary
-            field_type = type_hints[field.name]
-            if isinstance(type_hints[field.name], type) and issubclass(field_type, BaseSparkConfig):
-                # Field is another SparkConfig use create partial recursively.
-                try:
-                    # Check if kwargs already defines an instance of config
-                    field_config = kwargs.get(field.name, None)
-                    if field_config is None or not issubclass(field_config, BaseSparkConfig):
-                        # Construct config dynamically
-                        factory = field.default_factory
-                        if not factory or factory is dc.MISSING:
-                            raise ValueError(
-                                f'Configuration class does not define a default_factory for Subconfig: \"{field.name}\".'
-                            )
-                        is_config_cls = isinstance(factory, type) and issubclass(factory, BaseSparkConfig)
-                        is_callable = callable(factory)
-                        if not (is_callable or is_config_cls):
-                            raise TypeError(
-                                f'Configuration class defines default_factory for Subconfig: \"{field.name}\" '
-                                f'expected factory of type \"{BaseSparkConfig.__name__} | tp.Callable" but got {factory}.'
-                            )
-                        if is_config_cls:
-                            field_config = factory._create_partial(**kwargs)
-                        else:
-                            field_config = factory(**kwargs)
-                        if not isinstance(field_config, BaseSparkConfig):
-                            raise TypeError(
-                                f'Expected factory output to be of type \"{BaseSparkConfig.__name__}\", but got \"{field_config.__class__}\".'
-                            )
-                    setattr(instance, field.name, field_config)
-                except:
-                    setattr(instance, field.name, field_type._create_partial(**kwargs))
-            elif field.default_factory is not dc.MISSING:
-                # Fallback to default factory.
-                setattr(instance, field.name, field.default_factory())
-            elif field.default is not dc.MISSING:
-                # Fallback to default.
-                setattr(instance, field.name, field.default)
-            else:
-                setattr(instance, field.name, None)
-                
-        # Set existing attributes
+        # Fold kwargs
         kwargs_fold, shared_partial = instance._fold_partial(instance, kwargs)
         # Set attributes programatically
-        instance._set_partial_attributes(kwargs_fold, shared_partial)
+        instance._set_partial_attributes(kwargs_fold, shared_partial, True)
+        # TODO: __graph_editor_metadata__ is not being set automatically
+        instance.__graph_editor_metadata__ = kwargs['__graph_editor_metadata__'] if '__graph_editor_metadata__' in kwargs else {}
         return instance
 
 
 
-    def merge(self, partial: dict[str, tp.Any] = {}) -> None:
+    def merge(self, partial: dict[str, tp.Any] = {}, __skip_validation__: bool = False) -> None:
         """
             Update config with partial overrides.
         """
         # Fold partial to pass child config attributes.
         kwargs_fold, shared_partial = self._fold_partial(self, partial)
         # Get current fields and pass attributes.
-        self._set_partial_attributes(kwargs_fold, shared_partial)
+        self._set_partial_attributes(kwargs_fold, shared_partial, __skip_validation__=__skip_validation__)
         # Validate
-        self.validate()
+        if not __skip_validation__:
+            self.__post_init__()
 
 
 
@@ -257,7 +210,12 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
     # TODO: We need to validate that whenever we set a config class it is a valid subclass for the field
-    def _set_partial_attributes(self, kwargs_fold: dict[str, tp.Any], shared_partial: dict[str, tp.Any]) -> None:
+    def _set_partial_attributes(
+            self, 
+            kwargs_fold: dict[str, tp.Any], 
+            shared_partial: dict[str, tp.Any], 
+            __skip_validation__: bool = False,
+        ) -> None:
         """
             Method to recursively set/override the attributes of the configuration instance from a dictionary of values.
         """
@@ -273,8 +231,6 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 type_hints[key] = tuple([raw_type_hints[key]])
                 optional_attrs[key] = False
 
-
-
         # Set attributes programatically
         prefixed_shared_partial = {f'{self.__shared_config_delimiter__}{k}':v for k,v in shared_partial.items()}
         for field in dc.fields(self.__class__):
@@ -286,8 +242,11 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 field_name = field.name
 
             # Check if attribute is optional and the user manually set it to None. 
-            if optional_attrs[field_name] and field_name in kwargs_fold.keys() and isinstance(kwargs_fold[field_name], type(None)):
+            if optional_attrs[field_name] and (
+                    (field_name in kwargs_fold.keys() and isinstance(kwargs_fold[field_name], type(None)))
+                    or (isinstance(field.default, type(None)))):
                 # Unfortunately, the user is correct in this one, set the parameter to None and move on.
+                field.default = None
                 setattr(self, field_name, None)
                 continue
 
@@ -300,16 +259,20 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 if isinstance(subconfig, BaseSparkConfig):
                     # User set a config. Copy subconfig to avoid weird overwrittings.
                     field_config = copy.deepcopy(subconfig)
-                    field_config.merge(partial={**prefixed_shared_partial})
+                    field_config.merge(partial={**prefixed_shared_partial}, __skip_validation__=__skip_validation__)
                     setattr(self, field_name, field_config)
                 # Check if parent config set this attribute and is a SparkConfig
                 elif isinstance(field_value, BaseSparkConfig):
                     # Use current config 
-                    field_value.merge(partial={**subconfig, **prefixed_shared_partial})
+                    field_value.merge(partial={**subconfig, **prefixed_shared_partial}, __skip_validation__=__skip_validation__)
                     setattr(self, field_name, field_value)
                 # Use default factory if provided
                 elif field.default_factory is not dc.MISSING:
-                    setattr(self, field_name, field.default_factory(**{**subconfig, **prefixed_shared_partial}))
+                    setattr(self, field_name, field.default_factory(**{
+                        **subconfig, 
+                        **prefixed_shared_partial, 
+                        **{'__skip_validation__': __skip_validation__}
+                    }))
                 # Use type class otherwise
                 else:
                     # TODO: It is not clear how to fully resolve multiple BaseSparkConfig types. We currently select the first one.
@@ -323,7 +286,11 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                         )
                     # Recover instance
                     valid_field_type = field_type[valid_types.index(True)]
-                    setattr(self, field_name, valid_field_type(**{**subconfig, **prefixed_shared_partial}))
+                    setattr(self, field_name, valid_field_type(**{
+                        **subconfig, 
+                        **prefixed_shared_partial,
+                        **{'__skip_validation__': __skip_validation__}
+                    }))
             elif field_name in kwargs_fold:
                 # Use kwargs attribute if provided
                 setattr(self, field_name, kwargs_fold[field_name])
@@ -351,7 +318,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def _get_nested_configs_names(self,):
+    def _get_nested_configs_names(self,) -> list[tuple[type,...]]:
         """
             Returns a list containing all nested SparkConfigs' names.
         """
@@ -360,13 +327,15 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         for key in type_hints.keys():
             if tp.get_origin(type_hints[key]): 
                 hints = list(tp.get_args(type_hints[key]))
-                type_hints[key] = (h for h in hints if h is not type(None))
+                type_hints[key] = tuple([h for h in hints if h is not type(None)])
+            else:
+                type_hints[key] = tuple([type_hints[key]])
 
         # Collect all fields and map into a dict
         nested_configs = []
         for field in dc.fields(self):
             # Check if field is another SparkConfig
-            if isinstance(type_hints[field.name], type) and issubclass(type_hints[field.name], BaseSparkConfig):
+            if any([isinstance(t, type) and issubclass(t, BaseSparkConfig) for t in type_hints[field.name]]):
                 nested_configs.append(field.name)
 
         return nested_configs
@@ -621,7 +590,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 continue
 
             # Yield the field name and its corresponding value
-            yield (f.name, f, getattr(self, f.name))
+            yield (f.name, f, getattr(self, f.name, None))
 
 
 
@@ -630,19 +599,17 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def summary(self,):
-        return utils.ascii_tree(self._parse_tree_structure(0, simplified=False))
-
-
-
-    def get_tree_structure(self,) -> str:
+    def inspect(self,) -> str:
+        """
+            Returns a formated string of the datastructure.
+        """
         return utils.ascii_tree(self._parse_tree_structure(0, simplified=True))
 
 
 
     def _parse_tree_structure(self, current_depth: int, simplified: bool = False) -> str:
         """
-            Parses the tree with to produce a string with the appropiate format for the ascii_tree method.
+            Parses the tree to produce a string with the appropiate format for the ascii_tree method.
         """
         rep = current_depth * ' ' + f'{self.__class__.__name__}\n'
         for name, field, value in self:

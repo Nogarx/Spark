@@ -110,8 +110,8 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             return
         # Check if defines config
         resolved_hints = tp.get_type_hints(cls)
-        config_type = resolved_hints.get('config')
-        if not config_type or not issubclass(config_type, BaseSparkConfig):
+        config_type = resolved_hints.get('config', None)
+        if not config_type or config_type == ConfigT or not issubclass(config_type, BaseSparkConfig):
             raise AttributeError('SparkModules must define a valid config: type[BaseSparkConfig] attribute.')
         cls.default_config = tp.cast(type[ConfigT], config_type)
 
@@ -420,7 +420,36 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             Execution method.
         """
         pass
-    
+
+
+
+    def __repr__(self,):
+        return f'{self.__class__.__name__}(...)'
+
+
+
+    def inspect(self,) -> str:
+        """
+            Returns a formated string of the datastructure.
+        """
+        print(utils.ascii_tree(self._parse_tree_structure()))
+
+
+
+    def _parse_tree_structure(self, current_depth: int = 0, name: str | None = None) -> str:
+        """
+            Parses the tree with to produce a string with the appropiate format for the ascii_tree method.
+        """
+        if name:
+            rep = current_depth * ' ' + f'{name} ({self.__class__.__name__})\n'
+        else:
+            rep = current_depth * ' ' + f'{self.__class__.__name__}\n'
+        for name, value in self.__dict__.items():
+            if isinstance(value, SparkModule):
+                rep += value._parse_tree_structure(current_depth+1, name=name)
+        return rep
+
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

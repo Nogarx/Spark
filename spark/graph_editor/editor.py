@@ -17,6 +17,10 @@ from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 from spark.graph_editor.ui.menu_bar import MenuBar
 from spark.graph_editor.ui.status_bar import StatusBar
 
+# TODO: Initializer selection missing
+# TODO: Allow to set the specific class of subconfigs.
+# TODO: Allow to set optional configs to None in the inspector.
+
 # NOTE: We use numpy to  manage dtypes. Jax sometimes tries to move data (?) to the GPU,
 # which in turn slows down the editor unnecesarily.
 

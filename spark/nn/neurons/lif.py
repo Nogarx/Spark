@@ -22,7 +22,7 @@ from spark.nn.components.delays.n2n_delays import N2NDelaysConfig
 from spark.nn.components.synapses.base import Synanpses, SynanpsesConfig
 from spark.nn.components.synapses.linear import LinearSynapsesConfig
 from spark.nn.components.learning_rules.base import LearningRule, LearningRuleConfig
-from spark.nn.components.learning_rules.hebbian_rule import HebbianRule
+from spark.nn.components.learning_rules.hebbian_rule import HebbianRuleConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -60,7 +60,7 @@ class LIFNeuronConfig(NeuronConfig):
             'description': 'Delays configuration.',
         })
     learning_rule_config: LearningRuleConfig | None = dc.field(
-        default_factory = HebbianRule,
+        default_factory = HebbianRuleConfig,
         metadata = {
             'description': 'Learning configuration.',
         })

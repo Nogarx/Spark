@@ -133,8 +133,13 @@ class BrainConfig(BaseSparkConfig):
 
 class Brain(SparkModule, metaclass=BrainMeta):
 	"""
-		Abstract brain model.
-		This is more a convenience class used to synchronize data more easily.
+		Brain model.
+
+		A brain is a pipeline object used to represent and coordinate a collection of neurons and interfaces.
+		This implementation relies on a cache system to simplify parallel computations; every timestep all the modules
+		in the Brain read from the cache, update its internal state and update the cache state. 
+		Note that this introduces a small latency between elements of the brain, which for most cases is negligible, and for
+		such a reason it is recommended that only full neuron models and interfaces are used within a Brain.
 	"""
 	config: BrainConfig
 
@@ -477,6 +482,7 @@ class Brain(SparkModule, metaclass=BrainMeta):
 		return brain_output
 
 
+
 	# TODO: This needs to be set differently, perhaps through some sort of mask. 
 	def get_spikes_from_cache(self) -> dict:
 		"""
@@ -489,6 +495,23 @@ class Brain(SparkModule, metaclass=BrainMeta):
 			elif 'out_spikes' in self._cache[module_name]:
 				brain_spikes[module_name] = self._cache[module_name]['out_spikes'].value
 		return brain_spikes
+
+
+
+	def _parse_tree_structure(self, current_depth: int = 0, name: str | None = None) -> str:
+		"""
+			Parses the tree with to produce a string with the appropiate format for the ascii_tree method.
+		"""
+		if name:
+			rep = current_depth * ' ' + f'{name} ({self.__class__.__name__})\n'
+		else:
+			rep = current_depth * ' ' + f'{self.__class__.__name__}\n'
+		for module_name in self._modules_list:
+			module: SparkModule = getattr(self, module_name)
+			rep += module._parse_tree_structure(current_depth+1, name=module_name)
+		return rep
+
+
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

@@ -243,9 +243,8 @@ class SparkModuleNode(AbstractNode, abc.ABC):
                 )
         # Create partial configuration
         node_config_type = self.module_cls.get_config_spec()
-        #self.node_config = node_config_type._create_partial()
-        # NOTE: DUMMY TEST
-        self.node_config = node_config_type._create_partial(_s_units=utils.validate_shape(1,), _s_num_outputs=1)
+        self.node_config = node_config_type._create_partial(_s_units=(1,))
+
 
     @property
     def node_config_metadata(self,) -> dict:
