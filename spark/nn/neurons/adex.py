@@ -95,7 +95,7 @@ class AdExNeuron(Neuron):
         # Soma model.
         self.soma = self.config.soma_config.class_ref(config=self.config.soma_config)
         # Delays model.
-        self._delays_active = self.config.learning_rule_config is not None
+        self._delays_active = self.config.delays_config is not None
         if self._delays_active:
             self.delays = self.config.delays_config.class_ref(config=self.config.delays_config)
         # Synaptic model.

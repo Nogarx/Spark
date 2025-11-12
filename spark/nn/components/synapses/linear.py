@@ -109,7 +109,7 @@ class LinearSynapses(Synanpses):
         self.kernel.value = new_kernel.value
 
     def _dot(self, spikes: SpikeArray) -> CurrentArray:
-        return CurrentArray(jnp.sum(self.kernel.value * spikes.value, axis=self._sum_axes) * 1000.0)
+        return CurrentArray(jnp.sum(self.kernel.value * spikes.value, axis=self._sum_axes) )#* 1000.0)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

@@ -10,7 +10,7 @@ import jax.numpy as jnp
 import flax.nnx as nnx
 import numpy as np
 import spark
-
+import time
 from functools import partial
 
 #################################################################################################################################################
@@ -90,7 +90,7 @@ def build_LIF_model(
             potential_rest = potential_rest,
             potential_reset = potential_reset,
             potential_tau = potential_tau,
-            resistance = resistance / 1000, # MΩ -> GΩ
+            resistance = resistance,
             threshold = threshold,
             cooldown = cooldown - dt, 
         ),
@@ -131,7 +131,7 @@ def build_AdEx_model(
 			potential_rest = potential_rest,
 			potential_reset = potential_reset,
 			potential_tau = potential_tau,
-			resistance = resistance / 1000, # MΩ -> GΩ
+			resistance = resistance,
 			threshold = threshold,
 			rheobase_threshold = rheobase_threshold,
 			spike_slope = spike_slope,
@@ -154,6 +154,161 @@ def build_AdEx_model(
 simulate_LIF_model_spark = partial(simulate_model_spark, build_func=build_LIF_model)
 
 simulate_AdEx_model_spark = partial(simulate_model_spark, build_func=build_AdEx_model)
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+def adex_brain_config(
+	units,
+	ker_density,
+	dt,
+	synapse_strength,
+	potential_rest,
+	potential_reset,
+	potential_tau,
+	resistance, # MΩ -> GΩ
+	threshold,
+	rheobase_threshold,
+	spike_slope,
+	adaptation_tau,
+	adaptation_delta,
+	adaptation_subthreshold,
+) -> spark.nn.BrainConfig:
+
+	adex_config = spark.nn.neurons.AdExNeuronConfig(
+		_s_units = (units,),
+		_s_dt = dt,
+		_s_dtype = jnp.float16,
+		inhibitory_rate = 0.0,
+		soma_config = spark.nn.somas.AdaptiveExponentialSomaConfig(
+			potential_rest = potential_rest,
+			potential_reset = potential_reset,
+			potential_tau = potential_tau,
+			resistance = resistance,
+			threshold = threshold,
+			rheobase_threshold = rheobase_threshold,
+			spike_slope = spike_slope,
+			adaptation_tau = adaptation_tau,
+			adaptation_delta = adaptation_delta,
+			adaptation_subthreshold = adaptation_subthreshold,
+		),
+		synapses_config = spark.nn.synapses.LinearSynapsesConfig(
+			units = (units,),
+			kernel_initializer = spark.nn.initializers.SparseUniformInitializerConfig(
+				density = ker_density,
+				scale = synapse_strength
+			),
+		),
+		delays_config = None,
+		learning_rule_config = None,
+	)
+
+	def adex_specs(name, origin, port) -> spark.ModuleSpecs:
+		return spark.ModuleSpecs(
+			name = name, 
+			module_cls = spark.nn.neurons.AdExNeuron, 
+			inputs = {
+				'in_spikes': [
+					spark.PortMap(origin=o, port=p) for o, p in zip(origin, port)
+				]
+			},
+			config = adex_config
+		)
+	
+	input_map = {
+		'spikes': spark.InputSpec(
+			payload_type=spark.FloatArray, 
+			shape=(units,), 
+			dtype=jnp.float16,
+		)
+	}
+	output_map = {
+		'spikes': {
+			'input': spark.PortMap(
+				origin='n_D1',
+				port='out_spikes'
+			),
+			'spec': spark.OutputSpec(
+				payload_type=spark.SpikeArray,
+				shape=(units,),
+				dtype=jnp.float16
+			)
+		}
+	}
+	modules_map = {
+		'n_A1': adex_specs('n_A1', ['__call__'], ['spikes']),
+		'n_B1': adex_specs('n_B1', ['n_A1'], ['out_spikes']),
+		'n_B2': adex_specs('n_B2', ['n_B1'], ['out_spikes']),
+		'n_B3': adex_specs('n_B3', ['n_B2'], ['out_spikes']),
+		'n_C1': adex_specs('n_C1', ['n_A1'], ['out_spikes']),
+		'n_C2': adex_specs('n_C2', ['n_C1'], ['out_spikes']),
+		'n_C3': adex_specs('n_C3', ['n_C2'], ['out_spikes']),
+		'n_D1': adex_specs('n_D1', ['n_B3', 'n_C3'], ['out_spikes', 'out_spikes']),
+	}
+
+	return spark.nn.BrainConfig(input_map=input_map, output_map=output_map, modules_map=modules_map)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def spark_adex_performance(
+	t_steps,
+	k_steps,
+	units,
+	ker_density,
+	dt,
+	synapse_strength,
+	potential_rest,
+	potential_reset,
+	potential_tau,
+	resistance,
+	threshold,
+	rheobase_threshold,
+	spike_slope,
+	adaptation_tau,
+	adaptation_delta,
+	adaptation_subthreshold,
+):
+	# Build brain
+	brain_config = adex_brain_config(
+		units = units,
+		ker_density = ker_density,
+		dt = dt,
+		synapse_strength = synapse_strength,
+		potential_rest = potential_rest,
+		potential_reset = potential_reset,
+		potential_tau = potential_tau,
+		resistance = resistance,
+		threshold = threshold,
+		rheobase_threshold = rheobase_threshold,
+		spike_slope = spike_slope,
+		adaptation_tau = adaptation_tau,
+		adaptation_delta = adaptation_delta,
+		adaptation_subthreshold = adaptation_subthreshold,
+	)
+	brain = spark.nn.Brain(config=brain_config)
+	brain(spikes=spark.SpikeArray( jnp.zeros((units,), dtype=jnp.float16)) )
+	graph, state = spark.split((brain))
+	# Compile iteration function
+	run_model_k_steps(graph, state, k_steps, spikes=spark.SpikeArray( 
+		jnp.zeros((units,), dtype=jnp.float16)
+	))
+	# Benchmark
+	times = []
+	iters = (t_steps // k_steps)
+	for i in range(10):
+		_, state = spark.split((brain))
+		start = time.time()
+		# Simulate
+		for i in range(iters):
+			# Note: this is equivalent to passing a constant current to the input neurons for k steps.
+			outputs, state = run_model_k_steps(graph, state, k_steps, spikes=spark.SpikeArray( 
+				(jax.random.uniform(jax.random.key(i), (units,)) < 0.05).astype(jnp.float16) 
+			))
+		end = time.time()
+		times.append(end-start)
+
+	return times
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

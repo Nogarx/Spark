@@ -287,7 +287,7 @@ class AdaptiveExponentialSomaConfig(ExponentialSomaConfig):
     adaptation_delta: float | jax.Array = dc.field(
         default = 7.0, 
         metadata = {
-            'units': 'mV',
+            'units': 'pA',
             'validators': [
                 TypeValidator,
             ], 
@@ -296,7 +296,7 @@ class AdaptiveExponentialSomaConfig(ExponentialSomaConfig):
     adaptation_subthreshold: float | jax.Array = dc.field(
         default = 0.5, 
         metadata = {
-            'units': 'mV',
+            'units': 'nS', # 1/GΩ
             'validators': [
                 TypeValidator,
             ], 
