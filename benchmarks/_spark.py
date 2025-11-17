@@ -297,6 +297,7 @@ def spark_adex_performance(
 	times = []
 	iters = (t_steps // k_steps)
 	for i in range(10):
+		# This effectively resets the brain
 		_, state = spark.split((brain))
 		start = time.time()
 		# Simulate

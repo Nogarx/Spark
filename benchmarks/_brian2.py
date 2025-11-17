@@ -64,7 +64,7 @@ def simulate_LIF_model_brian(
 		reset='v=v_reset', 
 		threshold='v>firing_threshold',
 		refractory=abs_refractory_period, 
-		method='linear'
+		method='exact'
 	)
 	# Initialization
 	neuron.v = v_rest
@@ -120,7 +120,7 @@ def simulate_AdEx_model_brian(
 		model=eqs, 
 		reset='v=v_reset;w+=b', 
 		threshold='v>firing_threshold',
-		method='euler'
+		method='rk2'
 	)
 	# Initialization
 	neuron.v = v_rest
