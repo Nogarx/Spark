@@ -12,6 +12,7 @@ import numpy as np
 import spark
 import time
 from functools import partial
+from _hh import HodgkinHuxleyNeuron, HodgkinHuxleySomaConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -48,6 +49,7 @@ def run_model_k_steps(graph, state, k, **inputs)-> tuple[dict, nnx.GraphState | 
 def simulate_model_spark(
     spike_times,
     build_func,
+    offset,
     **kwargs,
 ) -> tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
     # Initialize model
@@ -62,7 +64,7 @@ def simulate_model_spark(
         outputs, state = run_model_one_steps(graph, state, in_spikes=in_spikes)
         spikes.append(np.array(outputs['out_spikes'].value))
         model = spark.merge(graph, state)
-        potentials.append(np.array(model.soma.potential.value) + kwargs['potential_rest'])
+        potentials.append(np.array(model.soma.potential.value) + offset)
     spikes = [t*kwargs['dt'] for t, s in enumerate(spikes) if s == 1]
     return times, potentials, spikes
 
@@ -84,7 +86,7 @@ def build_LIF_model(
     lif_neuron = spark.nn.neurons.LIFNeuron(
         _s_units = (1,),
         _s_dt = dt,
-        _s_dtype = jnp.float16,
+        _s_dtype = jnp.float64,
         inhibitory_rate = 0.0,
         soma_config = spark.nn.somas.StrictRefractoryLeakySomaConfig(
             potential_rest = potential_rest,
@@ -151,9 +153,50 @@ def build_AdEx_model(
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+def build_HH_model(
+    dt,
+    synapse_strength,
+    c_m,
+    e_leak,
+    e_na,
+    e_k,
+    g_leak,
+    g_na,
+    g_k,
+    threshold,
+) -> HodgkinHuxleyNeuron:
+    hh_neuron = HodgkinHuxleyNeuron(
+        _s_units = (1,),
+        _s_dt = dt,
+        _s_dtype = jnp.float16,
+        inhibitory_rate = 0.0,
+        soma_config = HodgkinHuxleySomaConfig(
+            c_m = c_m,
+            e_leak = e_leak,
+            e_na = e_na,
+            e_k = e_k,
+            g_leak = g_leak,
+            g_na = g_na,
+            g_k = g_k,
+            threshold = threshold, 
+        ),
+        synapses_config = spark.nn.synapses.LinearSynapsesConfig(
+            units = (1,),
+            kernel_initializer = spark.nn.initializers.ConstantInitializerConfig(scale=synapse_strength),
+        ),
+        delays_config = None,
+        learning_rule_config = None,
+    )
+    hh_neuron(in_spikes=spark.SpikeArray( jnp.zeros((1,)) ))
+    return hh_neuron
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 simulate_LIF_model_spark = partial(simulate_model_spark, build_func=build_LIF_model)
 
 simulate_AdEx_model_spark = partial(simulate_model_spark, build_func=build_AdEx_model)
+
+simulate_HH_model_spark = partial(simulate_model_spark, build_func=build_HH_model)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

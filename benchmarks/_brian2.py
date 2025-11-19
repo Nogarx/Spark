@@ -143,6 +143,76 @@ def simulate_AdEx_model_brian(
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+def simulate_HH_model_brian(
+		spike_times,
+		synapse_strength,
+		t_max,
+		dt,
+		c_m,
+		e_leak,
+		e_k,
+		e_na,
+		g_leak,
+		g_na,
+		g_k,
+		threshold,
+	) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+	"""
+		Simulate a HH neuron receiving discrete one-step current inputs from spikes.
+	"""
+	b2.set_device('cpp_standalone', build_on_run=False)
+	# Reset scope
+	b2.start_scope()
+	# Build discrete current trace from spikes
+	times, currents = spikes_to_current(spike_times, k=synapse_strength, t_max=t_max, dt=dt)
+	input_current = b2.TimedArray(currents * b2.uA, dt=dt * b2.ms)
+	# Build model
+	eqs = """
+		dm/dt = alpha_m * (1-m) - beta_m * m : 1
+		alpha_m = (0.1/mV) * (-v+25*mV) / (exp( (-v+25*mV)/(10*mV) ) - 1) / ms : Hz
+		beta_m = 4 * exp(-v/(18*mV)) / ms : Hz
+
+		dn/dt = alpha_n * (1-n) - beta_n * n : 1
+		alpha_n = (0.01/mV) * (-v+10*mV) / (exp( (-v+10*mV)/(10*mV) ) - 1) / ms : Hz
+		beta_n = 0.125 * exp(-v/(80*mV) ) / ms : Hz
+
+		dh/dt = alpha_h * (1-h) - beta_h * h : 1
+		alpha_h = 0.07 * exp( -v/(20*mV) ) / ms : Hz
+		beta_h = 1 / (exp( (-v+30*mV)/(10*mV) ) + 1) / ms : Hz
+            
+		dv/dt = (-g_leak*(v-e_leak) - g_na*(m**3)*h*(v-e_na) - g_k*(n**4)*(v-e_k) + input_current(t))/c_m : volt
+	"""
+	neuron = b2.NeuronGroup(
+		1,
+		model=eqs, 
+		threshold='v > threshold',
+		refractory='v > threshold',
+		method='exponential_euler'
+	)
+	# Initialization
+	neuron.v = e_leak
+	neuron.h = 1
+	neuron.m = 0
+	neuron.n = 0.5
+	# Monitors
+	state_monitor = b2.StateMonitor(neuron, ['v', 'm', 'h', 'n'], record=True)
+	spike_monitor = b2.SpikeMonitor(neuron)
+	# Run simulation
+	b2.run(t_max * b2.ms)
+	b2.device.build(directory='_hh_cpp', compile=True, run=True, debug=False)
+	# Get outputs
+	times = state_monitor.t / b2.ms
+	spikes = np.array([s / b2.ms for s in spike_monitor.t])
+	potentials = state_monitor.v[0] / b2.mV - 70
+	# Clear files
+	b2.device.delete(force=True)
+	b2.device.reinit()
+	return times, potentials, spikes
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
 def brian_adex_performance_non_interactive(
         units,
         ker_density,
