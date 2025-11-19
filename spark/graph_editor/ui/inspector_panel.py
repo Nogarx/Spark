@@ -173,7 +173,7 @@ class QNodeConfig(QtWidgets.QWidget):
         name_widget = NodeHeaderWidget(
             name=self._target_node.NODE_NAME,
             node_cls=getattr(self._target_node, 'module_cls', None).__name__,
-            config_tree=node_config.inspect(),
+            config_tree=node_config._inspect(),
             parent=self,
         )
         name_widget.on_update.connect(

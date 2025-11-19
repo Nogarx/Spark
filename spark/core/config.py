@@ -16,7 +16,7 @@ import json
 import pathlib as pl
 import spark.core.utils as utils
 from jax.typing import DTypeLike
-from spark.core.validation import _is_config_instance
+from spark.core.validation import _is_config_instance, _is_initializer_type, _is_initializer_config_type
 from spark.core.registry import REGISTRY, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 
@@ -29,7 +29,39 @@ METADATA_TEMPLATE = {
     'valid_types': tp.Any, 
     'validators': [], 
     'description': '',
+    'allows_init': False,
 }
+IMMUTABLE_TYPES = (str, int, bool, float, tuple)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class EntryDescriptor:
+    
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __get__(self, obj):
+        return obj
+
+    def __set__(self, obj):
+        self.obj = obj
+
+    def __repr__(self):
+        return self.obj.__repr__()
+
+    def __str__(self):
+        return self.obj.__str__()
+
+    def init(self, **kwargs):
+        from spark.nn.initializers import Initializer, InitializerConfig
+        if isinstance(self.obj, Initializer):
+            return self.obj(**kwargs)
+        if isinstance(self.obj, InitializerConfig):
+            return self.obj.class_ref(
+                **self.obj.get_kwargs()
+            )(**kwargs)
+        else:
+            return self.obj
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -48,20 +80,23 @@ class SparkMetaConfig(abc.ABCMeta):
             # Parse valid types.
             if isinstance(attr_type, str):
                 valid_types = {'valid_types': attr_type}
+                allows_init = False
             elif tp.get_origin(attr_type):
                 attr_types = list(tp.get_args(attr_type))
                 try:
                     attr_types.remove(type(None))
                 except:
                     pass
+                allows_init = any([_is_initializer_type(ft) or _is_initializer_config_type(ft) for ft in attr_types])
                 attr_types = '|'.join([ft.__name__ for ft in attr_types])
                 valid_types = {'valid_types': attr_types}
             else:
+                allows_init = _is_initializer_type(attr_type) or _is_initializer_config_type(attr_type)
                 valid_types = {'valid_types': attr_type.__name__}
 
             # Get default value
             attr_value = dct.get(attr_name, dc.MISSING)
-
+            
             # If is field, add template info
             if isinstance(attr_value, dc.Field):
                 # Merge metadata with template.
@@ -70,9 +105,19 @@ class SparkMetaConfig(abc.ABCMeta):
                     if 'validators' in attr_value.metadata 
                     else METADATA_TEMPLATE['validators']
                 }
+
+                # Promote default mutable types to factories, default takes precedence over factories.
+                # Note that default and default_factory are mutually exclusive
+                if attr_value.default != dc.MISSING and not isinstance(attr_value.default, IMMUTABLE_TYPES):
+                    factory = lambda **_: attr_value.default
+                    default = dc.MISSING
+                else:
+                    default = attr_value.default
+                    factory = attr_value.default_factory
+
                 field = dc.field(
-                    default=attr_value.default,
-                    default_factory=attr_value.default_factory,
+                    default=default,
+                    default_factory=factory,
                     init=attr_value.init,
                     repr=attr_value.repr,
                     hash=attr_value.hash,
@@ -81,18 +126,30 @@ class SparkMetaConfig(abc.ABCMeta):
                         **METADATA_TEMPLATE, 
                         **(attr_value.metadata or {}), 
                         **valid_types, 
-                        **validators
+                        **validators,
+                        **{'allows_init': allows_init}
                     },
                 )
 
             # If is not field, promote to field
             else:
+
+                # Promote mutable types to factories, default takes precedence over factories.
+                if not callable(attr_value) and not isinstance(attr_value, IMMUTABLE_TYPES):
+                    factory = lambda **_: attr_value
+                    default = dc.MISSING
+                else:
+                    default = attr_value
+                    factory = dc.MISSING
+
                 # Create a new Field object.
                 field = dc.field(
-                    default=attr_value,
+                    default=default,
+                    default_factory=factory,
                     metadata={
                         **METADATA_TEMPLATE, 
-                        **valid_types
+                        **valid_types,
+                        **{'allows_init': allows_init}
                     }
                 )
 
@@ -124,7 +181,6 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         dc.dataclass(cls, init=False, kw_only=True, repr=False)
 
 
-
     def __init__(self, __skip_validation__: bool = False, **kwargs):
         # Fold kwargs
         kwargs_fold, shared_partial = self._fold_partial(self, kwargs)
@@ -135,8 +191,10 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         # Validate
         if not __skip_validation__:
             self.__post_init__()
-
-
+        # Wrap attributes that admit initializers
+        for field in dc.fields(self):
+            if field.metadata['allows_init']:
+                setattr(self, field.name, EntryDescriptor(getattr(self, field.name)))
 
     @classmethod
     def _create_partial(cls, **kwargs) -> tp.Self:
@@ -248,6 +306,22 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 # Unfortunately, the user is correct in this one, set the parameter to None and move on.
                 field.default = None
                 setattr(self, field_name, None)
+                continue
+
+            # Check if field is an initializer-like fiedl (i.e., allows_init=True)
+            if field.metadata['allows_init']:
+                if field.default is not dc.MISSING:
+                    setattr(self, field_name, field.default)
+                elif field.default_factory is not dc.MISSING:
+                    from spark.nn.initializers.base import Initializer, InitializerConfig
+                    if isinstance(field.default_factory, (Initializer, InitializerConfig)):
+                        setattr(self, field_name, field.default_factory)
+                    else:
+                        setattr(self, field_name, field.default_factory())
+                else:
+                    raise ValueError(
+                        f'Expected field {field.name} to define either a default value or a default_factory.'
+                    )
                 continue
 
             # Nested config need to be treated differently, propagating kwargs if necessary
@@ -496,6 +570,20 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
+    def get_kwargs(self) -> dict[str, dict[str, tp.Any]]:
+        """
+            Returns a dictionary with pairs of key, value fields (skips metadata).
+        """
+        kwargs_dict = {}
+        for name, field, value in self:
+            if isinstance(value, BaseSparkConfig):
+                kwargs_dict[name] = value.get_kwargs()
+            else:
+                kwargs_dict[name] = value
+        return kwargs_dict
+
+
+
     @classmethod
     def from_dict(cls: type['BaseSparkConfig'], dct: dict) -> 'BaseSparkConfig':
         """
@@ -599,11 +687,19 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def inspect(self,) -> str:
+    def inspect(self, simplified=False) -> str:
         """
             Returns a formated string of the datastructure.
         """
-        return utils.ascii_tree(self._parse_tree_structure(0, simplified=True))
+        print(utils.ascii_tree(self._parse_tree_structure(0, simplified=simplified)))
+
+
+
+    def _inspect(self, simplified=True) -> str:
+        """
+            Returns a formated string of the datastructure.
+        """
+        return utils.ascii_tree(self._parse_tree_structure(0, simplified=simplified))
 
 
 
@@ -617,11 +713,25 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 if isinstance(value, BaseSparkConfig):
                     rep += value._parse_tree_structure(current_depth+1, simplified=simplified)
                 else:
-                    rep += (current_depth+1) * ' ' + f'{name}: {field.type} <- {str(value).strip('\n')}\n'
+                    if isinstance(value, (np.ndarray, jnp.ndarray, list)) and len(value) > 5:
+                        value_str = ', '.join([f'{x:.2f}'.rstrip('0').rstrip('.') for x in value[:5]]).strip('\n').replace('\n', '')
+                        value_str = f'[{value_str[:-1]}...]'
+                    else:
+                        value_str = str(value).strip('\n')
+                    rep += (current_depth+1) * ' ' + f'{name}: {field.type} <- {value_str}\n'
             else:
                 if isinstance(value, BaseSparkConfig):
                     rep += value._parse_tree_structure(current_depth+1, simplified=simplified)
         return rep
+
+
+
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

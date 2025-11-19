@@ -41,13 +41,13 @@ class NDelaysConfig(DelaysConfig):
             ],
             'description': 'Maximum synaptic delay. Note: Final max delay is computed as ⌈max/dt⌉.',
         })
-    delay_initializer: InitializerConfig = dc.field(
+    delays: jnp.ndarray | Initializer = dc.field(
         default_factory = lambda **kwargs: UniformInitializerConfig( **({'dtype': jnp.uint8, **kwargs}) ),
         metadata = {
             'validators': [
                 TypeValidator,
             ], 
-            'description': 'Synaptic delays initializer method.',
+            'description': 'Synaptic delays array / initializer method.',
         })
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -62,7 +62,7 @@ class NDelays(Delays):
 
         Init:
             max_delay: float
-            delay_initializer: DelayInitializerConfig
+            delays: jnp.ndarray | Initializer
 
         Input:
             in_spikes: SpikeArray
@@ -87,18 +87,12 @@ class NDelays(Delays):
         self._padding = (0, num_bytes * 8 - self._units)
         self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
         self._current_idx = Variable(0, dtype=jnp.int32)
-        # Get kernel initializer
-        initializer_cls: type[Initializer] = self.config.delay_initializer.class_ref
-        # Override initializer config
-        initializer = initializer_cls(
-            config=self.config.delay_initializer, 
-            scale=self._buffer_size+1,
-            min_value=1, 
-            dtype=jnp.uint8
-        )
         # Initialize kernel
-        delay_kernel = initializer(self.get_rng_keys(1), (self._units,))
-        self.delay_kernel = Constant(delay_kernel, dtype=jnp.uint8)
+        delays_kernel = self.config.delays.init(
+            key=self.get_rng_keys(1), 
+            shape=(self._units,)
+        )
+        self.delays_kernel = Constant(delays_kernel, dtype=jnp.uint8)
 
     def reset(self) -> None:
         """
@@ -128,7 +122,7 @@ class NDelays(Delays):
         j_indices = jnp.arange(self._units)
         byte_indices = j_indices // 8
         bit_indices = 7 - (j_indices % 8)  # MSB-first adjustment
-        delay_idx = (self._current_idx.value - self.delay_kernel.value - 1) % self._buffer_size
+        delay_idx = (self._current_idx.value - self.delays_kernel.value - 1) % self._buffer_size
         selected_bytes = self._bitmask.value[delay_idx, byte_indices]
         selected_bits = (selected_bytes >> bit_indices) & 1
         return SpikeArray(selected_bits.astype(self._dtype).reshape(self._shape) * sign, async_spikes=False)

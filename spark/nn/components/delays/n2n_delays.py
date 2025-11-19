@@ -52,7 +52,7 @@ class N2NDelays(Delays):
         Init:
             units: tuple[int, ...]
             max_delay: float
-            delay_kernel_initializer: Initializer
+            delays: jnp.ndarray | Initializer
 
         Input:
             in_spikes: SpikeArray
@@ -79,18 +79,12 @@ class N2NDelays(Delays):
         self._padding = (0, num_bytes * 8 - self._units)
         self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
         self._current_idx = Variable(0, dtype=jnp.int32)
-        # Get kernel initializer
-        initializer_cls: type[Initializer] = self.config.delay_initializer.class_ref
-        # Override initializer config
-        initializer = initializer_cls(
-            config=self.config.delay_initializer, 
-            scale=self._buffer_size+1,
-            min_value=1, 
-            dtype=jnp.uint8
-        )
         # Initialize kernel
-        delay_kernel = initializer(self.get_rng_keys(1), self._kernel_shape)
-        self.delay_kernel = Constant(delay_kernel, dtype=jnp.uint8)
+        delays_kernel = self.config.delays.init(
+            key=self.get_rng_keys(1), 
+            shape=(self._units,)
+        )
+        self.delays_kernel = Constant(delays_kernel, dtype=jnp.uint8)
 
     def reset(self) -> None:
         """
@@ -120,7 +114,7 @@ class N2NDelays(Delays):
         j_indices = jnp.arange(self._units)
         byte_indices = j_indices // 8
         bit_indices = 7 - (j_indices % 8)  # MSB-first adjustment
-        delay_idx = (self._current_idx.value - self.delay_kernel.value - 1) % self._buffer_size
+        delay_idx = (self._current_idx.value - self.delays_kernel.value - 1) % self._buffer_size
         selected_bytes = self._bitmask.value[delay_idx, byte_indices]
         selected_bits = (selected_bytes >> bit_indices) & 1
         return SpikeArray(selected_bits.astype(self._dtype).reshape(self.output_shape+self._in_shape) * sign, async_spikes=True)
