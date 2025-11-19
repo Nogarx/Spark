@@ -41,7 +41,7 @@ class NDelaysConfig(DelaysConfig):
             ],
             'description': 'Maximum synaptic delay. Note: Final max delay is computed as ⌈max/dt⌉.',
         })
-    delays: jnp.ndarray | Initializer = dc.field(
+    delays: jnp.ndarray | InitializerConfig = dc.field(
         default_factory = lambda **kwargs: UniformInitializerConfig( **({'dtype': jnp.uint8, **kwargs}) ),
         metadata = {
             'validators': [
@@ -62,7 +62,7 @@ class NDelays(Delays):
 
         Init:
             max_delay: float
-            delays: jnp.ndarray | Initializer
+            delay_initializer: DelayInitializerConfig
 
         Input:
             in_spikes: SpikeArray
