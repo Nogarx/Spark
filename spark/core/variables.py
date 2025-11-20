@@ -65,7 +65,7 @@ class Constant:
         return np.array(self.value).astype(dtype if dtype else self.value.dtype)
 
     @property
-    def shape(self) -> tuple[int, ...]:
+    def shape(self) -> tuple[int]:
         return self.value.shape
 
     @property
@@ -187,7 +187,7 @@ class Variable(nnx.Variable):
         return np.array(self.value).astype(dtype if dtype else self.value.dtype)
 
     @property
-    def shape(self) -> tuple[int, ...]:
+    def shape(self) -> tuple[int]:
         return self.value.shape
 
 #################################################################################################################################################

@@ -31,7 +31,7 @@ class N2NDelaysConfig(NDelaysConfig):
        N2NDelays configuration class.
     """
 
-    units: tuple[int, ...] = dc.field(
+    units: tuple[int] = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,
@@ -50,7 +50,7 @@ class N2NDelays(Delays):
                  neuron C recieves A's spikes J timesteps later and neuron D recieves A's spikes K timesteps later.
 
         Init:
-            units: tuple[int, ...]
+            units: tuple[int]
             max_delay: float
             delays: jnp.ndarray | Initializer
 
@@ -81,8 +81,8 @@ class N2NDelays(Delays):
         self._current_idx = Variable(0, dtype=jnp.int32)
         # Initialize kernel
         delays_kernel = self.config.delays.init(
-            key=self.get_rng_keys(1), 
-            shape=(self._units,)
+            init_kwargs = {'scale':self._buffer_size+1, 'min_value':1,},
+            key=self.get_rng_keys(1), shape=self._kernel_shape, dtype=jnp.uint8,
         )
         self.delays_kernel = Constant(delays_kernel, dtype=jnp.uint8)
 

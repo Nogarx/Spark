@@ -116,7 +116,7 @@ class HodgkinHuxleySoma(Soma):
         Hodgkin-Huxley soma model.
 
         Init:
-            units: tuple[int, ...]
+            units: tuple[int]
             c_m: float | jax.Array
             e_leak: float | jax.Array
             e_na: float | jax.Array

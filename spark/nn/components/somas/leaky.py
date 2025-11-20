@@ -17,6 +17,7 @@ from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.somas.base import Soma, SomaConfig
 from spark.core.flax_imports import data
+from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -28,7 +29,7 @@ class LeakySomaConfig(SomaConfig):
         LeakySoma model configuration class.
     """
 
-    potential_rest: float | jax.Array = dc.field(
+    potential_rest: float | jax.Array | Initializer = dc.field(
         default = -60.0, 
         metadata = {
             'units': 'mV',
@@ -37,7 +38,7 @@ class LeakySomaConfig(SomaConfig):
             ], 
             'description': 'Membrane rest potential.',
         })
-    potential_reset: float | jax.Array = dc.field(
+    potential_reset: float | jax.Array | Initializer = dc.field(
         default = -50.0, 
         metadata = {
             'units': 'mV',
@@ -46,7 +47,7 @@ class LeakySomaConfig(SomaConfig):
             ], 
             'description': 'Membrane after spike reset potential.',
         })
-    potential_tau: float | jax.Array = dc.field(
+    potential_tau: float | jax.Array | Initializer = dc.field(
         default = 20.0, 
         metadata = {
             'units': 'ms',
@@ -56,7 +57,7 @@ class LeakySomaConfig(SomaConfig):
             ],
             'description': 'Membrane potential decay constant.',
         })
-    resistance: float | jax.Array = dc.field(
+    resistance: float | jax.Array | Initializer = dc.field(
         default = 0.1,
         metadata = {
             'units': 'GΩ', # [1/nS]
@@ -65,7 +66,7 @@ class LeakySomaConfig(SomaConfig):
             ], 
             'description': 'Membrane resistance.',
         })
-    threshold: float | jax.Array = dc.field(
+    threshold: float | jax.Array | Initializer = dc.field(
         default = -40.0, 
         metadata = {
             'units': 'mV',
@@ -83,7 +84,7 @@ class LeakySoma(Soma):
         Leaky soma model.
 
         Init:
-            units: tuple[int, ...]
+            units: tuple[int]
             potential_rest: float | jax.Array
             potential_reset: float | jax.Array
             potential_tau: float | jax.Array
@@ -112,13 +113,19 @@ class LeakySoma(Soma):
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         super().build(input_specs)
         # Initialize variables.
+        _potential_rest = self.config.potential_rest.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _potential_reset = self.config.potential_reset.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _potential_tau = self.config.potential_tau.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _resistance = self.config.resistance.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _threshold = self.config.threshold.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
         # Membrane. Substract potential_rest to potential related terms to rebase potential at zero.
-        self.potential_reset = Constant(self.config.potential_reset - self.config.potential_rest, dtype=self._dtype)
-        self.potential_scale = Constant(self._dt / self.config.potential_tau, dtype=self._dtype)
+        self.potential_rest = Constant(_potential_rest, dtype=self._dtype)
+        self.potential_reset = Constant(_potential_reset - _potential_rest, dtype=self._dtype)
+        self.potential_scale = Constant(self._dt / _potential_tau, dtype=self._dtype)
         # Conductance.
-        self.resistance = Constant(self.config.resistance, dtype=self._dtype) # Current is in pA for stability
+        self.resistance = Constant(_resistance, dtype=self._dtype) # Current is in pA for stability
         # Threshold.
-        self.threshold = Constant(self.config.threshold - self.config.potential_rest, dtype=self._dtype)
+        self.threshold = Constant(_threshold - _potential_rest, dtype=self._dtype)
 
     def _update_states(self, current: CurrentArray) -> None:
         """
@@ -146,7 +153,7 @@ class RefractoryLeakySomaConfig(LeakySomaConfig):
         RefractoryLeakySoma model configuration class.
     """
 
-    cooldown: float | jax.Array = dc.field(
+    cooldown: float | jax.Array | Initializer = dc.field(
         default = 2.0, 
         metadata = {
             'units': 'ms',
@@ -164,7 +171,7 @@ class RefractoryLeakySoma(LeakySoma):
         Leaky soma with refractory time model.
 
         Init:
-            units: tuple[int, ...]
+            units: tuple[int]
             potential_rest: float | jax.Array
             potential_reset: float | jax.Array
             potential_tau: float | jax.Array
@@ -193,8 +200,10 @@ class RefractoryLeakySoma(LeakySoma):
     # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         super().build(input_specs)
+        # Initialize variables.
+        _cooldown = self.config.cooldown.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
         # Refractory period.
-        self.cooldown = Constant(jnp.round(self.config.cooldown / self._dt).astype(jnp.uint16), dtype=jnp.uint16)
+        self.cooldown = Constant(jnp.round(_cooldown / self._dt).astype(jnp.uint16), dtype=jnp.uint16)
         self.refractory = Variable(self.cooldown * jnp.ones(self.units), dtype=jnp.uint16)
         self.is_ready = Variable(jnp.ones(self.units), dtype=jnp.bool)
 
@@ -248,7 +257,7 @@ class StrictRefractoryLeakySoma(RefractoryLeakySoma):
         Note: This model is here mostly for didactic/historical reasons.
 
         Init:
-            units: tuple[int, ...]
+            units: tuple[int]
             potential_rest: float | jax.Array
             potential_reset: float | jax.Array
             potential_tau: float | jax.Array
@@ -288,7 +297,7 @@ class AdaptiveLeakySomaConfig(RefractoryLeakySomaConfig):
         AdaptiveLeakySoma model configuration class.
     """
 
-    threshold_tau: float | jax.Array = dc.field(
+    threshold_tau: float | jax.Array | Initializer = dc.field(
         default = 20.0, 
         metadata = {
             'units': 'ms',
@@ -298,7 +307,7 @@ class AdaptiveLeakySomaConfig(RefractoryLeakySomaConfig):
             ],
             'description': 'Adaptive action potential threshold decay constant.',
         })
-    threshold_delta: float | jax.Array = dc.field(
+    threshold_delta: float | jax.Array | Initializer = dc.field(
         default = 100.0, 
         metadata = {
             'units': 'mV',
@@ -316,7 +325,7 @@ class AdaptiveLeakySoma(RefractoryLeakySoma):
         Adaptive leaky soma model.
 
         Init:
-            units: tuple[int, ...]
+            units: tuple[int]
             potential_rest: float | jax.Array
             potential_reset: float | jax.Array
             potential_tau: float | jax.Array
@@ -347,12 +356,15 @@ class AdaptiveLeakySoma(RefractoryLeakySoma):
     # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
     def build(self, input_specs: dict[str, InputSpec]) -> None:
         super().build(input_specs)
-        # Overwrite constant threshold with a tracer.
+        # Initialize variables.
+        _threshold_tau = self.config.threshold_tau.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _threshold_delta = self.config.threshold_delta.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        # Replace constant threshold with a tracer.
         self.threshold = data(Tracer(
             self.units,
-            tau=self.config.threshold_tau, 
-            base=(self.config.threshold - self.config.potential_rest), 
-            scale=self.config.threshold_delta, 
+            tau=_threshold_tau, 
+            base=(self.threshold), 
+            scale=_threshold_delta, 
             dt=self._dt, dtype=self._dtype
         ))
 

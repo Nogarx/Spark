@@ -63,12 +63,12 @@ class ALIFNeuronConfig(NeuronConfig):
         metadata = {
             'description': 'Synapses configuration.',
         })
-    delays_config: DelaysConfig = dc.field(
+    delays_config: DelaysConfig | None = dc.field(
         default_factory = N2NDelaysConfig,
         metadata = {
             'description': 'Delays configuration.',
         })
-    learning_rule_config: LearningRuleConfig = dc.field(
+    learning_rule_config: LearningRuleConfig | None = dc.field(
         default_factory = ZenkeRuleConfig,
         metadata = {
             'description': 'Learning configuration.',
@@ -105,13 +105,17 @@ class ALIFNeuron(Neuron):
         inhibition_mask = inhibition_mask.at[indices].set(-1).reshape(self.units)
         self._inhibition_mask = Constant(inhibition_mask, dtype=jnp.float16)
         # Soma model.
-        self.soma = AdaptiveLeakySoma(config=self.config.soma_config)
+        self.soma = self.config.soma_config.class_ref(config=self.config.soma_config)
         # Delays model.
-        self.delays = self.config.delays_config.class_ref(config=self.config.delays_config) if self.config.delays_config is not None else None
+        self._delays_active = self.config.learning_rule_config is not None
+        if self._delays_active:
+            self.delays = self.config.delays_config.class_ref(config=self.config.delays_config)
         # Synaptic model.
         self.synapses = self.config.synapses_config.class_ref(config=self.config.synapses_config)
         # Learning rule model.
-        self.learning_rule = self.config.learning_rule_config.class_ref(config=self.config.learning_rule_config)
+        self._learning_active = self.config.learning_rule_config is not None
+        if self._learning_active:
+            self.learning_rule = self.config.learning_rule_config.class_ref(config=self.config.learning_rule_config)
 
     def __call__(self, in_spikes: SpikeArray) -> NeuronOutput:
         """

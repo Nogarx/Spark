@@ -110,7 +110,7 @@ class Initializer(abc.ABC):
             self.config.merge(partial=kwargs)
 
     @abc.abstractmethod
-    def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
+    def __call__(self, key: jax.Array, shape: tuple[int]) -> jax.Array:
         raise NotImplementedError
 
 #################################################################################################################################################

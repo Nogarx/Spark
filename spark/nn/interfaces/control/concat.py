@@ -88,7 +88,7 @@ class ConcatReshapeConfig(ConcatConfig):
         ConcatReshape configuration class.
     """
 
-    reshape: tuple[int, ...] = dc.field(
+    reshape: tuple[int] = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,
@@ -105,7 +105,7 @@ class ConcatReshape(ControlInterface):
 
         Init:
             num_inputs: int
-            reshape: tuple[int, ...]
+            reshape: tuple[int]
             payload_type: type[SparkPayload]
             
         Input:

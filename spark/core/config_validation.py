@@ -108,7 +108,7 @@ class PositiveValidator(ConfigurationValidator):
         elif isinstance(value, np.ndarray):
             is_positive = np.all(value > 0)
         else:
-            raise TypeError(f'value is not a supported numeric object.')
+            raise TypeError(f'{value} is not a supported numeric object.')
         if not is_positive:
             raise ValueError(f'Attribute "{self.field.name}" must be positive, but got {value}.')
 

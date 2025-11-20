@@ -51,7 +51,7 @@ class AbstractNode(BaseNode, abc.ABC):
             spec: str,
             port_name: str, 
             payload_type: type[SparkPayload] | None = None,
-            shape: tuple[int, ...] | None = None,
+            shape: tuple[int] | None = None,
             dtype: DTypeLike | None = None,
             description: str | None = None
         ):
@@ -62,7 +62,7 @@ class AbstractNode(BaseNode, abc.ABC):
                 spec: str, target spec {input, output}
                 port_name: str, the name of the port to update
                 payload_type: type[SparkPayload] | None, the new payload_type
-                shape: tuple[int, ...] | None,  the new shape
+                shape: tuple[int] | None,  the new shape
                 dtype: DTypeLike | None,  the new dtype
                 description: str | None,  the new description
         """

@@ -315,7 +315,7 @@
                                     },
                                     "units": {
                                         "name": "units",
-                                        "type_string": "tuple[int, ...]",
+                                        "type_string": "tuple[int]",
                                         "inheritance_childs": [
                                             [
                                                 "synapses_config",
@@ -467,7 +467,7 @@
                                         },
                                         "units": {
                                             "name": "units",
-                                            "type_string": "tuple[int, ...]",
+                                            "type_string": "tuple[int]",
                                             "inheritance_childs": [],
                                             "break_inheritance": false,
                                             "flags": 2
@@ -517,7 +517,7 @@
                                             },
                                             "norm_axes": {
                                                 "name": "norm_axes",
-                                                "type_string": "tuple[int, ...] | None",
+                                                "type_string": "tuple[int] | None",
                                                 "inheritance_childs": [],
                                                 "break_inheritance": true,
                                                 "flags": 0
@@ -555,7 +555,7 @@
                                         },
                                         "units": {
                                             "name": "units",
-                                            "type_string": "tuple[int, ...]",
+                                            "type_string": "tuple[int]",
                                             "inheritance_childs": [],
                                             "break_inheritance": false,
                                             "flags": 2
@@ -912,7 +912,7 @@
                                     },
                                     "units": {
                                         "name": "units",
-                                        "type_string": "tuple[int, ...]",
+                                        "type_string": "tuple[int]",
                                         "inheritance_childs": [
                                             [
                                                 "synapses_config",
@@ -1064,7 +1064,7 @@
                                         },
                                         "units": {
                                             "name": "units",
-                                            "type_string": "tuple[int, ...]",
+                                            "type_string": "tuple[int]",
                                             "inheritance_childs": [],
                                             "break_inheritance": false,
                                             "flags": 2
@@ -1114,7 +1114,7 @@
                                             },
                                             "norm_axes": {
                                                 "name": "norm_axes",
-                                                "type_string": "tuple[int, ...] | None",
+                                                "type_string": "tuple[int] | None",
                                                 "inheritance_childs": [],
                                                 "break_inheritance": true,
                                                 "flags": 0
@@ -1152,7 +1152,7 @@
                                         },
                                         "units": {
                                             "name": "units",
-                                            "type_string": "tuple[int, ...]",
+                                            "type_string": "tuple[int]",
                                             "inheritance_childs": [],
                                             "break_inheritance": false,
                                             "flags": 2
@@ -1523,7 +1523,7 @@
                                     },
                                     "units": {
                                         "name": "units",
-                                        "type_string": "tuple[int, ...]",
+                                        "type_string": "tuple[int]",
                                         "inheritance_childs": [
                                             [
                                                 "synapses_config",
@@ -1675,7 +1675,7 @@
                                         },
                                         "units": {
                                             "name": "units",
-                                            "type_string": "tuple[int, ...]",
+                                            "type_string": "tuple[int]",
                                             "inheritance_childs": [],
                                             "break_inheritance": false,
                                             "flags": 2
@@ -1725,7 +1725,7 @@
                                             },
                                             "norm_axes": {
                                                 "name": "norm_axes",
-                                                "type_string": "tuple[int, ...] | None",
+                                                "type_string": "tuple[int] | None",
                                                 "inheritance_childs": [],
                                                 "break_inheritance": true,
                                                 "flags": 0
@@ -1763,7 +1763,7 @@
                                         },
                                         "units": {
                                             "name": "units",
-                                            "type_string": "tuple[int, ...]",
+                                            "type_string": "tuple[int]",
                                             "inheritance_childs": [],
                                             "break_inheritance": false,
                                             "flags": 2
@@ -2120,7 +2120,7 @@
                                     },
                                     "units": {
                                         "name": "units",
-                                        "type_string": "tuple[int, ...]",
+                                        "type_string": "tuple[int]",
                                         "inheritance_childs": [
                                             [
                                                 "synapses_config",
@@ -2272,7 +2272,7 @@
                                         },
                                         "units": {
                                             "name": "units",
-                                            "type_string": "tuple[int, ...]",
+                                            "type_string": "tuple[int]",
                                             "inheritance_childs": [],
                                             "break_inheritance": false,
                                             "flags": 2
@@ -2322,7 +2322,7 @@
                                             },
                                             "norm_axes": {
                                                 "name": "norm_axes",
-                                                "type_string": "tuple[int, ...] | None",
+                                                "type_string": "tuple[int] | None",
                                                 "inheritance_childs": [],
                                                 "break_inheritance": true,
                                                 "flags": 0
@@ -2360,7 +2360,7 @@
                                         },
                                         "units": {
                                             "name": "units",
-                                            "type_string": "tuple[int, ...]",
+                                            "type_string": "tuple[int]",
                                             "inheritance_childs": [],
                                             "break_inheritance": false,
                                             "flags": 2

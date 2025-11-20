@@ -20,7 +20,7 @@ import spark.core.utils as utils
         ({1,2,3}, (1,2,3)),
     ]
 )
-def test_validate_shapes(input_shape: int | list[int] | tuple[int, ...] | set[int], expected_shape: tuple[int, ...]):
+def test_validate_shapes(input_shape: int | list[int] | tuple[int] | set[int], expected_shape: tuple[int]):
     """
         Tests various inputs that should normalize to a single tuple shape.
     """
@@ -44,7 +44,7 @@ def test_validate_shapes(input_shape: int | list[int] | tuple[int, ...] | set[in
         (([1], (2,3), {4,5,6}), [(1,), (2,3), (4,5,6)]),
     ]
 )
-def test_validate_list_of_shapes(input_list: list | tuple | set, expected_list: list[tuple[int, ...]]):
+def test_validate_list_of_shapes(input_list: list | tuple | set, expected_list: list[tuple[int]]):
     """
         Tests various inputs that should normalize to a list of tuple shapes.
     """

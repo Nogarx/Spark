@@ -41,8 +41,8 @@ class NDelaysConfig(DelaysConfig):
             ],
             'description': 'Maximum synaptic delay. Note: Final max delay is computed as ⌈max/dt⌉.',
         })
-    delays: jnp.ndarray | InitializerConfig = dc.field(
-        default_factory = lambda **kwargs: UniformInitializerConfig( **({'dtype': jnp.uint8, **kwargs}) ),
+    delays: jax.Array | Initializer = dc.field(
+        default_factory = UniformInitializerConfig,
         metadata = {
             'validators': [
                 TypeValidator,
@@ -89,8 +89,8 @@ class NDelays(Delays):
         self._current_idx = Variable(0, dtype=jnp.int32)
         # Initialize kernel
         delays_kernel = self.config.delays.init(
-            key=self.get_rng_keys(1), 
-            shape=(self._units,)
+            init_kwargs = {'scale':self._buffer_size+1, 'min_value':1,},
+            key=self.get_rng_keys(1), shape=(self._units,), dtype=jnp.uint8,
         )
         self.delays_kernel = Constant(delays_kernel, dtype=jnp.uint8)
 

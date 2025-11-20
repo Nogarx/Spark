@@ -18,8 +18,8 @@ import jax.numpy as jnp
 
 DEFAULT_SPARKMODULE_PATH = 'spark.core.module.SparkModule'
 DEFAULT_PAYLOAD_PATH = 'spark.core.payloads.SparkPayload'
-DEFAULT_INITIALIZER_PATH = 'spark.nn.initializers.base.Initializer'
 DEFAULT_CONFIG_PATH = 'spark.core.config.BaseSparkConfig'
+DEFAULT_INITIALIZER_PATH = 'spark.nn.initializers.base.Initializer'
 DEFAULT_INITIALIZER_CONFIG_PATH = 'spark.nn.initializers.base.InitializerConfig'
 DEFAULT_CFG_VALIDATOR_PATH = 'spark.core.config_validation.ConfigurationValidator'
 
@@ -86,7 +86,7 @@ def _is_initializer_type(obj: tp.Any) -> bool:
 
 def _is_initializer_config_type(obj: tp.Any) -> bool:
     """
-        Check if an object is a subclass of 'spark.nn.initializers.base.Initializer'.
+        Check if an object is a subclass of 'spark.nn.initializers.base.InitializerConfig'.
 
         Args:
             obj (tp.Any): The class to check.

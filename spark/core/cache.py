@@ -45,7 +45,7 @@ class Cache:
         self.variable.value = new_value
 
     @property
-    def shape(self,) -> tuple[int, ...]:
+    def shape(self,) -> tuple[int]:
         """
             Shape of the value store in the cache object.
         """

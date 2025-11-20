@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.specs import InputSpec
 
+import jax
 import jax.numpy as jnp
 import dataclasses as dc
 from math import prod
@@ -18,7 +19,7 @@ from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator
 from spark.nn.initializers.common import NormalizedSparseUniformInitializerConfig
 from spark.nn.components.synapses.base import Synanpses, SynanpsesConfig
-from spark.nn.initializers.base import Initializer, InitializerConfig
+from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -30,14 +31,14 @@ class LinearSynapsesConfig(SynanpsesConfig):
         LinearSynapses model configuration class.
     """
 
-    units: tuple[int, ...] = dc.field(
+    units: tuple[int] = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,
             ], 
-            'description': 'tuple[int, ...] of the postsynaptic pool of neurons.',
+            'description': 'tuple[int] of the postsynaptic pool of neurons.',
         })
-    kernel_initializer: InitializerConfig = dc.field(
+    kernel: jax.Array | Initializer = dc.field(
         default_factory = NormalizedSparseUniformInitializerConfig,
         metadata = {
             'units': 'pA',
@@ -56,8 +57,8 @@ class LinearSynapses(Synanpses):
         Output currents are computed as the dot product of the kernel with the input spikes.
 
         Init:
-            units: tuple[int, ...]
-            kernel_initializer: KernelInitializerConfig
+            units: tuple[int]
+            kernel: jax.Array | Initializer
 
         Input:
             spikes: SpikeArray
@@ -88,15 +89,11 @@ class LinearSynapses(Synanpses):
         self._input_shape = utils.validate_shape(input_specs['spikes'].shape)
         self._real_input_shape = self._input_shape[len(self._output_shape):] if self.async_spikes else self._input_shape
         self._sum_axes = tuple(range(len(self._output_shape), len(self._output_shape)+len(self._real_input_shape)))
-        # Get kernel initializer
-        initializer_cls: type[Initializer] = self.config.kernel_initializer.class_ref
-        # Override initializer config
-        initializer = initializer_cls(
-            config=self.config.kernel_initializer, 
-            norm_axes = tuple(s for s in range(len(self._output_shape))),
-        )
         # Initialize kernel
-        kernel = initializer(key=self.get_rng_keys(1), shape=self._output_shape+self._real_input_shape)
+        kernel = self.config.kernel.init(
+            init_kwargs = {'norm_axes': tuple(s for s in range(len(self._output_shape))),},
+            key=self.get_rng_keys(1), shape=self._output_shape+self._real_input_shape, dtype=self._dtype,
+        )
         self.kernel = Variable(kernel, dtype=self._dtype)
         
     def get_kernel(self,) -> FloatArray:

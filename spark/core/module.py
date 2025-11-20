@@ -146,7 +146,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # Flags
         self.__built__: bool = False
         self.__allow_cycles__: bool = False
-        self._recurrent_shape_contract: dict[str, tuple[int, ...]] | None = None
+        self._recurrent_shape_contract: dict[str, tuple[int]] | None = None
 
 
 
@@ -228,8 +228,8 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
     def set_recurrent_shape_contract(
             self, 
-            shape: tuple[int, ...] | None = None, 
-            output_shapes: dict[str, tuple[int, ...]] | None = None
+            shape: tuple[int] | None = None, 
+            output_shapes: dict[str, tuple[int]] | None = None
         ) -> None:
         """
             Recurrent shape policy pre-defines expected shapes for the output specs.
@@ -237,8 +237,8 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             This is function is a binding contract that allows the modules to accept self connections.
 
             Input:
-                shape: tuple[int, ...], A common shape for all the outputs.
-                output_shapes: dict[str, tuple[int, ...]], A specific policy for every single output variable.
+                shape: tuple[int], A common shape for all the outputs.
+                output_shapes: dict[str, tuple[int]], A specific policy for every single output variable.
 
             NOTE: If both, shape and output_specs, are provided, output_specs takes preference over shape.
         """

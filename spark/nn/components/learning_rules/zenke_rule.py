@@ -17,6 +17,7 @@ from spark.core.registry import register_module, register_config
 from spark.core.utils import get_einsum_labels
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.learning_rules.base import LearningRule, LearningRuleConfig, LearningRuleOutput
+from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -28,7 +29,7 @@ class ZenkeRuleConfig(LearningRuleConfig):
        ZenkeRule configuration class.
     """
 
-    pre_tau: float | jax.Array = dc.field(
+    pre_tau: float | jax.Array | Initializer = dc.field(
         default = 20.0, 
         metadata = {
             'units': 'ms',
@@ -38,7 +39,7 @@ class ZenkeRuleConfig(LearningRuleConfig):
             ],
             'description': 'Time constant of the presynaptic spike train',
         })
-    post_tau: float | jax.Array = dc.field(
+    post_tau: float | jax.Array | Initializer = dc.field(
         default = 20.0, 
         metadata = {
             'units': 'ms',
@@ -48,7 +49,7 @@ class ZenkeRuleConfig(LearningRuleConfig):
             ],
             'description': 'Time constant of the fast postynaptic spike train',
         })
-    post_slow_tau: float | jax.Array = dc.field(
+    post_slow_tau: float | jax.Array | Initializer = dc.field(
         default = 20.0, 
         metadata = {
             'units': 'ms',
@@ -58,7 +59,7 @@ class ZenkeRuleConfig(LearningRuleConfig):
             ],
             'description': 'Time constant of the slow postynaptic spike train',
         })
-    target_tau: float | jax.Array = dc.field(
+    target_tau: float | jax.Array | Initializer = dc.field(
         default = 20000.0, 
         metadata = {
             'units': 'ms',
@@ -157,11 +158,16 @@ class ZenkeRule(LearningRule):
         input_shape = input_specs['pre_spikes'].shape
         output_shape = input_specs['post_spikes'].shape
         kernel_shape = input_specs['current_kernel'].shape
+        # Initialize variables.
+        _pre_tau = self.config.pre_tau.init(key=self.get_rng_keys(1), shape=kernel_shape, dtype=self._dtype)
+        _post_tau = self.config.post_tau.init(key=self.get_rng_keys(1), shape=output_shape, dtype=self._dtype)
+        _post_slow_tau = self.config.post_slow_tau.init(key=self.get_rng_keys(1), shape=output_shape, dtype=self._dtype)
+        _target_tau = self.config.target_tau.init(key=self.get_rng_keys(1), shape=kernel_shape, dtype=self._dtype)
         # Tracers.
-        self.pre_trace = Tracer(kernel_shape, tau=self.config.pre_tau, scale=1/self.config.pre_tau, dtype=self._dtype) 
-        self.post_trace = Tracer(output_shape, tau=self.config.post_tau, scale=1/self.config.post_tau, dtype=self._dtype)
-        self.post_slow_trace = Tracer(output_shape, tau=self.config.post_slow_tau, scale=1/self.config.post_slow_tau, dtype=self._dtype)
-        self.target_trace = Tracer(kernel_shape, tau=self.config.target_tau, scale=1/self.config.target_tau, dtype=self._dtype)
+        self.pre_trace = Tracer(kernel_shape, tau=_pre_tau, scale=1/_pre_tau, dtype=self._dtype) 
+        self.post_trace = Tracer(output_shape, tau=_post_tau, scale=1/_post_tau, dtype=self._dtype)
+        self.post_slow_trace = Tracer(output_shape, tau=_post_slow_tau, scale=1/_post_slow_tau, dtype=self._dtype)
+        self.target_trace = Tracer(kernel_shape, tau=_target_tau, scale=1/_target_tau, dtype=self._dtype)
         self.a = Constant(self.config.a)
         self.b = Constant(self.config.b)
         self.c = Constant(self.config.c)
