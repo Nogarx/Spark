@@ -213,7 +213,8 @@ def simulate_HH_model_brian(
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-def brian_adex_performance_non_interactive(
+def brian_adex_performance_model_1_non_interactive(
+        sim_repetitions,
         units,
         ker_density,
         synapse_strength,
@@ -374,7 +375,7 @@ def brian_adex_performance_non_interactive(
     b2.device.build(directory='_adex_cpp', compile=True, run=False, debug=False)
 
     times = []
-    for _ in range(10):
+    for _ in range(sim_repetitions):
         start = time.time()
         b2.device.run()
         end = time.time()
@@ -386,10 +387,10 @@ def brian_adex_performance_non_interactive(
 
     return times
 
-
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def brian_adex_performance_interactive_mock(
+def brian_adex_performance_model_1_interactive_mock(
+        sim_repetitions,
         units,
         ker_density,
         synapse_strength,
@@ -547,7 +548,7 @@ def brian_adex_performance_interactive_mock(
     b2.device.build(directory='_adex_cpp', compile=True, run=False, debug=False)
 
     times = []
-    for _ in range(10):
+    for _ in range(sim_repetitions):
         start = time.time()
         b2.device.run()
         end = time.time()
@@ -561,7 +562,8 @@ def brian_adex_performance_interactive_mock(
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def brian_adex_performance_interactive_numpy_mock(
+def brian_adex_performance_model_1_interactive_numpy_mock(
+        sim_repetitions,
         units,
         ker_density,
         synapse_strength,
@@ -714,7 +716,1002 @@ def brian_adex_performance_interactive_numpy_mock(
 
 
     times = []
-    for _ in range(10):
+    for _ in range(sim_repetitions):
+        start = time.time()
+        for _ in range(iters):
+            idx = np.random.rand(units) < 0.05
+            it_current = np.sum(np.random.rand(units,units)[:,idx], axis=1).reshape(1,-1)
+            input_current = b2.TimedArray(np.repeat(it_current, k_steps, axis=0) * b2.nA, dt=dt)
+            b2.run(k_time)
+        end = time.time()
+        times.append(end - start)
+
+    # Clear files
+    b2.device.delete(force=True)
+    b2.device.reinit()
+
+    return times
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+def brian_adex_performance_model_2_non_interactive(
+        sim_repetitions,
+        units,
+        ker_density,
+        synapse_strength,
+        t_max,
+        k_time,
+        dt,
+        tau_m,
+        R,
+        v_rest,
+        v_reset,
+        v_rheobase,
+        a,
+        b,
+        firing_threshold,
+        delta_T,
+        tau_w,
+    ):
+	# Build currents
+    currents = []
+    iters = int(t_max / k_time)
+    k_steps = int(k_time / dt)
+    for _ in range(iters):
+        idx = np.random.rand(units) < 0.05
+        it_current = np.sum(np.random.rand(units,units)[:,idx], axis=1)
+        for _ in range(k_steps):
+            currents.append(it_current)
+    currents = np.array(currents)
+
+    b2.set_device('cpp_standalone', build_on_run=False)
+    # Reset scope
+    b2.start_scope()
+    input_current = b2.TimedArray(currents * b2.nA, dt=dt)
+
+    # Neurons
+    eqs_in = """
+        dv/dt = (-(v-v_rest) +delta_T*exp((v-v_rheobase)/delta_T)+ R * input_current(t,i) - R * w)/(tau_m) : volt
+        dw/dt = (a*(v-v_rest)-w)/tau_w : amp
+    """
+    eqs = """
+        dv/dt = (-(v-v_rest) +delta_T*exp((v-v_rheobase)/delta_T) - R * w)/(tau_m) : volt
+        dw/dt = (a*(v-v_rest)-w)/tau_w : amp
+    """
+    n_A1 = b2.NeuronGroup(
+        units,
+        model=eqs_in, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_A1.v = v_rest
+    n_A2 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_A2.v = v_rest
+    n_B1 = b2.NeuronGroup(
+        units,
+        model=eqs_in, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_B1.v = v_rest
+    n_B2 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_B2.v = v_rest
+    n_C1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_C1.v = v_rest
+    n_C2 = b2.NeuronGroup(
+        units,
+        model=eqs_in, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_C2.v = v_rest
+    n_D1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_D1.v = v_rest
+
+    # Synapses
+    ker_A1_A2 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_A2 = b2.Synapses(n_A1, n_B2, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_A2_src, s_A1_A2_tgt = ker_A1_A2.nonzero()
+    s_A1_A2.connect(i=s_A1_A2_src, j=s_A1_A2_tgt)
+    s_A1_A2.w_syn = ker_A1_A2[s_A1_A2_src, s_A1_A2_tgt] * b2.mV
+
+    ker_B1_B2 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_B1_B2 = b2.Synapses(n_B1, n_B2, model='w_syn : volt', on_pre='v += w_syn')
+    s_B1_B2_src, s_B1_B2_tgt = ker_B1_B2.nonzero()
+    s_B1_B2.connect(i=s_B1_B2_src, j=s_B1_B2_tgt)
+    s_B1_B2.w_syn = ker_B1_B2[s_B1_B2_src, s_B1_B2_tgt] * b2.mV
+
+    ker_C1_C2 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_C1_C2 = b2.Synapses(n_C1, n_C2, model='w_syn : volt', on_pre='v += w_syn')
+    s_C1_C2_src, s_C1_C2_tgt = ker_C1_C2.nonzero()
+    s_C1_C2.connect(i=s_C1_C2_src, j=s_C1_C2_tgt)
+    s_C1_C2.w_syn = ker_C1_C2[s_C1_C2_src, s_C1_C2_tgt] * b2.mV
+
+    ker_A2_D1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A2_D1 = b2.Synapses(n_A2, n_D1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A2_D1_src, s_A2_D1_tgt = ker_A2_D1.nonzero()
+    s_A2_D1.connect(i=s_A2_D1_src, j=s_A2_D1_tgt)
+    s_A2_D1.w_syn = ker_A2_D1[s_A2_D1_src, s_A2_D1_tgt] * b2.mV
+
+    ker_B2_D1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_B2_D1 = b2.Synapses(n_B2, n_D1, model='w_syn : volt', on_pre='v += w_syn')
+    s_B2_D1_src, s_B2_D1_tgt = ker_B2_D1.nonzero()
+    s_B2_D1.connect(i=s_B2_D1_src, j=s_B2_D1_tgt)
+    s_B2_D1.w_syn = ker_B2_D1[s_B2_D1_src, s_B2_D1_tgt] * b2.mV
+
+    ker_C2_D1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_C2_D1 = b2.Synapses(n_C2, n_D1, model='w_syn : volt', on_pre='v += w_syn')
+    s_C2_D1_src, s_C2_D1_tgt = ker_C2_D1.nonzero()
+    s_C2_D1.connect(i=s_C2_D1_src, j=s_C2_D1_tgt)
+    s_C2_D1.w_syn = ker_C2_D1[s_C2_D1_src, s_C2_D1_tgt] * b2.mV
+
+    b2.run(t_max)
+    b2.device.build(directory='_adex_cpp', compile=True, run=False, debug=False)
+
+    times = []
+    for _ in range(sim_repetitions):
+        start = time.time()
+        b2.device.run()
+        end = time.time()
+        times.append(end - start)
+
+    # Clear files
+    b2.device.delete(force=True)
+    b2.device.reinit()
+
+    return times
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def brian_adex_performance_model_2_interactive_mock(
+        sim_repetitions,
+        units,
+        ker_density,
+        synapse_strength,
+        t_max,
+        k_time,
+        dt,
+        tau_m,
+        R,
+        v_rest,
+        v_reset,
+        v_rheobase,
+        a,
+        b,
+        firing_threshold,
+        delta_T,
+        tau_w,
+    ):
+    b2.set_device('cpp_standalone', build_on_run=False)
+    # Reset scope
+    b2.start_scope()
+    # Build discrete current trace from spikes
+    iters = int(t_max / k_time)
+    k_steps = int(k_time / dt)
+    input_current = b2.TimedArray(np.zeros((k_steps, units)) * b2.nA, dt=dt)
+
+    # Neurons
+    eqs_in = """
+        dv/dt = (-(v-v_rest) +delta_T*exp((v-v_rheobase)/delta_T)+ R * input_current(t,i) - R * w)/(tau_m) : volt
+        dw/dt = (a*(v-v_rest)-w)/tau_w : amp
+    """
+    eqs = """
+        dv/dt = (-(v-v_rest) +delta_T*exp((v-v_rheobase)/delta_T) - R * w)/(tau_m) : volt
+        dw/dt = (a*(v-v_rest)-w)/tau_w : amp
+    """
+    n_A1 = b2.NeuronGroup(
+        units,
+        model=eqs_in, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_A1.v = v_rest
+    n_A2 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_A2.v = v_rest
+    n_B1 = b2.NeuronGroup(
+        units,
+        model=eqs_in, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_B1.v = v_rest
+    n_B2 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_B2.v = v_rest
+    n_C1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_C1.v = v_rest
+    n_C2 = b2.NeuronGroup(
+        units,
+        model=eqs_in, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_C2.v = v_rest
+    n_D1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_D1.v = v_rest
+
+    # Synapses
+    ker_A1_A2 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_A2 = b2.Synapses(n_A1, n_B2, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_A2_src, s_A1_A2_tgt = ker_A1_A2.nonzero()
+    s_A1_A2.connect(i=s_A1_A2_src, j=s_A1_A2_tgt)
+    s_A1_A2.w_syn = ker_A1_A2[s_A1_A2_src, s_A1_A2_tgt] * b2.mV
+
+    ker_B1_B2 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_B1_B2 = b2.Synapses(n_B1, n_B2, model='w_syn : volt', on_pre='v += w_syn')
+    s_B1_B2_src, s_B1_B2_tgt = ker_B1_B2.nonzero()
+    s_B1_B2.connect(i=s_B1_B2_src, j=s_B1_B2_tgt)
+    s_B1_B2.w_syn = ker_B1_B2[s_B1_B2_src, s_B1_B2_tgt] * b2.mV
+
+    ker_C1_C2 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_C1_C2 = b2.Synapses(n_C1, n_C2, model='w_syn : volt', on_pre='v += w_syn')
+    s_C1_C2_src, s_C1_C2_tgt = ker_C1_C2.nonzero()
+    s_C1_C2.connect(i=s_C1_C2_src, j=s_C1_C2_tgt)
+    s_C1_C2.w_syn = ker_C1_C2[s_C1_C2_src, s_C1_C2_tgt] * b2.mV
+
+    ker_A2_D1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A2_D1 = b2.Synapses(n_A2, n_D1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A2_D1_src, s_A2_D1_tgt = ker_A2_D1.nonzero()
+    s_A2_D1.connect(i=s_A2_D1_src, j=s_A2_D1_tgt)
+    s_A2_D1.w_syn = ker_A2_D1[s_A2_D1_src, s_A2_D1_tgt] * b2.mV
+
+    ker_B2_D1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_B2_D1 = b2.Synapses(n_B2, n_D1, model='w_syn : volt', on_pre='v += w_syn')
+    s_B2_D1_src, s_B2_D1_tgt = ker_B2_D1.nonzero()
+    s_B2_D1.connect(i=s_B2_D1_src, j=s_B2_D1_tgt)
+    s_B2_D1.w_syn = ker_B2_D1[s_B2_D1_src, s_B2_D1_tgt] * b2.mV
+
+    ker_C2_D1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_C2_D1 = b2.Synapses(n_C2, n_D1, model='w_syn : volt', on_pre='v += w_syn')
+    s_C2_D1_src, s_C2_D1_tgt = ker_C2_D1.nonzero()
+    s_C2_D1.connect(i=s_C2_D1_src, j=s_C2_D1_tgt)
+    s_C2_D1.w_syn = ker_C2_D1[s_C2_D1_src, s_C2_D1_tgt] * b2.mV
+
+    for _ in range(iters):
+        idx = np.random.rand(units) < 0.05
+        it_current = np.sum(np.random.rand(units,units)[:,idx], axis=1).reshape(1,-1)
+        input_current = b2.TimedArray(np.repeat(it_current, k_steps, axis=0) * b2.nA, dt=dt)
+        b2.run(k_time)
+
+    b2.device.build(directory='_adex_cpp', compile=True, run=False, debug=False)
+
+    times = []
+    for _ in range(sim_repetitions):
+        start = time.time()
+        b2.device.run()
+        end = time.time()
+        times.append(end - start)
+
+    # Clear files
+    b2.device.delete(force=True)
+    b2.device.reinit()
+
+    return times
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def brian_adex_performance_model_2_interactive_numpy_mock(
+        sim_repetitions,
+        units,
+        ker_density,
+        synapse_strength,
+        t_max,
+        k_time,
+        dt,
+        tau_m,
+        R,
+        v_rest,
+        v_reset,
+        v_rheobase,
+        a,
+        b,
+        firing_threshold,
+        delta_T,
+        tau_w,
+    ):
+    b2.prefs.codegen.target = 'numpy'
+    b2.set_device('runtime')
+    # Reset scope
+    b2.start_scope()
+    # Build discrete current trace from spikes
+    iters = int(t_max / k_time)
+    k_steps = int(k_time / dt)
+    input_current = b2.TimedArray(np.zeros((k_steps, units)) * b2.nA, dt=dt)
+
+    # Neurons
+    eqs_in = """
+        dv/dt = (-(v-v_rest) +delta_T*exp((v-v_rheobase)/delta_T)+ R * input_current(t,i) - R * w)/(tau_m) : volt
+        dw/dt = (a*(v-v_rest)-w)/tau_w : amp
+    """
+    eqs = """
+        dv/dt = (-(v-v_rest) +delta_T*exp((v-v_rheobase)/delta_T) - R * w)/(tau_m) : volt
+        dw/dt = (a*(v-v_rest)-w)/tau_w : amp
+    """
+    n_A1 = b2.NeuronGroup(
+        units,
+        model=eqs_in, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_A1.v = v_rest
+    n_A2 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_A2.v = v_rest
+    n_B1 = b2.NeuronGroup(
+        units,
+        model=eqs_in, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_B1.v = v_rest
+    n_B2 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_B2.v = v_rest
+    n_C1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_C1.v = v_rest
+    n_C2 = b2.NeuronGroup(
+        units,
+        model=eqs_in, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_C2.v = v_rest
+    n_D1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_D1.v = v_rest
+
+    # Synapses
+    ker_A1_A2 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_A2 = b2.Synapses(n_A1, n_B2, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_A2_src, s_A1_A2_tgt = ker_A1_A2.nonzero()
+    s_A1_A2.connect(i=s_A1_A2_src, j=s_A1_A2_tgt)
+    s_A1_A2.w_syn = ker_A1_A2[s_A1_A2_src, s_A1_A2_tgt] * b2.mV
+
+    ker_B1_B2 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_B1_B2 = b2.Synapses(n_B1, n_B2, model='w_syn : volt', on_pre='v += w_syn')
+    s_B1_B2_src, s_B1_B2_tgt = ker_B1_B2.nonzero()
+    s_B1_B2.connect(i=s_B1_B2_src, j=s_B1_B2_tgt)
+    s_B1_B2.w_syn = ker_B1_B2[s_B1_B2_src, s_B1_B2_tgt] * b2.mV
+
+    ker_C1_C2 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_C1_C2 = b2.Synapses(n_C1, n_C2, model='w_syn : volt', on_pre='v += w_syn')
+    s_C1_C2_src, s_C1_C2_tgt = ker_C1_C2.nonzero()
+    s_C1_C2.connect(i=s_C1_C2_src, j=s_C1_C2_tgt)
+    s_C1_C2.w_syn = ker_C1_C2[s_C1_C2_src, s_C1_C2_tgt] * b2.mV
+
+    ker_A2_D1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A2_D1 = b2.Synapses(n_A2, n_D1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A2_D1_src, s_A2_D1_tgt = ker_A2_D1.nonzero()
+    s_A2_D1.connect(i=s_A2_D1_src, j=s_A2_D1_tgt)
+    s_A2_D1.w_syn = ker_A2_D1[s_A2_D1_src, s_A2_D1_tgt] * b2.mV
+
+    ker_B2_D1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_B2_D1 = b2.Synapses(n_B2, n_D1, model='w_syn : volt', on_pre='v += w_syn')
+    s_B2_D1_src, s_B2_D1_tgt = ker_B2_D1.nonzero()
+    s_B2_D1.connect(i=s_B2_D1_src, j=s_B2_D1_tgt)
+    s_B2_D1.w_syn = ker_B2_D1[s_B2_D1_src, s_B2_D1_tgt] * b2.mV
+
+    ker_C2_D1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_C2_D1 = b2.Synapses(n_C2, n_D1, model='w_syn : volt', on_pre='v += w_syn')
+    s_C2_D1_src, s_C2_D1_tgt = ker_C2_D1.nonzero()
+    s_C2_D1.connect(i=s_C2_D1_src, j=s_C2_D1_tgt)
+    s_C2_D1.w_syn = ker_C2_D1[s_C2_D1_src, s_C2_D1_tgt] * b2.mV
+
+
+    times = []
+    for _ in range(sim_repetitions):
+        start = time.time()
+        for _ in range(iters):
+            idx = np.random.rand(units) < 0.05
+            it_current = np.sum(np.random.rand(units,units)[:,idx], axis=1).reshape(1,-1)
+            input_current = b2.TimedArray(np.repeat(it_current, k_steps, axis=0) * b2.nA, dt=dt)
+            b2.run(k_time)
+        end = time.time()
+        times.append(end - start)
+
+    # Clear files
+    b2.device.delete(force=True)
+    b2.device.reinit()
+
+    return times
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+def brian_adex_performance_model_3_non_interactive(
+        sim_repetitions,
+        units,
+        ker_density,
+        synapse_strength,
+        t_max,
+        k_time,
+        dt,
+        tau_m,
+        R,
+        v_rest,
+        v_reset,
+        v_rheobase,
+        a,
+        b,
+        firing_threshold,
+        delta_T,
+        tau_w,
+    ):
+	# Build currents
+    currents = []
+    iters = int(t_max / k_time)
+    k_steps = int(k_time / dt)
+    for _ in range(iters):
+        idx = np.random.rand(units) < 0.05
+        it_current = np.sum(np.random.rand(units,units)[:,idx], axis=1)
+        for _ in range(k_steps):
+            currents.append(it_current)
+    currents = np.array(currents)
+
+    b2.set_device('cpp_standalone', build_on_run=False)
+    # Reset scope
+    b2.start_scope()
+    input_current = b2.TimedArray(currents * b2.nA, dt=dt)
+
+    # Neurons
+    eqs_in = """
+        dv/dt = (-(v-v_rest) +delta_T*exp((v-v_rheobase)/delta_T)+ R * input_current(t,i) - R * w)/(tau_m) : volt
+        dw/dt = (a*(v-v_rest)-w)/tau_w : amp
+    """
+    eqs = """
+        dv/dt = (-(v-v_rest) +delta_T*exp((v-v_rheobase)/delta_T) - R * w)/(tau_m) : volt
+        dw/dt = (a*(v-v_rest)-w)/tau_w : amp
+    """
+    n_A1 = b2.NeuronGroup(
+        units,
+        model=eqs_in, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_A1.v = v_rest
+    n_B1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_B1.v = v_rest
+    n_C1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_C1.v = v_rest
+    n_D1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_D1.v = v_rest
+    n_E1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_E1.v = v_rest
+    n_F1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_F1.v = v_rest
+    n_G1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_G1.v = v_rest
+
+    # Synapses
+    ker_A1_B1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_B1 = b2.Synapses(n_A1, n_B1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_B1_src, s_A1_B1_tgt = ker_A1_B1.nonzero()
+    s_A1_B1.connect(i=s_A1_B1_src, j=s_A1_B1_tgt)
+    s_A1_B1.w_syn = ker_A1_B1[s_A1_B1_src, s_A1_B1_tgt] * b2.mV
+
+    ker_A1_C1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_C1 = b2.Synapses(n_A1, n_C1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_C1_src, s_A1_C1_tgt = ker_A1_C1.nonzero()
+    s_A1_C1.connect(i=s_A1_C1_src, j=s_A1_C1_tgt)
+    s_A1_C1.w_syn = ker_A1_C1[s_A1_C1_src, s_A1_C1_tgt] * b2.mV
+
+    ker_A1_D1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_D1 = b2.Synapses(n_A1, n_D1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_D1_src, s_A1_D1_tgt = ker_A1_D1.nonzero()
+    s_A1_D1.connect(i=s_A1_D1_src, j=s_A1_D1_tgt)
+    s_A1_D1.w_syn = ker_A1_D1[s_A1_D1_src, s_A1_D1_tgt] * b2.mV
+
+    ker_A1_E1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_E1 = b2.Synapses(n_A1, n_E1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_E1_src, s_A1_E1_tgt = ker_A1_E1.nonzero()
+    s_A1_E1.connect(i=s_A1_E1_src, j=s_A1_E1_tgt)
+    s_A1_E1.w_syn = ker_A1_E1[s_A1_E1_src, s_A1_E1_tgt] * b2.mV
+
+    ker_A1_F1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_F1 = b2.Synapses(n_A1, n_F1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_F1_src, s_A1_F1_tgt = ker_A1_F1.nonzero()
+    s_A1_F1.connect(i=s_A1_F1_src, j=s_A1_F1_tgt)
+    s_A1_F1.w_syn = ker_A1_F1[s_A1_F1_src, s_A1_F1_tgt] * b2.mV
+
+    ker_B1_G1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_B1_G1 = b2.Synapses(n_B1, n_G1, model='w_syn : volt', on_pre='v += w_syn')
+    s_B1_G1_src, s_B1_G1_tgt = ker_B1_G1.nonzero()
+    s_B1_G1.connect(i=s_B1_G1_src, j=s_B1_G1_tgt)
+    s_B1_G1.w_syn = ker_B1_G1[s_B1_G1_src, s_B1_G1_tgt] * b2.mV
+
+    ker_C1_G1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_C1_G1 = b2.Synapses(n_C1, n_G1, model='w_syn : volt', on_pre='v += w_syn')
+    s_C1_G1_src, s_C1_G1_tgt = ker_C1_G1.nonzero()
+    s_C1_G1.connect(i=s_C1_G1_src, j=s_C1_G1_tgt)
+    s_C1_G1.w_syn = ker_C1_G1[s_C1_G1_src, s_C1_G1_tgt] * b2.mV
+
+    ker_D1_G1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_D1_G1 = b2.Synapses(n_D1, n_G1, model='w_syn : volt', on_pre='v += w_syn')
+    s_D1_G1_src, s_D1_G1_tgt = ker_D1_G1.nonzero()
+    s_D1_G1.connect(i=s_D1_G1_src, j=s_D1_G1_tgt)
+    s_D1_G1.w_syn = ker_D1_G1[s_D1_G1_src, s_D1_G1_tgt] * b2.mV
+
+    ker_E1_G1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_E1_G1 = b2.Synapses(n_E1, n_G1, model='w_syn : volt', on_pre='v += w_syn')
+    s_E1_G1_src, s_E1_G1_tgt = ker_E1_G1.nonzero()
+    s_E1_G1.connect(i=s_E1_G1_src, j=s_E1_G1_tgt)
+    s_E1_G1.w_syn = ker_E1_G1[s_E1_G1_src, s_E1_G1_tgt] * b2.mV
+
+    ker_F1_G1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_F1_G1 = b2.Synapses(n_F1, n_G1, model='w_syn : volt', on_pre='v += w_syn')
+    s_F1_G1_src, s_F1_G1_tgt = ker_F1_G1.nonzero()
+    s_F1_G1.connect(i=s_F1_G1_src, j=s_F1_G1_tgt)
+    s_F1_G1.w_syn = ker_F1_G1[s_F1_G1_src, s_F1_G1_tgt] * b2.mV
+
+    b2.run(t_max)
+    b2.device.build(directory='_adex_cpp', compile=True, run=False, debug=False)
+
+    times = []
+    for _ in range(sim_repetitions):
+        start = time.time()
+        b2.device.run()
+        end = time.time()
+        times.append(end - start)
+
+    # Clear files
+    b2.device.delete(force=True)
+    b2.device.reinit()
+
+    return times
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def brian_adex_performance_model_3_interactive_mock(
+        sim_repetitions,
+        units,
+        ker_density,
+        synapse_strength,
+        t_max,
+        k_time,
+        dt,
+        tau_m,
+        R,
+        v_rest,
+        v_reset,
+        v_rheobase,
+        a,
+        b,
+        firing_threshold,
+        delta_T,
+        tau_w,
+    ):
+    b2.set_device('cpp_standalone', build_on_run=False)
+    # Reset scope
+    b2.start_scope()
+    # Build discrete current trace from spikes
+    iters = int(t_max / k_time)
+    k_steps = int(k_time / dt)
+    input_current = b2.TimedArray(np.zeros((k_steps, units)) * b2.nA, dt=dt)
+
+    # Neurons
+    eqs_in = """
+        dv/dt = (-(v-v_rest) +delta_T*exp((v-v_rheobase)/delta_T)+ R * input_current(t,i) - R * w)/(tau_m) : volt
+        dw/dt = (a*(v-v_rest)-w)/tau_w : amp
+    """
+    eqs = """
+        dv/dt = (-(v-v_rest) +delta_T*exp((v-v_rheobase)/delta_T) - R * w)/(tau_m) : volt
+        dw/dt = (a*(v-v_rest)-w)/tau_w : amp
+    """
+    n_A1 = b2.NeuronGroup(
+        units,
+        model=eqs_in, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_A1.v = v_rest
+    n_B1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_B1.v = v_rest
+    n_C1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_C1.v = v_rest
+    n_D1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_D1.v = v_rest
+    n_E1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_E1.v = v_rest
+    n_F1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_F1.v = v_rest
+    n_G1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_G1.v = v_rest
+
+    # Synapses
+    ker_A1_B1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_B1 = b2.Synapses(n_A1, n_B1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_B1_src, s_A1_B1_tgt = ker_A1_B1.nonzero()
+    s_A1_B1.connect(i=s_A1_B1_src, j=s_A1_B1_tgt)
+    s_A1_B1.w_syn = ker_A1_B1[s_A1_B1_src, s_A1_B1_tgt] * b2.mV
+
+    ker_A1_C1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_C1 = b2.Synapses(n_A1, n_C1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_C1_src, s_A1_C1_tgt = ker_A1_C1.nonzero()
+    s_A1_C1.connect(i=s_A1_C1_src, j=s_A1_C1_tgt)
+    s_A1_C1.w_syn = ker_A1_C1[s_A1_C1_src, s_A1_C1_tgt] * b2.mV
+
+    ker_A1_D1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_D1 = b2.Synapses(n_A1, n_D1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_D1_src, s_A1_D1_tgt = ker_A1_D1.nonzero()
+    s_A1_D1.connect(i=s_A1_D1_src, j=s_A1_D1_tgt)
+    s_A1_D1.w_syn = ker_A1_D1[s_A1_D1_src, s_A1_D1_tgt] * b2.mV
+
+    ker_A1_E1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_E1 = b2.Synapses(n_A1, n_E1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_E1_src, s_A1_E1_tgt = ker_A1_E1.nonzero()
+    s_A1_E1.connect(i=s_A1_E1_src, j=s_A1_E1_tgt)
+    s_A1_E1.w_syn = ker_A1_E1[s_A1_E1_src, s_A1_E1_tgt] * b2.mV
+
+    ker_A1_F1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_F1 = b2.Synapses(n_A1, n_F1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_F1_src, s_A1_F1_tgt = ker_A1_F1.nonzero()
+    s_A1_F1.connect(i=s_A1_F1_src, j=s_A1_F1_tgt)
+    s_A1_F1.w_syn = ker_A1_F1[s_A1_F1_src, s_A1_F1_tgt] * b2.mV
+
+    ker_B1_G1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_B1_G1 = b2.Synapses(n_B1, n_G1, model='w_syn : volt', on_pre='v += w_syn')
+    s_B1_G1_src, s_B1_G1_tgt = ker_B1_G1.nonzero()
+    s_B1_G1.connect(i=s_B1_G1_src, j=s_B1_G1_tgt)
+    s_B1_G1.w_syn = ker_B1_G1[s_B1_G1_src, s_B1_G1_tgt] * b2.mV
+
+    ker_C1_G1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_C1_G1 = b2.Synapses(n_C1, n_G1, model='w_syn : volt', on_pre='v += w_syn')
+    s_C1_G1_src, s_C1_G1_tgt = ker_C1_G1.nonzero()
+    s_C1_G1.connect(i=s_C1_G1_src, j=s_C1_G1_tgt)
+    s_C1_G1.w_syn = ker_C1_G1[s_C1_G1_src, s_C1_G1_tgt] * b2.mV
+
+    ker_D1_G1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_D1_G1 = b2.Synapses(n_D1, n_G1, model='w_syn : volt', on_pre='v += w_syn')
+    s_D1_G1_src, s_D1_G1_tgt = ker_D1_G1.nonzero()
+    s_D1_G1.connect(i=s_D1_G1_src, j=s_D1_G1_tgt)
+    s_D1_G1.w_syn = ker_D1_G1[s_D1_G1_src, s_D1_G1_tgt] * b2.mV
+
+    ker_E1_G1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_E1_G1 = b2.Synapses(n_E1, n_G1, model='w_syn : volt', on_pre='v += w_syn')
+    s_E1_G1_src, s_E1_G1_tgt = ker_E1_G1.nonzero()
+    s_E1_G1.connect(i=s_E1_G1_src, j=s_E1_G1_tgt)
+    s_E1_G1.w_syn = ker_E1_G1[s_E1_G1_src, s_E1_G1_tgt] * b2.mV
+
+    ker_F1_G1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_F1_G1 = b2.Synapses(n_F1, n_G1, model='w_syn : volt', on_pre='v += w_syn')
+    s_F1_G1_src, s_F1_G1_tgt = ker_F1_G1.nonzero()
+    s_F1_G1.connect(i=s_F1_G1_src, j=s_F1_G1_tgt)
+    s_F1_G1.w_syn = ker_F1_G1[s_F1_G1_src, s_F1_G1_tgt] * b2.mV
+
+    for _ in range(iters):
+        idx = np.random.rand(units) < 0.05
+        it_current = np.sum(np.random.rand(units,units)[:,idx], axis=1).reshape(1,-1)
+        input_current = b2.TimedArray(np.repeat(it_current, k_steps, axis=0) * b2.nA, dt=dt)
+        b2.run(k_time)
+
+    b2.device.build(directory='_adex_cpp', compile=True, run=False, debug=False)
+
+    times = []
+    for _ in range(sim_repetitions):
+        start = time.time()
+        b2.device.run()
+        end = time.time()
+        times.append(end - start)
+
+    # Clear files
+    b2.device.delete(force=True)
+    b2.device.reinit()
+
+    return times
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def brian_adex_performance_model_3_interactive_numpy_mock(
+        sim_repetitions,
+        units,
+        ker_density,
+        synapse_strength,
+        t_max,
+        k_time,
+        dt,
+        tau_m,
+        R,
+        v_rest,
+        v_reset,
+        v_rheobase,
+        a,
+        b,
+        firing_threshold,
+        delta_T,
+        tau_w,
+    ):
+    b2.prefs.codegen.target = 'numpy'
+    b2.set_device('runtime')
+    # Reset scope
+    b2.start_scope()
+    # Build discrete current trace from spikes
+    iters = int(t_max / k_time)
+    k_steps = int(k_time / dt)
+    input_current = b2.TimedArray(np.zeros((k_steps, units)) * b2.nA, dt=dt)
+
+    # Neurons
+    eqs_in = """
+        dv/dt = (-(v-v_rest) +delta_T*exp((v-v_rheobase)/delta_T)+ R * input_current(t,i) - R * w)/(tau_m) : volt
+        dw/dt = (a*(v-v_rest)-w)/tau_w : amp
+    """
+    eqs = """
+        dv/dt = (-(v-v_rest) +delta_T*exp((v-v_rheobase)/delta_T) - R * w)/(tau_m) : volt
+        dw/dt = (a*(v-v_rest)-w)/tau_w : amp
+    """
+    n_A1 = b2.NeuronGroup(
+        units,
+        model=eqs_in, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_A1.v = v_rest
+    n_B1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_B1.v = v_rest
+    n_C1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_C1.v = v_rest
+    n_D1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_D1.v = v_rest
+    n_E1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_E1.v = v_rest
+    n_F1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_F1.v = v_rest
+    n_G1 = b2.NeuronGroup(
+        units,
+        model=eqs, 
+        reset='v=v_reset;w+=b', 
+        threshold='v>firing_threshold',
+        method='euler'
+    )
+    n_G1.v = v_rest
+
+    # Synapses
+    ker_A1_B1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_B1 = b2.Synapses(n_A1, n_B1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_B1_src, s_A1_B1_tgt = ker_A1_B1.nonzero()
+    s_A1_B1.connect(i=s_A1_B1_src, j=s_A1_B1_tgt)
+    s_A1_B1.w_syn = ker_A1_B1[s_A1_B1_src, s_A1_B1_tgt] * b2.mV
+
+    ker_A1_C1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_C1 = b2.Synapses(n_A1, n_C1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_C1_src, s_A1_C1_tgt = ker_A1_C1.nonzero()
+    s_A1_C1.connect(i=s_A1_C1_src, j=s_A1_C1_tgt)
+    s_A1_C1.w_syn = ker_A1_C1[s_A1_C1_src, s_A1_C1_tgt] * b2.mV
+
+    ker_A1_D1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_D1 = b2.Synapses(n_A1, n_D1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_D1_src, s_A1_D1_tgt = ker_A1_D1.nonzero()
+    s_A1_D1.connect(i=s_A1_D1_src, j=s_A1_D1_tgt)
+    s_A1_D1.w_syn = ker_A1_D1[s_A1_D1_src, s_A1_D1_tgt] * b2.mV
+
+    ker_A1_E1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_E1 = b2.Synapses(n_A1, n_E1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_E1_src, s_A1_E1_tgt = ker_A1_E1.nonzero()
+    s_A1_E1.connect(i=s_A1_E1_src, j=s_A1_E1_tgt)
+    s_A1_E1.w_syn = ker_A1_E1[s_A1_E1_src, s_A1_E1_tgt] * b2.mV
+
+    ker_A1_F1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_A1_F1 = b2.Synapses(n_A1, n_F1, model='w_syn : volt', on_pre='v += w_syn')
+    s_A1_F1_src, s_A1_F1_tgt = ker_A1_F1.nonzero()
+    s_A1_F1.connect(i=s_A1_F1_src, j=s_A1_F1_tgt)
+    s_A1_F1.w_syn = ker_A1_F1[s_A1_F1_src, s_A1_F1_tgt] * b2.mV
+
+    ker_B1_G1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_B1_G1 = b2.Synapses(n_B1, n_G1, model='w_syn : volt', on_pre='v += w_syn')
+    s_B1_G1_src, s_B1_G1_tgt = ker_B1_G1.nonzero()
+    s_B1_G1.connect(i=s_B1_G1_src, j=s_B1_G1_tgt)
+    s_B1_G1.w_syn = ker_B1_G1[s_B1_G1_src, s_B1_G1_tgt] * b2.mV
+
+    ker_C1_G1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_C1_G1 = b2.Synapses(n_C1, n_G1, model='w_syn : volt', on_pre='v += w_syn')
+    s_C1_G1_src, s_C1_G1_tgt = ker_C1_G1.nonzero()
+    s_C1_G1.connect(i=s_C1_G1_src, j=s_C1_G1_tgt)
+    s_C1_G1.w_syn = ker_C1_G1[s_C1_G1_src, s_C1_G1_tgt] * b2.mV
+
+    ker_D1_G1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_D1_G1 = b2.Synapses(n_D1, n_G1, model='w_syn : volt', on_pre='v += w_syn')
+    s_D1_G1_src, s_D1_G1_tgt = ker_D1_G1.nonzero()
+    s_D1_G1.connect(i=s_D1_G1_src, j=s_D1_G1_tgt)
+    s_D1_G1.w_syn = ker_D1_G1[s_D1_G1_src, s_D1_G1_tgt] * b2.mV
+
+    ker_E1_G1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_E1_G1 = b2.Synapses(n_E1, n_G1, model='w_syn : volt', on_pre='v += w_syn')
+    s_E1_G1_src, s_E1_G1_tgt = ker_E1_G1.nonzero()
+    s_E1_G1.connect(i=s_E1_G1_src, j=s_E1_G1_tgt)
+    s_E1_G1.w_syn = ker_E1_G1[s_E1_G1_src, s_E1_G1_tgt] * b2.mV
+
+    ker_F1_G1 = (synapse_strength * np.random.rand(units, units)) * (np.random.rand(units, units) < ker_density)
+    s_F1_G1 = b2.Synapses(n_F1, n_G1, model='w_syn : volt', on_pre='v += w_syn')
+    s_F1_G1_src, s_F1_G1_tgt = ker_F1_G1.nonzero()
+    s_F1_G1.connect(i=s_F1_G1_src, j=s_F1_G1_tgt)
+    s_F1_G1.w_syn = ker_F1_G1[s_F1_G1_src, s_F1_G1_tgt] * b2.mV
+
+    times = []
+    for _ in range(sim_repetitions):
         start = time.time()
         for _ in range(iters):
             idx = np.random.rand(units) < 0.05
