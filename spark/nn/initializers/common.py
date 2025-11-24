@@ -4,19 +4,14 @@
 
 from __future__ import annotations
 
-import abc
 import jax
 import jax.numpy as jnp 
 import dataclasses as dc
 import typing as tp
 import spark.core.utils as utils
-from jax._src import dtypes
-from jax.typing import DTypeLike, ArrayLike
 from spark.core.registry import register_initializer, register_config
-from spark.core.config_validation import TypeValidator, ZeroOneValidator, PositiveValidator
+from spark.core.config_validation import TypeValidator, ZeroOneValidator
 from spark.nn.initializers.base import Initializer, InitializerConfig
-
-T = tp.TypeVar('T', bound=ArrayLike)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -41,11 +36,11 @@ class ConstantInitializer(Initializer):
 
         Input:
             key: jax.Array, key for the random generator (jax.random.key).
-            shape: tuple[int],shaoe fir the output array.
+            shape: tuple[int, ...],shaoe fir the output array.
     """
     config: ConstantInitializerConfig
 
-    def __call__(self, key: jax.Array, shape: tuple[int]) -> jax.Array:
+    def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
         array: jax.Array = self.config.scale * jnp.ones(shape, dtype=self.config.dtype)
         return array.astype(self.config.dtype)
 
@@ -72,11 +67,11 @@ class UniformInitializer(Initializer):
 
         Input:
             key: jax.Array, key for the random generator (jax.random.key).
-            shape: tuple[int],shaoe fir the output array.
+            shape: tuple[int, ...],shaoe fir the output array.
     """
     config: UniformInitializerConfig
 
-    def __call__(self, key: jax.Array, shape: tuple[int]) -> jax.Array:
+    def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
         array = self.config.scale * jax.random.uniform(key, shape)
         array = jnp.clip(array, min=self.config.min_value, max=self.config.max_value)
         return array.astype(self.config.dtype)
@@ -117,11 +112,11 @@ class SparseUniformInitializer(UniformInitializer):
 
         Input:
             key: jax.Array, key for the random generator (jax.random.key).
-            shape: tuple[int],shaoe fir the output array.
+            shape: tuple[int, ...],shaoe fir the output array.
     """
     config: SparseUniformInitializerConfig
 
-    def __call__(self, key: jax.Array, shape: tuple[int]) -> jax.Array:
+    def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
         key1, key2 = jax.random.split(key, 2)
         # Get uniform array
         array = super().__call__(key1, shape)
@@ -139,7 +134,7 @@ class NormalizedSparseUniformInitializerConfig(SparseUniformInitializerConfig):
     """
     __class_ref__: str = 'NormalizedSparseUniformInitializer'
 
-    norm_axes: tuple[int] | None = dc.field(
+    norm_axes: tuple[int, ...] | None = dc.field(
         default = (0,), 
         metadata = {
             'validators': [
@@ -171,18 +166,18 @@ class NormalizedSparseUniformInitializer(SparseUniformInitializer):
             min_value: numeric, minimum value for the output array (default = None).
             max_value: numeric, maximum value for the output array (default = None).
             density: float, expected ratio of non-zero entries (default = 0.2).
-            norm_axes: tuple[int], axes used for normalization (default = (0,)): 
+            norm_axes: tuple[int, ...], axes used for normalization (default = (0,)): 
 
         Input:
             key: jax.Array, key for the random generator (jax.random.key).
-            shape: tuple[int], shape for the output array.
+            shape: tuple[int, ...], shape for the output array.
 
         Output:
             jax.Array[dtype]
     """
     config: NormalizedSparseUniformInitializerConfig
 
-    def __call__(self, key: jax.Array, shape: tuple[int]) -> jax.Array:
+    def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
         # Get sparse array
         array = super().__call__(key, shape)
         # Normalize

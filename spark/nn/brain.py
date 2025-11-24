@@ -454,7 +454,7 @@ class Brain(SparkModule, metaclass=BrainMeta):
 
 
 
-	def __call__(self, **inputs: SparkPayload) -> tuple[SparkPayload]:
+	def __call__(self, **inputs: SparkPayload) -> dict[str, SparkPayload]:
 		"""
 			Update brain's states.
 		"""

@@ -10,17 +10,15 @@ import inspect
 import typing as tp
 import abc
 import dataclasses as dc
-from jax.typing import DTypeLike, ArrayLike
+from jax.typing import DTypeLike
 from spark.core.config import BaseSparkConfig
 from spark.core.config_validation import TypeValidator
-
-T = tp.TypeVar('T', bound=ArrayLike)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class InitializerConfig(BaseSparkConfig):
+class InitializerConfig(BaseSparkConfig, abc.ABC):
     """
         Base initializers configuration class.
     """
@@ -36,21 +34,16 @@ class InitializerConfig(BaseSparkConfig):
                 jnp.uint8,
                 jnp.uint16,
                 jnp.uint32,
-                #jnp.uint64,
                 jnp.int8,
                 jnp.int16,
                 jnp.int32,
-                #jnp.int64,
                 jnp.float16,
                 jnp.float32,
-                #jnp.float64,
-                #jnp.complex64,
-                #jnp.complex128,
             ],
             'description': 'Final dtype for the output jax.Array.',
         }
     )
-    scale: T = dc.field(
+    scale: int | float = dc.field(
         default = 1, 
         metadata = {
             'validators': [
@@ -58,7 +51,7 @@ class InitializerConfig(BaseSparkConfig):
             'description': 'Scale factor for the jax.Array.',
         }
     )
-    min_value: T | None = dc.field(
+    min_value: int | float | None = dc.field(
         default = None, 
         metadata = {
             'validators': [
@@ -66,7 +59,7 @@ class InitializerConfig(BaseSparkConfig):
             'description': 'Min value for the jax.Array. Note that some initializers implement this as a clipping value.',
         }
     )
-    max_value: T | None = dc.field(
+    max_value: int | float | None = dc.field(
         default = None, 
         metadata = {
             'validators': [
@@ -109,8 +102,16 @@ class Initializer(abc.ABC):
             self.config = copy.deepcopy(config)
             self.config.merge(partial=kwargs)
 
+    @classmethod 
+    def get_config_spec(cls) -> type[BaseSparkConfig]:
+        """
+            Returns the default configuration class associated with this module.
+        """
+        type_hints = tp.get_type_hints(cls)
+        return type_hints['config']
+
     @abc.abstractmethod
-    def __call__(self, key: jax.Array, shape: tuple[int]) -> jax.Array:
+    def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
         raise NotImplementedError
 
 #################################################################################################################################################

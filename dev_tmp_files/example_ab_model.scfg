@@ -176,7 +176,7 @@
                             "__type__": "dtype",
                             "name": "float16"
                         },
-                        "dt": 1.0,
+                        "dt": 0.1,
                         "tau": 30.0,
                         "cd": 2.0,
                         "max_freq": 200.0,
@@ -703,7 +703,7 @@
                             "__type__": "dtype",
                             "name": "float16"
                         },
-                        "dt": 1.0,
+                        "dt": 0.1,
                         "units": [
                             256
                         ],
@@ -719,7 +719,7 @@
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 1.0,
+                            "dt": 0.1,
                             "potential_rest": -60.0,
                             "potential_reset": -50.0,
                             "potential_tau": 20.0,
@@ -738,7 +738,7 @@
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 1.0,
+                            "dt": 0.1,
                             "units": [
                                 256
                             ],
@@ -770,7 +770,7 @@
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 1.0,
+                            "dt": 0.1,
                             "max_delay": 8.0,
                             "delay_initializer": {
                                 "__config_delimiter__": "__",
@@ -798,7 +798,7 @@
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 1.0,
+                            "dt": 0.1,
                             "async_spikes": true,
                             "pre_tau": 20.0,
                             "post_tau": 20.0,
@@ -1300,7 +1300,7 @@
                             "__type__": "dtype",
                             "name": "float16"
                         },
-                        "dt": 1.0,
+                        "dt": 0.1,
                         "units": [
                             64
                         ],
@@ -1316,7 +1316,7 @@
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 1.0,
+                            "dt": 0.1,
                             "potential_rest": -60.0,
                             "potential_reset": -50.0,
                             "potential_tau": 20.0,
@@ -1335,7 +1335,7 @@
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 1.0,
+                            "dt": 0.1,
                             "units": [
                                 64
                             ],
@@ -1367,7 +1367,7 @@
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 1.0,
+                            "dt": 0.1,
                             "max_delay": 8.0,
                             "delay_initializer": {
                                 "__config_delimiter__": "__",
@@ -1395,7 +1395,7 @@
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 1.0,
+                            "dt": 0.1,
                             "async_spikes": true,
                             "pre_tau": 20.0,
                             "post_tau": 20.0,
@@ -1911,7 +1911,7 @@
                             "__type__": "dtype",
                             "name": "float16"
                         },
-                        "dt": 1.0,
+                        "dt": 0.1,
                         "units": [
                             256
                         ],
@@ -1927,7 +1927,7 @@
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 1.0,
+                            "dt": 0.1,
                             "potential_rest": -60.0,
                             "potential_reset": -50.0,
                             "potential_tau": 20.0,
@@ -1946,7 +1946,7 @@
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 1.0,
+                            "dt": 0.1,
                             "units": [
                                 256
                             ],
@@ -1978,7 +1978,7 @@
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 1.0,
+                            "dt": 0.1,
                             "max_delay": 8.0,
                             "delay_initializer": {
                                 "__config_delimiter__": "__",
@@ -2006,7 +2006,7 @@
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 1.0,
+                            "dt": 0.1,
                             "async_spikes": true,
                             "pre_tau": 20.0,
                             "post_tau": 20.0,
@@ -2508,7 +2508,7 @@
                             "__type__": "dtype",
                             "name": "float16"
                         },
-                        "dt": 1.0,
+                        "dt": 0.1,
                         "units": [
                             64
                         ],
@@ -2524,7 +2524,7 @@
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 1.0,
+                            "dt": 0.1,
                             "potential_rest": -60.0,
                             "potential_reset": -50.0,
                             "potential_tau": 20.0,
@@ -2543,7 +2543,7 @@
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 1.0,
+                            "dt": 0.1,
                             "units": [
                                 64
                             ],
@@ -2575,7 +2575,7 @@
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 1.0,
+                            "dt": 0.1,
                             "max_delay": 8.0,
                             "delay_initializer": {
                                 "__config_delimiter__": "__",
@@ -2603,7 +2603,7 @@
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 1.0,
+                            "dt": 0.1,
                             "async_spikes": true,
                             "pre_tau": 20.0,
                             "post_tau": 20.0,
@@ -2718,7 +2718,7 @@
                             "__type__": "dtype",
                             "name": "float16"
                         },
-                        "dt": 1.0,
+                        "dt": 0.1,
                         "num_outputs": 2,
                         "saturation_freq": 50.0,
                         "tau": 20.0,

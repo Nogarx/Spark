@@ -70,17 +70,17 @@ def test_brain_config() -> spark.nn.BrainConfig:
         )
     }
     output_map = {
-    'action': {
-        'input': spark.PortMap(
-            origin='integrator',
-            port='signal'
-		),
-        'spec': spark.OutputSpec(
-            payload_type=spark.FloatArray,
-            shape=(2,),
-            dtype=jnp.float16
-		)
-	}
+        'action': {
+            'input': spark.PortMap(
+                origin='integrator',
+                port='signal'
+            ),
+            'spec': spark.OutputSpec(
+                payload_type=spark.FloatArray,
+                shape=(2,),
+                dtype=jnp.float16
+            )
+        }
     }
     modules_map = {
         'spiker': spiker_specs,
@@ -95,7 +95,7 @@ def test_brain_config() -> spark.nn.BrainConfig:
 def run_module_simplified(
         module: spark.nn.Brain, 
         module_inputs: dict
-    ) -> tuple[tp.Any, spark.nn.Module]:
+    ) -> tuple[dict[str, spark.SparkPayload], spark.nn.Module]:
     s = module(**module_inputs)
     return s, module
 
@@ -114,6 +114,8 @@ def test_jax_jit_split(
     spikes, brain_model = run_module_simplified(brain_model, brain_inputs)
     assert isinstance(spikes['action'], spark.FloatArray)
     assert spikes['action'].value.shape == (2,)
+    assert jnp.sum(jnp.isnan(spikes['action'].value)) == 0
+    assert jnp.sum(jnp.isinf(spikes['action'].value)) == 0
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -122,7 +124,7 @@ def run_module_split(
         graph: nnx.GraphDef, 
         state: nnx.GraphState | nnx.VariableState, 
         module_inputs: dict
-    ) -> tuple[tp.Any, nnx.GraphState | nnx.VariableState]:
+    ) -> tuple[dict[str, spark.SparkPayload], nnx.GraphState | nnx.VariableState]:
     module = spark.merge(graph, state)
     s = module(**module_inputs)
     _, state = spark.split((module))
@@ -145,6 +147,8 @@ def test_jax_jit_split(
     spikes, state = run_module_split(graph, state, brain_inputs)
     assert isinstance(spikes['action'], spark.FloatArray)
     assert spikes['action'].value.shape == (2,)
+    assert jnp.sum(jnp.isnan(spikes['action'].value)) == 0
+    assert jnp.sum(jnp.isinf(spikes['action'].value)) == 0
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

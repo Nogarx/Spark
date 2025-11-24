@@ -16,10 +16,14 @@ import json
 import pathlib as pl
 import spark.core.utils as utils
 from jax.typing import DTypeLike
-from spark.core.validation import _is_config_instance, _is_initializer_type, _is_initializer_config_type
+from spark.core.validation import(
+    _is_config_instance, _is_config_type,
+    _is_initializer_config_type, _is_initializer_type, _is_initializer_instance
+)
 from spark.core.registry import REGISTRY, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from functools import partial 
+from spark.core.signature_parser import normalize_typehint, is_instance
+from functools import partial, wraps
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -28,21 +32,65 @@ from functools import partial
 METADATA_TEMPLATE = {
     'units': None, 
     'valid_types': tp.Any, 
-    'validators': [], 
+    'validators': [
+        TypeValidator,
+    ], 
     'description': '',
     'allows_init': False,
 }
-IMMUTABLE_TYPES = (str, int, bool, float, tuple)
+IMMUTABLE_TYPES = (str, int, bool, float, tuple, type(None))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class EntryDescriptor:
-    
-    def __init__(self, obj):
-        if isinstance(obj, EntryDescriptor):
-            #raise TypeError("HIHO")
-            obj = obj.__obj__
+class InitializableFieldMetaclass(type):
+    """
+        Metaclass that automatically injects common methods into the class.
+    """
 
+    def __new__(mcs, name, bases, attrs) -> tp.Self:
+
+        DELEGATED_METHODS = [
+            # Container Methods
+            '__len__', '__getitem__', '__setitem__', '__delitem__', '__contains__',
+            '__iter__', '__reversed__',
+            # Arithmetic/Comparison
+            '__add__', '__radd__', '__sub__', '__rsub__', '__mul__', '__rmul__', 
+            '__truediv__', '__rtruediv__', '__floordiv__', '__rfloordiv__', '__mod__', 
+            '__rmod__', '__pow__', '__rpow__',
+            '__lt__', '__le__', '__eq__', '__ne__', '__gt__', '__ge__',
+            # Unary operators
+            '__neg__', '__pos__', '__abs__',
+            # Callable and Context Manager
+            '__call__', '__enter__', '__exit__',
+        ]
+
+        def _delegate_method_factory(method_name):
+            """Creates a function that delegates a dunder method call to the wrapped object."""
+            def delegator(self, *args, **kwargs):
+                # Forward method to __obj__.
+                return getattr(self.__obj__, method_name)(*args, **kwargs)
+            # Forward metadata from a potential base method.
+            return wraps(getattr(object, method_name, lambda *a, **k: None))(delegator)
+
+        # Inject methods into the class dictionary
+        for method_name in DELEGATED_METHODS:
+            if method_name not in attrs:
+                attrs[method_name] = _delegate_method_factory(method_name)
+        return super().__new__(mcs, name, bases, attrs)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class InitializableField(metaclass=InitializableFieldMetaclass):
+    """
+        Wrapper for fields that allow for Initializers | InitializersConfig to define the init() method.
+        The method init() is extensively used through Spark modules to initialize variables either from default
+        values or from full fledge initializers.
+    """
+
+    def __init__(self, obj) -> None:
+        # Avoid wrapping an already wrapped object.
+        if isinstance(obj, InitializableField):
+            obj = obj.__obj__
         super().__setattr__('__obj__', obj)
 
     def __getattr__(self, name) -> tp.Any:
@@ -67,7 +115,7 @@ class EntryDescriptor:
             shape: tuple | None = None, 
             dtype: np.dtype | None = None,
             **kwargs
-        ):
+        ) -> jax.Array | int | float | complex | bool:
         from spark.nn.initializers import Initializer, InitializerConfig
         if isinstance(self.__obj__, Initializer):
             return self.__obj__(key=key, shape=shape, **kwargs)
@@ -126,17 +174,16 @@ class SparkMetaConfig(abc.ABCMeta):
                     if 'validators' in attr_value.metadata 
                     else METADATA_TEMPLATE['validators']
                 }
+                # Save as much as we can of the intention of default_factory
+                factory = attr_value.default_factory
+                if factory != dc.MISSING and (_is_config_instance(factory) or _is_initializer_instance(factory) or not callable(factory)):
+                    raise TypeError(
+                        f'Expected \"{name}.{attr_name}.default_factory\" to be an instance of a function ' \
+                        f'or a subclass of SparkConfig | Initializer but got type {type(factory)}.' \
+                        f'If you intended to use an instance of a SparkConfig or an initializer use \"default\" instead'
+                    )
 
-                # Promote default mutable types to factories, default takes precedence over factories.
-                # Note that default and default_factory are mutually exclusive
-                from functools import partial
-                if attr_value.default != dc.MISSING and not isinstance(attr_value.default, IMMUTABLE_TYPES):
-                    factory = partial(lambda value, **_: value, attr_value.default)
-                    default = dc.MISSING
-                else:
-                    default = attr_value.default
-                    factory = attr_value.default_factory
-
+                default, factory = cls.map_common_init_patterns(attr_value.default, attr_value.default_factory)
                 field = dc.field(
                     default=default,
                     default_factory=factory,
@@ -155,15 +202,7 @@ class SparkMetaConfig(abc.ABCMeta):
 
             # If is not field, promote to field
             else:
-
-                # Promote mutable types to factories, default takes precedence over factories.
-                if not callable(attr_value) and not isinstance(attr_value, IMMUTABLE_TYPES):
-                    factory = partial(lambda value, **_: value, attr_value)
-                    default = dc.MISSING
-                else:
-                    default = attr_value
-                    factory = dc.MISSING
-
+                default, factory = cls.map_common_init_patterns(attr_value)
                 # Create a new Field object.
                 field = dc.field(
                     default=default,
@@ -182,6 +221,34 @@ class SparkMetaConfig(abc.ABCMeta):
         new_class = super().__new__(cls, name, bases, dct)
 
         return new_class
+
+    def map_common_init_patterns(default: tp.Any, factory: tp.Callable = dc.MISSING) -> tuple[tp.Any, tp.Any]:
+        if default != dc.MISSING and isinstance(default, (list, dict, set, np.ndarray, jax.Array)):
+            # Map list, arrays, dicts and sets to lambdas in order to be able to use them directly as defaults.
+            return dc.MISSING, lambda value=default : value
+        elif default != dc.MISSING and _is_config_instance(default):
+            # Map already initialized configs to lambdas 
+            return dc.MISSING, lambda value=default : value
+        elif default != dc.MISSING and _is_config_type(default):
+            # Map configs types to lambdas 
+            return dc.MISSING, lambda value=default : value()
+        elif default != dc.MISSING and _is_initializer_instance(default):
+            # Map already initialized initializers to lambdas of its configs
+            return dc.MISSING, lambda value=default.config : value
+        elif default != dc.MISSING and _is_initializer_type(default):
+            # Get config from initializer and map it to lambda of its config
+            return dc.MISSING, lambda value=default.get_config_spec() : value()
+        elif default != dc.MISSING and callable(default) and not utils.is_dtype(default):
+            # Default is a function
+            return dc.MISSING, default
+        elif factory != dc.MISSING and _is_config_type(factory):
+            # Map configs types to lambdas 
+            return dc.MISSING, lambda value=factory : value()
+        elif factory != dc.MISSING and _is_initializer_type(factory):
+            # Get config from initializer and map it to lambda of its config
+            return dc.MISSING, lambda value=factory.get_config_spec() : value()
+        else:
+            return default, factory
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -216,7 +283,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         # Wrap attributes that admit initializers
         for field in dc.fields(self):
             if field.metadata['allows_init']:
-                setattr(self, field.name, EntryDescriptor(getattr(self, field.name)))
+                setattr(self, field.name, InitializableField(getattr(self, field.name)))
 
     @classmethod
     def _create_partial(cls, **kwargs) -> tp.Self:
@@ -234,7 +301,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         # Wrap attributes that admit initializers
         for field in dc.fields(instance):
             if field.metadata['allows_init']:
-                setattr(instance, field.name, EntryDescriptor(getattr(instance, field.name)))
+                setattr(instance, field.name, InitializableField(getattr(instance, field.name)))
         return instance
 
 
@@ -253,7 +320,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         # Wrap attributes that admit initializers
         for field in dc.fields(self):
             if field.metadata['allows_init']:
-                setattr(self, field.name, EntryDescriptor(getattr(self, field.name)))
+                setattr(self, field.name, InitializableField(getattr(self, field.name)))
 
 
 
@@ -297,6 +364,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         return fold_partial, shared_partial
 
 
+
     # TODO: We need to validate that whenever we set a config class it is a valid subclass for the field
     def _set_partial_attributes(
             self, 
@@ -309,16 +377,8 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         """
         # Get type hints
         from spark.nn.initializers.base import Initializer, InitializerConfig
-        raw_type_hints = tp.get_type_hints(self.__class__)
-        type_hints, optional_attrs = {}, {}
-        for key in raw_type_hints.keys():
-            if tp.get_origin(raw_type_hints[key]): 
-                hints = list(tp.get_args(raw_type_hints[key]))
-                type_hints[key] = tuple([h for h in hints if h is not type(None)])
-                optional_attrs[key] = len(tuple([h for h in hints if h is type(None)])) > 0
-            else:
-                type_hints[key] = tuple([raw_type_hints[key]])
-                optional_attrs[key] = False
+        type_hints = {k: normalize_typehint(v) for k,v in tp.get_type_hints(self.__class__).items()}
+        optional_attrs = {k: type(None) in v for k,v in type_hints.items()}
 
         for k in type_hints.keys():
             if Initializer in type_hints[k] and not InitializerConfig in type_hints[k]:
@@ -330,17 +390,23 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         prefixed_shared_partial = {f'{self.__shared_config_delimiter__}{k}':v for k,v in shared_partial.items()}
         for field in dc.fields(self.__class__):
 
+            # Skip metadata fields
+            if field.name in ['__config_delimiter__', '__shared_config_delimiter__', '__class_ref__', '__graph_editor_metadata__']:
+                continue
+            
             # Parse field name, remove __shared_config_delimiter__ if present
             if self.__shared_config_delimiter__ == field.name[:len(self.__shared_config_delimiter__)]:
                 field_name = field.name[len(self.__shared_config_delimiter__):]
             else:
                 field_name = field.name
 
-            # Check if attribute is optional and the user manually set it to None. 
+            # Check if attribute is optional and the user manually set it to None. Kwargs have priority over defaults.
             if optional_attrs[field_name] and (
-                    (field_name in kwargs_fold.keys() and isinstance(kwargs_fold[field_name], type(None)))
-                    or (isinstance(field.default, type(None)))):
+                (field_name in kwargs_fold.keys() and isinstance(kwargs_fold[field_name], type(None))) or
+                (not field_name in kwargs_fold.keys() and getattr(self, field_name, None) == None and isinstance(field.default, type(None)))
+                ):
                 # Unfortunately, the user is correct in this one, set the parameter to None and move on.
+                field.default_factory = dc.MISSING
                 field.default = None
                 setattr(self, field_name, None)
                 continue
@@ -348,39 +414,50 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             # Current field relevant values
             field_type = type_hints[field_name]
             field_value = getattr(self, field_name, None)
+
             # Unpack.
             # TODO: Packing and unpacking looks dirty, maybe there is a workaround?
-            if isinstance(field.default, EntryDescriptor):
+            if isinstance(field.default, InitializableField):
                 field.default = field.default.__obj__
-            if isinstance(field.default_factory, EntryDescriptor):
+            if isinstance(field.default_factory, InitializableField):
                 field.default_factory = field.default_factory.__obj__
-            if isinstance(field_value, EntryDescriptor):
+            if isinstance(field_value, InitializableField):
                 field_value = field_value.__obj__
 
-            # Non-config initializers case
+            # Fields of type Initializer are appended the class InitializerConfig.
+            # We need to resolve simple fields and kwargs before the Config case 
             if any([isinstance(t, type) and issubclass(t, Initializer) for t in field_type]):
-                # Check that user did not set a config-based initializer
-                if not any([
-                    isinstance(field.default, BaseSparkConfig),
-                    isinstance(field.default, type) and issubclass(field.default, BaseSparkConfig),
-                    isinstance(field.default_factory, BaseSparkConfig),
-                    isinstance(field.default_factory, type) and issubclass(field.default_factory, BaseSparkConfig),
-                ]):
-                    # TODO: Maybe promote initializers to configs?
-                    if isinstance(field.default_factory, Initializer):
-                        # Instantiated initializers cannot be modified
-                        setattr(self, field_name, field.default_factory)
-                    elif isinstance(field.default_factory, type) and issubclass(field.default_factory, Initializer):
-                        # Instantiate the initializers with config params
-                        setattr(self, field_name, field.default_factory(**{**prefixed_shared_partial, **subconfig}))
-                    elif isinstance(field_value, type(None)) and field.default_factory is not dc.MISSING:
-                        # Fallback to default factory.
-                        setattr(self, field_name, field.default_factory())
-                    elif isinstance(field_value, type(None)) and field.default is not dc.MISSING:
-                        # Fallback to default.
-                        setattr(self, field_name, field.default)
-                        # Initializer is using a default path
-                    continue
+
+                if field_name in kwargs_fold:
+                    if isinstance(kwargs_fold[field_name], Initializer):
+                        # Extract config and let it reach the next section
+                        kwargs_fold[field_name] = kwargs_fold[field_name].config
+                    elif isinstance(kwargs_fold[field_name], InitializerConfig):
+                        # Let it reach the next section
+                        pass
+                    elif not isinstance(kwargs_fold[field_name], dict):
+                        # NOTE: dict means that want to initialize a config.
+                        # Use kwargs attribute to set field
+                        self._validate_and_set(field_name, kwargs_fold[field_name], field_type)
+                        continue
+                elif not isinstance(field_value, type(None)):
+                    if isinstance(field_value, Initializer):
+                        # Extract config and let it reach the next section
+                        field_value = field_value.config
+                    elif isinstance(field_value, InitializerConfig):
+                        # Let it reach the next section
+                        pass
+                    else:
+                        # Use field_value attribute to set field
+                        self._validate_and_set(field_name, field_value, field_type)
+                        continue
+                else:
+                    if len(field_type) > 2 and field.default == dc.MISSING and field.default_factory == dc.MISSING and field_value == None:
+                        raise ValueError(
+                            f'Field \"{self.__class__.__name__}.{field_name}\" does not define a default value and multiple types are ' \
+                            f'provided, automatic resolution is not possible for fields with the type Initializer | InitializerConfig ' \
+                            f'when multiple types are provided. Please define a default value for this field.'
+                        )
 
             # Nested Config case
             if any([isinstance(t, type) and issubclass(t, BaseSparkConfig) for t in field_type]):
@@ -391,18 +468,29 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     field_config = copy.deepcopy(subconfig)
                     field_config.merge(partial={**prefixed_shared_partial}, __skip_validation__=__skip_validation__)
                     setattr(self, field_name, field_config)
+                elif isinstance(subconfig, type) and issubclass(subconfig, BaseSparkConfig):
+                    # Use current config 
+                    field_value = subconfig(**{**subconfig, **prefixed_shared_partial}, __skip_validation__=__skip_validation__)
+                    setattr(self, field_name, field_value)
                 # Check if parent config set this attribute and is a SparkConfig
                 elif isinstance(field_value, BaseSparkConfig):
                     # Use current config 
                     field_value.merge(partial={**subconfig, **prefixed_shared_partial}, __skip_validation__=__skip_validation__)
                     setattr(self, field_name, field_value)
+                elif isinstance(field_value, type) and issubclass(field_value, BaseSparkConfig):
+                    # Use current config 
+                    field_value = field_value(**{**subconfig, **prefixed_shared_partial}, __skip_validation__=__skip_validation__)
+                    setattr(self, field_name, field_value)
                 # Use default factory if provided
                 elif field.default_factory is not dc.MISSING:
-                    setattr(self, field_name, field.default_factory(**{
-                        **subconfig, 
-                        **prefixed_shared_partial, 
-                        **{'__skip_validation__': __skip_validation__}
-                    }))
+                    # NOTE: This case is not only covering generic factories, but also the case when a SparkConfig() 
+                    # is used as a default value. The simple solution is call the factory, then merge with default parameters.
+                    field_value = field.default_factory()
+                    field_value.merge(
+                        partial={**subconfig, **prefixed_shared_partial},
+                        __skip_validation__=__skip_validation__
+                    )
+                    setattr(self, field_name, field_value)
                 # Use type class otherwise
                 else:
                     # TODO: It is not clear how to fully resolve multiple BaseSparkConfig types. We currently select the first one.
@@ -426,16 +514,65 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             # Generic case
             if field_name in kwargs_fold:
                 # Use kwargs attribute if provided
-                setattr(self, field_name, kwargs_fold[field_name])
+                self._validate_and_set(field_name, kwargs_fold[field_name], field_type)
+                continue
+            elif not isinstance(field_value, type(None)):
+                # Use field_value attribute if provided
+                self._validate_and_set(field_name, field_value, field_type)
+                continue
             elif isinstance(field_value, type(None)) and field.default_factory is not dc.MISSING:
                 # Fallback to default factory.
                 setattr(self, field_name, field.default_factory())
+                continue
             elif isinstance(field_value, type(None)) and field.default is not dc.MISSING:
                 # Fallback to default.
                 setattr(self, field_name, field.default)
+                continue
             else:
-                # TODO: Throw a better error than the default dataclass error.
-                pass
+                if __skip_validation__:
+                    continue
+                # Try a default initialization of the parameter
+                if len(field_type) > 1:
+                    raise ValueError(
+                        f'Field "{field_name}" does not define a default value and multiple types are provided, ' \
+                        f'automatic resolution is not possible. ' \
+                        f'Please define a default value for this field.'
+                    )
+                else:
+                    try:
+                        default_value = field_type[0]()
+                        field.default = default_value
+                        setattr(self, field_name, default_value)
+                        continue
+                    except:
+                        raise ValueError(
+                            f'Field "{field_name}" does not define a default value, ' \
+                            f'and automatic resolution failed to produce a default value. ' \
+                            f'Please define a default value for this field.'
+                        )
+
+
+
+    def _validate_and_set(self, field_name, value, field_type):
+        # Use kwargs attribute if provided
+        if is_instance(value, field_type):
+            # kwargs_fold provides a valid type:
+            setattr(self, field_name, value)
+        else:
+            # Try some safe promotions
+            valid_safer_types = [float, int, bool, str]
+            for t in valid_safer_types:
+                if t in field_type:
+                    try:
+                        safe_value = t(value)
+                        setattr(self, field_name, safe_value)
+                        return
+                    except:
+                        pass
+            raise TypeError(
+                f'Field {field_name} got value of type {type(value)} but ' \
+                f'it is not possible to safely promote it to the types: {field_type}.'
+            )
 
 
 
@@ -518,7 +655,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 validator_instance = validator(field)
                 value_attr = getattr(self, field.name)
                 # Remove descriptor
-                if isinstance(value_attr, EntryDescriptor):
+                if isinstance(value_attr, InitializableField):
                     value_attr = value_attr.__obj__
                 # TODO: Add a wrapper to init to perform dynamic validation
                 if isinstance(value_attr, BaseSparkConfig):
@@ -567,7 +704,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             Returns the type of the associated Module/Initializer.
 
             NOTE: It is recommended to set the __class_ref__ to the name of the associated module/initializer
-            when defining custom configuration classes. The current class_ref solver is extremely brittle and
+            when defining custom configuration classes. The automatic class_ref solver is extremely brittle and
             likely to fail in many different custom scenarios.
         """
         # Check for class_ref otherwise try to set it up.
@@ -583,10 +720,10 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         # Check we only got one coincidence, otherwise throw an error to avoid headaches.
         if module_class_ref and initializer_class_ref:
             raise AttributeError(
-                f'Configuration \"{obj.__name__}\" cannot resolve __class_ref__. '
+                f'Configuration \"{obj.__class__.__name__}\" cannot resolve __class_ref__. '
                 f'A Module and an Initializer with the same reference were found. '
                 f'To prevent errors impute the class manually. Alternatively, update the name '
-                f'of one of the classes to avoid overlappings (not recommended).'
+                f'of one of the classes to avoid overlappings.'
             )
         if module_class_ref:
             class_ref = module_class_ref.class_ref
@@ -594,10 +731,10 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             class_ref = initializer_class_ref.class_ref
         else:
             raise AttributeError(
-                f'Configuration \"{obj.__name__}\" cannot resolve __class_ref__. '
+                f'Configuration \"{obj.__class__.__name__}\" cannot resolve __class_ref__. '
                 f'No Module nor Initializer with the same reference were found. '
-                f'Either rename the configuration object as \"Object.__name__ + Config\" or'
-                f'manually define __class_ref__ using the registry name of the object (default: Object.__name__).'
+                f'Either rename the configuration object as \"Object.__class__.__name__ + Config\" or'
+                f'manually define __class_ref__ using the registry name of the object (default: Object.__class__.__name__).'
             )
         return class_ref
 
@@ -779,7 +916,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             if not simplified:
                 if isinstance(value, BaseSparkConfig):
                     rep += value._parse_tree_structure(current_depth+1, simplified=simplified, header=name)
-                elif isinstance(value, EntryDescriptor) and isinstance(value.__obj__, BaseSparkConfig):
+                elif isinstance(value, InitializableField) and isinstance(value.__obj__, BaseSparkConfig):
                     rep += value.__obj__._parse_tree_structure(current_depth+1, simplified=simplified, header=name)
                 else:
                     if isinstance(value, (np.ndarray, jnp.ndarray, list)) and len(value) > 5:
@@ -787,7 +924,13 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                         value_str = f'[{value_str[:-1]}...]'
                     else:
                         value_str = str(value).strip('\n')
-                    rep += (current_depth+1) * ' ' + f'{name}: {field.type} <- {value_str}\n'
+
+                    if field.type == jax.typing.DTypeLike:
+                        field_types = 'DTypeLike'
+                    else:
+                        field_types = str(field.type)
+                    #field_types = ' | '.join([t.replace(' ', '').split('.')[-1] for t in str(field.type).split('|')])
+                    rep += (current_depth+1) * ' ' + f'{name}: {field_types} <- {value_str}\n'
             else:
                 if isinstance(value, BaseSparkConfig):
                     rep += value._parse_tree_structure(current_depth+1, simplified=simplified)
@@ -795,14 +938,9 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
-
-
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_config
 class SparkConfig(BaseSparkConfig):

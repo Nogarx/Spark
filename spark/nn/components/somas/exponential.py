@@ -101,7 +101,7 @@ class ExponentialSoma(Soma):
         Exponential soma model.
 
         Init:
-            units: tuple[int]
+            units: tuple[int, ...]
             potential_rest: float | jax.Array
             potential_reset: float | jax.Array
             potential_tau: float | jax.Array
@@ -200,7 +200,7 @@ class RefractoryExponentialSoma(ExponentialSoma):
         Exponential soma with refractory time model.
 
         Init:
-            units: tuple[int]
+            units: tuple[int, ...]
             potential_rest: float | jax.Array
             potential_reset: float | jax.Array
             potential_tau: float | jax.Array
@@ -322,7 +322,7 @@ class AdaptiveExponentialSoma(ExponentialSoma):
         Adaptive Exponential soma model.
 
         Init:
-            units: tuple[int]
+            units: tuple[int, ...]
             potential_rest: float | jax.Array
             potential_reset: float | jax.Array
             potential_tau: float | jax.Array
@@ -436,7 +436,7 @@ class SimplifiedAdaptiveExponentialSoma(RefractoryExponentialSoma):
         Simplified Adaptive Exponential soma model. This model drops the subthreshold adaptation.
 
         Init:
-            units: tuple[int]
+            units: tuple[int, ...]
             potential_rest: float | jax.Array
             potential_reset: float | jax.Array
             potential_tau: float | jax.Array

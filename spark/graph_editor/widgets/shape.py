@@ -41,7 +41,7 @@ class QShapeEdit(QtWidgets.QWidget):
 
     def __init__(
         self,
-        initial_shape: tuple[int] = None,
+        initial_shape: tuple[int, ...] = None,
         min_dims: int = 1,
         max_dims: int = 8,
         max_shape: int = 1E9,
@@ -148,12 +148,12 @@ class QShapeEdit(QtWidgets.QWidget):
     def _on_shape_changed(self):
         self.editingFinished.emit()
 
-    def get_shape(self) -> tuple[int]:
+    def get_shape(self) -> tuple[int, ...]:
         shape_text = tuple(int(edit.text()) for edit in self._dimension_edits if edit.text())
         shape = utils.validate_shape(shape_text)
         return shape
 
-    def set_shape(self, new_shape: tuple[int]):
+    def set_shape(self, new_shape: tuple[int, ...]):
         """
             Clears existing dimensions and sets a new shape.
         """
@@ -185,7 +185,7 @@ class QShape(SparkQWidget):
 
     def __init__(
             self,
-            initial_shape: tuple[int] = (1,),
+            initial_shape: tuple[int, ...] = (1,),
             min_dims: int = 1,
             max_dims: int = 8,
             max_shape: int = 1E9,
@@ -204,10 +204,10 @@ class QShape(SparkQWidget):
         layout.addWidget(self._shape_edit)
         self.setLayout(layout)
 
-    def get_value(self) -> tuple[int]:
+    def get_value(self) -> tuple[int, ...]:
         return self._shape_edit.get_shape()
 
-    def set_value(self, value: tuple[int]):
+    def set_value(self, value: tuple[int, ...]):
         return self._shape_edit.set_shape(value)
     
     def setEnabled(self, value: bool) -> None:

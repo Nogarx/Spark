@@ -89,12 +89,12 @@ def get_einsum_labels(num_dims: int, offset: int = 0) -> str:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def get_axes_einsum_labels(axes: tuple[int], ignore_repeated:bool = False) -> str:
+def get_axes_einsum_labels(axes: tuple[int, ...], ignore_repeated:bool = False) -> str:
 	"""
 		Generates labels for a generalized dot product using Einstein notation.
 
 		Args:
-			axes: tuple[int], requested dimensions (labels) to generate
+			axes: tuple[int, ...], requested dimensions (labels) to generate
 
 		Returns:
 			str, a string with num_dims different labels, skipping the first offset characters 
@@ -118,7 +118,7 @@ def get_axes_einsum_labels(axes: tuple[int], ignore_repeated:bool = False) -> st
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def validate_shape(obj: tp.Any) -> tuple[int]:
+def validate_shape(obj: tp.Any) -> tuple[int, ...]:
     """
         Verifies that the object is broadcastable to a valid shape (tuple of integers).
         Returns the shape.
@@ -127,7 +127,7 @@ def validate_shape(obj: tp.Any) -> tuple[int]:
             obj: tp.Any: the instance to validate
 
         Returns:
-            list[tuple[int]], the shape
+            list[tuple[int, ...]], the shape
     """
     # Sanity checks
     if isinstance(obj, int):
@@ -149,7 +149,7 @@ def validate_shape(obj: tp.Any) -> tuple[int]:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def validate_list_shape(obj: tp.Any) -> list[tuple[int]]:
+def validate_list_shape(obj: tp.Any) -> list[tuple[int, ...]]:
     """
         Verifies that the object is broadcastable to a valid list ofshape (a list of tuple of integers).
         Returns the list of shapes.
@@ -158,7 +158,7 @@ def validate_list_shape(obj: tp.Any) -> list[tuple[int]]:
             obj: tp.Any: the instance to validate
 
         Returns:
-            list[tuple[int]], the list of shapes
+            list[tuple[int, ...]], the list of shapes
     """
     # Sanity checks
     if not isinstance(obj, collections.abc.Iterable) or len(obj) == 0:

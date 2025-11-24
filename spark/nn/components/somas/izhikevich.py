@@ -104,7 +104,7 @@ class IzhikevichSoma(Soma):
         Izhikevich soma model.
 
         Init:
-            units: tuple[int]
+            units: tuple[int, ...]
             potential_rest: float | jax.Array
             potential_reset: float | jax.Array
             resistance: float | jax.Array

@@ -36,7 +36,7 @@ class NeuronConfig(SparkConfig):
     """
         Abstract Neuron model configuration class.
     """
-    units: tuple[int] = dc.field(
+    units: tuple[int, ...] = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,

@@ -31,12 +31,12 @@ class LinearSynapsesConfig(SynanpsesConfig):
         LinearSynapses model configuration class.
     """
 
-    units: tuple[int] = dc.field(
+    units: tuple[int, ...] = dc.field(
         metadata = {
             'validators': [
                 TypeValidator,
             ], 
-            'description': 'tuple[int] of the postsynaptic pool of neurons.',
+            'description': 'tuple[int, ...] of the postsynaptic pool of neurons.',
         })
     kernel: jax.Array | Initializer = dc.field(
         default_factory = NormalizedSparseUniformInitializerConfig,
@@ -57,7 +57,7 @@ class LinearSynapses(Synanpses):
         Output currents are computed as the dot product of the kernel with the input spikes.
 
         Init:
-            units: tuple[int]
+            units: tuple[int, ...]
             kernel: jax.Array | Initializer
 
         Input:

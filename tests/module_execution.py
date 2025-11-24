@@ -222,7 +222,7 @@ data_test = [
 def run_module_simplified(
         module: spark.nn.Brain, 
         module_inputs: dict
-    ) -> tuple[tp.Any, spark.nn.Module]:
+    ) -> tuple[dict[str, spark.SparkPayload], spark.nn.Module]:
     s = module(**module_inputs)
     return s, module
 
@@ -238,7 +238,10 @@ def run_jax_jit_simplified(
     """
     module = module_cls(**module_config_kwargs)
     module(**module_inputs)
-    run_module_simplified(module, module_inputs)
+    output, new_module = run_module_simplified(module, module_inputs)
+    for payloads in output.values():
+        assert jnp.sum(jnp.isnan(payloads.value)) == 0
+        assert jnp.sum(jnp.isinf(payloads.value)) == 0
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -247,7 +250,7 @@ def run_module_split(
         graph: nnx.GraphDef, 
         state: nnx.GraphState | nnx.VariableState, 
         module_inputs: dict
-    ) -> tuple[tp.Any, nnx.GraphState | nnx.VariableState]:
+    ) -> tuple[dict[str, spark.SparkPayload], nnx.GraphState | nnx.VariableState]:
     module = spark.merge(graph, state)
     s = module(**module_inputs)
     _, state = spark.split((module))
@@ -267,7 +270,10 @@ def test_jax_jit_split(
     module = module_cls(**module_config_kwargs)
     module(**module_inputs)
     graph, state = spark.split((module))
-    run_module_split(graph, state, module_inputs)
+    output, new_state = run_module_split(graph, state, module_inputs)
+    for payloads in output.values():
+        assert jnp.sum(jnp.isnan(payloads.value)) == 0
+        assert jnp.sum(jnp.isinf(payloads.value)) == 0
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

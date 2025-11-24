@@ -84,6 +84,19 @@ def _is_initializer_type(obj: tp.Any) -> bool:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+def _is_initializer_instance(obj: tp.Any) -> bool:
+    """
+        Check if an object instance is derived from 'spark.nn.initializers.base.Initializer'.
+
+        Args:
+            obj (tp.Any): The class to check.
+        Returns:
+            bool, True if 'obj' is an instance of 'Initializer', False otherwise.
+    """
+    return _is_spark_instance(obj, DEFAULT_INITIALIZER_PATH)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def _is_initializer_config_type(obj: tp.Any) -> bool:
     """
         Check if an object is a subclass of 'spark.nn.initializers.base.InitializerConfig'.
@@ -146,6 +159,19 @@ def _is_config_instance(obj: tp.Any) -> bool:
             bool, True if the object is an instance of 'BaseSparkConfig', False otherwise.
     """
     return _is_spark_instance(obj, DEFAULT_CONFIG_PATH)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _is_config_type(obj: tp.Any) -> bool:
+    """
+        Check if an object a subclass of from DEFAULT_CONFIG_PATH.
+
+        Args:
+            obj (tp.Any): The instance to check.
+        Returns:
+            bool, True if the object is a subclass of 'BaseSparkConfig', False otherwise.
+    """
+    return _is_spark_type(obj, DEFAULT_CONFIG_PATH)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

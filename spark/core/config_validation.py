@@ -17,6 +17,31 @@ from spark.core.registry import REGISTRY, register_cfg_validator
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+def _try_promotion(method: tp.Callable, value: tp.Any):
+    try:
+        return method(value)
+    except:
+        return None
+
+DEFAULT_TYPE_PROMOTIONS = {
+    int: {
+        float: lambda value: _try_promotion(int, value),
+        bool: lambda value: _try_promotion(int, value),
+    },
+    float : {
+        int: lambda value: _try_promotion(float, value),
+        bool: lambda value: _try_promotion(float, value),
+    },
+    bool : {
+        int: lambda value: _try_promotion(bool, value),
+        float: lambda value: _try_promotion(bool, value),
+    }
+}
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
 class ConfigurationValidator:
     """
         Base class for validators for the fields in a SparkConfig.

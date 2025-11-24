@@ -19,46 +19,55 @@ np.random.seed(42)
 data_test = [
     # Input interfaces
     (
+        'ConstantInitializer_1',
         spark.nn.initializers.ConstantInitializer, 
         {'key': jax.random.key(42), 'shape': (2,3,4,5)},
         {'scale':8, 'dtype':jnp.uint8}
     ),
     (
+        'ConstantInitializer_2',
         spark.nn.initializers.ConstantInitializer, 
         {'key': jax.random.key(42), 'shape': (8,2,4)},
         {'scale':8, 'dtype':jnp.float16}
     ),
     (
+        'UniformInitializer_1',
         spark.nn.initializers.UniformInitializer, 
         {'key': jax.random.key(42), 'shape': (2,3,4,5)},
         {'scale':8, 'dtype':jnp.int16, 'max_value':4}
     ),
     (
+        'UniformInitializer_2',
         spark.nn.initializers.UniformInitializer, 
         {'key': jax.random.key(42), 'shape': (8,2,4)},
         {'scale':8, 'dtype':jnp.float32, 'max_value':4, 'min_value':2}
     ),
     (
+        'SparseUniformInitializer_1',
         spark.nn.initializers.SparseUniformInitializer, 
         {'key': jax.random.key(42), 'shape': (2,3,4,5)},
         {'scale':4, 'dtype':jnp.uint32, 'density': 1.0}
     ),
     (
+        'SparseUniformInitializer_2',
         spark.nn.initializers.SparseUniformInitializer, 
         {'key': jax.random.key(42), 'shape': (8,2,4)},
         {'scale':4, 'dtype':jnp.float16, 'density': 0.5}
     ),
     (
+        'NormalizedSparseUniformInitializer_1',
         spark.nn.initializers.NormalizedSparseUniformInitializer, 
         {'key': jax.random.key(42), 'shape': (10,5), 'norm_axes': (0,)},
         {'scale':4, 'dtype':jnp.float16, 'density': 1.0}
     ),
     (
+        'NormalizedSparseUniformInitializer_2',
         spark.nn.initializers.NormalizedSparseUniformInitializer, 
         {'key': jax.random.key(42), 'shape': (2,3,4,5), 'norm_axes': (1,3)},
         {'scale':4, 'dtype':jnp.float32, 'density': 1.0}
     ),
     (
+        'NormalizedSparseUniformInitializer_3',
         spark.nn.initializers.NormalizedSparseUniformInitializer, 
         {'key': jax.random.key(42), 'shape': (8,2,4), 'norm_axes': (0,)},
         {'scale':4, 'dtype':jnp.float16, 'density': 0.5}
@@ -72,8 +81,9 @@ relaxed_min_test = (
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@pytest.mark.parametrize('initializer_cls, initializer_input, initializer_config_kwargs', data_test)
+@pytest.mark.parametrize('name, initializer_cls, initializer_input, initializer_config_kwargs', data_test)
 def test_initializer(
+        name: str,
         initializer_cls: type[spark.nn.initializers.Initializer], 
         initializer_input: dict[str, spark.SparkPayload], 
         initializer_config_kwargs: dict[str, tp.Any]

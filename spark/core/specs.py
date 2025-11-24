@@ -29,14 +29,14 @@ class PortSpecs:
         Base specification for a port of an SparkModule.
     """
     payload_type: type[SparkPayload] | None
-    shape: tuple[int] | list[tuple[int]] | None
+    shape: tuple[int, ...] | list[tuple[int, ...]] | None
     dtype: DTypeLike | None
     description: str | None = None
 
     def __init__(
             self, 
             payload_type: type[SparkPayload] | None,
-            shape: tuple[int] | list[tuple[int]] | None,
+            shape: tuple[int, ...] | list[tuple[int, ...]] | None,
             dtype: DTypeLike | None, 
             description: str | None = None 
         ) -> None:
@@ -50,7 +50,7 @@ class PortSpecs:
             shape = utils.validate_list_shape(shape)
         elif shape:
             raise TypeError(
-                f'Expected "shape" to be broadcastable to \"tuple[int] | list[tuple[int]]\".'
+                f'Expected "shape" to be broadcastable to \"tuple[int, ...] | list[tuple[int, ...]]\".'
             )
         if dtype and not isinstance(jnp.dtype(dtype), jnp.dtype):
             raise TypeError(
@@ -101,7 +101,7 @@ class InputSpec(PortSpecs):
     def __init__(
             self, 
             payload_type: type[SparkPayload] | None, 
-            shape: tuple[int] | list[tuple[int]] | None, 
+            shape: tuple[int, ...] | list[tuple[int, ...]] | None, 
             dtype: DTypeLike | None, 
             description: str | None = None,
             async_spikes: bool | None = None,
