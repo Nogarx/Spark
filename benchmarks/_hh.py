@@ -276,8 +276,8 @@ class HodgkinHuxleyNeuron(Neuron):
         # Initialize inhibitory mask.
         inhibitory_units = int(self._units * self.config.inhibitory_rate)
         indices = jax.random.permutation(self.get_rng_keys(1), jnp.arange(self._units), independent=True)[:inhibitory_units]
-        inhibition_mask = jnp.ones((self._units,), dtype=self._dtype)
-        inhibition_mask = inhibition_mask.at[indices].set(-1).reshape(self.units)
+        inhibition_mask = jnp.zeros((self._units,), dtype=jnp.bool)
+        inhibition_mask = inhibition_mask.at[indices].set(True).reshape(self.units)
         self._inhibition_mask = Constant(inhibition_mask, dtype=jnp.float16)
         # Soma model.
         self.soma = self.config.soma_config.class_ref(config=self.config.soma_config)
@@ -309,7 +309,7 @@ class HodgkinHuxleyNeuron(Neuron):
             self.synapses.set_kernel(learning_rule_output['kernel'])
         # Signed spikes
         return {
-            'out_spikes': SpikeArray(soma_output['spikes'].value * self._inhibition_mask)
+            'out_spikes': SpikeArray(soma_output['spikes'].spikes, inhibition_mask=self._inhibition_mask)
         }
 
 #################################################################################################################################################

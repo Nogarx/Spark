@@ -60,7 +60,7 @@ def simulate_model_spark(
 	graph, state = spark.split((model))
 	spikes, potentials = [], []
 	for s in in_spikes:
-		in_spikes = spark.SpikeArray( jnp.array([s]) )
+		in_spikes = spark.SpikeArray(jnp.array([s]))
 		outputs, state = run_model_one_steps(graph, state, in_spikes=in_spikes)
 		spikes.append(np.array(outputs['out_spikes'].value))
 		model = spark.merge(graph, state)
@@ -103,7 +103,7 @@ def build_LIF_model(
 		delays_config = None,
 		learning_rule_config = None,
 	)
-	lif_neuron(in_spikes=spark.SpikeArray( jnp.zeros((1,)) ))
+	lif_neuron(in_spikes=spark.SpikeArray(jnp.zeros((1,))))
 	lif_neuron.config.inspect()
 	lif_neuron.synapses.config.inspect()
 	return lif_neuron
@@ -150,7 +150,7 @@ def build_AdEx_model(
 		delays_config = None,
 		learning_rule_config = None,
 	)
-	adex_neuron(in_spikes=spark.SpikeArray( jnp.zeros((1,)) ))
+	adex_neuron(in_spikes=spark.SpikeArray(jnp.zeros((1,))))
 	return adex_neuron
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -189,7 +189,7 @@ def build_HH_model(
 		delays_config = None,
 		learning_rule_config = None,
 	)
-	hh_neuron(in_spikes=spark.SpikeArray( jnp.zeros((1,)) ))
+	hh_neuron(in_spikes=spark.SpikeArray(jnp.zeros((1,))))
 	return hh_neuron
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -332,12 +332,13 @@ def spark_adex_performance(
 		adaptation_subthreshold = adaptation_subthreshold,
 	)
 	brain = spark.nn.Brain(config=brain_config)
-	brain(spikes=spark.SpikeArray( jnp.zeros((units,), dtype=jnp.float16)) )
+	brain(spikes=spark.SpikeArray(jnp.zeros((units,))))
 	graph, state = spark.split((brain))
 	# Compile iteration function
-	run_model_k_steps(graph, state, k_steps, spikes=spark.SpikeArray( 
-		jnp.zeros((units,), dtype=jnp.float16)
-	))
+	run_model_k_steps(
+		graph, state, k_steps, 
+		spikes=spark.SpikeArray(jnp.zeros((units,), dtype=jnp.float16))
+	)
 	# Benchmark
 	times = []
 	iters = (t_steps // k_steps)
@@ -348,9 +349,10 @@ def spark_adex_performance(
 		# Simulate
 		for i in range(iters):
 			# Note: this is equivalent to passing a constant current to the input neurons for k steps.
-			outputs, state = run_model_k_steps(graph, state, k_steps, spikes=spark.SpikeArray( 
-				(jax.random.uniform(jax.random.key(i), (units,)) < 0.05).astype(jnp.float16) 
-			))
+			outputs, state = run_model_k_steps(
+				graph, state, k_steps, 
+				spikes=spark.SpikeArray((jax.random.uniform(jax.random.key(i), (units,)) < 0.05))
+			)
 		end = time.time()
 		times.append(end-start)
 

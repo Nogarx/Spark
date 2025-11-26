@@ -6,13 +6,14 @@ from __future__ import annotations
 
 import json
 import numpy as np
+import jax
 import jax.numpy as jnp
 import warnings
 import typing as tp
 import spark.core.utils as utils
 from jax.typing import DTypeLike
 from spark.core.registry import REGISTRY
-from spark.core.config import BaseSparkConfig
+from spark.core.config import BaseSparkConfig, InitializableField
 from spark.core.specs import PortSpecs, InputSpec, OutputSpec, PortMap, ModuleSpecs
 
 #################################################################################################################################################
@@ -39,7 +40,7 @@ class SparkJSONEncoder(json.JSONEncoder):
 
 	def default(self, obj):
 		# Encode jax arrays
-		if isinstance(obj, jnp.ndarray):
+		if isinstance(obj, (jax.Array, jnp.ndarray)):
 			return {
 				'__type__': 'jax_array',
 				'dtype': obj.dtype.name,
@@ -122,7 +123,7 @@ class SparkJSONDecoder(json.JSONDecoder):
 			else:
 				if version not in self.__supported_versions__:
 					warnings.warn(
-						f'⚠️ Warning: Unsupported version {version}, decoding may fail unexpectedly.'
+						f'Warning: Unsupported version {version}, decoding may fail unexpectedly.'
 					)
 			return obj.get('__data__')
 

@@ -11,7 +11,7 @@ import jax
 import jax.numpy as jnp
 import dataclasses as dc
 from spark.nn.neurons import Neuron, NeuronConfig, NeuronOutput
-from spark.core.payloads import SpikeArray
+from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator, ZeroOneValidator
@@ -122,7 +122,7 @@ class LIFNeuron(Neuron):
             self.synapses.set_kernel(learning_rule_output['kernel'])
         # Signed spikes
         return {
-            'out_spikes': SpikeArray(soma_output['spikes'].value * self._inhibition_mask)
+            'out_spikes': SpikeArray(soma_output['spikes'].spikes, inhibition_mask=self._inhibition_mask)
         }
 
 #################################################################################################################################################

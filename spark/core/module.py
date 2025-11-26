@@ -189,8 +189,8 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             abc_inputs = {}
             for key, value in bound_args.arguments.items():
                 if value and validation._is_payload_instance(value):
-                    abc_inputs[key] = input_specs[key].payload_type(
-                        jax.ShapeDtypeStruct(shape=input_specs[key].shape, dtype=input_specs[key].dtype))
+                    abc_inputs[key] = self._input_specs[key].payload_type(
+                        jax.ShapeDtypeStruct(shape=self._input_specs[key].shape, dtype=self._input_specs[key].dtype))
             # Evaluate.
             abc_output = nnx.eval_shape(self.__call__, **abc_inputs)
 
@@ -203,6 +203,8 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                         mock_input[key] = value.payload_type(jnp.zeros(value.shape, dtype=value.dtype))
                 else:
                         mock_input[key] = [value.payload_type(jnp.zeros(s, dtype=value.dtype)) for s in value.shape]
+            else:
+                mock_input[key] = value.payload_type(jnp.zeros(value.shape, dtype=value.dtype))
         abc_output = self.__call__(**mock_input)
 
         # Contruct output sepcs.

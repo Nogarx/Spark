@@ -11,7 +11,7 @@ import jax
 import jax.numpy as jnp
 import dataclasses as dc
 from spark.nn.neurons import Neuron, NeuronConfig, NeuronOutput
-from spark.core.payloads import SpikeArray
+from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator, ZeroOneValidator
@@ -24,6 +24,8 @@ from spark.nn.components.synapses.linear import LinearSynapsesConfig
 from spark.nn.components.learning_rules.base import LearningRule, LearningRuleConfig
 from spark.nn.components.learning_rules.zenke_rule import ZenkeRuleConfig
 
+from spark.nn.components.learning_rules.three_factor_rule import ThreeFactorHebbianRule
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
@@ -33,17 +35,6 @@ class ALIFNeuronConfig(NeuronConfig):
     """
         ALIFNeuron configuration class.
     """
-
-    max_delay: float = dc.field(
-        default = 0.2, 
-        metadata = {
-            'units': 'ms',
-            'validators': [
-                TypeValidator,
-                PositiveValidator,
-            ],
-            'description': '',
-        })
     inhibitory_rate: float = dc.field(
         default = 0.2, 
         metadata = {
@@ -92,14 +83,13 @@ class ALIFNeuron(Neuron):
     def __init__(self, config: ALIFNeuronConfig | None = None, **kwargs):
         super().__init__(config=config, **kwargs)
         # Main attributes
-        self.max_delay = self.config.max_delay
         self.inhibitory_rate = self.config.inhibitory_rate
         # Set output shapes earlier to allow cycles.
         self.set_recurrent_shape_contract(shape=self.units)
 
     def build(self, input_specs: dict[str, InputSpec]):
         # Initialize inhibitory mask.
-        inhibitory_units = int(self._units * self.inhibitory_rate)
+        inhibitory_units = int(self._units * self.config.inhibitory_rate)
         indices = jax.random.permutation(self.get_rng_keys(1), jnp.arange(self._units), independent=True)[:inhibitory_units]
         inhibition_mask = jnp.ones((self._units,), dtype=self._dtype)
         inhibition_mask = inhibition_mask.at[indices].set(-1).reshape(self.units)
@@ -122,16 +112,23 @@ class ALIFNeuron(Neuron):
             Update neuron's states and compute spikes.
         """
         # Inference
-        delays_output = self.delays(in_spikes)
-        synapses_output = self.synapses(delays_output['out_spikes'])
+        if self._delays_active:
+            delays_output = self.delays(in_spikes)
+            synapses_output = self.synapses(delays_output['out_spikes'])
+        else: 
+            synapses_output = self.synapses(in_spikes)
         soma_output = self.soma(synapses_output['currents'])
         # Learning
-        learning_rule_output = self.learning_rule(delays_output['out_spikes'], soma_output['spikes'], self.synapses.get_kernel())
-        self.synapses.set_kernel(learning_rule_output['kernel'])
-        #self.synapses.kernel.value = learning_rule_output['kernel'].value
+        if self._learning_active:
+            learning_rule_output = self.learning_rule(
+                delays_output['out_spikes'], 
+                soma_output['spikes'], 
+                self.synapses.get_kernel()
+            )
+            self.synapses.set_kernel(learning_rule_output['kernel'])
         # Signed spikes
         return {
-            'out_spikes': SpikeArray(soma_output['spikes'].value * self._inhibition_mask)
+            'out_spikes': SpikeArray(soma_output['spikes'].spikes, inhibition_mask=self._inhibition_mask)
         }
 
 #################################################################################################################################################

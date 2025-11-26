@@ -24,6 +24,7 @@ from spark.core.registry import REGISTRY, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.core.signature_parser import normalize_typehint, is_instance
 from functools import partial, wraps
+from math import prod
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -126,7 +127,7 @@ class InitializableField(metaclass=InitializableFieldMetaclass):
                 **({'dtype': dtype} if dtype is not None else {})
             }
             return self.__obj__.class_ref(**init_args)(key=key, shape=shape, **kwargs)
-        elif isinstance(self.__obj__, (int, float, complex, bool)):
+        elif isinstance(self.__obj__, (int, float, complex, bool, np.ndarray, jax.Array)):
             return self.__obj__
         else:
             raise TypeError(
@@ -560,7 +561,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             setattr(self, field_name, value)
         else:
             # Try some safe promotions
-            valid_safer_types = [float, int, bool, str]
+            valid_safer_types = [float, int, bool, str, tuple[int, ...], list]
             for t in valid_safer_types:
                 if t in field_type:
                     try:
@@ -765,10 +766,13 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         dataclass_dict = {}
         for field in dc.fields(self):
             # Nested config need to be treated differently, propagating kwargs if necessary
+            value = getattr(self, field.name)
             if isinstance(type_hints[field.name], type) and issubclass(type_hints[field.name], BaseSparkConfig):
-                dataclass_dict[field.name] = getattr(self, field.name).to_dict()
+                dataclass_dict[field.name] = value.to_dict()
+            elif isinstance(value, InitializableField):
+                dataclass_dict[field.name] = value.__obj__
             else:
-                dataclass_dict[field.name] = getattr(self, field.name)
+                dataclass_dict[field.name] = value
         return dataclass_dict
 
 
@@ -914,14 +918,18 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         rep = current_depth * ' ' + f'{level_header}{self.__class__.__name__}\n'
         for name, field, value in self:
             if not simplified:
+                if isinstance(value, InitializableField):
+                    # Unpack Initializable fields
+                    value = value.__obj__
                 if isinstance(value, BaseSparkConfig):
                     rep += value._parse_tree_structure(current_depth+1, simplified=simplified, header=name)
-                elif isinstance(value, InitializableField) and isinstance(value.__obj__, BaseSparkConfig):
-                    rep += value.__obj__._parse_tree_structure(current_depth+1, simplified=simplified, header=name)
                 else:
-                    if isinstance(value, (np.ndarray, jnp.ndarray, list)) and len(value) > 5:
-                        value_str = ', '.join([f'{x:.2f}'.rstrip('0').rstrip('.') for x in value[:5]]).strip('\n').replace('\n', '')
-                        value_str = f'[{value_str[:-1]}...]'
+                    if isinstance(value, (list, tuple, set)) and len(value) > 5:
+                        value_str = str(value_str[:5])
+                        value_str = f'{type(value)}([{value_str[1:-1]}, ...])'
+                    elif isinstance(value, (np.ndarray, jnp.ndarray)) and prod(value.shape) > 5:
+                        value_str = ', '.join([f'{x:.2f}'.rstrip('0').rstrip('.') for x in value.reshape(-1)[:5]]).strip('\n').replace('\n', '')
+                        value_str = f'array([{value_str[:-1]}, ...], dtype={value.dtype})'
                     else:
                         value_str = str(value).strip('\n')
 

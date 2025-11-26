@@ -129,6 +129,36 @@ class BrainConfig(BaseSparkConfig):
 		super().validate()
 
 
+	def _parse_tree_structure(self, current_depth: int, simplified: bool = False, header: str | None= None) -> str:
+		"""
+			Parses the tree to produce a string with the appropiate format for the ascii_tree method.
+		"""
+		level_header = f'{header}: ' if header else ''
+		rep = current_depth * ' ' + f'{level_header}{self.__class__.__name__}\n'
+
+		# Expand inputs specs
+		rep += (current_depth + 1) * ' ' + f'Input Map:\n'
+		for spec_name, spec in self.input_map.items():
+			rep += (current_depth + 2) * ' ' + f'{spec_name} <- {spec}\n'
+		# Expand outputs specs
+		rep += (current_depth + 1) * ' ' + f'Output Map:\n'
+		for spec_name, spec in self.output_map.items():
+			rep += (current_depth + 2) * ' ' + f'{spec_name} <- {spec['input']} | {spec['spec']}\n'
+		# Expand module specs
+		rep += (current_depth + 1) * ' ' + f'Modules Map:\n'
+		for spec_name, module_spec in self.modules_map.items():
+			if not simplified:
+				rep += (current_depth + 2) * ' ' + f'{spec_name}: {module_spec.module_cls.__name__}\n'
+				rep += (current_depth + 3) * ' ' + f'Inputs:\n'
+				for input_name, port_spec_list in module_spec.inputs.items():
+					rep += (current_depth + 4) * ' ' + f'{input_name}:\n'
+					for port in port_spec_list:
+						rep += (current_depth + 5) * ' ' + f'{port}\n'
+				rep += module_spec.config._parse_tree_structure(current_depth+3, simplified=simplified)
+			else:
+				rep += module_spec.config._parse_tree_structure(current_depth+2, simplified=simplified)
+		return rep
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class Brain(SparkModule, metaclass=BrainMeta):
@@ -510,8 +540,6 @@ class Brain(SparkModule, metaclass=BrainMeta):
 			module: SparkModule = getattr(self, module_name)
 			rep += module._parse_tree_structure(current_depth+1, name=module_name)
 		return rep
-
-
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

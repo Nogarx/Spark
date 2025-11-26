@@ -3,20 +3,7 @@
     "__cfg__": {
         "__config_delimiter__": "__",
         "__shared_config_delimiter__": "_s_",
-        "__graph_editor_metadata__": {
-            "drive": {
-                "pos": [
-                    -471.25480338745706,
-                    -217.266824938373
-                ]
-            },
-            "action": {
-                "pos": [
-                    530.41666182138,
-                    184.62579959551888
-                ]
-            }
-        },
+        "__graph_editor_metadata__": {},
         "input_map": {
             "drive": {
                 "__type__": "input_specs",
@@ -26,6 +13,22 @@
                     },
                     "shape": [
                         4
+                    ],
+                    "dtype": {
+                        "__type__": "dtype",
+                        "name": "float16"
+                    },
+                    "description": null
+                }
+            },
+            "reward": {
+                "__type__": "input_specs",
+                "__data__": {
+                    "payload_type": {
+                        "__payload_type__": "float_array"
+                    },
+                    "shape": [
+                        1
                     ],
                     "dtype": {
                         "__type__": "dtype",
@@ -84,99 +87,13 @@
                     "config": {
                         "__config_delimiter__": "__",
                         "__shared_config_delimiter__": "_s_",
-                        "__graph_editor_metadata__": {
-                            "inheritance_tree": {
-                                "main": {
-                                    "seed": {
-                                        "name": "seed",
-                                        "type_string": "int",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "dtype": {
-                                        "name": "dtype",
-                                        "type_string": "DTypeLike",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "dt": {
-                                        "name": "dt",
-                                        "type_string": "float",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "tau": {
-                                        "name": "tau",
-                                        "type_string": "float",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "cd": {
-                                        "name": "cd",
-                                        "type_string": "float",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "max_freq": {
-                                        "name": "max_freq",
-                                        "type_string": "float",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "glue": {
-                                        "name": "glue",
-                                        "type_string": "jax.Array",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "mins": {
-                                        "name": "mins",
-                                        "type_string": "jax.Array",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "maxs": {
-                                        "name": "maxs",
-                                        "type_string": "jax.Array",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "resolution": {
-                                        "name": "resolution",
-                                        "type_string": "int",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "sigma": {
-                                        "name": "sigma",
-                                        "type_string": "float",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    }
-                                }
-                            },
-                            "pos": [
-                                -404.9527206597845,
-                                -5.100160209820935
-                            ]
-                        },
-                        "seed": 954201685,
+                        "__graph_editor_metadata__": {},
+                        "seed": 742969077,
                         "dtype": {
                             "__type__": "dtype",
                             "name": "float16"
                         },
-                        "dt": 0.1,
+                        "dt": 1.0,
                         "tau": 30.0,
                         "cd": 2.0,
                         "max_freq": 200.0,
@@ -233,497 +150,45 @@
                                     "port": "out_spikes"
                                 }
                             }
+                        ],
+                        "reward": [
+                            {
+                                "__type__": "port_map",
+                                "__data__": {
+                                    "origin": "__call__",
+                                    "port": "reward"
+                                }
+                            }
                         ]
                     },
                     "config": {
                         "__config_delimiter__": "__",
                         "__shared_config_delimiter__": "_s_",
-                        "__graph_editor_metadata__": {
-                            "inheritance_tree": {
-                                "main": {
-                                    "seed": {
-                                        "name": "seed",
-                                        "type_string": "int",
-                                        "inheritance_childs": [
-                                            [
-                                                "soma_config",
-                                                "seed"
-                                            ],
-                                            [
-                                                "synapses_config",
-                                                "seed"
-                                            ],
-                                            [
-                                                "delays_config",
-                                                "seed"
-                                            ],
-                                            [
-                                                "learning_rule_config",
-                                                "seed"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "dtype": {
-                                        "name": "dtype",
-                                        "type_string": "DTypeLike",
-                                        "inheritance_childs": [
-                                            [
-                                                "soma_config",
-                                                "dtype"
-                                            ],
-                                            [
-                                                "synapses_config",
-                                                "dtype"
-                                            ],
-                                            [
-                                                "delays_config",
-                                                "dtype"
-                                            ],
-                                            [
-                                                "learning_rule_config",
-                                                "dtype"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "dt": {
-                                        "name": "dt",
-                                        "type_string": "float",
-                                        "inheritance_childs": [
-                                            [
-                                                "soma_config",
-                                                "dt"
-                                            ],
-                                            [
-                                                "synapses_config",
-                                                "dt"
-                                            ],
-                                            [
-                                                "delays_config",
-                                                "dt"
-                                            ],
-                                            [
-                                                "learning_rule_config",
-                                                "dt"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "units": {
-                                        "name": "units",
-                                        "type_string": "tuple[int, ...]",
-                                        "inheritance_childs": [
-                                            [
-                                                "synapses_config",
-                                                "units"
-                                            ],
-                                            [
-                                                "delays_config",
-                                                "units"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "max_delay": {
-                                        "name": "max_delay",
-                                        "type_string": "float",
-                                        "inheritance_childs": [
-                                            [
-                                                "delays_config",
-                                                "max_delay"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "inhibitory_rate": {
-                                        "name": "inhibitory_rate",
-                                        "type_string": "float",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "async_spikes": {
-                                        "name": "async_spikes",
-                                        "type_string": "bool",
-                                        "inheritance_childs": [
-                                            [
-                                                "synapses_config",
-                                                "async_spikes"
-                                            ],
-                                            [
-                                                "learning_rule_config",
-                                                "async_spikes"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "soma_config": {
-                                        "seed": {
-                                            "name": "seed",
-                                            "type_string": "int",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dtype": {
-                                            "name": "dtype",
-                                            "type_string": "DTypeLike",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dt": {
-                                            "name": "dt",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "potential_rest": {
-                                            "name": "potential_rest",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "potential_reset": {
-                                            "name": "potential_reset",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "potential_tau": {
-                                            "name": "potential_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "resistance": {
-                                            "name": "resistance",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "threshold": {
-                                            "name": "threshold",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "cooldown": {
-                                            "name": "cooldown",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "threshold_tau": {
-                                            "name": "threshold_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "threshold_delta": {
-                                            "name": "threshold_delta",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        }
-                                    },
-                                    "synapses_config": {
-                                        "seed": {
-                                            "name": "seed",
-                                            "type_string": "int",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dtype": {
-                                            "name": "dtype",
-                                            "type_string": "DTypeLike",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dt": {
-                                            "name": "dt",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "units": {
-                                            "name": "units",
-                                            "type_string": "tuple[int, ...]",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "async_spikes": {
-                                            "name": "async_spikes",
-                                            "type_string": "bool",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "kernel_initializer": {
-                                            "dtype": {
-                                                "name": "dtype",
-                                                "type_string": "DTypeLike",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "scale": {
-                                                "name": "scale",
-                                                "type_string": "T",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "min_value": {
-                                                "name": "min_value",
-                                                "type_string": "T | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "max_value": {
-                                                "name": "max_value",
-                                                "type_string": "T | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "density": {
-                                                "name": "density",
-                                                "type_string": "float",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "norm_axes": {
-                                                "name": "norm_axes",
-                                                "type_string": "tuple[int, ...] | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            }
-                                        }
-                                    },
-                                    "delays_config": {
-                                        "seed": {
-                                            "name": "seed",
-                                            "type_string": "int",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dtype": {
-                                            "name": "dtype",
-                                            "type_string": "DTypeLike",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dt": {
-                                            "name": "dt",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "max_delay": {
-                                            "name": "max_delay",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "units": {
-                                            "name": "units",
-                                            "type_string": "tuple[int, ...]",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "delay_initializer": {
-                                            "dtype": {
-                                                "name": "dtype",
-                                                "type_string": "DTypeLike",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "scale": {
-                                                "name": "scale",
-                                                "type_string": "T",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "min_value": {
-                                                "name": "min_value",
-                                                "type_string": "T | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "max_value": {
-                                                "name": "max_value",
-                                                "type_string": "T | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            }
-                                        }
-                                    },
-                                    "learning_rule_config": {
-                                        "seed": {
-                                            "name": "seed",
-                                            "type_string": "int",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dtype": {
-                                            "name": "dtype",
-                                            "type_string": "DTypeLike",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dt": {
-                                            "name": "dt",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "async_spikes": {
-                                            "name": "async_spikes",
-                                            "type_string": "bool",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "pre_tau": {
-                                            "name": "pre_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "post_tau": {
-                                            "name": "post_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "post_slow_tau": {
-                                            "name": "post_slow_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "target_tau": {
-                                            "name": "target_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "a": {
-                                            "name": "a",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "b": {
-                                            "name": "b",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "c": {
-                                            "name": "c",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "d": {
-                                            "name": "d",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "p": {
-                                            "name": "p",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "gamma": {
-                                            "name": "gamma",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        }
-                                    }
-                                }
-                            },
-                            "pos": [
-                                -105.06330032231185,
-                                -143.82451791695118
-                            ]
-                        },
-                        "seed": 45037071,
+                        "__graph_editor_metadata__": {},
+                        "seed": 3329659806,
                         "dtype": {
                             "__type__": "dtype",
                             "name": "float16"
                         },
-                        "dt": 0.1,
+                        "dt": 1.0,
                         "units": [
                             256
                         ],
-                        "max_delay": 1,
                         "inhibitory_rate": 0.0,
-                        "async_spikes": true,
                         "soma_config": {
                             "__config_delimiter__": "__",
                             "__shared_config_delimiter__": "_s_",
                             "__graph_editor_metadata__": {},
-                            "seed": 804374538,
+                            "seed": 998671358,
                             "dtype": {
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 0.1,
+                            "dt": 1.0,
                             "potential_rest": -60.0,
                             "potential_reset": -50.0,
                             "potential_tau": 20.0,
-                            "resistance": 100.0,
+                            "resistance": 0.1,
                             "threshold": -40.0,
                             "cooldown": 2.0,
                             "threshold_tau": 20.0,
@@ -733,83 +198,86 @@
                             "__config_delimiter__": "__",
                             "__shared_config_delimiter__": "_s_",
                             "__graph_editor_metadata__": {},
-                            "seed": 4179541189,
+                            "seed": 1445428516,
                             "dtype": {
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 0.1,
+                            "dt": 1.0,
                             "units": [
                                 256
                             ],
-                            "async_spikes": true,
-                            "kernel_initializer": {
+                            "kernel": {
+                                "__type__": "normalized_sparse_uniform_initializer_config",
+                                "__cfg__": {
+                                    "__config_delimiter__": "__",
+                                    "__shared_config_delimiter__": "_s_",
+                                    "__graph_editor_metadata__": {},
+                                    "dtype": {
+                                        "__type__": "dtype",
+                                        "name": "float16"
+                                    },
+                                    "scale": 15000.0,
+                                    "min_value": null,
+                                    "max_value": 200.0,
+                                    "__class_ref__": "NormalizedSparseUniformInitializer",
+                                    "density": 0.1,
+                                    "norm_axes": [
+                                        0
+                                    ]
+                                }
+                            }
+                        },
+                        "delays_config": {
+                            "__type__": "n2n_delays_config",
+                            "__cfg__": {
                                 "__config_delimiter__": "__",
                                 "__shared_config_delimiter__": "_s_",
                                 "__graph_editor_metadata__": {},
+                                "seed": 1358329853,
                                 "dtype": {
                                     "__type__": "dtype",
                                     "name": "float16"
                                 },
-                                "scale": 1,
-                                "min_value": null,
-                                "max_value": null,
-                                "__class_ref__": "NormalizedSparseUniformInitializer",
-                                "density": 0.2,
-                                "norm_axes": [
-                                    0
+                                "dt": 1.0,
+                                "max_delay": 5.0,
+                                "delays": {
+                                    "__type__": "uniform_initializer_config",
+                                    "__cfg__": {
+                                        "__config_delimiter__": "__",
+                                        "__shared_config_delimiter__": "_s_",
+                                        "__graph_editor_metadata__": {},
+                                        "dtype": {
+                                            "__type__": "dtype",
+                                            "name": "float16"
+                                        },
+                                        "scale": 1,
+                                        "min_value": null,
+                                        "max_value": null,
+                                        "__class_ref__": "UniformInitializer"
+                                    }
+                                },
+                                "units": [
+                                    256
                                 ]
                             }
                         },
-                        "delays_config": {
-                            "__config_delimiter__": "__",
-                            "__shared_config_delimiter__": "_s_",
-                            "__graph_editor_metadata__": {},
-                            "seed": 1260303700,
-                            "dtype": {
-                                "__type__": "dtype",
-                                "name": "float16"
-                            },
-                            "dt": 0.1,
-                            "max_delay": 8.0,
-                            "delay_initializer": {
+                        "learning_rule_config": {
+                            "__type__": "three_factor_hebbian_rule_config",
+                            "__cfg__": {
                                 "__config_delimiter__": "__",
                                 "__shared_config_delimiter__": "_s_",
                                 "__graph_editor_metadata__": {},
+                                "seed": 1977320585,
                                 "dtype": {
                                     "__type__": "dtype",
-                                    "name": "uint8"
+                                    "name": "float16"
                                 },
-                                "scale": 1,
-                                "min_value": null,
-                                "max_value": null,
-                                "__class_ref__": "UniformInitializer"
-                            },
-                            "units": [
-                                256
-                            ]
-                        },
-                        "learning_rule_config": {
-                            "__config_delimiter__": "__",
-                            "__shared_config_delimiter__": "_s_",
-                            "__graph_editor_metadata__": {},
-                            "seed": 740535427,
-                            "dtype": {
-                                "__type__": "dtype",
-                                "name": "float16"
-                            },
-                            "dt": 0.1,
-                            "async_spikes": true,
-                            "pre_tau": 20.0,
-                            "post_tau": 20.0,
-                            "post_slow_tau": 20.0,
-                            "target_tau": 20000.0,
-                            "a": 1.0,
-                            "b": -1.0,
-                            "c": -1.0,
-                            "d": 1.0,
-                            "p": 20.0,
-                            "gamma": 0.1
+                                "dt": 1.0,
+                                "pre_tau": 10.0,
+                                "post_tau": 10.0,
+                                "gamma": 0.1
+                            }
                         }
                     }
                 }
@@ -826,8 +294,24 @@
                             {
                                 "__type__": "port_map",
                                 "__data__": {
+                                    "origin": "spiker",
+                                    "port": "spikes"
+                                }
+                            },
+                            {
+                                "__type__": "port_map",
+                                "__data__": {
                                     "origin": "A_ex",
                                     "port": "out_spikes"
+                                }
+                            }
+                        ],
+                        "reward": [
+                            {
+                                "__type__": "port_map",
+                                "__data__": {
+                                    "origin": "__call__",
+                                    "port": "reward"
                                 }
                             }
                         ]
@@ -835,494 +319,33 @@
                     "config": {
                         "__config_delimiter__": "__",
                         "__shared_config_delimiter__": "_s_",
-                        "__graph_editor_metadata__": {
-                            "inheritance_tree": {
-                                "main": {
-                                    "seed": {
-                                        "name": "seed",
-                                        "type_string": "int",
-                                        "inheritance_childs": [
-                                            [
-                                                "soma_config",
-                                                "seed"
-                                            ],
-                                            [
-                                                "synapses_config",
-                                                "seed"
-                                            ],
-                                            [
-                                                "delays_config",
-                                                "seed"
-                                            ],
-                                            [
-                                                "learning_rule_config",
-                                                "seed"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "dtype": {
-                                        "name": "dtype",
-                                        "type_string": "DTypeLike",
-                                        "inheritance_childs": [
-                                            [
-                                                "soma_config",
-                                                "dtype"
-                                            ],
-                                            [
-                                                "synapses_config",
-                                                "dtype"
-                                            ],
-                                            [
-                                                "delays_config",
-                                                "dtype"
-                                            ],
-                                            [
-                                                "learning_rule_config",
-                                                "dtype"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "dt": {
-                                        "name": "dt",
-                                        "type_string": "float",
-                                        "inheritance_childs": [
-                                            [
-                                                "soma_config",
-                                                "dt"
-                                            ],
-                                            [
-                                                "synapses_config",
-                                                "dt"
-                                            ],
-                                            [
-                                                "delays_config",
-                                                "dt"
-                                            ],
-                                            [
-                                                "learning_rule_config",
-                                                "dt"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "units": {
-                                        "name": "units",
-                                        "type_string": "tuple[int, ...]",
-                                        "inheritance_childs": [
-                                            [
-                                                "synapses_config",
-                                                "units"
-                                            ],
-                                            [
-                                                "delays_config",
-                                                "units"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "max_delay": {
-                                        "name": "max_delay",
-                                        "type_string": "float",
-                                        "inheritance_childs": [
-                                            [
-                                                "delays_config",
-                                                "max_delay"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "inhibitory_rate": {
-                                        "name": "inhibitory_rate",
-                                        "type_string": "float",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "async_spikes": {
-                                        "name": "async_spikes",
-                                        "type_string": "bool",
-                                        "inheritance_childs": [
-                                            [
-                                                "synapses_config",
-                                                "async_spikes"
-                                            ],
-                                            [
-                                                "learning_rule_config",
-                                                "async_spikes"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "soma_config": {
-                                        "seed": {
-                                            "name": "seed",
-                                            "type_string": "int",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dtype": {
-                                            "name": "dtype",
-                                            "type_string": "DTypeLike",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dt": {
-                                            "name": "dt",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "potential_rest": {
-                                            "name": "potential_rest",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "potential_reset": {
-                                            "name": "potential_reset",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "potential_tau": {
-                                            "name": "potential_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "resistance": {
-                                            "name": "resistance",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "threshold": {
-                                            "name": "threshold",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "cooldown": {
-                                            "name": "cooldown",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "threshold_tau": {
-                                            "name": "threshold_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "threshold_delta": {
-                                            "name": "threshold_delta",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        }
-                                    },
-                                    "synapses_config": {
-                                        "seed": {
-                                            "name": "seed",
-                                            "type_string": "int",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dtype": {
-                                            "name": "dtype",
-                                            "type_string": "DTypeLike",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dt": {
-                                            "name": "dt",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "units": {
-                                            "name": "units",
-                                            "type_string": "tuple[int, ...]",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "async_spikes": {
-                                            "name": "async_spikes",
-                                            "type_string": "bool",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "kernel_initializer": {
-                                            "dtype": {
-                                                "name": "dtype",
-                                                "type_string": "DTypeLike",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "scale": {
-                                                "name": "scale",
-                                                "type_string": "T",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "min_value": {
-                                                "name": "min_value",
-                                                "type_string": "T | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "max_value": {
-                                                "name": "max_value",
-                                                "type_string": "T | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "density": {
-                                                "name": "density",
-                                                "type_string": "float",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "norm_axes": {
-                                                "name": "norm_axes",
-                                                "type_string": "tuple[int, ...] | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            }
-                                        }
-                                    },
-                                    "delays_config": {
-                                        "seed": {
-                                            "name": "seed",
-                                            "type_string": "int",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dtype": {
-                                            "name": "dtype",
-                                            "type_string": "DTypeLike",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dt": {
-                                            "name": "dt",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "max_delay": {
-                                            "name": "max_delay",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "units": {
-                                            "name": "units",
-                                            "type_string": "tuple[int, ...]",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "delay_initializer": {
-                                            "dtype": {
-                                                "name": "dtype",
-                                                "type_string": "DTypeLike",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "scale": {
-                                                "name": "scale",
-                                                "type_string": "T",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "min_value": {
-                                                "name": "min_value",
-                                                "type_string": "T | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "max_value": {
-                                                "name": "max_value",
-                                                "type_string": "T | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            }
-                                        }
-                                    },
-                                    "learning_rule_config": {
-                                        "seed": {
-                                            "name": "seed",
-                                            "type_string": "int",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dtype": {
-                                            "name": "dtype",
-                                            "type_string": "DTypeLike",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dt": {
-                                            "name": "dt",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "async_spikes": {
-                                            "name": "async_spikes",
-                                            "type_string": "bool",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "pre_tau": {
-                                            "name": "pre_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "post_tau": {
-                                            "name": "post_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "post_slow_tau": {
-                                            "name": "post_slow_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "target_tau": {
-                                            "name": "target_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "a": {
-                                            "name": "a",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "b": {
-                                            "name": "b",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "c": {
-                                            "name": "c",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "d": {
-                                            "name": "d",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "p": {
-                                            "name": "p",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "gamma": {
-                                            "name": "gamma",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        }
-                                    }
-                                }
-                            },
-                            "pos": [
-                                158.1049665044498,
-                                -232.5673055678359
-                            ]
-                        },
-                        "seed": 542559901,
+                        "__graph_editor_metadata__": {},
+                        "seed": 1402160772,
                         "dtype": {
                             "__type__": "dtype",
                             "name": "float16"
                         },
-                        "dt": 0.1,
+                        "dt": 1.0,
                         "units": [
                             64
                         ],
-                        "max_delay": 1,
                         "inhibitory_rate": 1.0,
-                        "async_spikes": true,
                         "soma_config": {
                             "__config_delimiter__": "__",
                             "__shared_config_delimiter__": "_s_",
                             "__graph_editor_metadata__": {},
-                            "seed": 2699412678,
+                            "seed": 918089204,
                             "dtype": {
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 0.1,
+                            "dt": 1.0,
                             "potential_rest": -60.0,
                             "potential_reset": -50.0,
                             "potential_tau": 20.0,
-                            "resistance": 100.0,
+                            "resistance": 0.1,
                             "threshold": -40.0,
-                            "cooldown": 2.0,
+                            "cooldown": 1.0,
                             "threshold_tau": 20.0,
                             "threshold_delta": 100.0
                         },
@@ -1330,83 +353,86 @@
                             "__config_delimiter__": "__",
                             "__shared_config_delimiter__": "_s_",
                             "__graph_editor_metadata__": {},
-                            "seed": 3754483790,
+                            "seed": 1342668360,
                             "dtype": {
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 0.1,
+                            "dt": 1.0,
                             "units": [
                                 64
                             ],
-                            "async_spikes": true,
-                            "kernel_initializer": {
+                            "kernel": {
+                                "__type__": "normalized_sparse_uniform_initializer_config",
+                                "__cfg__": {
+                                    "__config_delimiter__": "__",
+                                    "__shared_config_delimiter__": "_s_",
+                                    "__graph_editor_metadata__": {},
+                                    "dtype": {
+                                        "__type__": "dtype",
+                                        "name": "float16"
+                                    },
+                                    "scale": 30000.0,
+                                    "min_value": null,
+                                    "max_value": 400.0,
+                                    "__class_ref__": "NormalizedSparseUniformInitializer",
+                                    "density": 0.1,
+                                    "norm_axes": [
+                                        0
+                                    ]
+                                }
+                            }
+                        },
+                        "delays_config": {
+                            "__type__": "n2n_delays_config",
+                            "__cfg__": {
                                 "__config_delimiter__": "__",
                                 "__shared_config_delimiter__": "_s_",
                                 "__graph_editor_metadata__": {},
+                                "seed": 874411649,
                                 "dtype": {
                                     "__type__": "dtype",
                                     "name": "float16"
                                 },
-                                "scale": 1,
-                                "min_value": null,
-                                "max_value": null,
-                                "__class_ref__": "NormalizedSparseUniformInitializer",
-                                "density": 0.2,
-                                "norm_axes": [
-                                    0
+                                "dt": 1.0,
+                                "max_delay": 5.0,
+                                "delays": {
+                                    "__type__": "uniform_initializer_config",
+                                    "__cfg__": {
+                                        "__config_delimiter__": "__",
+                                        "__shared_config_delimiter__": "_s_",
+                                        "__graph_editor_metadata__": {},
+                                        "dtype": {
+                                            "__type__": "dtype",
+                                            "name": "float16"
+                                        },
+                                        "scale": 1,
+                                        "min_value": null,
+                                        "max_value": null,
+                                        "__class_ref__": "UniformInitializer"
+                                    }
+                                },
+                                "units": [
+                                    64
                                 ]
                             }
                         },
-                        "delays_config": {
-                            "__config_delimiter__": "__",
-                            "__shared_config_delimiter__": "_s_",
-                            "__graph_editor_metadata__": {},
-                            "seed": 3206462833,
-                            "dtype": {
-                                "__type__": "dtype",
-                                "name": "float16"
-                            },
-                            "dt": 0.1,
-                            "max_delay": 8.0,
-                            "delay_initializer": {
+                        "learning_rule_config": {
+                            "__type__": "three_factor_hebbian_rule_config",
+                            "__cfg__": {
                                 "__config_delimiter__": "__",
                                 "__shared_config_delimiter__": "_s_",
                                 "__graph_editor_metadata__": {},
+                                "seed": 2394139817,
                                 "dtype": {
                                     "__type__": "dtype",
-                                    "name": "uint8"
+                                    "name": "float16"
                                 },
-                                "scale": 1,
-                                "min_value": null,
-                                "max_value": null,
-                                "__class_ref__": "UniformInitializer"
-                            },
-                            "units": [
-                                64
-                            ]
-                        },
-                        "learning_rule_config": {
-                            "__config_delimiter__": "__",
-                            "__shared_config_delimiter__": "_s_",
-                            "__graph_editor_metadata__": {},
-                            "seed": 1734563680,
-                            "dtype": {
-                                "__type__": "dtype",
-                                "name": "float16"
-                            },
-                            "dt": 0.1,
-                            "async_spikes": true,
-                            "pre_tau": 20.0,
-                            "post_tau": 20.0,
-                            "post_slow_tau": 20.0,
-                            "target_tau": 20000.0,
-                            "a": 1.0,
-                            "b": -1.0,
-                            "c": -1.0,
-                            "d": 1.0,
-                            "p": 20.0,
-                            "gamma": 0.1
+                                "dt": 1.0,
+                                "pre_tau": 10.0,
+                                "post_tau": 10.0,
+                                "gamma": 0.1
+                            }
                         }
                     }
                 }
@@ -1441,497 +467,45 @@
                                     "port": "out_spikes"
                                 }
                             }
+                        ],
+                        "reward": [
+                            {
+                                "__type__": "port_map",
+                                "__data__": {
+                                    "origin": "__call__",
+                                    "port": "reward"
+                                }
+                            }
                         ]
                     },
                     "config": {
                         "__config_delimiter__": "__",
                         "__shared_config_delimiter__": "_s_",
-                        "__graph_editor_metadata__": {
-                            "inheritance_tree": {
-                                "main": {
-                                    "seed": {
-                                        "name": "seed",
-                                        "type_string": "int",
-                                        "inheritance_childs": [
-                                            [
-                                                "soma_config",
-                                                "seed"
-                                            ],
-                                            [
-                                                "synapses_config",
-                                                "seed"
-                                            ],
-                                            [
-                                                "delays_config",
-                                                "seed"
-                                            ],
-                                            [
-                                                "learning_rule_config",
-                                                "seed"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "dtype": {
-                                        "name": "dtype",
-                                        "type_string": "DTypeLike",
-                                        "inheritance_childs": [
-                                            [
-                                                "soma_config",
-                                                "dtype"
-                                            ],
-                                            [
-                                                "synapses_config",
-                                                "dtype"
-                                            ],
-                                            [
-                                                "delays_config",
-                                                "dtype"
-                                            ],
-                                            [
-                                                "learning_rule_config",
-                                                "dtype"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "dt": {
-                                        "name": "dt",
-                                        "type_string": "float",
-                                        "inheritance_childs": [
-                                            [
-                                                "soma_config",
-                                                "dt"
-                                            ],
-                                            [
-                                                "synapses_config",
-                                                "dt"
-                                            ],
-                                            [
-                                                "delays_config",
-                                                "dt"
-                                            ],
-                                            [
-                                                "learning_rule_config",
-                                                "dt"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "units": {
-                                        "name": "units",
-                                        "type_string": "tuple[int, ...]",
-                                        "inheritance_childs": [
-                                            [
-                                                "synapses_config",
-                                                "units"
-                                            ],
-                                            [
-                                                "delays_config",
-                                                "units"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "max_delay": {
-                                        "name": "max_delay",
-                                        "type_string": "float",
-                                        "inheritance_childs": [
-                                            [
-                                                "delays_config",
-                                                "max_delay"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "inhibitory_rate": {
-                                        "name": "inhibitory_rate",
-                                        "type_string": "float",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "async_spikes": {
-                                        "name": "async_spikes",
-                                        "type_string": "bool",
-                                        "inheritance_childs": [
-                                            [
-                                                "synapses_config",
-                                                "async_spikes"
-                                            ],
-                                            [
-                                                "learning_rule_config",
-                                                "async_spikes"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "soma_config": {
-                                        "seed": {
-                                            "name": "seed",
-                                            "type_string": "int",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dtype": {
-                                            "name": "dtype",
-                                            "type_string": "DTypeLike",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dt": {
-                                            "name": "dt",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "potential_rest": {
-                                            "name": "potential_rest",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "potential_reset": {
-                                            "name": "potential_reset",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "potential_tau": {
-                                            "name": "potential_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "resistance": {
-                                            "name": "resistance",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "threshold": {
-                                            "name": "threshold",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "cooldown": {
-                                            "name": "cooldown",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "threshold_tau": {
-                                            "name": "threshold_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "threshold_delta": {
-                                            "name": "threshold_delta",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        }
-                                    },
-                                    "synapses_config": {
-                                        "seed": {
-                                            "name": "seed",
-                                            "type_string": "int",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dtype": {
-                                            "name": "dtype",
-                                            "type_string": "DTypeLike",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dt": {
-                                            "name": "dt",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "units": {
-                                            "name": "units",
-                                            "type_string": "tuple[int, ...]",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "async_spikes": {
-                                            "name": "async_spikes",
-                                            "type_string": "bool",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "kernel_initializer": {
-                                            "dtype": {
-                                                "name": "dtype",
-                                                "type_string": "DTypeLike",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "scale": {
-                                                "name": "scale",
-                                                "type_string": "T",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "min_value": {
-                                                "name": "min_value",
-                                                "type_string": "T | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "max_value": {
-                                                "name": "max_value",
-                                                "type_string": "T | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "density": {
-                                                "name": "density",
-                                                "type_string": "float",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "norm_axes": {
-                                                "name": "norm_axes",
-                                                "type_string": "tuple[int, ...] | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            }
-                                        }
-                                    },
-                                    "delays_config": {
-                                        "seed": {
-                                            "name": "seed",
-                                            "type_string": "int",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dtype": {
-                                            "name": "dtype",
-                                            "type_string": "DTypeLike",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dt": {
-                                            "name": "dt",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "max_delay": {
-                                            "name": "max_delay",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "units": {
-                                            "name": "units",
-                                            "type_string": "tuple[int, ...]",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "delay_initializer": {
-                                            "dtype": {
-                                                "name": "dtype",
-                                                "type_string": "DTypeLike",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "scale": {
-                                                "name": "scale",
-                                                "type_string": "T",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "min_value": {
-                                                "name": "min_value",
-                                                "type_string": "T | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "max_value": {
-                                                "name": "max_value",
-                                                "type_string": "T | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            }
-                                        }
-                                    },
-                                    "learning_rule_config": {
-                                        "seed": {
-                                            "name": "seed",
-                                            "type_string": "int",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dtype": {
-                                            "name": "dtype",
-                                            "type_string": "DTypeLike",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dt": {
-                                            "name": "dt",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "async_spikes": {
-                                            "name": "async_spikes",
-                                            "type_string": "bool",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "pre_tau": {
-                                            "name": "pre_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "post_tau": {
-                                            "name": "post_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "post_slow_tau": {
-                                            "name": "post_slow_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "target_tau": {
-                                            "name": "target_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "a": {
-                                            "name": "a",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "b": {
-                                            "name": "b",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "c": {
-                                            "name": "c",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "d": {
-                                            "name": "d",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "p": {
-                                            "name": "p",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "gamma": {
-                                            "name": "gamma",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        }
-                                    }
-                                }
-                            },
-                            "pos": [
-                                -106.08333236427602,
-                                111.18349257409699
-                            ]
-                        },
-                        "seed": 4273006449,
+                        "__graph_editor_metadata__": {},
+                        "seed": 3329659806,
                         "dtype": {
                             "__type__": "dtype",
                             "name": "float16"
                         },
-                        "dt": 0.1,
+                        "dt": 1.0,
                         "units": [
                             256
                         ],
-                        "max_delay": 1,
                         "inhibitory_rate": 0.0,
-                        "async_spikes": true,
                         "soma_config": {
                             "__config_delimiter__": "__",
                             "__shared_config_delimiter__": "_s_",
                             "__graph_editor_metadata__": {},
-                            "seed": 1795714517,
+                            "seed": 998671358,
                             "dtype": {
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 0.1,
+                            "dt": 1.0,
                             "potential_rest": -60.0,
                             "potential_reset": -50.0,
                             "potential_tau": 20.0,
-                            "resistance": 100.0,
+                            "resistance": 0.1,
                             "threshold": -40.0,
                             "cooldown": 2.0,
                             "threshold_tau": 20.0,
@@ -1941,83 +515,86 @@
                             "__config_delimiter__": "__",
                             "__shared_config_delimiter__": "_s_",
                             "__graph_editor_metadata__": {},
-                            "seed": 1898322204,
+                            "seed": 1445428516,
                             "dtype": {
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 0.1,
+                            "dt": 1.0,
                             "units": [
                                 256
                             ],
-                            "async_spikes": true,
-                            "kernel_initializer": {
+                            "kernel": {
+                                "__type__": "normalized_sparse_uniform_initializer_config",
+                                "__cfg__": {
+                                    "__config_delimiter__": "__",
+                                    "__shared_config_delimiter__": "_s_",
+                                    "__graph_editor_metadata__": {},
+                                    "dtype": {
+                                        "__type__": "dtype",
+                                        "name": "float16"
+                                    },
+                                    "scale": 15000.0,
+                                    "min_value": null,
+                                    "max_value": 200.0,
+                                    "__class_ref__": "NormalizedSparseUniformInitializer",
+                                    "density": 0.1,
+                                    "norm_axes": [
+                                        0
+                                    ]
+                                }
+                            }
+                        },
+                        "delays_config": {
+                            "__type__": "n2n_delays_config",
+                            "__cfg__": {
                                 "__config_delimiter__": "__",
                                 "__shared_config_delimiter__": "_s_",
                                 "__graph_editor_metadata__": {},
+                                "seed": 1358329853,
                                 "dtype": {
                                     "__type__": "dtype",
                                     "name": "float16"
                                 },
-                                "scale": 1,
-                                "min_value": null,
-                                "max_value": null,
-                                "__class_ref__": "NormalizedSparseUniformInitializer",
-                                "density": 0.2,
-                                "norm_axes": [
-                                    0
+                                "dt": 1.0,
+                                "max_delay": 5.0,
+                                "delays": {
+                                    "__type__": "uniform_initializer_config",
+                                    "__cfg__": {
+                                        "__config_delimiter__": "__",
+                                        "__shared_config_delimiter__": "_s_",
+                                        "__graph_editor_metadata__": {},
+                                        "dtype": {
+                                            "__type__": "dtype",
+                                            "name": "float16"
+                                        },
+                                        "scale": 1,
+                                        "min_value": null,
+                                        "max_value": null,
+                                        "__class_ref__": "UniformInitializer"
+                                    }
+                                },
+                                "units": [
+                                    256
                                 ]
                             }
                         },
-                        "delays_config": {
-                            "__config_delimiter__": "__",
-                            "__shared_config_delimiter__": "_s_",
-                            "__graph_editor_metadata__": {},
-                            "seed": 2586470067,
-                            "dtype": {
-                                "__type__": "dtype",
-                                "name": "float16"
-                            },
-                            "dt": 0.1,
-                            "max_delay": 8.0,
-                            "delay_initializer": {
+                        "learning_rule_config": {
+                            "__type__": "three_factor_hebbian_rule_config",
+                            "__cfg__": {
                                 "__config_delimiter__": "__",
                                 "__shared_config_delimiter__": "_s_",
                                 "__graph_editor_metadata__": {},
+                                "seed": 1977320585,
                                 "dtype": {
                                     "__type__": "dtype",
-                                    "name": "uint8"
+                                    "name": "float16"
                                 },
-                                "scale": 1,
-                                "min_value": null,
-                                "max_value": null,
-                                "__class_ref__": "UniformInitializer"
-                            },
-                            "units": [
-                                256
-                            ]
-                        },
-                        "learning_rule_config": {
-                            "__config_delimiter__": "__",
-                            "__shared_config_delimiter__": "_s_",
-                            "__graph_editor_metadata__": {},
-                            "seed": 2768251944,
-                            "dtype": {
-                                "__type__": "dtype",
-                                "name": "float16"
-                            },
-                            "dt": 0.1,
-                            "async_spikes": true,
-                            "pre_tau": 20.0,
-                            "post_tau": 20.0,
-                            "post_slow_tau": 20.0,
-                            "target_tau": 20000.0,
-                            "a": 1.0,
-                            "b": -1.0,
-                            "c": -1.0,
-                            "d": 1.0,
-                            "p": 20.0,
-                            "gamma": 0.1
+                                "dt": 1.0,
+                                "pre_tau": 10.0,
+                                "post_tau": 10.0,
+                                "gamma": 0.1
+                            }
                         }
                     }
                 }
@@ -2034,8 +611,24 @@
                             {
                                 "__type__": "port_map",
                                 "__data__": {
+                                    "origin": "spiker",
+                                    "port": "spikes"
+                                }
+                            },
+                            {
+                                "__type__": "port_map",
+                                "__data__": {
                                     "origin": "B_ex",
                                     "port": "out_spikes"
+                                }
+                            }
+                        ],
+                        "reward": [
+                            {
+                                "__type__": "port_map",
+                                "__data__": {
+                                    "origin": "__call__",
+                                    "port": "reward"
                                 }
                             }
                         ]
@@ -2043,494 +636,33 @@
                     "config": {
                         "__config_delimiter__": "__",
                         "__shared_config_delimiter__": "_s_",
-                        "__graph_editor_metadata__": {
-                            "inheritance_tree": {
-                                "main": {
-                                    "seed": {
-                                        "name": "seed",
-                                        "type_string": "int",
-                                        "inheritance_childs": [
-                                            [
-                                                "soma_config",
-                                                "seed"
-                                            ],
-                                            [
-                                                "synapses_config",
-                                                "seed"
-                                            ],
-                                            [
-                                                "delays_config",
-                                                "seed"
-                                            ],
-                                            [
-                                                "learning_rule_config",
-                                                "seed"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "dtype": {
-                                        "name": "dtype",
-                                        "type_string": "DTypeLike",
-                                        "inheritance_childs": [
-                                            [
-                                                "soma_config",
-                                                "dtype"
-                                            ],
-                                            [
-                                                "synapses_config",
-                                                "dtype"
-                                            ],
-                                            [
-                                                "delays_config",
-                                                "dtype"
-                                            ],
-                                            [
-                                                "learning_rule_config",
-                                                "dtype"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "dt": {
-                                        "name": "dt",
-                                        "type_string": "float",
-                                        "inheritance_childs": [
-                                            [
-                                                "soma_config",
-                                                "dt"
-                                            ],
-                                            [
-                                                "synapses_config",
-                                                "dt"
-                                            ],
-                                            [
-                                                "delays_config",
-                                                "dt"
-                                            ],
-                                            [
-                                                "learning_rule_config",
-                                                "dt"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "units": {
-                                        "name": "units",
-                                        "type_string": "tuple[int, ...]",
-                                        "inheritance_childs": [
-                                            [
-                                                "synapses_config",
-                                                "units"
-                                            ],
-                                            [
-                                                "delays_config",
-                                                "units"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "max_delay": {
-                                        "name": "max_delay",
-                                        "type_string": "float",
-                                        "inheritance_childs": [
-                                            [
-                                                "delays_config",
-                                                "max_delay"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "inhibitory_rate": {
-                                        "name": "inhibitory_rate",
-                                        "type_string": "float",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "async_spikes": {
-                                        "name": "async_spikes",
-                                        "type_string": "bool",
-                                        "inheritance_childs": [
-                                            [
-                                                "synapses_config",
-                                                "async_spikes"
-                                            ],
-                                            [
-                                                "learning_rule_config",
-                                                "async_spikes"
-                                            ]
-                                        ],
-                                        "break_inheritance": false,
-                                        "flags": 8
-                                    },
-                                    "soma_config": {
-                                        "seed": {
-                                            "name": "seed",
-                                            "type_string": "int",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dtype": {
-                                            "name": "dtype",
-                                            "type_string": "DTypeLike",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dt": {
-                                            "name": "dt",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "potential_rest": {
-                                            "name": "potential_rest",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "potential_reset": {
-                                            "name": "potential_reset",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "potential_tau": {
-                                            "name": "potential_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "resistance": {
-                                            "name": "resistance",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "threshold": {
-                                            "name": "threshold",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "cooldown": {
-                                            "name": "cooldown",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "threshold_tau": {
-                                            "name": "threshold_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "threshold_delta": {
-                                            "name": "threshold_delta",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        }
-                                    },
-                                    "synapses_config": {
-                                        "seed": {
-                                            "name": "seed",
-                                            "type_string": "int",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dtype": {
-                                            "name": "dtype",
-                                            "type_string": "DTypeLike",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dt": {
-                                            "name": "dt",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "units": {
-                                            "name": "units",
-                                            "type_string": "tuple[int, ...]",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "async_spikes": {
-                                            "name": "async_spikes",
-                                            "type_string": "bool",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "kernel_initializer": {
-                                            "dtype": {
-                                                "name": "dtype",
-                                                "type_string": "DTypeLike",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "scale": {
-                                                "name": "scale",
-                                                "type_string": "T",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "min_value": {
-                                                "name": "min_value",
-                                                "type_string": "T | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "max_value": {
-                                                "name": "max_value",
-                                                "type_string": "T | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "density": {
-                                                "name": "density",
-                                                "type_string": "float",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "norm_axes": {
-                                                "name": "norm_axes",
-                                                "type_string": "tuple[int, ...] | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            }
-                                        }
-                                    },
-                                    "delays_config": {
-                                        "seed": {
-                                            "name": "seed",
-                                            "type_string": "int",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dtype": {
-                                            "name": "dtype",
-                                            "type_string": "DTypeLike",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dt": {
-                                            "name": "dt",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "max_delay": {
-                                            "name": "max_delay",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "units": {
-                                            "name": "units",
-                                            "type_string": "tuple[int, ...]",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "delay_initializer": {
-                                            "dtype": {
-                                                "name": "dtype",
-                                                "type_string": "DTypeLike",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "scale": {
-                                                "name": "scale",
-                                                "type_string": "T",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "min_value": {
-                                                "name": "min_value",
-                                                "type_string": "T | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            },
-                                            "max_value": {
-                                                "name": "max_value",
-                                                "type_string": "T | None",
-                                                "inheritance_childs": [],
-                                                "break_inheritance": true,
-                                                "flags": 0
-                                            }
-                                        }
-                                    },
-                                    "learning_rule_config": {
-                                        "seed": {
-                                            "name": "seed",
-                                            "type_string": "int",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dtype": {
-                                            "name": "dtype",
-                                            "type_string": "DTypeLike",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "dt": {
-                                            "name": "dt",
-                                            "type_string": "float",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "async_spikes": {
-                                            "name": "async_spikes",
-                                            "type_string": "bool",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 2
-                                        },
-                                        "pre_tau": {
-                                            "name": "pre_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "post_tau": {
-                                            "name": "post_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "post_slow_tau": {
-                                            "name": "post_slow_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "target_tau": {
-                                            "name": "target_tau",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "a": {
-                                            "name": "a",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "b": {
-                                            "name": "b",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "c": {
-                                            "name": "c",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "d": {
-                                            "name": "d",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "p": {
-                                            "name": "p",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        },
-                                        "gamma": {
-                                            "name": "gamma",
-                                            "type_string": "float | jax.Array",
-                                            "inheritance_childs": [],
-                                            "break_inheritance": false,
-                                            "flags": 0
-                                        }
-                                    }
-                                }
-                            },
-                            "pos": [
-                                131.58413341338087,
-                                220.3269210642656
-                            ]
-                        },
-                        "seed": 1786492405,
+                        "__graph_editor_metadata__": {},
+                        "seed": 1402160772,
                         "dtype": {
                             "__type__": "dtype",
                             "name": "float16"
                         },
-                        "dt": 0.1,
+                        "dt": 1.0,
                         "units": [
                             64
                         ],
-                        "max_delay": 1,
                         "inhibitory_rate": 1.0,
-                        "async_spikes": true,
                         "soma_config": {
                             "__config_delimiter__": "__",
                             "__shared_config_delimiter__": "_s_",
                             "__graph_editor_metadata__": {},
-                            "seed": 4237839438,
+                            "seed": 918089204,
                             "dtype": {
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 0.1,
+                            "dt": 1.0,
                             "potential_rest": -60.0,
                             "potential_reset": -50.0,
                             "potential_tau": 20.0,
-                            "resistance": 100.0,
+                            "resistance": 0.1,
                             "threshold": -40.0,
-                            "cooldown": 2.0,
+                            "cooldown": 1.0,
                             "threshold_tau": 20.0,
                             "threshold_delta": 100.0
                         },
@@ -2538,83 +670,86 @@
                             "__config_delimiter__": "__",
                             "__shared_config_delimiter__": "_s_",
                             "__graph_editor_metadata__": {},
-                            "seed": 1204325373,
+                            "seed": 1342668360,
                             "dtype": {
                                 "__type__": "dtype",
                                 "name": "float16"
                             },
-                            "dt": 0.1,
+                            "dt": 1.0,
                             "units": [
                                 64
                             ],
-                            "async_spikes": true,
-                            "kernel_initializer": {
+                            "kernel": {
+                                "__type__": "normalized_sparse_uniform_initializer_config",
+                                "__cfg__": {
+                                    "__config_delimiter__": "__",
+                                    "__shared_config_delimiter__": "_s_",
+                                    "__graph_editor_metadata__": {},
+                                    "dtype": {
+                                        "__type__": "dtype",
+                                        "name": "float16"
+                                    },
+                                    "scale": 30000.0,
+                                    "min_value": null,
+                                    "max_value": 400.0,
+                                    "__class_ref__": "NormalizedSparseUniformInitializer",
+                                    "density": 0.1,
+                                    "norm_axes": [
+                                        0
+                                    ]
+                                }
+                            }
+                        },
+                        "delays_config": {
+                            "__type__": "n2n_delays_config",
+                            "__cfg__": {
                                 "__config_delimiter__": "__",
                                 "__shared_config_delimiter__": "_s_",
                                 "__graph_editor_metadata__": {},
+                                "seed": 874411649,
                                 "dtype": {
                                     "__type__": "dtype",
                                     "name": "float16"
                                 },
-                                "scale": 1,
-                                "min_value": null,
-                                "max_value": null,
-                                "__class_ref__": "NormalizedSparseUniformInitializer",
-                                "density": 0.2,
-                                "norm_axes": [
-                                    0
+                                "dt": 1.0,
+                                "max_delay": 5.0,
+                                "delays": {
+                                    "__type__": "uniform_initializer_config",
+                                    "__cfg__": {
+                                        "__config_delimiter__": "__",
+                                        "__shared_config_delimiter__": "_s_",
+                                        "__graph_editor_metadata__": {},
+                                        "dtype": {
+                                            "__type__": "dtype",
+                                            "name": "float16"
+                                        },
+                                        "scale": 1,
+                                        "min_value": null,
+                                        "max_value": null,
+                                        "__class_ref__": "UniformInitializer"
+                                    }
+                                },
+                                "units": [
+                                    64
                                 ]
                             }
                         },
-                        "delays_config": {
-                            "__config_delimiter__": "__",
-                            "__shared_config_delimiter__": "_s_",
-                            "__graph_editor_metadata__": {},
-                            "seed": 999334468,
-                            "dtype": {
-                                "__type__": "dtype",
-                                "name": "float16"
-                            },
-                            "dt": 0.1,
-                            "max_delay": 8.0,
-                            "delay_initializer": {
+                        "learning_rule_config": {
+                            "__type__": "three_factor_hebbian_rule_config",
+                            "__cfg__": {
                                 "__config_delimiter__": "__",
                                 "__shared_config_delimiter__": "_s_",
                                 "__graph_editor_metadata__": {},
+                                "seed": 2394139817,
                                 "dtype": {
                                     "__type__": "dtype",
-                                    "name": "uint8"
+                                    "name": "float16"
                                 },
-                                "scale": 1,
-                                "min_value": null,
-                                "max_value": null,
-                                "__class_ref__": "UniformInitializer"
-                            },
-                            "units": [
-                                64
-                            ]
-                        },
-                        "learning_rule_config": {
-                            "__config_delimiter__": "__",
-                            "__shared_config_delimiter__": "_s_",
-                            "__graph_editor_metadata__": {},
-                            "seed": 866515951,
-                            "dtype": {
-                                "__type__": "dtype",
-                                "name": "float16"
-                            },
-                            "dt": 0.1,
-                            "async_spikes": true,
-                            "pre_tau": 20.0,
-                            "post_tau": 20.0,
-                            "post_slow_tau": 20.0,
-                            "target_tau": 20000.0,
-                            "a": 1.0,
-                            "b": -1.0,
-                            "c": -1.0,
-                            "d": 1.0,
-                            "p": 20.0,
-                            "gamma": 0.1
+                                "dt": 1.0,
+                                "pre_tau": 10.0,
+                                "post_tau": 10.0,
+                                "gamma": 0.1
+                            }
                         }
                     }
                 }
@@ -2647,78 +782,13 @@
                     "config": {
                         "__config_delimiter__": "__",
                         "__shared_config_delimiter__": "_s_",
-                        "__graph_editor_metadata__": {
-                            "inheritance_tree": {
-                                "main": {
-                                    "seed": {
-                                        "name": "seed",
-                                        "type_string": "int",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "dtype": {
-                                        "name": "dtype",
-                                        "type_string": "DTypeLike",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "dt": {
-                                        "name": "dt",
-                                        "type_string": "float",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "num_outputs": {
-                                        "name": "num_outputs",
-                                        "type_string": "int",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "saturation_freq": {
-                                        "name": "saturation_freq",
-                                        "type_string": "float",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "tau": {
-                                        "name": "tau",
-                                        "type_string": "float",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "shuffle": {
-                                        "name": "shuffle",
-                                        "type_string": "bool",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    },
-                                    "smooth_trace": {
-                                        "name": "smooth_trace",
-                                        "type_string": "bool",
-                                        "inheritance_childs": [],
-                                        "break_inheritance": false,
-                                        "flags": 0
-                                    }
-                                }
-                            },
-                            "pos": [
-                                443.71393825442374,
-                                -5.100160209820963
-                            ]
-                        },
-                        "seed": 2361819834,
+                        "__graph_editor_metadata__": {},
+                        "seed": 3480677908,
                         "dtype": {
                             "__type__": "dtype",
                             "name": "float16"
                         },
-                        "dt": 0.1,
+                        "dt": 1.0,
                         "num_outputs": 2,
                         "saturation_freq": 50.0,
                         "tau": 20.0,

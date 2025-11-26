@@ -115,7 +115,7 @@ class NDelays(Delays):
         self._bitmask.value = self._bitmask.value.at[self._current_idx.value].set(new_bitmask_row)
         self._current_idx.value = (self._current_idx.value + 1) % self._buffer_size
 
-    def _gather(self, sign: jax.Array) -> SpikeArray:
+    def _gather(self, inhibition_mask: jax.Array) -> SpikeArray:
         """
             Gather operation.
         """
@@ -125,7 +125,11 @@ class NDelays(Delays):
         delay_idx = (self._current_idx.value - self.delays_kernel.value - 1) % self._buffer_size
         selected_bytes = self._bitmask.value[delay_idx, byte_indices]
         selected_bits = (selected_bytes >> bit_indices) & 1
-        return SpikeArray(selected_bits.astype(self._dtype).reshape(self._shape) * sign, async_spikes=False)
+        return SpikeArray(
+            selected_bits.reshape(self._shape), 
+            inhibition_mask=inhibition_mask, 
+        async_spikes=False
+        )
 
     def get_dense(self,) -> jax.Array:
         """
@@ -134,11 +138,11 @@ class NDelays(Delays):
         # Unpack all bitmasks into bits (shape: [buffer_size, num_bytes, 8])
         unpacked = jnp.unpackbits(self._bitmask.value, axis=1, count=self._units)
         # Flatten to [buffer_size, num_bytes*8] and truncate to vector_size
-        return unpacked.reshape(self._buffer_size, -1)[:, :self._units].astype(self._dtype).reshape((self._buffer_size,self._units))
+        return unpacked.reshape(self._buffer_size, -1)[:, :self._units].reshape((self._buffer_size,self._units))
 
     def __call__(self, in_spikes: SpikeArray) -> DelaysOutput:
         self._push(in_spikes)
-        out_spikes = self._gather(1 - 2 *jnp.signbit(in_spikes.value))
+        out_spikes = self._gather(in_spikes.inhibition_mask)
         return {
             'out_spikes': out_spikes
         }
