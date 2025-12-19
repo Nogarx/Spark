@@ -8,6 +8,7 @@ __pycache__/
 *.py[codz]
 *$py.class
 benchmarks/*.npy
+benchmarks/npy_files
 
 # C extensions
 *.so

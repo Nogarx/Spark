@@ -81,6 +81,7 @@ def build_LIF_model(
 	threshold,
 	cooldown,
 ) -> spark.nn.neurons.LIFNeuron:
+<<<<<<< HEAD
 	# NOTE: We need to substract 1 timestep from the cooldown to match the Brian2 dynamic 
 	# Since we update the refractory the period at the end of the cycle, Brian2 does it at the begining. 
 	lif_neuron = spark.nn.neurons.LIFNeuron(
@@ -107,6 +108,32 @@ def build_LIF_model(
 	lif_neuron.config.inspect()
 	lif_neuron.synapses.config.inspect()
 	return lif_neuron
+=======
+    # NOTE: We need to substract 1 timestep from the cooldown to match the Brian2 dynamic 
+    # Since we update the refractory the period at the end of the cycle, Brian2 does it at the begining. 
+    lif_neuron = spark.nn.neurons.LIFNeuron(
+        _s_units = (1,),
+        _s_dt = dt,
+        _s_dtype = jnp.float16,
+        inhibitory_rate = 0.0,
+        soma_config = spark.nn.somas.StrictRefractoryLeakySomaConfig(
+            potential_rest = potential_rest,
+            potential_reset = potential_reset,
+            potential_tau = potential_tau,
+            resistance = resistance,
+            threshold = threshold,
+            cooldown = cooldown - dt, 
+        ),
+        synapses_config = spark.nn.synapses.LinearSynapsesConfig(
+            units = (1,),
+            kernel_initializer = spark.nn.initializers.ConstantInitializerConfig(scale=synapse_strength),
+        ),
+        delays_config = None,
+        learning_rule_config = None,
+    )
+    lif_neuron(in_spikes=spark.SpikeArray( jnp.zeros((1,)) ))
+    return lif_neuron
+>>>>>>> d01410941d694e6eb4333fd1e6feed65dbb913a4
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -204,7 +231,7 @@ simulate_HH_model_spark = partial(simulate_model_spark, build_func=build_HH_mode
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-def adex_brain_config(
+def adex_brain_model_1_config(
 	units,
 	ker_density,
 	dt,
@@ -296,7 +323,194 @@ def adex_brain_config(
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+def adex_brain_model_2_config(
+	units,
+	ker_density,
+	dt,
+	synapse_strength,
+	potential_rest,
+	potential_reset,
+	potential_tau,
+	resistance, # MΩ -> GΩ
+	threshold,
+	rheobase_threshold,
+	spike_slope,
+	adaptation_tau,
+	adaptation_delta,
+	adaptation_subthreshold,
+) -> spark.nn.BrainConfig:
+
+	adex_config = spark.nn.neurons.AdExNeuronConfig(
+		_s_units = (units,),
+		_s_dt = dt,
+		_s_dtype = jnp.float16,
+		inhibitory_rate = 0.0,
+		soma_config = spark.nn.somas.AdaptiveExponentialSomaConfig(
+			potential_rest = potential_rest,
+			potential_reset = potential_reset,
+			potential_tau = potential_tau,
+			resistance = resistance,
+			threshold = threshold,
+			rheobase_threshold = rheobase_threshold,
+			spike_slope = spike_slope,
+			adaptation_tau = adaptation_tau,
+			adaptation_delta = adaptation_delta,
+			adaptation_subthreshold = adaptation_subthreshold,
+		),
+		synapses_config = spark.nn.synapses.LinearSynapsesConfig(
+			units = (units,),
+			kernel_initializer = spark.nn.initializers.SparseUniformInitializerConfig(
+				density = ker_density,
+				scale = synapse_strength
+			),
+		),
+		delays_config = None,
+		learning_rule_config = None,
+	)
+
+	def adex_specs(name, origin, port) -> spark.ModuleSpecs:
+		return spark.ModuleSpecs(
+			name = name, 
+			module_cls = spark.nn.neurons.AdExNeuron, 
+			inputs = {
+				'in_spikes': [
+					spark.PortMap(origin=o, port=p) for o, p in zip(origin, port)
+				]
+			},
+			config = adex_config
+		)
+	
+	input_map = {
+		'spikes': spark.InputSpec(
+			payload_type=spark.FloatArray, 
+			shape=(units,), 
+			dtype=jnp.float16,
+		)
+	}
+	output_map = {
+		'spikes': {
+			'input': spark.PortMap(
+				origin='n_D1',
+				port='out_spikes'
+			),
+			'spec': spark.OutputSpec(
+				payload_type=spark.SpikeArray,
+				shape=(units,),
+				dtype=jnp.float16
+			)
+		}
+	}
+	modules_map = {
+		'n_A1': adex_specs('n_A1', ['__call__'], ['spikes']),
+		'n_A2': adex_specs('n_A2', ['n_A1'], ['out_spikes']),
+		'n_B1': adex_specs('n_B1', ['__call__'], ['spikes']),
+		'n_B2': adex_specs('n_B2', ['n_B1'], ['out_spikes']),
+		'n_C1': adex_specs('n_C1', ['__call__'], ['spikes']),
+		'n_C2': adex_specs('n_C2', ['n_C1'], ['out_spikes']),
+		'n_D1': adex_specs('n_D1', ['n_A2', 'n_B2', 'n_C2'], ['out_spikes', 'out_spikes', 'out_spikes']),
+	}
+
+	return spark.nn.BrainConfig(input_map=input_map, output_map=output_map, modules_map=modules_map)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def adex_brain_model_3_config(
+	units,
+	ker_density,
+	dt,
+	synapse_strength,
+	potential_rest,
+	potential_reset,
+	potential_tau,
+	resistance, # MΩ -> GΩ
+	threshold,
+	rheobase_threshold,
+	spike_slope,
+	adaptation_tau,
+	adaptation_delta,
+	adaptation_subthreshold,
+) -> spark.nn.BrainConfig:
+
+	adex_config = spark.nn.neurons.AdExNeuronConfig(
+		_s_units = (units,),
+		_s_dt = dt,
+		_s_dtype = jnp.float16,
+		inhibitory_rate = 0.0,
+		soma_config = spark.nn.somas.AdaptiveExponentialSomaConfig(
+			potential_rest = potential_rest,
+			potential_reset = potential_reset,
+			potential_tau = potential_tau,
+			resistance = resistance,
+			threshold = threshold,
+			rheobase_threshold = rheobase_threshold,
+			spike_slope = spike_slope,
+			adaptation_tau = adaptation_tau,
+			adaptation_delta = adaptation_delta,
+			adaptation_subthreshold = adaptation_subthreshold,
+		),
+		synapses_config = spark.nn.synapses.LinearSynapsesConfig(
+			units = (units,),
+			kernel_initializer = spark.nn.initializers.SparseUniformInitializerConfig(
+				density = ker_density,
+				scale = synapse_strength
+			),
+		),
+		delays_config = None,
+		learning_rule_config = None,
+	)
+
+	def adex_specs(name, origin, port) -> spark.ModuleSpecs:
+		return spark.ModuleSpecs(
+			name = name, 
+			module_cls = spark.nn.neurons.AdExNeuron, 
+			inputs = {
+				'in_spikes': [
+					spark.PortMap(origin=o, port=p) for o, p in zip(origin, port)
+				]
+			},
+			config = adex_config
+		)
+	
+	input_map = {
+		'spikes': spark.InputSpec(
+			payload_type=spark.FloatArray, 
+			shape=(units,), 
+			dtype=jnp.float16,
+		)
+	}
+	output_map = {
+		'spikes': {
+			'input': spark.PortMap(
+				origin='n_D1',
+				port='out_spikes'
+			),
+			'spec': spark.OutputSpec(
+				payload_type=spark.SpikeArray,
+				shape=(units,),
+				dtype=jnp.float16
+			)
+		}
+	}
+	modules_map = {
+		'n_A1': adex_specs('n_A1', ['__call__'], ['spikes']),
+		'n_B1': adex_specs('n_B1', ['n_A1'], ['out_spikes']),
+		'n_C1': adex_specs('n_C1', ['n_A1'], ['out_spikes']),
+		'n_D1': adex_specs('n_D1', ['n_A1'], ['out_spikes']),
+		'n_E1': adex_specs('n_E1', ['n_A1'], ['out_spikes']),
+		'n_F1': adex_specs('n_F1', ['n_A1'], ['out_spikes']),
+		'n_G1': adex_specs(
+			'n_G1', 
+			['n_B1', 'n_C1', 'n_D1', 'n_E1', 'n_F1'], 
+			['out_spikes', 'out_spikes', 'out_spikes', 'out_spikes', 'out_spikes']),
+	}
+
+	return spark.nn.BrainConfig(input_map=input_map, output_map=output_map, modules_map=modules_map)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def spark_adex_performance(
+	build_func,
+	sim_repetitions,
 	t_steps,
 	k_steps,
 	units,
@@ -315,7 +529,7 @@ def spark_adex_performance(
 	adaptation_subthreshold,
 ):
 	# Build brain
-	brain_config = adex_brain_config(
+	brain_config = build_func(
 		units = units,
 		ker_density = ker_density,
 		dt = dt,
@@ -342,7 +556,7 @@ def spark_adex_performance(
 	# Benchmark
 	times = []
 	iters = (t_steps // k_steps)
-	for i in range(10):
+	for _ in range(sim_repetitions):
 		# This effectively resets the brain
 		_, state = spark.split((brain))
 		start = time.time()
@@ -357,6 +571,14 @@ def spark_adex_performance(
 		times.append(end-start)
 
 	return times
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+spark_adex_performance_model_1 = partial(spark_adex_performance, build_func=adex_brain_model_1_config)
+
+spark_adex_performance_model_2 = partial(spark_adex_performance, build_func=adex_brain_model_2_config)
+
+spark_adex_performance_model_3 = partial(spark_adex_performance, build_func=adex_brain_model_3_config)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
