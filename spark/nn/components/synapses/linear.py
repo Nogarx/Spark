@@ -5,7 +5,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.specs import InputSpec
+    from spark.core.specs import PortSpecs
 
 import jax
 import jax.numpy as jnp
@@ -17,7 +17,7 @@ from spark.core.payloads import SpikeArray, CurrentArray, FloatArray
 from spark.core.variables import Variable
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator
-from spark.nn.initializers.common import NormalizedSparseUniformInitializerConfig
+from spark.nn.initializers.common import SparseUniformInitializerConfig
 from spark.nn.components.synapses.base import Synanpses, SynanpsesConfig
 from spark.nn.initializers.base import Initializer
 
@@ -39,7 +39,7 @@ class LinearSynapsesConfig(SynanpsesConfig):
             'description': 'tuple[int, ...] of the postsynaptic pool of neurons.',
         })
     kernel: jax.Array | Initializer = dc.field(
-        default_factory = NormalizedSparseUniformInitializerConfig,
+        default_factory = SparseUniformInitializerConfig,
         metadata = {
             'units': 'pA',
             'validators': [
@@ -82,10 +82,9 @@ class LinearSynapses(Synanpses):
         self._output_shape = utils.validate_shape(self.config.units)
         
 
-    def build(self, input_specs: dict[str, InputSpec]):
+    def build(self, input_specs: dict[str, PortSpecs]):
         # Initialize shapes
         self.async_spikes = input_specs['spikes'].async_spikes
-        self.async_spikes = self.async_spikes if self.async_spikes is not None else False
         self._input_shape = utils.validate_shape(input_specs['spikes'].shape)
         self._real_input_shape = self._input_shape[len(self._output_shape):] if self.async_spikes else self._input_shape
         self._sum_axes = tuple(range(len(self._output_shape), len(self._output_shape)+len(self._real_input_shape)))

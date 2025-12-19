@@ -136,6 +136,19 @@ def _is_payload_instance(obj: tp.Any) -> bool:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+def _is_module_instance(obj: tp.Any) -> bool:
+    """
+        Check if an object is an instance of 'spark.core.module.SparkModule'.
+
+        Args:
+            obj (tp.Any): The class to check.
+        Returns:
+            bool, True if 'obj' is an instance of 'SparkModule', False otherwise.
+    """
+    return _is_spark_instance(obj, DEFAULT_SPARKMODULE_PATH)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def _is_module_type(obj: tp.Any) -> bool:
     """
         Check if an object is a subclass of 'spark.core.module.SparkModule'.

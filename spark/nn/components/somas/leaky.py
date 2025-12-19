@@ -5,7 +5,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.specs import InputSpec
+    from spark.core.specs import PortSpecs
 
 import jax
 import jax.numpy as jnp
@@ -110,7 +110,7 @@ class LeakySoma(Soma):
         super().__init__(config=config, **kwargs)
 
     # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, input_specs: dict[str, InputSpec]) -> None:
+    def build(self, input_specs: dict[str, PortSpecs]) -> None:
         super().build(input_specs)
         # Initialize variables.
         _potential_rest = self.config.potential_rest.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
@@ -121,7 +121,8 @@ class LeakySoma(Soma):
         # Membrane. Substract potential_rest to potential related terms to rebase potential at zero.
         self.potential_rest = Constant(_potential_rest, dtype=self._dtype)
         self.potential_reset = Constant(_potential_reset - _potential_rest, dtype=self._dtype)
-        self.potential_scale = Constant(self._dt / _potential_tau, dtype=self._dtype)
+        self.potential_decay = Constant(jnp.exp(-self._dt / _potential_tau), dtype=self._dtype)
+        self.potential_gain = Constant((1 - self.potential_decay.value) * _potential_tau, dtype=self._dtype)
         # Conductance.
         self.resistance = Constant(_resistance, dtype=self._dtype) # Current is in pA for stability
         # Threshold.
@@ -131,7 +132,9 @@ class LeakySoma(Soma):
         """
             Update neuron's soma states variables.
         """
-        self.potential.value += self.potential_scale * (-self.potential.value + self.resistance * current.value)
+        self.potential.value = \
+            + self.potential_decay * self.potential.value \
+            + self.potential_gain * self.resistance * current.value
 
     def _compute_spikes(self,) -> SpikeArray:
         """
@@ -198,7 +201,7 @@ class RefractoryLeakySoma(LeakySoma):
         super().__init__(config=config, **kwargs)
 
     # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, input_specs: dict[str, InputSpec]) -> None:
+    def build(self, input_specs: dict[str, PortSpecs]) -> None:
         super().build(input_specs)
         # Initialize variables.
         _cooldown = self.config.cooldown.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
@@ -220,7 +223,9 @@ class RefractoryLeakySoma(LeakySoma):
         """
         self.is_ready.value = jnp.greater(self.refractory.value, self.cooldown)
         is_ready = self.is_ready.value.astype(self._dtype)
-        self.potential.value += self.potential_scale * (-self.potential.value + is_ready * self.resistance * current.value)
+        self.potential.value = \
+            + self.potential_decay * self.potential.value \
+            + is_ready * self.potential_gain * self.resistance * current.value
 
     def _compute_spikes(self,) -> SpikeArray:
         """
@@ -285,7 +290,10 @@ class StrictRefractoryLeakySoma(RefractoryLeakySoma):
         """
         self.is_ready.value = jnp.greater_equal(self.refractory.value, self.cooldown)
         is_ready = self.is_ready.value.astype(self._dtype)
-        self.potential.value += is_ready * self.potential_scale * (-self.potential.value + self.resistance * current.value)
+        self.potential.value = \
+            + is_ready * self.potential_decay * self.potential.value \
+            + is_ready * self.potential_gain * self.resistance * current.value \
+            + (1 - is_ready) * self.potential_reset
     
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -354,7 +362,7 @@ class AdaptiveLeakySoma(RefractoryLeakySoma):
         super().__init__(config=config, **kwargs)
 
     # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, input_specs: dict[str, InputSpec]) -> None:
+    def build(self, input_specs: dict[str, PortSpecs]) -> None:
         super().build(input_specs)
         # Initialize variables.
         _threshold_tau = self.config.threshold_tau.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
@@ -382,7 +390,7 @@ class AdaptiveLeakySoma(RefractoryLeakySoma):
         # Compute spikes.
         spikes = super()._compute_spikes()
         # Update thresholds
-        self.threshold(spikes.value)
+        self.threshold(spikes.spikes)
         return spikes
     
 #################################################################################################################################################

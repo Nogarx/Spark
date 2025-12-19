@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 import inspect
 import typing as tp
-from spark.core.specs import InputSpec, OutputSpec
+from spark.core.specs import PortSpecs, PortSpecs
 from collections.abc import Iterable
 import spark.core.validation as validation
 import itertools
@@ -158,7 +158,7 @@ def is_instance(value, types):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-def get_input_specs(module: type[SparkModule]) -> dict[str, InputSpec]:
+def get_input_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
     """
         Returns a dictionary of the SparkModule's input port specifications.
     """
@@ -200,7 +200,7 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, InputSpec]:
             )
         
         # Add the spec to collection.
-        input_specs[parameter.name] = InputSpec(
+        input_specs[parameter.name] = PortSpecs(
             payload_type=payload_type,
             shape=None,
             dtype=None,
@@ -210,7 +210,7 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, InputSpec]:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def get_output_specs(module: type[SparkModule]) -> dict[str, OutputSpec]:
+def get_output_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
     """
         Returns a dictionary of the SparkModule's input port specifications.
     """
@@ -254,7 +254,7 @@ def get_output_specs(module: type[SparkModule]) -> dict[str, OutputSpec]:
                 f'which is not a valid SparkPayload, None or sequence of SparkPayload.'
             )
 
-        output_specs[name] = OutputSpec(
+        output_specs[name] = PortSpecs(
             payload_type=payload_type,
             shape=None,
             dtype=None,

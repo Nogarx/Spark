@@ -5,7 +5,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.specs import InputSpec
+    from spark.core.specs import PortSpecs
 
 import jax
 import dataclasses as dc
@@ -26,7 +26,7 @@ class PoissonSpikerConfig(InputInterfaceConfig):
     """
 
     max_freq: float = dc.field(
-        default = 50.0, 
+        default = 100.0, 
         metadata = {
             'units': 'Hz',
             'validators': [
@@ -62,7 +62,7 @@ class PoissonSpiker(InputInterface):
         self.max_freq = self.config.max_freq
         self._scale = self._dt * (self.max_freq / 1000)
 
-    def build(self, input_specs: dict[str, InputSpec]) -> None:
+    def build(self, input_specs: dict[str, PortSpecs]) -> None:
         # Initialize shapes
         self._shape = utils.validate_shape(input_specs['signal'].shape)
 

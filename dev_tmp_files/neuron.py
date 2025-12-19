@@ -11,7 +11,7 @@ from math import prod
 import spark.core.utils as utils
 from spark.core.cache import Cache
 from spark.core.module import SparkModule, SparkMeta
-from spark.core.specs import PortSpecs, PortMap, OutputSpec, InputSpec, ModuleSpecs
+from spark.core.specs import PortSpecs, PortMap, PortSpecs, PortSpecs, ModuleSpecs
 from spark.core.variables import Variable
 from spark.core.payloads import SparkPayload, FloatArray
 from spark.core.registry import register_config, REGISTRY
@@ -34,7 +34,7 @@ class NeuronConfig(BaseSparkConfig):
 	"""
 		Configuration class for Neuron's.
 	"""
-	input_map: dict[str, InputSpec] = dc.field(
+	input_map: dict[str, PortSpecs] = dc.field(
 		metadata = {
 			'description': 'Input map configuration.',
 		})
@@ -63,9 +63,9 @@ class NeuronConfig(BaseSparkConfig):
 				raise TypeError(
 					f'All keys in \"input_map\" must be strings, but found key \"{key}\" of type {type(key).__name__}.'
 				)
-			if not isinstance(self.input_map[key], InputSpec):
+			if not isinstance(self.input_map[key], PortSpecs):
 				raise TypeError(
-					f'All values in \"input_map\" must be InputSpec, but found value \"{self.input_map[key]}\" '
+					f'All values in \"input_map\" must be PortSpecs, but found value \"{self.input_map[key]}\" '
 					f'of type {type(self.input_map[key]).__name__}.'
 				)
 		# Output map validation
@@ -89,9 +89,9 @@ class NeuronConfig(BaseSparkConfig):
 					f'Expected \"output_map[\"{output_name}\"][\"input\"]\" to be of type PortMap, but got \"{_input}\".'
 				)
 			spec = output_details.get('spec', None)
-			if not isinstance(spec, OutputSpec):
+			if not isinstance(spec, PortSpecs):
 				raise TypeError(
-					f'Expected \"output_map[\"{output_name}\"][\"spec\"]\" to be of type OutputSpec, but got \"{spec}\".'
+					f'Expected \"output_map[\"{output_name}\"][\"spec\"]\" to be of type PortSpecs, but got \"{spec}\".'
 				)
 		# Modules map validation
 		if not isinstance(self.modules_map, dict):
@@ -146,8 +146,8 @@ class Neuron(SparkModule, metaclass=NeuronMeta):
 	# Typing annotations.
 	_modules_list: list[str]
 	_modules_input_map: dict[str, dict[str, list[PortMap]]]
-	_modules_input_specs: dict[str, dict[str, InputSpec]]
-	_modules_output_specs: dict[str, dict[str, OutputSpec]]
+	_modules_input_specs: dict[str, dict[str, PortSpecs]]
+	_modules_output_specs: dict[str, dict[str, PortSpecs]]
 
 	def __init__(self, config: NeuronConfig = None, **kwargs):
 		# Initialize super.
@@ -243,14 +243,14 @@ class Neuron(SparkModule, metaclass=NeuronMeta):
 						if port_map.origin == '__call__':
 							shape += prod(self.config.input_map[port_map.port].shape)
 						else:
-							output_specs: OutputSpec = getattr(self, port_map.origin).get_output_specs()[port_map.port]
+							output_specs: PortSpecs = getattr(self, port_map.origin).get_output_specs()[port_map.port]
 							shape += prod(output_specs.shape)
 				else:
 					# One-to-one input-output.
 					if port_map.origin == '__call__':
 						shape = self.config.input_map[port_map.port].shape
 					else:
-						output_specs: OutputSpec = getattr(self, port_map.origin).get_output_specs()[port_map.port]
+						output_specs: PortSpecs = getattr(self, port_map.origin).get_output_specs()[port_map.port]
 						shape = output_specs.shape
 				# Normalize and compare shapes.
 				shape = utils.validate_shape(shape)
@@ -287,7 +287,7 @@ class Neuron(SparkModule, metaclass=NeuronMeta):
 
 
 	# TODO: Current approach to build the cache is rather silly, there should be a better more robust way to construct it.
-	def build(self, input_specs: dict[str, InputSpec]):
+	def build(self, input_specs: dict[str, PortSpecs]):
 		# Set built flag
 		self.__built__ = True
 		# Get a simplified version of the output map for __call__ iteration.
@@ -301,7 +301,7 @@ class Neuron(SparkModule, metaclass=NeuronMeta):
 
 	# NOTE: We need to override _construct_input_specs since sig_parser.get_input_specs will lead to an incorrect 
 	# signature because Neuron can have an arbitrary number of inputs all under the key "inputs".
-	def _construct_input_specs(self, abc_args: dict[str, dict[str, SparkPayload]]) -> dict[str, InputSpec]:
+	def _construct_input_specs(self, abc_args: dict[str, dict[str, SparkPayload]]) -> dict[str, PortSpecs]:
 		# Extract the real inputs from abc_args, they are all under the key 'inputs'
 		abc_args = abc_args['inputs']
 		# Validate specs and abc_args match.
@@ -328,8 +328,8 @@ class Neuron(SparkModule, metaclass=NeuronMeta):
 					f'Expected non-optional input payload \"{key}\" of module \"{self.name}\" to be '
 					f'of type \"{SparkPayload.__name__}\" but got type {type(payload)}'
 				)
-			# InputSpec are immutable, we need to create a new one.
-			input_specs[key] = InputSpec(
+			# PortSpecs are immutable, we need to create a new one.
+			input_specs[key] = PortSpecs(
 				payload_type=payload.__class__,
 				shape=payload.shape,
 				dtype=payload.dtype,
@@ -341,14 +341,14 @@ class Neuron(SparkModule, metaclass=NeuronMeta):
 
 	# NOTE: We need to override _construct_output_specs since sig_parser.get_output_specs will lead to an incorrect 
 	# signature because Neuron can have an arbitrary number of outputs all under the key "outputs".
-	def _construct_output_specs(self, abc_args: dict[str, SparkPayload]) -> dict[str, OutputSpec]:
+	def _construct_output_specs(self, abc_args: dict[str, SparkPayload]) -> dict[str, PortSpecs]:
 		# Output is constructed dynamically from the output map, there is no ground truth.
 		expected_output = self.config.output_map
 		output_specs = {}
 		for output_name in expected_output.keys():
 			port_map: PortMap = expected_output[output_name]['input']
-			port_spec: OutputSpec = expected_output[output_name]['spec']
-			output_specs[output_name] = OutputSpec(
+			port_spec: PortSpecs = expected_output[output_name]['spec']
+			output_specs[output_name] = PortSpecs(
 				payload_type=port_spec.payload_type,
 				shape=abc_args[output_name].shape,
 				dtype=abc_args[output_name].dtype,

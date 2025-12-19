@@ -7,7 +7,7 @@ from __future__ import annotations
 import jax.numpy as jnp
 import dataclasses as dc
 import spark.core.utils as utils
-from spark.core.specs import InputSpec
+from spark.core.specs import PortSpecs
 from spark.core.registry import register_module, register_config
 from spark.core.payloads import SparkPayload
 from spark.core.config_validation import TypeValidator, PositiveValidator
@@ -57,7 +57,7 @@ class Concat(ControlInterface):
         # Intialize variables.
         self.num_inputs = self.config.num_inputs
 
-    def build(self, input_specs: dict[str, InputSpec]) -> None:
+    def build(self, input_specs: dict[str, PortSpecs]) -> None:
         # Validate payloads types.
         payload_type = None
         for key, value in input_specs.items():
@@ -123,7 +123,7 @@ class ConcatReshape(ControlInterface):
         self.reshape = utils.validate_shape(self.config.reshape)
         self.num_inputs = self.config.num_inputs
 
-    def build(self, input_specs: dict[str, InputSpec]) -> None:
+    def build(self, input_specs: dict[str, PortSpecs]) -> None:
         # Validate payloads types.
         payload_type = None
         for key, value in input_specs.items():

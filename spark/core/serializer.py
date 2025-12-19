@@ -14,7 +14,7 @@ import spark.core.utils as utils
 from jax.typing import DTypeLike
 from spark.core.registry import REGISTRY
 from spark.core.config import BaseSparkConfig, InitializableField
-from spark.core.specs import PortSpecs, InputSpec, OutputSpec, PortMap, ModuleSpecs
+from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -63,16 +63,6 @@ class SparkJSONEncoder(json.JSONEncoder):
 			}
 		# Encode spark specs. 
 		# NOTE: Order matters!
-		if isinstance(obj, InputSpec):
-			return  {
-				'__type__': 'input_specs',
-				'__data__': obj.to_dict(),
-			}
-		if isinstance(obj, OutputSpec):
-			return  {
-				'__type__': 'output_specs',
-				'__data__': obj.to_dict(),
-			}
 		if isinstance(obj, PortSpecs):
 			return  {
 				'__type__': 'port_specs',
@@ -90,9 +80,11 @@ class SparkJSONEncoder(json.JSONEncoder):
 			}
 		# Encode jax/numpy dtypes
 		if utils.is_dtype(obj):
+			# TODO: Somewhere in the encoding/decoding dtypes are transformed to plain np.dtypes 
+			# rather than np.dtypes('#').type. Below is a temporary patch
 			return {
 				'__type__': 'dtype',
-				'name': obj.__name__,
+				'name': obj.__name__ if isinstance(obj, type) else obj.type.__name__,
 			}
 		# Default handler
 		return super().default(obj)
@@ -169,10 +161,6 @@ class SparkJSONDecoder(json.JSONDecoder):
 		# Decode spark specs
 		if obj.get('__type__') == 'port_specs':
 			return self._decode_spec(PortSpecs, obj)
-		if obj.get('__type__') == 'input_specs':
-			return self._decode_spec(InputSpec, obj)
-		if obj.get('__type__') == 'output_specs':
-			return self._decode_spec(OutputSpec, obj)
 		if obj.get('__type__') == 'port_map':
 			return self._decode_spec(PortMap, obj)
 		if obj.get('__type__') == 'module_specs':

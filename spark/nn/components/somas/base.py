@@ -5,7 +5,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.specs import InputSpec
+    from spark.core.specs import PortSpecs
 
 import abc
 import jax.numpy as jnp
@@ -47,7 +47,7 @@ class Soma(Component, tp.Generic[ConfigT]):
         # Initialize super.
         super().__init__(config = config, **kwargs)
     
-    def build(self, input_specs: dict[str, InputSpec]):
+    def build(self, input_specs: dict[str, PortSpecs]):
         # Initialize shapes
         self.units = utils.validate_shape(input_specs['current'].shape)
         # Initialize variables

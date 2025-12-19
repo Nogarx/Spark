@@ -5,7 +5,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.specs import InputSpec
+    from spark.core.specs import PortSpecs
 
 import jax
 import jax.numpy as jnp
@@ -66,7 +66,7 @@ class N2NDelays(Delays):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
-    def build(self, input_specs: dict[str, InputSpec]):
+    def build(self, input_specs: dict[str, PortSpecs]):
         # Initialize shapes
         self._in_shape = utils.validate_shape(input_specs['in_spikes'].shape)
         self.output_shape = utils.validate_shape(self.config.units)
@@ -98,8 +98,7 @@ class N2NDelays(Delays):
             Push operation.
         """
         # Pad and pack the binary vector (MSB-first)
-        #padded_vec = jnp.pad(spikes.value.reshape(-1), self._padding)
-        padded_vec = jnp.pad(jnp.abs(spikes.value).reshape(-1), self._padding)
+        padded_vec = jnp.pad(spikes.spikes.reshape(-1), self._padding)
         reshaped = padded_vec.reshape(-1, 8)
         bits = jnp.left_shift(1, jnp.arange(7, -1, step=-1, dtype=jnp.uint8))
         new_bitmask_row = jnp.dot(reshaped.astype(jnp.uint8), bits).astype(jnp.uint8)
@@ -120,7 +119,7 @@ class N2NDelays(Delays):
         return SpikeArray(
             selected_bits.reshape(self.output_shape+self._in_shape), 
             inhibition_mask=inhibition_mask, 
-            async_spikes=False
+            async_spikes=True,
         )
 
     def get_dense(self,) -> jax.Array:

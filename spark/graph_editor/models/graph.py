@@ -10,7 +10,7 @@ from PySide6 import QtCore
 from NodeGraphQt import NodeGraph, Port, BaseNode
 from NodeGraphQt.widgets.viewer import NodeViewer
 
-from spark.core.specs import ModuleSpecs, InputSpec, OutputSpec, PortMap
+from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
 from spark.nn.brain import BrainConfig
 from spark.graph_editor.models.nodes import SourceNode, SinkNode, AbstractNode, SparkModuleNode
 from spark.graph_editor.ui.console_panel import MessageLevel
@@ -275,14 +275,14 @@ class SparkNodeGraph(NodeGraph):
         """
             Build the model from the graph state.
         """
-        input_map: dict[str, InputSpec] = {}
+        input_map: dict[str, PortSpecs] = {}
         output_map: dict[str, dict] = {}
         modules_map: dict[str, ModuleSpecs] = {}
         io_nodes_metadata = {}
         for node in self.all_nodes():
             if isinstance(node, SourceNode):
                 # Source nodes had a single output of the appropiate type
-                input_map[node.NODE_NAME] = InputSpec(
+                input_map[node.NODE_NAME] = PortSpecs(
                     payload_type=node.output_specs['value'].payload_type,
                     shape=node.output_specs['value'].shape,
                     dtype=node.output_specs['value'].dtype,
@@ -301,10 +301,10 @@ class SparkNodeGraph(NodeGraph):
                 else:
                     origin_name = origin_node.NODE_NAME
                     port_name = origin_port.name()
-                # Create OutputSpec
+                # Create PortSpecs
                 output_map[node.NODE_NAME] = {
                     'input': PortMap(origin=origin_name, port=port_name),
-                    'spec': OutputSpec(
+                    'spec': PortSpecs(
                         payload_type=node.input_specs['value'].payload_type,
                         shape=node.input_specs['value'].shape,
                         dtype=node.input_specs['value'].dtype,

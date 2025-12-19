@@ -21,7 +21,7 @@ import spark.core.utils as utils
 from NodeGraphQt import BaseNode
 from spark.core.registry import REGISTRY, RegistryEntry
 from spark.core.payloads import FloatArray
-from spark.core.specs import InputSpec, OutputSpec
+from spark.core.specs import PortSpecs
 import spark.core.validation as validation 
 from spark.graph_editor.style.painter import DEFAULT_PALLETE
 from spark.graph_editor.ui.console_panel import MessageLevel
@@ -37,8 +37,8 @@ class AbstractNode(BaseNode, abc.ABC):
 
     __identifier__ = 'spark'
     NODE_NAME = 'Abstract Node'
-    input_specs: dict[str, InputSpec] = {}
-    output_specs: dict[str, OutputSpec] = {}
+    input_specs: dict[str, PortSpecs] = {}
+    output_specs: dict[str, PortSpecs] = {}
     graph: SparkNodeGraph
 
     def __init__(self,) -> None:
@@ -156,7 +156,7 @@ class SourceNode(AbstractNode):
         super().__init__()
         # Delay specs definition for better control.
         self.output_specs = {
-            'value': OutputSpec(
+            'value': PortSpecs(
                 payload_type=FloatArray,
                 shape=(1,),
                 dtype=np.float16,
@@ -189,7 +189,7 @@ class SinkNode(AbstractNode):
         super().__init__()
         # Delay specs definition for better control.
         self.input_specs = {
-            'value': InputSpec(
+            'value': PortSpecs(
                 payload_type=FloatArray,
                 shape=(1,),
                 dtype=np.float16,

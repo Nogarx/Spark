@@ -12,6 +12,7 @@ import typing as tp
 import collections.abc
 import copy 
 import dataclasses as dc
+from math import prod 
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -90,31 +91,202 @@ def get_einsum_labels(num_dims: int, offset: int = 0) -> str:
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 def get_axes_einsum_labels(axes: tuple[int, ...], ignore_repeated:bool = False) -> str:
-	"""
-		Generates labels for a generalized dot product using Einstein notation.
+    """
+        Generates labels for a generalized dot product using Einstein notation.
 
-		Args:
-			axes: tuple[int, ...], requested dimensions (labels) to generate
+        Args:
+            axes: tuple[int, ...], requested dimensions (labels) to generate
 
-		Returns:
-			str, a string with num_dims different labels, skipping the first offset characters 
-	"""
-	
-	if any([ax < 0 for ax in axes]):
-		raise ValueError(
-			f'\"axes\" out of bounds, expected all axis to be positive. '
-		)
-	
-	if any([ax >= len(string.ascii_letters) for ax in axes]):
-		raise ValueError(
-			f'\"axes\" out of bounds, it is only possible to represent up to {len(string.ascii_letters)-1} symbols. '
-			f'If this was intentional consider defining a custom label map.'
-		)
-	if (not ignore_repeated) and len(set(ax for ax in axes)) != len(axes):
-		raise ValueError(
-			f'Requested two labels for the same axis. If this was intended use the flag \"ignore_repeated=True\".'
-		)
-	return ''.join([string.ascii_letters[ax] for ax in axes])
+        Returns:
+            str, a string with num_dims different labels, skipping the first offset characters 
+    """
+    
+    if any([ax < 0 for ax in axes]):
+        raise ValueError(
+            f'\"axes\" out of bounds, expected all axis to be positive. '
+        )
+    
+    if any([ax >= len(string.ascii_letters) for ax in axes]):
+        raise ValueError(
+            f'\"axes\" out of bounds, it is only possible to represent up to {len(string.ascii_letters)-1} symbols. '
+            f'If this was intentional consider defining a custom label map.'
+        )
+    if (not ignore_repeated) and len(set(ax for ax in axes)) != len(axes):
+        raise ValueError(
+            f'Requested two labels for the same axis. If this was intended use the flag \"ignore_repeated=True\".'
+        )
+    return ''.join([string.ascii_letters[ax] for ax in axes])
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def get_einsum_dot_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one_dims: bool = True, side: str = 'right') -> str:
+    """
+        Generates labels for a generalized dot product using Einstein notation.
+            right:	(c,d)•(a,b,c,d)=(a,b) - cd,abcd->ab     |    (a,b,c,d)•(c,d)=(a,b) - abcd,cd->ab
+            left:	(a,b)•(a,b,c,d)=(c,d) - ab,abcd->cd	    |	 (a,b,c,d)•(c,d)=(c,d) - abcd,ab->cd
+
+        Args:
+            x: tuple[int, ...], shape for the first variable of the dot product
+            y: tuple[int, ...], shape for the second variable of the dot product
+            ignore_one_dims: bool, ignore one dimensions when computing the labels (squeeze shapes), default: True
+            side: str, side of the dot product, default: "right"
+
+        Returns:
+            str, a string representing the dot product operation
+    """
+    # Check shape is valid
+    if 0 in x or 0 in y:
+        raise TypeError(
+            f'Invalid dot product operation dot(x,y) with dimension zero, {"x" if 0 in x else "y"}: {x if 0 in x else y}.'
+        )
+    # Ignore ones
+    if ignore_one_dims:
+        x = tuple(idx for idx in x if idx != 1)
+        y = tuple(idx for idx in y if idx != 1)
+    # Get labels
+    side = side.lower()
+    is_x_bigger = len(x) >= len(y)
+    if side == 'right' or side == 'r':
+        x_indices = get_einsum_labels(len(x), offset=0 if is_x_bigger else len(y)-len(x))
+        y_indices = get_einsum_labels(len(y), offset=len(x)-len(y) if is_x_bigger else 0)
+        z_size = len(x)-len(y) if is_x_bigger else len(y)-len(x)
+        z_indices = get_einsum_labels(z_size, offset=0)
+        # Validate labels / shapes
+        if len(z_indices) > max(len(x),len(y)) or (is_x_bigger and y != x[-len(y):]) or (not is_x_bigger and x != y[-len(x):]):
+            raise TypeError(
+                f'Invalid right dot product operation dot(x,y) with shapes x:{x} and y:{y}.'
+            )
+    elif side == 'left' or side == 'l':
+        x_indices = get_einsum_labels(len(x), offset=0)
+        y_indices = get_einsum_labels(len(y), offset=0)
+        z_size = len(x)-len(y) if is_x_bigger else len(y)-len(x)
+        z_indices = get_einsum_labels(z_size, offset=len(y) if is_x_bigger else len(x))
+        # Validate labels / shapes
+        if len(z_indices) > max(len(x),len(y)) or (is_x_bigger and y != x[:len(y)]) or (not is_x_bigger and x != y[:len(x)]):
+            raise TypeError(
+                f'Invalid left dot product operation dot(x,y) with shapes x:{x} and y:{y}.'
+            )
+    else:
+        raise ValueError(
+            f'Invalid side value: {side}'
+        )
+    return f'{x_indices},{y_indices}->{z_indices}'
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def get_einsum_dot_red_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one_dims: bool = True, side: str = 'right') -> str:
+    """
+        Generates labels for a generalized dot reduction product using Einstein notation.
+            right:	(a,b)•(a,b,c,d)=(a,b) - ab,abcd->ab     |    (a,b,c,d)•(a,b)=(a,b) - abcd,ab->ab
+            left:	(c,d)•(a,b,c,d)=(c,d) - cd,abcd->cd	    |	 (a,b,c,d)•(c,d)=(c,d) - abcd,ab->ab
+
+        Args:
+            x: tuple[int, ...], shape for the first variable of the dot product
+            y: tuple[int, ...], shape for the second variable of the dot product
+            ignore_one_dims: bool, ignore one dimensions when computing the labels (squeeze shapes), default: True
+            side: str, side of the reduction-dot product, default: "right" 
+
+        Returns:
+            str, a string representing the dot product operation
+    """
+    # Check shape is valid
+    if 0 in x or 0 in y:
+        raise TypeError(
+            f'Invalid reduction-dot product operation dot(x,y) with dimension zero, {"x" if 0 in x else "y"}: {x if 0 in x else y}.'
+        )
+    # Ignore ones
+    if ignore_one_dims:
+        x = tuple(idx for idx in x if idx != 1)
+        y = tuple(idx for idx in y if idx != 1)
+    # Get labels
+    side = side.lower()
+    is_x_bigger = len(x) >= len(y)
+    if side == 'right' or side == 'r':
+        x_indices = get_einsum_labels(len(x), offset=0 if is_x_bigger else len(y)-len(x))
+        y_indices = get_einsum_labels(len(y), offset=len(x)-len(y) if is_x_bigger else 0)
+        z_size = len(y) if is_x_bigger else len(x)
+        z_indices = get_einsum_labels(z_size, offset=len(x)-len(y) if is_x_bigger else len(y)-len(x))
+        # Validate labels / shapes
+        if len(z_indices) > max(len(x),len(y)) or (is_x_bigger and y != x[-len(y):]) or (not is_x_bigger and x != y[-len(x):]):
+            raise TypeError(
+                f'Invalid right reduction-dot product operation dot(x,y) with shapes x:{x} and y:{y}.'
+            )
+    elif side == 'left' or side == 'l':
+        x_indices = get_einsum_labels(len(x), offset=0)
+        y_indices = get_einsum_labels(len(y), offset=0)
+        z_size = len(y) if is_x_bigger else len(x)
+        z_indices = get_einsum_labels(z_size, offset=0)
+        # Validate labels / shapes
+        if  len(z_indices) > max(len(x),len(y)) or (is_x_bigger and y != x[:len(y)]) or (not is_x_bigger and x != y[:len(x)]):
+            raise TypeError(
+                f'Invalid left reduction-dot product operation dot(x,y) with shapes x:{x} and y:{y}.'
+            )
+    else:
+        raise ValueError(
+            f'Invalid side value: {side}'
+        )
+    return f'{x_indices},{y_indices}->{z_indices}'
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def get_einsum_dot_exp_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one_dims: bool = True, side: str = 'right') -> str:
+    """
+        Generates labels for a generalized dot expansion product using Einstein notation.
+            right:	(a,b)•(a,b,c,d)=(a,b,c,d) - ab,abcd->abcd   |   (a,b,c,d)•(a,b)=(a,b,c,d) - abcd,ab->abcd
+            left:	(c,d)•(a,b,c,d)=(a,b,c,d) - cd,abcd->abcd	|	(c,d)•(a,b,c,d)=(a,b,c,d) - abcd,cd->abcd
+            none: 	(a,b)•(c,d)=(a,b,c,d) - ab,cd->abcd		    | 	(a)•(b,c,d)=(a,b,c,d) - a,bcde->abcde
+
+        Args:
+            x: tuple[int, ...], shape for the first variable of the dot product
+            y: tuple[int, ...], shape for the second variable of the dot product
+            ignore_one_dims: bool, ignore one dimensions when computing the labels (squeeze shapes), default: True
+            side: str, side of the expansion-dot, default: "right"
+                
+        Returns:
+            str, a string representing the dot product operation
+    """
+    # Check shape is valid
+    if 0 in x or 0 in y:
+        raise TypeError(
+            f'Invalid dot-expansion product operation dot(x,y) with dimension zero, {"x" if 0 in x else "y"}: {x if 0 in x else y}.'
+        )
+    # Ignore ones
+    if ignore_one_dims:
+        x = tuple(idx for idx in x if idx != 1)
+        y = tuple(idx for idx in y if idx != 1)
+    # Get labels
+    side = side.lower()
+    is_x_bigger = len(x) >= len(y)
+    if side == 'right' or side == 'r':
+        x_indices = get_einsum_labels(len(x), offset=0 if is_x_bigger else len(y)-len(x))
+        y_indices = get_einsum_labels(len(y), offset=len(x)-len(y) if is_x_bigger else 0)
+        z_size = len(x) if is_x_bigger else len(y)
+        z_indices = get_einsum_labels(z_size, offset=0)
+        # Validate labels / shapes
+        if (is_x_bigger and y != x[-len(y):]) or (not is_x_bigger and x != y[-len(x):]):
+            raise ValueError(
+                f'Invalid right dot-expansion product operation dot(x,y) with shapes x:{x} and y:{y}.'
+            )
+    elif side == 'left' or side == 'l':
+        x_indices = get_einsum_labels(len(x), offset=0)
+        y_indices = get_einsum_labels(len(y), offset=0)
+        z_size = len(x) if is_x_bigger else len(y)
+        z_indices = get_einsum_labels(z_size, offset=0)
+        # Validate labels / shapes
+        if (is_x_bigger and y != x[:len(y)]) or (not is_x_bigger and x != y[:len(x)]):
+            raise ValueError(
+                f'Invalid left dot-expansion product operation dot(x,y) with shapes x:{x} and y:{y}.'
+            )
+    elif side == 'none' or side == 'n':
+        x_indices = get_einsum_labels(len(x), offset=0)
+        y_indices = get_einsum_labels(len(y), offset=len(x))
+        z_size = len(x) + len(y)
+        z_indices = get_einsum_labels(z_size, offset=0)
+    else:
+        raise ValueError(
+            f'Invalid side value: {side}'
+        )
+    return f'{x_indices},{y_indices}->{z_indices}'
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -172,6 +344,22 @@ def validate_list_shape(obj: tp.Any) -> list[tuple[int, ...]]:
         )
     # Cast to list of shapes
     return [validate_shape(e) for e in obj]
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+# TODO: Extend shape promotion to allow some sensible shape blends like stacks.
+def merge_shape_list(shape_list: list[tuple[int, ...]]) -> tuple[int, ...]:
+    """
+        Merges a list of shapes into a single shape.
+
+        Args:
+            shape_list: list[tuple[int, ...]]: the list of shapes
+
+        Returns:
+            tuple[int, ...], the merged shape
+    """
+    shape_list = validate_list_shape(shape_list)
+    return tuple([sum([prod(s) for s in shape_list])])
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -262,38 +450,38 @@ def is_list_of(obj: tp.Any, cls: type[tp.Any]) -> bool:
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 def is_dtype(obj: tp.Any) -> bool:
-	"""
-		Check if an object is a 'DTypeLike'.
+    """
+        Check if an object is a 'DTypeLike'.
 
-		Args:
-			obj (tp.Any): The instance to check.
-		Returns:
-			bool, True if the object is a 'DTypeLike', False otherwise.
-	"""
-	try:
-		if np.isdtype(obj, ('numeric', 'bool')):
-			return True
-	except: 
-		pass
-	return False
+        Args:
+            obj (tp.Any): The instance to check.
+        Returns:
+            bool, True if the object is a 'DTypeLike', False otherwise.
+    """
+    try:
+        if np.isdtype(obj, ('numeric', 'bool')):
+            return True
+    except: 
+        pass
+    return False
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 def is_float(obj: tp.Any) -> bool:
-	"""
-		Check if an object is a 'DTypeLike'.
+    """
+        Check if an object is a 'DTypeLike'.
 
-		Args:
-			obj (tp.Any): The instance to check.
-		Returns:
-			bool, True if the object is a 'DTypeLike', False otherwise.
-	"""
-	try:
-		if np.isdtype(obj, ('real floating',)):
-			return True
-	except: 
-		pass
-	return False
+        Args:
+            obj (tp.Any): The instance to check.
+        Returns:
+            bool, True if the object is a 'DTypeLike', False otherwise.
+    """
+    try:
+        if np.isdtype(obj, ('real floating',)):
+            return True
+    except: 
+        pass
+    return False
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

@@ -5,7 +5,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.specs import InputSpec
+    from spark.core.specs import PortSpecs
 
 import jax
 import jax.numpy as jnp
@@ -133,7 +133,7 @@ class HodgkinHuxleySoma(Soma):
         super().__init__(config=config, **kwargs)
 
     # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, input_specs: dict[str, InputSpec]) -> None:
+    def build(self, input_specs: dict[str, PortSpecs]) -> None:
         super().build(input_specs)
         # Initialize variables.
         # Reversal potentials
@@ -231,22 +231,22 @@ class HodgkinHuxleyNeuronConfig(NeuronConfig):
             ],
             'description': '',
         })
-    soma_config: HodgkinHuxleySomaConfig = dc.field(
+    soma: HodgkinHuxleySomaConfig = dc.field(
         default_factory = HodgkinHuxleySomaConfig,
         metadata = {
             'description': 'Soma configuration.',
         })
-    synapses_config: SynanpsesConfig = dc.field(
+    synapses: SynanpsesConfig = dc.field(
         default_factory = LinearSynapsesConfig,
         metadata = {
             'description': 'Synapses configuration.',
         })
-    delays_config: DelaysConfig | None = dc.field(
+    delays: DelaysConfig | None = dc.field(
         default_factory = N2NDelaysConfig,
         metadata = {
             'description': 'Delays configuration.',
         })
-    learning_rule_config: LearningRuleConfig | None = dc.field(
+    learning_rule: LearningRuleConfig | None = dc.field(
         default_factory = HebbianRuleConfig,
         metadata = {
             'description': 'Learning configuration.',
@@ -269,28 +269,31 @@ class HodgkinHuxleyNeuron(Neuron):
 
     def __init__(self, config: HodgkinHuxleyNeuronConfig | None = None, **kwargs):
         super().__init__(config=config, **kwargs)
-        # Set output shapes earlier to allow cycles.
-        self.set_recurrent_shape_contract(shape=self.units)
-
-    def build(self, input_specs: dict[str, InputSpec]):
         # Initialize inhibitory mask.
         inhibitory_units = int(self._units * self.config.inhibitory_rate)
         indices = jax.random.permutation(self.get_rng_keys(1), jnp.arange(self._units), independent=True)[:inhibitory_units]
         inhibition_mask = jnp.zeros((self._units,), dtype=jnp.bool)
         inhibition_mask = inhibition_mask.at[indices].set(True).reshape(self.units)
-        self._inhibition_mask = Constant(inhibition_mask, dtype=jnp.float16)
+        self._inhibition_mask = Constant(inhibition_mask, dtype=jnp.bool)
+        # Set output shapes earlier to allow cycles.
+        contract = self._get_output_specs()
+        contract['out_spikes'].shape = self.units
+        contract['out_spikes'].inhibition_mask = self._inhibition_mask
+        self.set_contract_output_specs(contract)
+
+    def build(self, input_specs: dict[str, PortSpecs]):
         # Soma model.
-        self.soma = self.config.soma_config.class_ref(config=self.config.soma_config)
+        self.soma = self.config.soma.class_ref(config=self.config.soma)
         # Delays model.
-        self._delays_active = self.config.learning_rule_config is not None
+        self._delays_active = self.config.learning_rule is not None
         if self._delays_active:
-            self.delays = self.config.delays_config.class_ref(config=self.config.delays_config)
+            self.delays = self.config.delays.class_ref(config=self.config.delays)
         # Synaptic model.
-        self.synapses = self.config.synapses_config.class_ref(config=self.config.synapses_config)
+        self.synapses = self.config.synapses.class_ref(config=self.config.synapses)
         # Learning rule model.
-        self._learning_active = self.config.learning_rule_config is not None
+        self._learning_active = self.config.learning_rule is not None
         if self._learning_active:
-            self.learning_rule = self.config.learning_rule_config.class_ref(config=self.config.learning_rule_config)
+            self.learning_rule = self.config.learning_rule.class_ref(config=self.config.learning_rule)
 
     def __call__(self, in_spikes: SpikeArray) -> NeuronOutput:
         """

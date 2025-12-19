@@ -3,6 +3,7 @@ notebooks/
 _run_tests.py
 .env_docs/
 .env_benchmarks/
+dev_tmp_files/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

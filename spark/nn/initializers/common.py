@@ -73,6 +73,7 @@ class UniformInitializer(Initializer):
 
     def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
         array = self.config.scale * jax.random.uniform(key, shape)
+        # Clip Min-Max
         array = jnp.clip(array, min=self.config.min_value, max=self.config.max_value)
         return array.astype(self.config.dtype)
 
@@ -119,10 +120,12 @@ class SparseUniformInitializer(UniformInitializer):
     def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
         key1, key2 = jax.random.split(key, 2)
         # Get uniform array
-        array = super().__call__(key1, shape)
+        array = self.config.scale * jax.random.uniform(key1, shape)
         # Zero mask
         mask = jax.random.uniform(key2, shape, dtype=jnp.float16) < self.config.density
         array = jnp.where(mask, array, 0)
+        # Clip Min-Max
+        array = jnp.clip(array, min=self.config.min_value, max=self.config.max_value)
         return array.astype(self.config.dtype)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -178,8 +181,6 @@ class NormalizedSparseUniformInitializer(SparseUniformInitializer):
     config: NormalizedSparseUniformInitializerConfig
 
     def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
-        # Get sparse array
-        array = super().__call__(key, shape)
         # Normalize
         num_dims = len(shape)
         # Sanity checks  
@@ -199,6 +200,13 @@ class NormalizedSparseUniformInitializer(SparseUniformInitializer):
             raise ValueError(
                 f'Expected all indices of \"norm_axes\" to be unique, but got: \"{self.config.norm_axes}\".'
             )
+        # Get sparse array
+        key1, key2 = jax.random.split(key, 2)
+        # Get uniform array
+        array = jax.random.uniform(key1, shape)
+        # Zero mask
+        mask = jax.random.uniform(key2, shape, dtype=jnp.float16) < self.config.density
+        array = jnp.where(mask, array, 0)
         # Normalize axes labes
         all_labels = utils.get_axes_einsum_labels([i for i in range(len(shape))])
         norm_labels = utils.get_axes_einsum_labels(self.config.norm_axes)
@@ -206,12 +214,8 @@ class NormalizedSparseUniformInitializer(SparseUniformInitializer):
         norm = jnp.einsum(f'{all_labels}->{norm_labels}', array)
         norm = jnp.where(norm != 0, 1/norm, 1)
         array = jnp.einsum(f'{all_labels},{norm_labels}->{all_labels}', array, norm)
-        # Rescale and clip
-        array = jnp.where(
-            array != 0, 
-            jnp.clip(self.config.scale * array, min=self.config.min_value, max=self.config.max_value),
-            0
-        )
+        # Clip Min-Max
+        array = jnp.clip(self.config.scale * array, min=self.config.min_value, max=self.config.max_value)
         return array.astype(self.config.dtype)
 
 #################################################################################################################################################

@@ -9,7 +9,7 @@ import jax.numpy as jnp
 import dataclasses as dc
 import spark.core.utils as utils
 from math import prod
-from spark.core.specs import InputSpec
+from spark.core.specs import PortSpecs
 from spark.core.variables import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.payloads import SparkPayload
@@ -60,7 +60,7 @@ class Sampler(ControlInterface):
         # Initialize variables
         self.sample_size = self.config.sample_size
 
-    def build(self, input_specs: dict[str, InputSpec]) -> None:
+    def build(self, input_specs: dict[str, PortSpecs]) -> None:
         # Initialize shapes
         input_shape = utils.validate_shape(input_specs['inputs'].shape)
         # Initialize variables

@@ -44,7 +44,7 @@ def test_brain_config() -> spark.nn.BrainConfig:
         },
         config = spark.nn.neurons.ALIFNeuronConfig(
             _s_units = (16,),
-            synapses_params__kernel_initializer__scale = 3.0,
+            synapses_params__kernel__scale = 3.0,
             soma_params__threshold_tau = 25.0 * jax.random.uniform(jax.random.key(43), shape=(16,), dtype=jnp.float16)**2,
             soma_params__threshold_delta = 250.0 * jax.random.uniform(jax.random.key(43), shape=(16,), dtype=jnp.float16)**2,
             soma_params__cooldown = 2.0,  
@@ -63,7 +63,7 @@ def test_brain_config() -> spark.nn.BrainConfig:
         )
     )
     input_map = {
-        'drive': spark.InputSpec(
+        'drive': spark.PortSpecs(
             payload_type=spark.FloatArray, 
             shape=(4,), 
             dtype=jnp.float16,
@@ -75,7 +75,7 @@ def test_brain_config() -> spark.nn.BrainConfig:
                 origin='integrator',
                 port='signal'
             ),
-            'spec': spark.OutputSpec(
+            'spec': spark.PortSpecs(
                 payload_type=spark.FloatArray,
                 shape=(2,),
                 dtype=jnp.float16
