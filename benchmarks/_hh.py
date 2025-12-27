@@ -145,8 +145,8 @@ class HodgkinHuxleySoma(Soma):
         self.g_na = Constant(self.config.g_na, dtype=self._dtype)
         self.g_k = Constant(self.config.g_k, dtype=self._dtype)
         # Gates
-        self.m = Variable(jnp.ones(self.units, dtype=self._dtype), dtype=self._dtype)
-        self.h = Variable(jnp.zeros(self.units, dtype=self._dtype), dtype=self._dtype)
+        self.h = Variable(jnp.ones(self.units, dtype=self._dtype), dtype=self._dtype)
+        self.m = Variable(jnp.zeros(self.units, dtype=self._dtype), dtype=self._dtype)
         self.n = Variable(0.5*jnp.ones(self.units, dtype=self._dtype), dtype=self._dtype)
         # Membrane.
         self.c_m = Constant(self.config.c_m, dtype=self._dtype)

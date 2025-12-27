@@ -122,7 +122,7 @@ class LeakySoma(Soma):
         self.potential_rest = Constant(_potential_rest, dtype=self._dtype)
         self.potential_reset = Constant(_potential_reset - _potential_rest, dtype=self._dtype)
         self.potential_decay = Constant(jnp.exp(-self._dt / _potential_tau), dtype=self._dtype)
-        self.potential_gain = Constant((1 - self.potential_decay.value) * _potential_tau, dtype=self._dtype)
+        self.potential_gain = Constant((1 - self.potential_decay.value), dtype=self._dtype)
         # Conductance.
         self.resistance = Constant(_resistance, dtype=self._dtype) # Current is in pA for stability
         # Threshold.

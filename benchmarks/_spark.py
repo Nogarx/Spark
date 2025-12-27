@@ -12,7 +12,7 @@ import numpy as np
 import spark
 import time
 from functools import partial
-from _hh import HodgkinHuxleyNeuron, HodgkinHuxleySomaConfig
+from _hh import HodgkinHuxleySoma, HodgkinHuxleySomaConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -46,26 +46,49 @@ def run_model_k_steps(graph, state, k, **inputs)-> tuple[dict, nnx.GraphState | 
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@partial(jax.jit, static_argnames=['steps', 'unroll'])
+def run_model_scan(graph, state, currents, steps, unroll=10):
+	def step_fn(carry_state, c):# -> tuple[GraphState | VariableState, Any]:
+		# Unpack carry_state
+		model_state = carry_state
+		# Merge model
+		model = spark.merge(graph, model_state)
+		# Run model
+		outputs = model(current=spark.CurrentArray(jnp.array([c])))
+		# Get new state
+		_, new_state = spark.split((model))
+		return new_state, outputs
+	# Run the scan loop
+	final_state, final_outputs = jax.lax.scan(
+		step_fn, 
+		state, 
+		xs=currents, 
+		length=steps,
+		unroll=unroll,
+	)
+	return final_outputs, final_state
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
 def simulate_model_spark(
-	spike_times,
+	currents,
 	build_func,
 	offset,
 	**kwargs,
 ) -> tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
 	# Initialize model
 	model = build_func(**kwargs)
-	# Map spikes
-	times, in_spikes = spike_events_to_array(spike_times, 100, dt=kwargs['dt'])
 	# Run simulation
 	graph, state = spark.split((model))
-	spikes, potentials = [], []
-	for s in in_spikes:
-		in_spikes = spark.SpikeArray(jnp.array([s]))
-		outputs, state = run_model_one_steps(graph, state, in_spikes=in_spikes)
-		spikes.append(np.array(outputs['out_spikes'].value))
-		model = spark.merge(graph, state)
-		potentials.append(np.array(model.soma.potential.value) + offset)
-	spikes = [t*kwargs['dt'] for t, s in enumerate(spikes) if s == 1]
+	spikes, potentials, times = [], [], []
+	t, dt = 0, kwargs['dt']
+	outputs, _ = run_model_scan(graph, state, currents, steps=len(currents), unroll=10)
+	times = [t*dt for t in range(len(currents))]
+	potentials = np.array(outputs['potential'].value).reshape(-1) + offset
+	spikes = np.array([t*dt for t, s in enumerate(np.array(outputs['spikes'].value).reshape(-1)) if s == 1])
+	times = np.array(times).reshape(-1)
 	return times, potentials, spikes
 
 
@@ -73,89 +96,70 @@ def simulate_model_spark(
 
 def build_LIF_model(
 	dt,
-	synapse_strength,
 	potential_rest,
 	potential_reset,
 	potential_tau,
 	resistance,
 	threshold,
 	cooldown,
-) -> spark.nn.neurons.LIFNeuron:
+) -> spark.nn.somas.StrictRefractoryLeakySoma:
 	# NOTE: We need to substract 1 timestep from the cooldown to match the Brian2 dynamic 
 	# Since we update the refractory the period at the end of the cycle, Brian2 does it at the begining. 
-	lif_neuron = spark.nn.neurons.LIFNeuron(
+	soma_config = spark.nn.somas.StrictRefractoryLeakySomaConfig(
 		_s_units = (1,),
 		_s_dt = dt,
 		_s_dtype = jnp.float16,
-		inhibitory_rate = 0.0,
-		soma = spark.nn.somas.StrictRefractoryLeakySomaConfig(
-			potential_rest = potential_rest,
-			potential_reset = potential_reset,
-			potential_tau = potential_tau,
-			resistance = resistance,
-			threshold = threshold,
-			cooldown = cooldown - dt, 
-		),
-		synapses = spark.nn.synapses.LinearSynapsesConfig(
-			units = (1,),
-			kernel = spark.nn.initializers.ConstantInitializerConfig(scale=synapse_strength),
-		),
-		delays = None,
-		learning_rule = None,
+		potential_rest = potential_rest,
+		potential_reset = potential_reset,
+		potential_tau = potential_tau,
+		resistance = resistance,
+		threshold = threshold,
+		cooldown = cooldown - dt, 
 	)
-	lif_neuron(in_spikes=spark.SpikeArray( jnp.zeros((1,)) ))
-	return lif_neuron
+	soma = spark.nn.somas.StrictRefractoryLeakySoma(config=soma_config)
+	soma(current=spark.CurrentArray( jnp.zeros((1,)) ))
+	return soma
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 def build_AdEx_model(
 	dt,
-	synapse_strength,
 	potential_rest,
 	potential_reset,
 	potential_tau,
-	resistance, # MΩ -> GΩ
+	resistance,
 	threshold,
 	rheobase_threshold,
 	spike_slope,
 	adaptation_tau,
 	adaptation_delta,
 	adaptation_subthreshold,	
-) -> spark.nn.neurons.AdExNeuron:
+) -> spark.nn.somas.AdaptiveExponentialSoma:
 	# NOTE: We need to substract 1 timestep from the cooldown to match the Brian2 dynamic 
 	# Since we update the refractory the period at the end of the cycle, Brian2 does it at the begining. 
-	adex_neuron = spark.nn.neurons.AdExNeuron(
+	soma_config = spark.nn.somas.AdaptiveExponentialSomaConfig(
 		_s_units = (1,),
 		_s_dt = dt,
 		_s_dtype = jnp.float16,
-		inhibitory_rate = 0.0,
-		soma = spark.nn.somas.AdaptiveExponentialSomaConfig(
-			potential_rest = potential_rest,
-			potential_reset = potential_reset,
-			potential_tau = potential_tau,
-			resistance = resistance,
-			threshold = threshold,
-			rheobase_threshold = rheobase_threshold,
-			spike_slope = spike_slope,
-			adaptation_tau = adaptation_tau,
-			adaptation_delta = adaptation_delta,
-			adaptation_subthreshold = adaptation_subthreshold,
-		),
-		synapses = spark.nn.synapses.LinearSynapsesConfig(
-			units = (1,),
-			kernel = spark.nn.initializers.ConstantInitializerConfig(scale=synapse_strength),
-		),
-		delays = None,
-		learning_rule = None,
+		potential_rest = potential_rest,
+		potential_reset = potential_reset,
+		potential_tau = potential_tau,
+		resistance = resistance,
+		threshold = threshold,
+		rheobase_threshold = rheobase_threshold,
+		spike_slope = spike_slope,
+		adaptation_tau = adaptation_tau,
+		adaptation_delta = adaptation_delta,
+		adaptation_subthreshold = adaptation_subthreshold,
 	)
-	adex_neuron(in_spikes=spark.SpikeArray(jnp.zeros((1,))))
-	return adex_neuron
+	soma = spark.nn.somas.AdaptiveExponentialSoma(config=soma_config)
+	soma(current=spark.CurrentArray( jnp.zeros((1,)) ))
+	return soma
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 def build_HH_model(
 	dt,
-	synapse_strength,
 	c_m,
 	e_leak,
 	e_na,
@@ -164,31 +168,23 @@ def build_HH_model(
 	g_na,
 	g_k,
 	threshold,
-) -> HodgkinHuxleyNeuron:
-	hh_neuron = HodgkinHuxleyNeuron(
+) -> HodgkinHuxleySoma:
+	soma_config = HodgkinHuxleySomaConfig(
 		_s_units = (1,),
 		_s_dt = dt,
 		_s_dtype = jnp.float16,
-		inhibitory_rate = 0.0,
-		soma = HodgkinHuxleySomaConfig(
-			c_m = c_m,
-			e_leak = e_leak,
-			e_na = e_na,
-			e_k = e_k,
-			g_leak = g_leak,
-			g_na = g_na,
-			g_k = g_k,
-			threshold = threshold, 
-		),
-		synapses = spark.nn.synapses.LinearSynapsesConfig(
-			units = (1,),
-			kernel = spark.nn.initializers.ConstantInitializerConfig(scale=synapse_strength),
-		),
-		delays = None,
-		learning_rule = None,
+		c_m = c_m,
+		e_leak = e_leak,
+		e_na = e_na,
+		e_k = e_k,
+		g_leak = g_leak,
+		g_na = g_na,
+		g_k = g_k,
+		threshold = threshold, 
 	)
-	hh_neuron(in_spikes=spark.SpikeArray(jnp.zeros((1,))))
-	return hh_neuron
+	soma = HodgkinHuxleySoma(config=soma_config)
+	soma(current=spark.CurrentArray( jnp.zeros((1,)) ))
+	return soma
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

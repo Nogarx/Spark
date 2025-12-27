@@ -424,6 +424,140 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         return rep
 
 
+
+    def checkpoint(self, path, overwrite=False) -> None:
+
+        import os
+        import tarfile
+        import shutil
+        import pathlib
+        import datetime
+        import orbax.checkpoint as ocp
+        from spark.core.flax_imports import split
+
+        try:
+            # Check if file exists
+            tar_path = pathlib.Path(path).with_suffix('.spark')
+            if tar_path.exists() and not overwrite:
+                raise RuntimeError(
+                    f'Attempting to overwrite file with {tar_path}. Set \"overwrite=True\" if this was intended.'
+                )
+            # Create temporary directory
+            timestamp = datetime.datetime.now().timestamp()
+            temp_dir = pathlib.Path(
+                os.path.join('/'.join(path.split('/')[:-1]), f'tmp_{timestamp}')
+            )
+            temp_dir.mkdir(exist_ok=True)
+            # Save config
+            config_path = pathlib.Path(os.path.join(temp_dir, 'model.scfg'))
+            config: BaseSparkConfig = self.config
+            config.__metadata__['input_specs'] = self.get_input_specs()
+            config.to_file(config_path.absolute())
+            # Save state
+            _, state = split((self))
+            ckptr = ocp.AsyncCheckpointer(ocp.StandardCheckpointHandler())
+            state_path = pathlib.Path(os.path.join(temp_dir, 'state'))
+            ckptr.save(state_path.absolute(), state)
+            ckptr.wait_until_finished()
+            # Compress into tar
+            with tarfile.open(tar_path, "w:gz") as tar:
+                    tar.add(temp_dir, arcname=".")
+            # Remove temporary files
+            shutil.rmtree(temp_dir)
+            # Message
+            print(f'Checkpoint for model {self.__class__.__name__} successfully saved to path: {tar_path}.')
+        except Exception as e:
+            raise RuntimeError(f'Unable to generate checkpoint for model {self.__class__.__name__}: {e}')
+
+
+    # TODO: This is a potentially dangerous operation. We need to add some safe guards
+    #  to prevent malicious software to enter a computer unintentionally.
+    @classmethod
+    def from_checkpoint(cls, path, safe=True) -> SparkModule:
+
+        import os
+        import tarfile
+        import shutil
+        import pathlib
+        import datetime
+        import orbax.checkpoint as ocp
+        from spark.core.config import BaseSparkConfig
+        from spark.core.flax_imports import split, merge
+
+        def is_child(member_name: str, parent: str) -> bool:
+            m = pathlib.PurePosixPath(member_name)
+            p = pathlib.PurePosixPath(parent)
+            # Must be relative
+            if m.is_absolute():
+                return False
+            # Normalize and ensure containment
+            try:
+                m.relative_to(p)
+                return True
+            except ValueError:
+                return False
+
+        def safe_member(m: tarfile.TarInfo) -> bool:
+            return not (m.issym() or m.islnk())
+        
+        # Open tar file
+        timestamp = datetime.datetime.now().timestamp()
+        temp_dir = pathlib.Path(
+            os.path.join('/'.join(path.split('/')[:-1]), f'tmp_{timestamp}')
+        )
+        try:
+            with tarfile.open(path, "r:gz") as tar:
+                config_file = tar.getmember('./model.scfg')
+                state_dir = tar.getmember('./state')
+                if safe and not config_file.isfile():
+                    raise RuntimeError(
+                        f'Unable to validate model.scfg. If you still want to try to extract the file set \"safe=False\"'
+                    )
+                if safe and not state_dir.isdir():
+                    raise RuntimeError(
+                        f'Unable to validate state. If you still want to try to extract the file set \"safe=False\"'
+                    )
+                tar.extract(config_file, path=temp_dir, filter='data') 
+                state_files = []
+                for member in tar.getmembers():
+                    if is_child(member.name, state_dir.name):
+                        if safe_member(member):
+                            state_files.append(member)
+                        else:
+                            raise RuntimeError(
+                                f'A strange possibly malicious file was detected: \"{member.name}\". If you still want to try to extract the file set \"safe=False\"'
+                            )
+                tar.extractall(members=state_files, path=temp_dir, filter='data') 
+            # Restore model
+            config_path = pathlib.Path(os.path.join(temp_dir, 'model.scfg'))
+            config = BaseSparkConfig.from_file(config_path.absolute())
+            # Get model class
+            model_cls: type[SparkModule] = config.class_ref
+            # Initialize the module.
+            model = model_cls(config=config)
+            dummy_input = {
+                port_name: port_spec._create_mock_input() for port_name, port_spec in config.__metadata__['input_specs'].items()
+            }
+            model(**dummy_input)
+            graph, template_state = split((model))
+            # Restore state
+            ckptr = ocp.AsyncCheckpointer(ocp.StandardCheckpointHandler())
+            state_path = pathlib.Path(os.path.join(temp_dir, 'state'))
+            state = ckptr.restore(state_path.absolute(), template_state)
+            ckptr.wait_until_finished()
+            #Assemble
+            model = merge(graph, state)
+            # Remove temporary files
+            shutil.rmtree(temp_dir)
+            # Message
+            print(f'Model {model.__class__.__name__} loaded successfully from path: {path}.')
+            return model
+        except Exception as e:
+            # Remove temporary files
+            if os.path.exists(temp_dir):
+                shutil.rmtree(temp_dir)
+            raise RuntimeError(f'Unable to restore checkpoint for model {path}: {e}')
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

@@ -24,7 +24,7 @@ class SomaOutput(tp.TypedDict):
        Generic soma model output spec.
     """
     spikes: SpikeArray
-    potentials: PotentialArray
+    potential: PotentialArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -80,7 +80,7 @@ class Soma(Component, tp.Generic[ConfigT]):
         self._update_states(current)
         return {
             'spikes': self._compute_spikes(), 
-            'potentials': self.potential,
+            'potential': self.potential,
         }
     
 #################################################################################################################################################
