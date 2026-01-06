@@ -890,7 +890,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
     @classmethod
-    def from_file(cls: type['BaseSparkConfig'], file_path: str) -> None:
+    def from_file(cls: type['BaseSparkConfig'], file_path: str) -> 'BaseSparkConfig':
         """
             Create config instance from a .scfg file.
         """
@@ -1005,17 +1005,27 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     rep += value._parse_tree_structure(current_depth+1, simplified=simplified)
         return rep
 
-    def with_new_seeds(self) -> 'BaseSparkConfig':
+    def with_new_seeds(self, seed=None) -> 'BaseSparkConfig':
         """
             Utility method to recompute all seed variables within the SparkConfig.
             Useful when creating several populations from the same config.
         """
         new_instance = copy.deepcopy(self)
-        for name, field, value in new_instance:
-            if isinstance(value, BaseSparkConfig):
-                setattr(new_instance, name, value.with_new_seeds())
-            elif name == 'seed':
-                setattr(new_instance, name, int.from_bytes(os.urandom(4), 'little'))
+        if seed is None:
+            for name, field, value in new_instance:
+                if isinstance(value, BaseSparkConfig):
+                    setattr(new_instance, name, value.with_new_seeds())
+                elif name == 'seed':
+                    setattr(new_instance, name, int.from_bytes(os.urandom(4), 'little'))
+        else:
+            key = jax.random.key(seed)
+            for name, field, value in new_instance:
+                key, subkey = jax.random.split(key, 2)
+                new_seed = int(subkey._base_array[0])
+                if isinstance(value, BaseSparkConfig):
+                    setattr(new_instance, name, value.with_new_seeds(seed=new_seed))
+                elif name == 'seed':
+                    setattr(new_instance, name, new_seed)
         return new_instance
 
 #################################################################################################################################################

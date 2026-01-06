@@ -10,7 +10,7 @@ import brian2 as b2
 from tqdm import tqdm
 import os
 
-MAIN_FOLDER = f'./npy_files/fidelity/'
+MAIN_FOLDER = f'./fidelity/'
 os.makedirs(MAIN_FOLDER, exist_ok=True)
 REPETITIONS = 100
 MAX_TIME = 1000.0

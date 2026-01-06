@@ -173,7 +173,6 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
         # Construct input specs.
         self._input_specs = nnx.data(self._construct_input_specs(bound_args.arguments))
-
         # Build model.
         self.build(self._input_specs)
         self.__built__ = True

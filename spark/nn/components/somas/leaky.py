@@ -327,6 +327,8 @@ class AdaptiveLeakySomaConfig(RefractoryLeakySomaConfig):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+# TODO: This is not really an ALIF some by a LIF soma with threshold adaptation. 
+# We need to redefine this module and add the true ALIF model
 @register_module
 class AdaptiveLeakySoma(RefractoryLeakySoma):
     """

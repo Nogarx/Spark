@@ -367,7 +367,6 @@ class Brain(SparkModule, metaclass=BrainMeta):
 								f'Trying to get port from module "{port_map.origin}" for "{module_name}"... '
 								f'418 I\'m a teapot.'
 							)
-					
 					mock_port_spec = PortSpecs.from_portspecs_list(portspecs_list, validate_async=validate_async)
 					mock_input[port_name] = mock_port_spec._create_mock_input()
 				# Initialize module
@@ -427,10 +426,12 @@ class Brain(SparkModule, metaclass=BrainMeta):
 				shape=payload.shape,
 				dtype=payload.dtype,
 				description=f'Auto-generated input spec for input \"{key}\" of module \"{self.name}\".',
+				# Payload specific build metadata
+				async_spikes=payload.async_spikes if isinstance(payload, SpikeArray) else None,
+				inhibition_mask=payload.inhibition_mask if isinstance(payload, SpikeArray) else None
 			)
 		return input_specs
-
-
+	
 
 	# NOTE: We need to override _construct_output_specs since sig_parser.get_output_specs will lead to an incorrect 
 	# signature because Brain can have an arbitrary number of outputs all under the key "outputs".
@@ -446,6 +447,9 @@ class Brain(SparkModule, metaclass=BrainMeta):
 				shape=abc_args[output_name].shape,
 				dtype=abc_args[output_name].dtype,
 				description=f'Auto-generated output spec for output \"{output_name}\".',
+                # Payload specific build metadata
+                async_spikes=abc_args[output_name].async_spikes if isinstance(abc_args[output_name], SpikeArray) else None,
+                inhibition_mask=abc_args[output_name].inhibition_mask if isinstance(abc_args[output_name], SpikeArray) else None
 			)
 		return output_specs
 

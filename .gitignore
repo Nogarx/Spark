@@ -4,13 +4,11 @@ _run_tests.py
 .env_docs/
 .env_benchmarks/
 dev_tmp_files/
+benchmarks/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
-benchmarks/*.npy
-benchmarks/npy_files
-
 # C extensions
 *.so
 
