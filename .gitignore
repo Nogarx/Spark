@@ -5,6 +5,7 @@ _run_tests.py
 .env_benchmarks/
 dev_tmp_files/
 benchmarks/
+hidden/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
