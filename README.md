@@ -47,7 +47,7 @@ No coding required for model design.
 
 ## Getting Started
 
-<!--
+
 Spark is available on PyPI, so it can be installed with:
 
 
@@ -56,8 +56,7 @@ pip install spark-snn
 ```
 
 Or, for the latest development version, clone this repository:
--->
-To try Spark, clone this repository and install it via: 
+
 ```
 git clone https://github.com/nogarx/spark.git
 cd spark
