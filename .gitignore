@@ -1,11 +1,13 @@
-notebooks/
-.env2/
+_run_tests.py
+.env/
 .env_docs/
+.env_benchmarks/
+hidden/
+Spark_paper/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
-
 # C extensions
 *.so
 

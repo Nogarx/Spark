@@ -34,10 +34,9 @@ class ConsolePanel(QDockPanel):
     def __init__(
             self, 
             name: str = 'Console', 
-            parent: QtWidgets.QWidget = None, 
             **kwargs
         ) -> None:
-        super().__init__(name, parent=parent, **kwargs)
+        super().__init__(name, **kwargs)
         self._target_node = None
         self._node_config_widget = None
         self.console = Console()
@@ -57,8 +56,8 @@ class Console(QtWidgets.QWidget):
     """
         Non-interactable console widget.
     """
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self):
+        super().__init__()
 
         # Filter state: initially all enabled
         self._filters = {
@@ -132,7 +131,7 @@ class Console(QtWidgets.QWidget):
         # Append timestamp to message
         timestamp = datetime.now().strftime('%H:%M:%S')
         text = f'[{timestamp}] {text}'
-        msg = _MessageWidget(level, text, parent=self.content)
+        msg = _MessageWidget(level, text)
         # Insert message
         self.content.layout().addWidget(msg)
         self._messages.append(msg)
@@ -203,8 +202,8 @@ class _MessageWidget(QtWidgets.QWidget):
     Visual representation of a single message inside the console.
     Not interactable (no focus); contains small level icon and a wrapping text label.
     """
-    def __init__(self, level: MessageLevel, text: str, parent=None):
-        super().__init__(parent)
+    def __init__(self, level: MessageLevel, text: str):
+        super().__init__()
         self.level = level
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
         icon_label = QtWidgets.QLabel()

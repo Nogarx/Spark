@@ -41,7 +41,7 @@ data_test = [
     # Output interfaces
     (
         spark.nn.interfaces.ExponentialIntegrator, 
-        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(10,) < 0.5, dtype=jnp.float16)),}, 
+        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(10,) < 0.5)),}, 
         {'num_outputs':2,}
     ),
     # Control interfaces
@@ -62,50 +62,45 @@ data_test = [
     ),
     # Delays
     (
-        spark.nn.delays.DummyDelays, 
-        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,4) < 0.5, dtype=jnp.float16)),}, 
-        {}
-    ),
-    (
         spark.nn.delays.NDelays, 
-        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,4) < 0.5, dtype=jnp.float16)),}, 
+        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,4) < 0.5)),}, 
         {'max_delay':5,}
     ),
     (
         spark.nn.delays.N2NDelays, 
-        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,4) < 0.5, dtype=jnp.float16)),}, 
+        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,4) < 0.5)),}, 
         {'units':(2,2), 'max_delay':5,}
     ),
     # Synapses
     (
         spark.nn.synapses.LinearSynapses, 
-        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'units':(2,3), 'async_spikes':False,}
+        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
+        {'units':(2,3),}
     ),
     (
         spark.nn.synapses.LinearSynapses, 
-        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'units':(2,3), 'async_spikes':True,}
+        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5), async_spikes=True),}, 
+        {'units':(2,3),}
     ),
     (
         spark.nn.synapses.TracedSynapses, 
-        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'units':(2,3), 'async_spikes':False,}
+        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
+        {'units':(2,3),}
     ),
     (
         spark.nn.synapses.TracedSynapses, 
-        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'units':(2,3), 'async_spikes':True,}
+        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5), async_spikes=True),}, 
+        {'units':(2,3),}
     ),
     (
-        spark.nn.synapses.DoubleTracedSynapses, 
-        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'units':(2,3), 'async_spikes':False,}
+        spark.nn.synapses.RDTracedSynapses, 
+        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
+        {'units':(2,3),}
     ),
     (
-        spark.nn.synapses.DoubleTracedSynapses, 
-        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'units':(2,3), 'async_spikes':True,}
+        spark.nn.synapses.RDTracedSynapses, 
+        {'spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5), async_spikes=True),}, 
+        {'units':(2,3),}
     ),
     # Somas
     (
@@ -147,77 +142,77 @@ data_test = [
     (
         spark.nn.learning_rules.HebbianRule, 
         {
-            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),
-            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5, dtype=jnp.float16)),
-            'current_kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
         }, 
-        {'units':(2,3), 'async_spikes':False,}
+        {'units':(2,3),}
     ),
     (
         spark.nn.learning_rules.HebbianRule, 
         {
-            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16)),
-            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5, dtype=jnp.float16)),
-            'current_kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5), async_spikes=True),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
         }, 
-        {'units':(2,3), 'async_spikes':True,}
+        {'units':(2,3),}
     ),
     (
     spark.nn.learning_rules.OjaRule, 
         {
-            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),
-            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5, dtype=jnp.float16)),
-            'current_kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
         }, 
-        {'units':(2,3), 'async_spikes':False,}
+        {'units':(2,3),}
     ),
     (
     spark.nn.learning_rules.OjaRule, 
         {
-            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16)),
-            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5, dtype=jnp.float16)),
-            'current_kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5), async_spikes=True),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
         }, 
-        {'units':(2,3), 'async_spikes':True,}
+        {'units':(2,3),}
     ),
     (
     spark.nn.learning_rules.ZenkeRule, 
         {
-            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),
-            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5, dtype=jnp.float16)),
-            'current_kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
         }, 
-        {'units':(2,3), 'async_spikes':False,}
+        {'units':(2,3),}
     ),
     (
     spark.nn.learning_rules.ZenkeRule, 
         {
-            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5, dtype=jnp.float16)),
-            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5, dtype=jnp.float16)),
-            'current_kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5), async_spikes=True),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
         }, 
-        {'units':(2,3), 'async_spikes':True,}
+        {'units':(2,3),}
     ),
     # Neurons
     (
         spark.nn.neurons.LIFNeuron, 
-        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'_s_units':(2,3), '_s_async_spikes':False,}
+        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
+        {'_s_units':(2,3),}
     ),
     (
         spark.nn.neurons.LIFNeuron, 
-        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'_s_units':(2,3), '_s_async_spikes':True,}
+        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
+        {'_s_units':(2,3),}
     ),
     (
         spark.nn.neurons.ALIFNeuron, 
-        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'_s_units':(2,3), '_s_async_spikes':False,}
+        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
+        {'_s_units':(2,3),}
     ),
     (
         spark.nn.neurons.ALIFNeuron, 
-        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5, dtype=jnp.float16)),}, 
-        {'_s_units':(2,3), '_s_async_spikes':True,}
+        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
+        {'_s_units':(2,3),}
     ),
 ]
 
@@ -227,7 +222,7 @@ data_test = [
 def run_module_simplified(
         module: spark.nn.Brain, 
         module_inputs: dict
-    ) -> tuple[tp.Any, spark.nn.Module]:
+    ) -> tuple[dict[str, spark.SparkPayload], spark.nn.Module]:
     s = module(**module_inputs)
     return s, module
 
@@ -243,7 +238,10 @@ def run_jax_jit_simplified(
     """
     module = module_cls(**module_config_kwargs)
     module(**module_inputs)
-    run_module_simplified(module, module_inputs)
+    output, new_module = run_module_simplified(module, module_inputs)
+    for payloads in output.values():
+        assert jnp.sum(jnp.isnan(payloads.value)) == 0
+        assert jnp.sum(jnp.isinf(payloads.value)) == 0
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -252,7 +250,7 @@ def run_module_split(
         graph: nnx.GraphDef, 
         state: nnx.GraphState | nnx.VariableState, 
         module_inputs: dict
-    ) -> tuple[tp.Any, nnx.GraphState | nnx.VariableState]:
+    ) -> tuple[dict[str, spark.SparkPayload], nnx.GraphState | nnx.VariableState]:
     module = spark.merge(graph, state)
     s = module(**module_inputs)
     _, state = spark.split((module))
@@ -272,7 +270,10 @@ def test_jax_jit_split(
     module = module_cls(**module_config_kwargs)
     module(**module_inputs)
     graph, state = spark.split((module))
-    run_module_split(graph, state, module_inputs)
+    output, new_state = run_module_split(graph, state, module_inputs)
+    for payloads in output.values():
+        assert jnp.sum(jnp.isnan(payloads.value)) == 0
+        assert jnp.sum(jnp.isinf(payloads.value)) == 0
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

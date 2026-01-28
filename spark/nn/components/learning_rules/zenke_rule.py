@@ -5,7 +5,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.specs import InputSpec
+    from spark.core.specs import PortSpecs
 
 import jax
 import dataclasses as dc
@@ -14,9 +14,10 @@ from spark.core.tracers import Tracer
 from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Constant
 from spark.core.registry import register_module, register_config
-from spark.core.utils import get_einsum_labels
+from spark.core.utils import get_einsum_dot_exp_string
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.learning_rules.base import LearningRule, LearningRuleConfig, LearningRuleOutput
+from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -28,15 +29,7 @@ class ZenkeRuleConfig(LearningRuleConfig):
        ZenkeRule configuration class.
     """
 
-    async_spikes: bool = dc.field(
-        metadata = {
-            'validators': [
-                TypeValidator,
-            ], 
-            'description': 'Use asynchronous spikes. This parameter should be True if the incomming spikes are \
-                            intercepted by a delay component and False otherwise.',
-        })
-    pre_tau: float | jax.Array = dc.field(
+    pre_tau: float | jax.Array | Initializer = dc.field(
         default = 20.0, 
         metadata = {
             'units': 'ms',
@@ -46,7 +39,7 @@ class ZenkeRuleConfig(LearningRuleConfig):
             ],
             'description': 'Time constant of the presynaptic spike train',
         })
-    post_tau: float | jax.Array = dc.field(
+    post_tau: float | jax.Array | Initializer = dc.field(
         default = 20.0, 
         metadata = {
             'units': 'ms',
@@ -56,7 +49,7 @@ class ZenkeRuleConfig(LearningRuleConfig):
             ],
             'description': 'Time constant of the fast postynaptic spike train',
         })
-    post_slow_tau: float | jax.Array = dc.field(
+    post_slow_tau: float | jax.Array | Initializer = dc.field(
         default = 20.0, 
         metadata = {
             'units': 'ms',
@@ -66,7 +59,7 @@ class ZenkeRuleConfig(LearningRuleConfig):
             ],
             'description': 'Time constant of the slow postynaptic spike train',
         })
-    target_tau: float | jax.Array = dc.field(
+    target_tau: float | jax.Array | Initializer = dc.field(
         default = 20000.0, 
         metadata = {
             'units': 'ms',
@@ -116,7 +109,7 @@ class ZenkeRuleConfig(LearningRuleConfig):
             ], 
             'description': '',
         })
-    gamma: float | jax.Array = dc.field(
+    eta: float | jax.Array = dc.field(
         default = 0.1, 
         metadata = {
             'validators': [
@@ -133,7 +126,6 @@ class ZenkeRule(LearningRule):
         Zenke plasticy rule model. This model is an extension of the classic Hebbian Rule.
 
         Init:
-            async_spikes: bool
             pre_tau: float | jax.Array
             post_tau: float | jax.Array
             post_slow_tau: float | jax.Array
@@ -143,12 +135,12 @@ class ZenkeRule(LearningRule):
             c: float | jax.Array
             d: float | jax.Array
             P: float | jax.Array
-            gamma: float | jax.Array
+            eta: float | jax.Array
 
         Input:
             pre_spikes: SpikeArray
             post_spikes: SpikeArray
-            current_kernel: FloatArray
+            kernel: FloatArray
             
         Output:
             kernel: FloatArray
@@ -158,31 +150,32 @@ class ZenkeRule(LearningRule):
     def __init__(self, config: ZenkeRuleConfig | None = None, **kwargs):
         # Initialize super.
         super().__init__(config=config, **kwargs)
-        # Initialize varibles
-        self._async_spikes = self.config.async_spikes
 
-    def build(self, input_specs: dict[str, InputSpec]):
+    def build(self, input_specs: dict[str, PortSpecs]):
         # Initialize shapes
         input_shape = input_specs['pre_spikes'].shape
         output_shape = input_specs['post_spikes'].shape
-        kernel_shape = input_specs['current_kernel'].shape
+        kernel_shape = input_specs['kernel'].shape
+        # Initialize variables.
+        _pre_tau = self.config.pre_tau.init(key=self.get_rng_keys(1), shape=input_shape, dtype=self._dtype)
+        _post_tau = self.config.post_tau.init(key=self.get_rng_keys(1), shape=output_shape, dtype=self._dtype)
+        _post_slow_tau = self.config.post_slow_tau.init(key=self.get_rng_keys(1), shape=output_shape, dtype=self._dtype)
+        _target_tau = self.config.target_tau.init(key=self.get_rng_keys(1), shape=kernel_shape, dtype=self._dtype)
         # Tracers.
-        self.pre_trace = Tracer(kernel_shape, tau=self.config.pre_tau, scale=1/self.config.pre_tau, dtype=self._dtype) 
-        self.post_trace = Tracer(output_shape, tau=self.config.post_tau, scale=1/self.config.post_tau, dtype=self._dtype)
-        self.post_slow_trace = Tracer(output_shape, tau=self.config.post_slow_tau, scale=1/self.config.post_slow_tau, dtype=self._dtype)
-        self.target_trace = Tracer(kernel_shape, tau=self.config.target_tau, scale=1/self.config.target_tau, dtype=self._dtype)
+        self.pre_trace = Tracer(input_shape, tau=_pre_tau, scale=1/_pre_tau, dtype=self._dtype, dt=self._dt) 
+        self.post_trace = Tracer(output_shape, tau=_post_tau, scale=1/_post_tau, dtype=self._dtype, dt=self._dt)
+        self.post_slow_trace = Tracer(output_shape, tau=_post_slow_tau, scale=1/_post_slow_tau, dtype=self._dtype, dt=self._dt)
+        self.target_trace = Tracer(kernel_shape, tau=_target_tau, scale=1/_target_tau, dtype=self._dtype, dt=self._dt)
         self.a = Constant(self.config.a)
         self.b = Constant(self.config.b)
         self.c = Constant(self.config.c)
         self.d = Constant(self.config.d)
         self.p = Constant(self.config.p)
-        self.gamma = Constant(self.config.gamma)
+        self.eta = Constant(self.config.eta)
         # Einsum labels.
-        out_labels = get_einsum_labels(len(output_shape))
-        in_labels = get_einsum_labels(len(input_shape), len(output_shape))
-        ker_labels = get_einsum_labels(len(kernel_shape))
-        self._post_pre_prod = f'{out_labels},{ker_labels if self._async_spikes else in_labels}->{ker_labels}'
-        self._ker_post_prod = f'{ker_labels},{out_labels}->{ker_labels}' 
+        async_spikes = input_specs['pre_spikes'].async_spikes
+        self._post_pre_dot = get_einsum_dot_exp_string(output_shape, input_shape, side='left' if async_spikes else 'none')
+        self._ker_post_dot = get_einsum_dot_exp_string(kernel_shape, output_shape, side='left')
             
     def reset(self) -> None:
         """
@@ -193,35 +186,39 @@ class ZenkeRule(LearningRule):
         self.post_slow_trace.reset()
         self.target_trace.reset()
 
-    def _compute_kernel_update(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, current_kernel: FloatArray) -> jax.Array:
+    def _compute_kernel_update(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> jax.Array:
         """
             Computes next kernel update.
         """
+        # Squeeze
+        _pre_spikes = pre_spikes.spikes
+        _post_spikes = post_spikes.spikes
+        _kernel = kernel.value
         # Update and get current trace value
-        pre_trace = self.pre_trace(pre_spikes.value)
-        post_trace = self.post_trace(post_spikes.value)
-        post_slow_trace = self.post_slow_trace(post_spikes.value)
+        pre_trace = self.pre_trace(_pre_spikes)
+        post_trace = self.post_trace(_post_spikes)
+        post_slow_trace = self.post_slow_trace(_post_spikes)
         target_trace = self.target_trace.value
-        delta_target = current_kernel.value - self.config.p * target_trace * (1/4 - target_trace) * (1/2 - target_trace)
+        delta_target = _kernel - self.config.p * target_trace * (1/4 - target_trace) * (1/2 - target_trace)
         target_trace = self.target_trace(delta_target)
         # Triplet LTP
-        a = self.a * jnp.einsum(self._ker_post_prod, pre_trace, post_slow_trace * post_spikes.value)
+        a = self.a * jnp.einsum(self._post_pre_dot, post_slow_trace * _post_spikes, pre_trace)
         # Doublet LTD
-        b = self.b * jnp.einsum(self._post_pre_prod, post_trace, pre_spikes.value)
+        b = self.b * jnp.einsum(self._post_pre_dot, post_trace, _pre_spikes)
         # Heterosynaptic plasticity.
-        c = self.c * jnp.einsum(self._ker_post_prod, current_kernel.value - target_trace, (post_trace**3) * post_spikes.value)
+        c = self.c * jnp.einsum(self._ker_post_dot, _kernel - target_trace, (post_trace**3) * _post_spikes)
         # Transmitter induced.
-        d = self.d * pre_spikes.value
+        d = self.d * _pre_spikes
         # Compute rule
-        dK = self.gamma * (a + b + c + d)
-        return current_kernel.value + self._dt * dK
+        dK = self.eta * (a + b + c + d)
+        return jnp.clip(_kernel + self._dt * dK, min=0.0)
         
-    def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, current_kernel: FloatArray) -> LearningRuleOutput:
+    def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> LearningRuleOutput:
         """
             Computes and returns the next kernel update.
         """
         return {
-            'kernel': FloatArray(self._compute_kernel_update(pre_spikes, post_spikes, current_kernel))
+            'kernel': FloatArray(self._compute_kernel_update(pre_spikes, post_spikes, kernel))
         }
 
 #################################################################################################################################################

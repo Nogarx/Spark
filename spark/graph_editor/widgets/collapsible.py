@@ -27,11 +27,10 @@ class QCollapsible(QtWidgets.QFrame):
     def __init__(
         self,
         title: str = '',
-        parent: QtWidgets.QWidget | None = None,
         expandedIcon: QtGui.QIcon | str | None = "▼",
         collapsedIcon: QtGui.QIcon | str | None = "▲",
     ):
-        super().__init__(parent)
+        super().__init__()
         self._locked = False
         self._is_animating = False
         self._text = title
@@ -58,7 +57,6 @@ class QCollapsible(QtWidgets.QFrame):
 
         #self.setStyleSheet(f'margin: 0px; padding: 0px; background-color: coral;')
         #self.setContentsMargins(0,0,0,0)
-        
 
         # frame layout
         layout = QtWidgets.QVBoxLayout(self)

@@ -34,6 +34,9 @@ class Synanpses(Component, tp.Generic[ConfigT]):
     """
         Abstract synapse model.
 
+        Note that we require the kernel entries to be in pA for numerical stability, since most of the time we want to run in half-precision.
+        However somas expect the current in nA so we need to rescale the output.
+
         Init:
 
         Input:

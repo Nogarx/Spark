@@ -10,23 +10,18 @@ if TYPE_CHECKING:
     from spark.graph_editor.models.graph import SparkNodeGraph
     from spark.core.payloads import SparkPayload
 
-# GPU is not required in the editor
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = ''     
-os.environ['XLA_FLAGS'] = '--xla_force_host_platform_device_count=1'
-
 from PySide6 import QtWidgets, QtCore, QtGui
 from NodeGraphQt import Port
 import abc
 import logging
-import jax.numpy as jnp
+import numpy as np
 from jax.typing import DTypeLike
 import typing as tp
 import spark.core.utils as utils
 from NodeGraphQt import BaseNode
 from spark.core.registry import REGISTRY, RegistryEntry
 from spark.core.payloads import FloatArray
-from spark.core.specs import InputSpec, OutputSpec
+from spark.core.specs import PortSpecs
 import spark.core.validation as validation 
 from spark.graph_editor.style.painter import DEFAULT_PALLETE
 from spark.graph_editor.ui.console_panel import MessageLevel
@@ -42,8 +37,8 @@ class AbstractNode(BaseNode, abc.ABC):
 
     __identifier__ = 'spark'
     NODE_NAME = 'Abstract Node'
-    input_specs: dict[str, InputSpec] = {}
-    output_specs: dict[str, OutputSpec] = {}
+    input_specs: dict[str, PortSpecs] = {}
+    output_specs: dict[str, PortSpecs] = {}
     graph: SparkNodeGraph
 
     def __init__(self,) -> None:
@@ -141,12 +136,12 @@ class AbstractNode(BaseNode, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def node_config_metadata(self,) -> dict:
+    def metadata(self,) -> dict:
         pass
     
     def _update_graph_metadata(self,) -> None:
         # Update metadata for model graph editor model reconstruction.
-        self.node_config_metadata['pos'] = self.pos()
+        self.metadata['pos'] = self.pos()
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -161,10 +156,10 @@ class SourceNode(AbstractNode):
         super().__init__()
         # Delay specs definition for better control.
         self.output_specs = {
-            'value': OutputSpec(
+            'value': PortSpecs(
                 payload_type=FloatArray,
                 shape=(1,),
-                dtype=jnp.float16,
+                dtype=np.float16,
                 description='Model input port.'
                 )
             }
@@ -178,7 +173,7 @@ class SourceNode(AbstractNode):
             )
         
     @property
-    def node_config_metadata(self,) -> dict:
+    def metadata(self,) -> dict:
         return None
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -194,10 +189,10 @@ class SinkNode(AbstractNode):
         super().__init__()
         # Delay specs definition for better control.
         self.input_specs = {
-            'value': InputSpec(
+            'value': PortSpecs(
                 payload_type=FloatArray,
                 shape=(1,),
-                dtype=jnp.float16,
+                dtype=np.float16,
                 description='Model output port.'
             )
         }
@@ -211,7 +206,7 @@ class SinkNode(AbstractNode):
             )
 
     @property
-    def node_config_metadata(self,) -> dict:
+    def metadata(self,) -> dict:
         return None
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -248,12 +243,10 @@ class SparkModuleNode(AbstractNode, abc.ABC):
                 )
         # Create partial configuration
         node_config_type = self.module_cls.get_config_spec()
-        #self.node_config = node_config_type._create_partial()
-        # NOTE: DUMMY TEST
-        self.node_config = node_config_type._create_partial(_s_units=utils.validate_shape(1,), _s_async_spikes=True, _s_num_outputs=1)
+        self.node_config = node_config_type._create_partial(_s_units=(1,))
 
     @property
-    def node_config_metadata(self,) -> dict:
+    def metadata(self,) -> dict:
         return self.node_config.__graph_editor_metadata__
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

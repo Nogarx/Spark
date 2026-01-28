@@ -5,18 +5,17 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.specs import InputSpec
+    from spark.core.specs import PortSpecs
 
 import jax
 import jax.numpy as jnp
 import dataclasses as dc
 from spark.nn.neurons import Neuron, NeuronConfig, NeuronOutput
-from spark.core.payloads import SpikeArray
+from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator, ZeroOneValidator
 
-from spark.nn.components.delays.dummy import DummyDelays
 from spark.nn.components.somas.leaky import AdaptiveLeakySoma, AdaptiveLeakySomaConfig
 from spark.nn.components.delays.base import Delays, DelaysConfig
 from spark.nn.components.delays.n2n_delays import N2NDelaysConfig
@@ -24,6 +23,8 @@ from spark.nn.components.synapses.base import Synanpses, SynanpsesConfig
 from spark.nn.components.synapses.linear import LinearSynapsesConfig
 from spark.nn.components.learning_rules.base import LearningRule, LearningRuleConfig
 from spark.nn.components.learning_rules.zenke_rule import ZenkeRuleConfig
+
+from spark.nn.components.learning_rules.three_factor_rule import ThreeFactorHebbianRule
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -34,17 +35,6 @@ class ALIFNeuronConfig(NeuronConfig):
     """
         ALIFNeuron configuration class.
     """
-
-    max_delay: float = dc.field(
-        default = 0.2, 
-        metadata = {
-            'units': 'ms',
-            'validators': [
-                TypeValidator,
-                PositiveValidator,
-            ],
-            'description': '',
-        })
     inhibitory_rate: float = dc.field(
         default = 0.2, 
         metadata = {
@@ -55,29 +45,21 @@ class ALIFNeuronConfig(NeuronConfig):
             ],
             'description': '',
         })
-    async_spikes: bool = dc.field(
-        metadata = {
-            'validators': [
-                TypeValidator,
-            ],
-            'description': 'Use asynchronous spikes. This parameter should be True if the incomming spikes are \
-                            intercepted by a delay component and False otherwise.',
-        })
-    soma_config: AdaptiveLeakySomaConfig = dc.field(
+    soma: AdaptiveLeakySomaConfig = dc.field(
         metadata = {
             'description': 'Soma configuration.',
         })
-    synapses_config: SynanpsesConfig = dc.field(
+    synapses: SynanpsesConfig = dc.field(
         default_factory = LinearSynapsesConfig,
         metadata = {
             'description': 'Synapses configuration.',
         })
-    delays_config: DelaysConfig = dc.field(
+    delays: DelaysConfig | None = dc.field(
         default_factory = N2NDelaysConfig,
         metadata = {
             'description': 'Delays configuration.',
         })
-    learning_rule_config: LearningRuleConfig = dc.field(
+    learning_rule: LearningRuleConfig | None = dc.field(
         default_factory = ZenkeRuleConfig,
         metadata = {
             'description': 'Learning configuration.',
@@ -100,44 +82,54 @@ class ALIFNeuron(Neuron):
 
     def __init__(self, config: ALIFNeuronConfig | None = None, **kwargs):
         super().__init__(config=config, **kwargs)
-        # Main attributes
-        self.max_delay = self.config.max_delay
-        self.inhibitory_rate = self.config.inhibitory_rate
-        self.async_spikes = self.config.async_spikes
-        # Set output shapes earlier to allow cycles.
-        self.set_recurrent_shape_contract(shape=self.units)
-
-    def build(self, input_specs: dict[str, InputSpec]):
         # Initialize inhibitory mask.
-        inhibitory_units = int(self._units * self.inhibitory_rate)
+        inhibitory_units = int(self._units * self.config.inhibitory_rate)
         indices = jax.random.permutation(self.get_rng_keys(1), jnp.arange(self._units), independent=True)[:inhibitory_units]
-        inhibition_mask = jnp.ones((self._units,), dtype=self._dtype)
-        inhibition_mask = inhibition_mask.at[indices].set(-1).reshape(self.units)
-        self._inhibition_mask = Constant(inhibition_mask, dtype=jnp.float16)
+        inhibition_mask = jnp.zeros((self._units,), dtype=jnp.bool)
+        inhibition_mask = inhibition_mask.at[indices].set(True).reshape(self.units)
+        self._inhibition_mask = Constant(inhibition_mask, dtype=jnp.bool)
+        # Set output shapes earlier to allow cycles.
+        contract = self._get_output_specs()
+        contract['out_spikes'].shape = self.units
+        contract['out_spikes'].inhibition_mask = self._inhibition_mask
+        self.set_contract_output_specs(contract)
+
+    def build(self, input_specs: dict[str, PortSpecs]):
         # Soma model.
-        self.soma = AdaptiveLeakySoma(config=self.config.soma_config)
+        self.soma = self.config.soma.class_ref(config=self.config.soma)
         # Delays model.
-        self.delays = self.config.delays_config.class_ref(config=self.config.delays_config) if self.async_spikes else DummyDelays()
+        self._delays_active = self.config.learning_rule is not None
+        if self._delays_active:
+            self.delays = self.config.delays.class_ref(config=self.config.delays)
         # Synaptic model.
-        self.synapses = self.config.synapses_config.class_ref(config=self.config.synapses_config)
+        self.synapses = self.config.synapses.class_ref(config=self.config.synapses)
         # Learning rule model.
-        self.learning_rule = self.config.learning_rule_config.class_ref(config=self.config.learning_rule_config)
+        self._learning_active = self.config.learning_rule is not None
+        if self._learning_active:
+            self.learning_rule = self.config.learning_rule.class_ref(config=self.config.learning_rule)
 
     def __call__(self, in_spikes: SpikeArray) -> NeuronOutput:
         """
             Update neuron's states and compute spikes.
         """
         # Inference
-        delays_output = self.delays(in_spikes)
-        synapses_output = self.synapses(delays_output['out_spikes'])
+        if self._delays_active:
+            delays_output = self.delays(in_spikes)
+            synapses_output = self.synapses(delays_output['out_spikes'])
+        else: 
+            synapses_output = self.synapses(in_spikes)
         soma_output = self.soma(synapses_output['currents'])
         # Learning
-        learning_rule_output = self.learning_rule(delays_output['out_spikes'], soma_output['spikes'], self.synapses.get_kernel())
-        self.synapses.set_kernel(learning_rule_output['kernel'])
-        #self.synapses.kernel.value = learning_rule_output['kernel'].value
+        if self._learning_active:
+            learning_rule_output = self.learning_rule(
+                delays_output['out_spikes'], 
+                soma_output['spikes'], 
+                self.synapses.get_kernel()
+            )
+            self.synapses.set_kernel(learning_rule_output['kernel'])
         # Signed spikes
         return {
-            'out_spikes': SpikeArray(soma_output['spikes'].value * self._inhibition_mask)
+            'out_spikes': SpikeArray(soma_output['spikes'].spikes, inhibition_mask=self._inhibition_mask)
         }
 
 #################################################################################################################################################

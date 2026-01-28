@@ -18,8 +18,9 @@ import jax.numpy as jnp
 
 DEFAULT_SPARKMODULE_PATH = 'spark.core.module.SparkModule'
 DEFAULT_PAYLOAD_PATH = 'spark.core.payloads.SparkPayload'
-DEFAULT_INITIALIZER_PATH = 'spark.nn.initializers.base.Initializer'
 DEFAULT_CONFIG_PATH = 'spark.core.config.BaseSparkConfig'
+DEFAULT_INITIALIZER_PATH = 'spark.nn.initializers.base.Initializer'
+DEFAULT_INITIALIZER_CONFIG_PATH = 'spark.nn.initializers.base.InitializerConfig'
 DEFAULT_CFG_VALIDATOR_PATH = 'spark.core.config_validation.ConfigurationValidator'
 
 def _is_spark_type(obj: tp.Any, type_name: str) -> bool:
@@ -77,9 +78,35 @@ def _is_initializer_type(obj: tp.Any) -> bool:
         Args:
             obj (tp.Any): The class to check.
         Returns:
-            bool, True if 'obj' is a subclass of 'SparkPayload', False otherwise.
+            bool, True if 'obj' is a subclass of 'Initializer', False otherwise.
     """
     return _is_spark_type(obj, DEFAULT_INITIALIZER_PATH)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _is_initializer_instance(obj: tp.Any) -> bool:
+    """
+        Check if an object instance is derived from 'spark.nn.initializers.base.Initializer'.
+
+        Args:
+            obj (tp.Any): The class to check.
+        Returns:
+            bool, True if 'obj' is an instance of 'Initializer', False otherwise.
+    """
+    return _is_spark_instance(obj, DEFAULT_INITIALIZER_PATH)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _is_initializer_config_type(obj: tp.Any) -> bool:
+    """
+        Check if an object is a subclass of 'spark.nn.initializers.base.InitializerConfig'.
+
+        Args:
+            obj (tp.Any): The class to check.
+        Returns:
+            bool, True if 'obj' is a subclass of 'InitializerConfig', False otherwise.
+    """
+    return _is_spark_type(obj, DEFAULT_INITIALIZER_CONFIG_PATH)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -109,6 +136,19 @@ def _is_payload_instance(obj: tp.Any) -> bool:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+def _is_module_instance(obj: tp.Any) -> bool:
+    """
+        Check if an object is an instance of 'spark.core.module.SparkModule'.
+
+        Args:
+            obj (tp.Any): The class to check.
+        Returns:
+            bool, True if 'obj' is an instance of 'SparkModule', False otherwise.
+    """
+    return _is_spark_instance(obj, DEFAULT_SPARKMODULE_PATH)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def _is_module_type(obj: tp.Any) -> bool:
     """
         Check if an object is a subclass of 'spark.core.module.SparkModule'.
@@ -132,6 +172,19 @@ def _is_config_instance(obj: tp.Any) -> bool:
             bool, True if the object is an instance of 'BaseSparkConfig', False otherwise.
     """
     return _is_spark_instance(obj, DEFAULT_CONFIG_PATH)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _is_config_type(obj: tp.Any) -> bool:
+    """
+        Check if an object a subclass of from DEFAULT_CONFIG_PATH.
+
+        Args:
+            obj (tp.Any): The instance to check.
+        Returns:
+            bool, True if the object is a subclass of 'BaseSparkConfig', False otherwise.
+    """
+    return _is_spark_type(obj, DEFAULT_CONFIG_PATH)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

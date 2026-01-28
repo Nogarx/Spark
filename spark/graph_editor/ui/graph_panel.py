@@ -32,8 +32,8 @@ class GraphPanel(CDockWidget):
     broadcast_message = QtCore.Signal(MessageLevel, str)
     onWidgetUpdate = QtCore.Signal(str, tp.Any)
 
-    def __init__(self, parent = None, **kwargs):
-        super().__init__('Graph', parent=parent, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__('Graph', **kwargs)
         # Initialize the graph controller.
         self.graph = SparkNodeGraph()
         # Add graph widget to layout.

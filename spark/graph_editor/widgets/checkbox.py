@@ -3,7 +3,8 @@
 #################################################################################################################################################
 
 from __future__ import annotations
-    
+
+import enum
 import typing as tp
 from PySide6 import QtWidgets, QtCore, QtGui
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
@@ -20,9 +21,9 @@ class WarningFlag(QtWidgets.QPushButton):
     def __init__(
             self, 
             value: bool = False,
-            parent: QtWidgets.QWidget = None,
+            **kwargs,
         ) -> None:
-        super().__init__(None, parent)
+        super().__init__()
         # Warning icon
         warning_pixmap = self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MessageBoxWarning)
         self.warning_icon = warning_pixmap.pixmap(12, 12)
@@ -58,7 +59,7 @@ class WarningFlag(QtWidgets.QPushButton):
             """
         )
 
-    def set_error_status(self, messages: list[str]):
+    def set_error_status(self, messages: list[str]) -> None:
         if len(messages) > 0:
             self.setChecked(True)
             self.tooltip_message = '\n'.join(messages)
@@ -81,30 +82,28 @@ class WarningFlag(QtWidgets.QPushButton):
     def leaveEvent(self, event: QtCore.QEvent) -> None:
         # Hide the tooltip
         QtWidgets.QToolTip.hideText()
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class InheritToggleButton(QtWidgets.QPushButton):
+class InitializerToggleButton(QtWidgets.QPushButton):
     """
-        Toggleable QPushButton used to indicate that an attribute in a SparkConfig is inheriting it's value to child attributes.
+        Toggleable QPushButton used to indicate that an attribute in a SparkConfig can be set using an initializer.
     """
     def __init__(
             self, 
             value: bool = False,
             interactable: bool = True,
-            parent: QtWidgets.QWidget = None,
+            **kwargs,
         ) -> None:
-        super().__init__(None, parent)
+        super().__init__()
         # Icons
-        self.link_icon = QtGui.QPixmap(':/icons/link_icon.png')
-        self.lock_icon = QtGui.QPixmap(':/icons/lock_icon.png')
-        empty_pixmap = QtGui.QPixmap(QtCore.QSize(12, 12))
-        empty_pixmap.fill(QtGui.QColor(0, 0, 0, 0))
-        self.unlink_icon = empty_pixmap
+        self.simple_icon = QtGui.QPixmap(':/icons/simple_icon.png')
+        self.complex_icon = QtGui.QPixmap(':/icons/complex_icon.png')
 
         # State-aware QIcon
         self.toggle_icon = QtGui.QIcon()
-        self.toggle_icon.addPixmap(self.link_icon, QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
-        self.toggle_icon.addPixmap(self.unlink_icon, QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
+        self.toggle_icon.addPixmap(self.complex_icon, QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+        self.toggle_icon.addPixmap(self.simple_icon, QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
         # Format ToggleButton
         self.setFixedSize(QtCore.QSize(16, 16))
         self.setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
@@ -133,13 +132,103 @@ class InheritToggleButton(QtWidgets.QPushButton):
                 """
             )
 
+    def set_value(self, state: bool) -> None:
+        """
+            Set the current state of the checkbox.
+        """
+        self.setChecked(state)
+        self._set_virtual_icon_state(state)
+
     def _set_virtual_icon_state(self, state: bool = True) -> None:
         """
             Set the current icon to the icon associated with state.
 
             Internal method for visual feedback that avoids triggering events.
         """
-        self.setIcon(QtGui.QIcon(self.lock_icon if state else self.unlink_icon))
+        self.setIcon(QtGui.QIcon(self.complex_icon if state else self.simple_icon))
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class InheritStatus(enum.Enum):
+    LINK = enum.auto()
+    LOCK = enum.auto()
+    FREE = enum.auto()
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class InheritToggleButton(QtWidgets.QPushButton):
+    """
+        Toggleable QPushButton used to indicate that an attribute in a SparkConfig is inheriting it's value to child attributes.
+    """
+    def __init__(
+            self, 
+            value: bool = False,
+            interactable: bool = True,
+            **kwargs,
+        ) -> None:
+        super().__init__()
+        # Icons
+        self.link_icon = QtGui.QPixmap(':/icons/link_icon.png')
+        self.lock_icon = QtGui.QPixmap(':/icons/lock_icon.png')
+        empty_pixmap = QtGui.QPixmap(QtCore.QSize(12, 12))
+        empty_pixmap.fill(QtGui.QColor(0, 0, 0, 0))
+        self.free_icon = empty_pixmap
+        self.interactable = interactable
+
+        # State-aware QIcon
+        self.toggle_icon = QtGui.QIcon()
+        self.toggle_icon.addPixmap(self.link_icon, QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+        self.toggle_icon.addPixmap(self.free_icon, QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
+        # Format ToggleButton
+        self.setFixedSize(QtCore.QSize(16, 16))
+        self.setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
+        self.setIconSize(QtCore.QSize(12, 12))
+        # Initialize button
+        self.setCheckable(self.interactable) 
+        self.setIcon(self.toggle_icon)
+        self.setChecked(value)
+
+        if self.interactable:
+            self.setStyleSheet(
+                f"""
+                    QPushButton {{
+                        background-color: {GRAPH_EDITOR_CONFIG.input_field_bg_color};
+                        border-radius: {GRAPH_EDITOR_CONFIG.input_field_border_radius}px;
+                    }}
+                """
+            )
+        else:
+            self.setStyleSheet(
+                f"""
+                    QPushButton {{
+                        background-color: {GRAPH_EDITOR_CONFIG.primary_bg_color};
+                        border-radius: {GRAPH_EDITOR_CONFIG.input_field_border_radius}px;
+                    }}
+                """
+            )
+
+    def set_value(self, state: InheritStatus) -> None:
+        """
+            Set the current state of the checkbox.
+        """
+        if state is InheritStatus.LINK:
+            self.setChecked(True)
+            self.setCheckable(True)
+            self.setIcon(QtGui.QIcon(self.link_icon))
+        elif state is InheritStatus.LOCK:
+            self.setChecked(True)
+            if self.interactable:
+                self.setCheckable(False)
+            self.setIcon(QtGui.QIcon(self.lock_icon))
+        elif state is InheritStatus.FREE:
+            self.setChecked(False)
+            if self.interactable:
+                self.setCheckable(True)
+            self.setIcon(QtGui.QIcon(self.free_icon))
+        else:
+            raise ValueError(
+                f'Invalid state, expeceted state of type {InheritStatus.__name__} but got {state.__class__.__name__}'
+            )
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

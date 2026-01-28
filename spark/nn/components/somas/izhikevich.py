@@ -5,7 +5,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.specs import InputSpec
+    from spark.core.specs import PortSpecs
 
 import jax
 import jax.numpy as jnp
@@ -16,6 +16,7 @@ from spark.core.variables import Variable, Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.somas.base import Soma, SomaConfig
+from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -27,7 +28,7 @@ class IzhikevichSomaConfig(SomaConfig):
         IzhikevichSoma model configuration class.
     """
 
-    potential_rest: float | jax.Array = dc.field(
+    potential_rest: float | jax.Array  | Initializer = dc.field(
         default = -65.0, 
         metadata = {
             'units': 'mV',
@@ -36,7 +37,7 @@ class IzhikevichSomaConfig(SomaConfig):
             ], 
             'description': 'Membrane rest potential.',
         })
-    potential_reset: float | jax.Array = dc.field(
+    potential_reset: float | jax.Array | Initializer = dc.field(
         default = -65.0, 
         metadata = {
             'units': 'mV',
@@ -46,16 +47,16 @@ class IzhikevichSomaConfig(SomaConfig):
             'description': 'Membrane after spike reset potential. ' +
                            'C parameter for the Izhikevich model.',
         })
-    resistance: float | jax.Array = dc.field(
-        default = 100.0,
+    resistance: float | jax.Array | Initializer= dc.field(
+        default = 0.1,
         metadata = {
-            'units': 'MΩ', # [1/µS]
+            'units': 'GΩ', # [1/nS]
             'validators': [
                 TypeValidator,
             ], 
             'description': 'Membrane resistance.',
         })
-    threshold: float | jax.Array = dc.field(
+    threshold: float | jax.Array | Initializer = dc.field(
         default = 30.0, 
         metadata = {
             'units': 'mV',
@@ -64,7 +65,7 @@ class IzhikevichSomaConfig(SomaConfig):
             ], 
             'description': 'Action potential threshold base value.',
         })
-    recovery_timescale: float | jax.Array = dc.field(
+    recovery_timescale: float | jax.Array | Initializer = dc.field(
         default = 0.02, 
         metadata = {
             'units': '',
@@ -74,7 +75,7 @@ class IzhikevichSomaConfig(SomaConfig):
             'description': 'Time scale of the recovery variable. ' +
                            'A parameter for the Izhikevich model.',
         })
-    recovery_sensitivity: float | jax.Array = dc.field(
+    recovery_sensitivity: float | jax.Array | Initializer = dc.field(
         default = 0.2, 
         metadata = {
             'units': '',
@@ -84,7 +85,7 @@ class IzhikevichSomaConfig(SomaConfig):
             'description': 'Sensitivity of the recovery variable to the subthreshold fluctuations of the membrane potential. ' +
                            'B parameter for the Izhikevich model.',
         })
-    recovery_update: float | jax.Array = dc.field(
+    recovery_update: float | jax.Array | Initializer = dc.field(
         default = 2, 
         metadata = {
             'units': '',
@@ -131,38 +132,52 @@ class IzhikevichSoma(Soma):
         super().__init__(config=config, **kwargs)
 
     # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, input_specs: dict[str, InputSpec]) -> None:
+    def build(self, input_specs: dict[str, PortSpecs]) -> None:
         super().build(input_specs)
         # Initialize variables.
+        _potential_rest = self.config.potential_rest.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _potential_reset = self.config.potential_reset.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _recovery_update = self.config.recovery_update.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _recovery_timescale = self.config.recovery_timescale.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _recovery_sensitivity = self.config.recovery_sensitivity.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _resistance = self.config.resistance.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _threshold = self.config.threshold.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
         # Membrane. Substract potential_rest to potential related terms to rebase potential at zero.
-        self.potential_reset = Constant(self.config.potential_reset - self.config.potential_rest, dtype=self._dtype)
+        self.potential_rest = Constant(_potential_reset, dtype=self._dtype)
+        self.potential_reset = Constant(_potential_reset - _potential_rest, dtype=self._dtype)
         # Recovery
-        self.recovery = Variable(jnp.zeros(self._shape, dtype=self._dtype), dtype=self._dtype)
-        self.recovery_update = Constant(self.config.recovery_update, dtype=self._dtype)
-        self.recovery_timescale = Constant(self.config.recovery_timescale, dtype=self._dtype)
-        self.recovery_sensitivity = Constant(self.config.recovery_sensitivity, dtype=self._dtype)
+        self.recovery = Variable(jnp.zeros(self.units, dtype=self._dtype), dtype=self._dtype)
+        self.recovery_update = Constant(_recovery_update, dtype=self._dtype)
+        self.recovery_timescale = Constant(_recovery_timescale, dtype=self._dtype)
+        self.recovery_sensitivity = Constant(_recovery_sensitivity, dtype=self._dtype)
         # Conductance.
-        self.resistance = Constant(self.config.resistance / 1000.0, dtype=self._dtype) # Current is in pA for stability
+        self.resistance = Constant(_resistance, dtype=self._dtype) # Current is in pA for stability
         # Threshold.
-        self.threshold = Constant(self.config.threshold - self.config.potential_rest, dtype=self._dtype)
+        self.threshold = Constant(_threshold - _potential_rest, dtype=self._dtype)
 
     def reset(self) -> None:
         """
             Resets component state.
         """
         super().reset()
-        self.recovery.value = jnp.zeros(self._shape, dtype=self._dtype)
+        self.recovery.value = jnp.zeros(self.units, dtype=self._dtype)
 
     def _update_states(self, current: CurrentArray) -> None:
         """
             Update neuron's soma states variables.
         """
-        potential_delta = 0.04 * (self._potential.value - self.config.potential_rest)**2 + \
-            5 * (self._potential.value - self.config.potential_rest) + \
-            140 - self.resistance * self.recovery.value + self.resistance * current.value
-        self._potential.value += self._dt * potential_delta
+        potential_delta = (
+            0.04 * (self.potential.value - self.potential_rest)**2
+            + 5 * (self.potential.value - self.potential_rest)
+            + 140 
+            - self.resistance * self.recovery.value 
+            + self.resistance * current.value
+        )
+        self.potential.value += self._dt * potential_delta
         recovery_delta = self.recovery_timescale * (
-            self.recovery_sensitivity * (self._potential.value - self.config.potential_rest) - self.recovery.value)
+            self.recovery_sensitivity * (self.potential.value - self.potential_rest) 
+            - self.recovery.value
+        )
         self.recovery.value += self._dt * recovery_delta
 
     def _compute_spikes(self,) -> SpikeArray:
@@ -170,9 +185,9 @@ class IzhikevichSoma(Soma):
             Compute neuron's spikes.
         """
         # Compute spikes.
-        spikes = jnp.greater(self._potential.value, self.threshold.value).astype(self._dtype)
+        spikes = jnp.greater(self.potential.value, self.threshold.value).astype(self._dtype)
         # Reset neurons.
-        self._potential.value = spikes * self.potential_reset + (1 - spikes) * self._potential.value
+        self.potential.value = spikes * self.potential_reset + (1 - spikes) * self.potential.value
         # Update recovery.
         self.recovery.value = spikes * (self.recovery.value + self.recovery_update) + (1 - spikes) * self.recovery.value
         return SpikeArray(spikes)

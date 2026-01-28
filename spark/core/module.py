@@ -17,11 +17,11 @@ import typing as tp
 import dataclasses as dc
 from jax.typing import DTypeLike
 from functools import wraps
-
+import copy
 import spark.core.signature_parser as sig_parser
 import spark.core.validation as validation
 import spark.core.utils as utils
-from spark.core.specs import OutputSpec, InputSpec
+from spark.core.specs import PortSpecs
 from spark.core.config import BaseSparkConfig
 from spark.core.variables import Variable
 
@@ -110,8 +110,8 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             return
         # Check if defines config
         resolved_hints = tp.get_type_hints(cls)
-        config_type = resolved_hints.get('config')
-        if not config_type or not issubclass(config_type, BaseSparkConfig):
+        config_type = resolved_hints.get('config', None)
+        if not config_type or config_type == ConfigT or not issubclass(config_type, BaseSparkConfig):
             raise AttributeError('SparkModules must define a valid config: type[BaseSparkConfig] attribute.')
         cls.default_config = tp.cast(type[ConfigT], config_type)
 
@@ -124,7 +124,6 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         if config is None:
             self.config = self.default_config(**kwargs)
         else:
-            import copy
             self.config = copy.deepcopy(config)
             self.config.merge(partial=kwargs)
         # Define default parameters.
@@ -141,19 +140,19 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             # Random engine key.
             self.rng = Variable(jax.random.PRNGKey(self._seed))
         # Specs
-        self._input_specs: dict[str, InputSpec] | None = None
-        self._output_specs: dict[str, OutputSpec] | None = None
+        self._input_specs: dict[str, PortSpecs] | None = None
+        self._output_specs: dict[str, PortSpecs] | None = None
         # Flags
         self.__built__: bool = False
         self.__allow_cycles__: bool = False
-        self._recurrent_shape_contract: dict[str, tuple[int, ...]] | None = None
+        self._contract_specs: dict[str, PortSpecs] | None = None
 
 
 
     @classmethod 
     def get_config_spec(cls) -> type[BaseSparkConfig]:
         """
-            Returns the default configuratio class associated with this module.
+            Returns the default configuration class associated with this module.
         """
         type_hints = tp.get_type_hints(cls)
         return type_hints['config']
@@ -173,8 +172,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             raise TypeError(f'Error binding arguments for "{self.name}": {error}') from error
 
         # Construct input specs.
-        self._input_specs = self._construct_input_specs(bound_args.arguments)
-
+        self._input_specs = nnx.data(self._construct_input_specs(bound_args.arguments))
         # Build model.
         self.build(self._input_specs)
         self.__built__ = True
@@ -189,8 +187,8 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             abc_inputs = {}
             for key, value in bound_args.arguments.items():
                 if value and validation._is_payload_instance(value):
-                    abc_inputs[key] = input_specs[key].payload_type(
-                        jax.ShapeDtypeStruct(shape=input_specs[key].shape, dtype=input_specs[key].dtype))
+                    abc_inputs[key] = self._input_specs[key].payload_type(
+                        jax.ShapeDtypeStruct(shape=self._input_specs[key].shape, dtype=self._input_specs[key].dtype))
             # Evaluate.
             abc_output = nnx.eval_shape(self.__call__, **abc_inputs)
 
@@ -198,19 +196,14 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         from spark.core.payloads import ValueSparkPayload
         mock_input = {}
         for key, value in self._input_specs.items():
-            if value.payload_type and issubclass(value.payload_type, ValueSparkPayload):
-                if not isinstance(value.shape, list):
-                        mock_input[key] = value.payload_type(jnp.zeros(value.shape, dtype=value.dtype))
-                else:
-                        mock_input[key] = [value.payload_type(jnp.zeros(s, dtype=value.dtype)) for s in value.shape]
+            mock_input[key] = value._create_mock_input()
         abc_output = self.__call__(**mock_input)
-
         # Contruct output sepcs.
-        self._output_specs = self._construct_output_specs(abc_output)
+        self._output_specs = nnx.data(self._construct_output_specs(abc_output))
 
 
 
-    def build(self, input_specs: dict[str, InputSpec]) -> None:
+    def build(self, input_specs: dict[str, PortSpecs]) -> None:
         """
             Build method.
         """
@@ -226,76 +219,51 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
 
 
-    def set_recurrent_shape_contract(
-            self, 
-            shape: tuple[int, ...] | None = None, 
-            output_shapes: dict[str, tuple[int, ...]] | None = None
-        ) -> None:
+    def set_contract_output_specs(self, contract_specs: dict[str, PortSpecs]) -> None:
         """
             Recurrent shape policy pre-defines expected shapes for the output specs.
 
             This is function is a binding contract that allows the modules to accept self connections.
 
             Input:
-                shape: tuple[int, ...], A common shape for all the outputs.
-                output_shapes: dict[str, tuple[int, ...]], A specific policy for every single output variable.
+                contract_specs: dict[str, PortSpecs], A dictionary with a contract for the output specs.
 
             NOTE: If both, shape and output_specs, are provided, output_specs takes preference over shape.
         """
 
-        # Validate shapes.
+        # Validate contract.
         output_specs = sig_parser.get_output_specs(type(self))
-        if not output_shapes is None:
-            # Validate specs and output_shapes match.
-            if output_specs.keys() != output_shapes.keys():
+        for port in output_specs.keys():
+            if port not in contract_specs:
                 raise ValueError(
-                    f'Keys missmatch between expected outputs and provided outputs. '
-                    f'Expected: {list(output_specs.keys())}. '
-                    f'Provided: {list(output_shapes.keys())},'
+                    f'PortSpecs for port {port} is not defined.'
                 )
-            # Construct recurrent contract.
-            self._recurrent_shape_contract = {}
-            for key, value in output_shapes.items():
-                try:
-                    self._recurrent_shape_contract[key] = utils.validate_shape(value)
-                except Exception as e:
-                    raise TypeError(
-                        f'Arguemnt \"output_shapes[\"{key}\"]\" is not a valid shape. Error: {e}'
-                    )
-        elif not shape is None:
-            # Construct recurrent contract.
-            self._recurrent_shape_contract = {}
-            try:
-                for key in output_specs.keys():
-                    self._recurrent_shape_contract[key] = utils.validate_shape(shape)
-            except Exception as e:
-                raise TypeError(
-                    f'Arguemnt \"shape\" is not a valid shape. Error: {e}'
-                )
-        else:
-            raise ValueError(
-                f'Expected \"output_spec\" or \"shape\" to be provided but both are None.'
-            )
+            if not isinstance(contract_specs[port], PortSpecs):
+                raise ValueError(
+                    f'PortSpecs for port got {contract_specs[port].__class__.__name__}, which is not a valid PortSpecs..'
+                )   
+        # Set contract
+        self._contract_specs = contract_specs
         # Enable recurrence flag.
         self.__allow_cycles__ = True
         
 
 
-    def get_recurrent_shape_contract(self,):
+    def get_contract_output_specs(self,) -> dict[str, PortSpecs] | None:
         """
-            Retrieve the recurrent shape policy of the module.
+            Retrieve the recurrent spec policy of the module.
         """
         if self.__allow_cycles__:
-            return self._recurrent_shape_contract
+            return self._contract_specs
         raise RuntimeError(
-            f'Trying to access the recurrent shape contract of module \"{self.name}\", but \"set_recurrent_shape_contract\" '
-            f'has not been called with the appropiate shapes. If you are trying to use \"{self.name}\" within a recurrent context '
+            f'Trying to access the contract output specs of module \"{self.name}\", but \"set_contract_output_specs\" '
+            f'has not been called. If you are trying to use \"{self.name}\" within a recurrent context '
             f'set the recurrent shape contract inside the __init__ method of \"{self.__class__.__name__}\".'
         )
 
 
 
-    def _construct_input_specs(self, abc_args: dict[str, SparkPayload | list[SparkPayload]]) -> dict[str, InputSpec]:
+    def _construct_input_specs(self, abc_args: dict[str, SparkPayload | list[SparkPayload]]) -> dict[str, PortSpecs]:
         """
             Input spec constructor.
         """
@@ -316,6 +284,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                     f'Module \"{self.name}\" received an extra variable \"{key}\" but it is not part of the specification.'
                 )
         # Finish specs, use abc_args to skip optional missing keys.
+        from spark.core.payloads import SpikeArray
         for key, payload in abc_args.items():
             # NOTE: This is a particular case for modules that expect abstract variadic positional arguments. 
             # I am looking at you Concat (╯°□°）╯︵ ┻━┻.
@@ -326,18 +295,21 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                 payload_type = input_specs[key].payload_type
             shape = payload.shape if not isinstance(payload, list) else [p.shape for p in payload]
             dtype = payload.dtype if not isinstance(payload, list) else payload[0].dtype
-            # InputSpec are immutable, we need to create a new one.
-            input_specs[key] = InputSpec(
+            # PortSpecs are immutable, we need to create a new one.
+            input_specs[key] = PortSpecs(
                 payload_type=payload_type,
                 shape=shape,
                 dtype=dtype,
                 description=f'Auto-generated input spec for input \"{key}\" of module \"{self.name}\".',
+                # Payload specific build metadata
+                async_spikes=payload.async_spikes if isinstance(payload, SpikeArray) else None,
+                inhibition_mask=payload.inhibition_mask if isinstance(payload, SpikeArray) else None
             )
         return input_specs
 
 
 
-    def _construct_output_specs(self, abc_args: ModuleOutput) -> dict[str, OutputSpec]:
+    def _construct_output_specs(self, abc_args: ModuleOutput) -> dict[str, PortSpecs]:
         """
             Output spec constructor.
         """
@@ -351,18 +323,22 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                 f'__call__: {list(abc_args.keys())},'
             )
         # Finish specs.
+        from spark.core.payloads import SpikeArray
         for key in output_specs.keys():
-            output_specs[key] = OutputSpec(
+            output_specs[key] = PortSpecs(
                 payload_type=output_specs[key].payload_type,
                 shape=abc_args[key].shape,
                 dtype=abc_args[key].dtype,
                 description=f'Auto-generated output spec for input \"{key}\" of module \"{self.name}\".',
+                # Payload specific build metadata
+                async_spikes=abc_args[key].async_spikes if isinstance(abc_args[key], SpikeArray) else None,
+                inhibition_mask=abc_args[key].inhibition_mask if isinstance(abc_args[key], SpikeArray) else None
             )
         return output_specs
 
 
 
-    def get_input_specs(self) -> dict[str, InputSpec]:
+    def get_input_specs(self) -> dict[str, PortSpecs]:
         """
             Returns a dictionary of the SparkModule's input port specifications.
         """
@@ -372,7 +348,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
 
 
-    def get_output_specs(self) -> dict[str, OutputSpec]:
+    def get_output_specs(self) -> dict[str, PortSpecs]:
         """
             Returns a dictionary of the SparkModule's input port specifications.
         """
@@ -383,7 +359,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
 
     @classmethod
-    def _get_input_specs(cls) -> dict[str, InputSpec]:
+    def _get_input_specs(cls) -> dict[str, PortSpecs]:
         """
             Returns a dictionary of the SparkModule's input port specifications.
         """
@@ -392,7 +368,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
 
     @classmethod
-    def _get_output_specs(cls) -> dict[str, OutputSpec]:
+    def _get_output_specs(cls) -> dict[str, PortSpecs]:
         """
             Returns a dictionary of the SparkModule's input port specifications.
         """
@@ -417,7 +393,170 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             Execution method.
         """
         pass
-    
+
+
+
+    def __repr__(self,):
+        return f'{self.__class__.__name__}(...)'
+
+
+
+    def inspect(self,) -> str:
+        """
+            Returns a formated string of the datastructure.
+        """
+        print(utils.ascii_tree(self._parse_tree_structure()))
+
+
+
+    def _parse_tree_structure(self, current_depth: int = 0, name: str | None = None) -> str:
+        """
+            Parses the tree with to produce a string with the appropiate format for the ascii_tree method.
+        """
+        if name:
+            rep = current_depth * ' ' + f'{name} ({self.__class__.__name__})\n'
+        else:
+            rep = current_depth * ' ' + f'{self.__class__.__name__}\n'
+        for name, value in self.__dict__.items():
+            if isinstance(value, SparkModule):
+                rep += value._parse_tree_structure(current_depth+1, name=name)
+        return rep
+
+
+
+    def checkpoint(self, path, overwrite=False) -> None:
+
+        import os
+        import tarfile
+        import shutil
+        import pathlib
+        import datetime
+        import orbax.checkpoint as ocp
+        from spark.core.flax_imports import split
+
+        try:
+            # Check if file exists
+            tar_path = pathlib.Path(path).with_suffix('.spark')
+            if tar_path.exists() and not overwrite:
+                raise RuntimeError(
+                    f'Attempting to overwrite file with {tar_path}. Set \"overwrite=True\" if this was intended.'
+                )
+            # Create temporary directory
+            timestamp = datetime.datetime.now().timestamp()
+            temp_dir = pathlib.Path(
+                os.path.join('/'.join(path.split('/')[:-1]), f'tmp_{timestamp}')
+            )
+            temp_dir.mkdir(exist_ok=True)
+            # Save config
+            config_path = pathlib.Path(os.path.join(temp_dir, 'model.scfg'))
+            config: BaseSparkConfig = self.config
+            config.__metadata__['input_specs'] = self.get_input_specs()
+            config.to_file(config_path.absolute())
+            # Save state
+            _, state = split((self))
+            ckptr = ocp.AsyncCheckpointer(ocp.StandardCheckpointHandler())
+            state_path = pathlib.Path(os.path.join(temp_dir, 'state'))
+            ckptr.save(state_path.absolute(), state)
+            ckptr.wait_until_finished()
+            # Compress into tar
+            with tarfile.open(tar_path, "w:gz") as tar:
+                    tar.add(temp_dir, arcname=".")
+            # Remove temporary files
+            shutil.rmtree(temp_dir)
+            # Message
+            print(f'Checkpoint for model {self.__class__.__name__} successfully saved to path: {tar_path}.')
+        except Exception as e:
+            raise RuntimeError(f'Unable to generate checkpoint for model {self.__class__.__name__}: {e}')
+
+
+    # TODO: This is a potentially dangerous operation. We need to add some safe guards
+    #  to prevent malicious software to enter a computer unintentionally.
+    @classmethod
+    def from_checkpoint(cls, path, safe=True) -> SparkModule:
+
+        import os
+        import tarfile
+        import shutil
+        import pathlib
+        import datetime
+        import orbax.checkpoint as ocp
+        from spark.core.config import BaseSparkConfig
+        from spark.core.flax_imports import split, merge
+
+        def is_child(member_name: str, parent: str) -> bool:
+            m = pathlib.PurePosixPath(member_name)
+            p = pathlib.PurePosixPath(parent)
+            # Must be relative
+            if m.is_absolute():
+                return False
+            # Normalize and ensure containment
+            try:
+                m.relative_to(p)
+                return True
+            except ValueError:
+                return False
+
+        def safe_member(m: tarfile.TarInfo) -> bool:
+            return not (m.issym() or m.islnk())
+        
+        # Open tar file
+        timestamp = datetime.datetime.now().timestamp()
+        temp_dir = pathlib.Path(
+            os.path.join('/'.join(path.split('/')[:-1]), f'tmp_{timestamp}')
+        )
+        try:
+            with tarfile.open(path, "r:gz") as tar:
+                config_file = tar.getmember('./model.scfg')
+                state_dir = tar.getmember('./state')
+                if safe and not config_file.isfile():
+                    raise RuntimeError(
+                        f'Unable to validate model.scfg. If you still want to try to extract the file set \"safe=False\"'
+                    )
+                if safe and not state_dir.isdir():
+                    raise RuntimeError(
+                        f'Unable to validate state. If you still want to try to extract the file set \"safe=False\"'
+                    )
+                tar.extract(config_file, path=temp_dir, filter='data') 
+                state_files = []
+                for member in tar.getmembers():
+                    if is_child(member.name, state_dir.name):
+                        if safe_member(member):
+                            state_files.append(member)
+                        else:
+                            raise RuntimeError(
+                                f'A strange possibly malicious file was detected: \"{member.name}\". If you still want to try to extract the file set \"safe=False\"'
+                            )
+                tar.extractall(members=state_files, path=temp_dir, filter='data') 
+            # Restore model
+            config_path = pathlib.Path(os.path.join(temp_dir, 'model.scfg'))
+            config = BaseSparkConfig.from_file(config_path.absolute())
+            # Get model class
+            model_cls: type[SparkModule] = config.class_ref
+            # Initialize the module.
+            model = model_cls(config=config)
+            dummy_input = {
+                port_name: port_spec._create_mock_input() for port_name, port_spec in config.__metadata__['input_specs'].items()
+            }
+            model(**dummy_input)
+            graph, template_state = split((model))
+            # Restore state
+            ckptr = ocp.AsyncCheckpointer(ocp.StandardCheckpointHandler())
+            state_path = pathlib.Path(os.path.join(temp_dir, 'state'))
+            state = ckptr.restore(state_path.absolute(), template_state)
+            ckptr.wait_until_finished()
+            #Assemble
+            model = merge(graph, state)
+            # Remove temporary files
+            shutil.rmtree(temp_dir)
+            # Message
+            print(f'Model {model.__class__.__name__} loaded successfully from path: {path}.')
+            return model
+        except Exception as e:
+            # Remove temporary files
+            if os.path.exists(temp_dir):
+                shutil.rmtree(temp_dir)
+            raise RuntimeError(f'Unable to restore checkpoint for model {path}: {e}')
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

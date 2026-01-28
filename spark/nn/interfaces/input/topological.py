@@ -5,7 +5,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.specs import InputSpec
+    from spark.core.specs import PortSpecs
 
 import jax
 import jax.numpy as jnp
@@ -126,7 +126,7 @@ class TopologicalPoissonSpiker(InputInterface):
         self._sigma = Constant(self.sigma, dtype=self._dtype)
 
 
-    def build(self, input_specs: dict[str, InputSpec]) -> None:
+    def build(self, input_specs: dict[str, PortSpecs]) -> None:
         # Initialize shapes
         input_shape = utils.validate_shape(input_specs['signal'].shape)
         self._output_shape = utils.validate_shape(input_specs['signal'].shape + (self.resolution,))
@@ -209,7 +209,7 @@ class TopologicalLinearSpiker(InputInterface):
         self._decay = Constant(jnp.exp(-self._dt / self._tau), dtype=self._dtype)
         self._gain = Constant(1 - self._decay, dtype=self._dtype)
 
-    def build(self, input_specs: dict[str, InputSpec]) -> None:
+    def build(self, input_specs: dict[str, PortSpecs]) -> None:
         # Initialize shapes
         input_shape = utils.validate_shape(input_specs['signal'].shape)
         self._output_shape = utils.validate_shape(input_specs['signal'].shape + (self.resolution,))
@@ -240,7 +240,7 @@ class TopologicalLinearSpiker(InputInterface):
         x = (signal.value - self._mins) / (self._maxs - self._mins)
         x = jnp.where(self._glue.value, jnp.sin(self._space + x*jnp.pi), jnp.tanh(self._space - x*jnp.pi))
         x = jnp.exp( -(0.5 / self._sigma) * (x**2) ).T
-        # Update potential
+        # Update potential. Note: dt cancels out.
         is_ready = jnp.greater_equal(self._refractory.value, self._cooldown).astype(self._dtype)
         dV = is_ready * self._tau * self._gain * self._scale * x
         self.potential.value = self._decay * self.potential.value + dV

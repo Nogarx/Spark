@@ -6,11 +6,11 @@ from __future__ import annotations
 
 import networkx as nx
 from typing import Dict, List, Tuple
-from PySide6 import QtCore
+from PySide6 import QtCore, QtGui, QtWidgets
 from NodeGraphQt import NodeGraph, Port, BaseNode
 from NodeGraphQt.widgets.viewer import NodeViewer
 
-from spark.core.specs import ModuleSpecs, InputSpec, OutputSpec, PortMap
+from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
 from spark.nn.brain import BrainConfig
 from spark.graph_editor.models.nodes import SourceNode, SinkNode, AbstractNode, SparkModuleNode
 from spark.graph_editor.ui.console_panel import MessageLevel
@@ -21,21 +21,32 @@ from spark.graph_editor.ui.console_panel import MessageLevel
 
 class SparkNodeViewer(NodeViewer):
     """
-        Custom reimplementation of NodeViwer use to solve certain visual bugs.
+        Custom reimplementation of NodeViwer use to solve certain bugs.
     """
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._ignore_next_click_flag = False
 
-    def _ignore_next_click_event(self, state: bool):
-        self._ignore_next_click_flag = state
+    # BUG: Patch because NodeGraph keeps overriding the Save shortcut >:|
+    BUGFIX_on_save = QtCore.Signal()
 
-    def mousePressEvent(self, event):
-        # If the flag is set, we consume the event. This is used to avoid certain visual bugs.
-        if self._ignore_next_click_flag:
-            self._ignore_next_click_flag = False
+    def __init__(self, parent=None, undo_stack=None):
+        super().__init__(parent, undo_stack)
+
+    def focusInEvent(self, event):
+        QtWidgets.QGraphicsView.focusInEvent(self, event)
+
+    def focusOutEvent(self, event):
+        QtWidgets.QGraphicsView.focusOutEvent(self, event)
+
+    def keyPressEvent(self, event):
+        """
+            Explicitly ignore Ctrl+S so it propagates to the Main Window.
+        """
+        if event.matches(QtGui.QKeySequence.Save):
+            self.BUGFIX_on_save.emit()
+
+            # We ignore this specific event. Qt will then pass it 
+            # to the parent widget (your Main Window).
+            event.ignore()
             return
-        super().mousePressEvent(event)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -46,13 +57,13 @@ class SparkNodeGraph(NodeGraph):
 
     context_menu_prompt = QtCore.Signal(object, object)
     broadcast_message = QtCore.Signal(MessageLevel, str)
-    stateChanged = QtCore.Signal(bool) 
+    on_update = QtCore.Signal(bool) 
 
     def __init__(self, parent=None, **kwargs):
-        super().__init__(parent, **kwargs, )#viewer=SparkNodeViewer())
+        super().__init__(parent, **kwargs, viewer=SparkNodeViewer())
         # Enable recurrence
         self.set_acyclic(False)
-        self._is_modified = False
+        self._is_dirty = False
         self._node_registry: Dict[str, str] = {}
         # Add a callback to validate logic.
         self.port_connected.connect(self._on_port_connected)
@@ -60,15 +71,17 @@ class SparkNodeGraph(NodeGraph):
         # Callbacks to make NODE_NAME unique (required for readable model files)
         self.viewer().node_name_changed.connect(self._on_node_name_changed)
         # TODO: This doesnt really capture the is_modified status, but ro properly fix this issue we need to createa general undo/redo stack.
-        self.node_created.connect(lambda: self._on_state_changed(True))
-        self.nodes_deleted.connect(lambda: self._on_state_changed(True))
-        self.port_connected.connect(lambda: self._on_state_changed(True))
-        self.port_disconnected.connect(lambda: self._on_state_changed(True))
-        self.property_changed.connect(lambda: self._on_state_changed(True))
-        self.data_dropped.connect(lambda: self._on_state_changed(True))
-        self.session_changed.connect(lambda: self._on_state_changed(True))
+        self.node_created.connect(lambda: self._on_update(True))
+        self.nodes_deleted.connect(lambda: self._on_update(True))
+        self.port_connected.connect(lambda: self._on_update(True))
+        self.port_disconnected.connect(lambda: self._on_update(True))
+        self.property_changed.connect(lambda: self._on_update(True))
+        self.data_dropped.connect(lambda: self._on_update(True))
+        self.session_changed.connect(lambda: self._on_update(True))
+        self._viewer.moved_nodes.connect(lambda: self._on_update(True))
         self.node_selection_changed.connect(self._bugfix_on_node_selection_changed)
         self._prev_selection = []
+        
     
 
     # NOTE: This is a simple workaround to fix a bug that happens when cliking an already selected node in the graph.
@@ -94,9 +107,9 @@ class SparkNodeGraph(NodeGraph):
             pass # Something weird happend
     
 
-    def _on_state_changed(self, value: bool) -> None:
-        self._is_modified = value
-        self.stateChanged.emit(self._is_modified)
+    def _on_update(self, value: bool) -> None:
+        self._is_dirty = value
+        self.on_update.emit(self._is_dirty)
 
     #def ignore_next_click_event(self, state: bool = True) -> None:
     #    self.viewer()._ignore_next_click_event(state)
@@ -139,8 +152,8 @@ class SparkNodeGraph(NodeGraph):
             input_port.disconnect_from(output_port, push_undo=False, emit_signal=False)
             self.broadcast_message.emit(
                 MessageLevel.WARNING,
-                f'Tried to connect {output_node.NODE_NAME}.{output_port.name()} to {input_node.NODE_NAME}.{input_port.name()} \
-                but they have different payload types: {output_payload_type} vs {input_payload_type}.'
+                f'Tried to connect {output_node.NODE_NAME}.{output_port.name()} to {input_node.NODE_NAME}.{input_port.name()} '
+                f'but they have different payload types: {output_payload_type} vs {input_payload_type}.'
             )
             return
         
@@ -154,11 +167,22 @@ class SparkNodeGraph(NodeGraph):
     def _on_node_name_changed(self, node_id: str, node_name: str) -> None:
         self._node_registry[node_id] = node_name
 
-    def create_node(self, node_type, name=None, selected=True, color=None, text_color=None, pos=None, push_undo=True) -> AbstractNode:
+    def create_node(
+            self, 
+            node_type: str,
+            name: str = None, 
+            selected: bool = True, 
+            color: str | None = None, 
+            text_color: str | None = None, 
+            pos: list | tuple | None = None, 
+            push_undo: bool = True, 
+            select_node: bool = True
+        ) -> AbstractNode:
         node: BaseNode = super().create_node(node_type, name, selected, color, text_color, pos, push_undo)
         self._node_registry[node.id] = node.NODE_NAME
-        # Graph automatically selects the new node. We need to trigger the event to keep it consistent.
-        self._on_node_selection_changed([node.id], self._prev_selection)
+        # Graph automatically selects the new node. This is not really ideal always.
+        if select_node:
+            self._on_node_selection_changed([node.id], self._prev_selection)
         return node
     
     def delete_node(self, node, push_undo=True) -> None:
@@ -200,7 +224,7 @@ class SparkNodeGraph(NodeGraph):
         # Input nodes.
         for name, spec in config.input_map.items():
             pos = config.__graph_editor_metadata__.get(name, {}).get('pos', [0,0])
-            node: SourceNode = self.create_node('spark.SourceNode', name=name, pos=pos)
+            node: SourceNode = self.create_node('spark.SourceNode', name=name, pos=pos, select_node=False)
             node.output_specs['value'].payload_type = spec.payload_type
             node.output_specs['value'].dtype = spec.dtype
             node.output_specs['value'].shape = spec.shape
@@ -209,7 +233,7 @@ class SparkNodeGraph(NodeGraph):
         # Output nodes.
         for name, dict_spec in config.output_map.items():
             pos = config.__graph_editor_metadata__.get(name, {}).get('pos', [0,0])
-            node: SinkNode = self.create_node('spark.SinkNode', name=name, pos=pos)
+            node: SinkNode = self.create_node('spark.SinkNode', name=name, pos=pos, select_node=False)
             node.input_specs['value'].payload_type = dict_spec['spec'].payload_type
             node.input_specs['value'].dtype = dict_spec['spec'].dtype
             node.input_specs['value'].shape = dict_spec['spec'].shape
@@ -218,7 +242,7 @@ class SparkNodeGraph(NodeGraph):
         # Module nodes.
         for name, spec in config.modules_map.items():
             pos = spec.config.__graph_editor_metadata__.get('pos', [0,0])
-            node: SparkModuleNode = self.create_node(f'spark.{spec.module_cls.__name__}', name=name, pos=pos)
+            node: SparkModuleNode = self.create_node(f'spark.{spec.module_cls.__name__}', name=name, pos=pos, select_node=False)
             node.node_config = spec.config
             node_names_to_ids[name] = node.id
         # Setup sink node connections
@@ -245,9 +269,9 @@ class SparkNodeGraph(NodeGraph):
         self.clear_selection()
         self.clear_undo_stack()
         self.center_on()
-        self._is_modified = False
+        self._is_dirty = False
 
-    def validate_graph(self,) -> bool:
+    def validate_graph(self,) -> list[str]:
         """
             Simple graph validation. 
             
@@ -271,18 +295,18 @@ class SparkNodeGraph(NodeGraph):
             )
         return errors
 
-    def build_brain_config(self,) -> BrainConfig:
+    def build_brain_config(self, is_partial: bool = True, errors: list | None = None) -> BrainConfig:
         """
             Build the model from the graph state.
         """
-        input_map: dict[str, InputSpec] = {}
+        input_map: dict[str, PortSpecs] = {}
         output_map: dict[str, dict] = {}
         modules_map: dict[str, ModuleSpecs] = {}
         io_nodes_metadata = {}
         for node in self.all_nodes():
             if isinstance(node, SourceNode):
                 # Source nodes had a single output of the appropiate type
-                input_map[node.NODE_NAME] = InputSpec(
+                input_map[node.NODE_NAME] = PortSpecs(
                     payload_type=node.output_specs['value'].payload_type,
                     shape=node.output_specs['value'].shape,
                     dtype=node.output_specs['value'].dtype,
@@ -301,10 +325,10 @@ class SparkNodeGraph(NodeGraph):
                 else:
                     origin_name = origin_node.NODE_NAME
                     port_name = origin_port.name()
-                # Create OutputSpec
+                # Create PortSpecs
                 output_map[node.NODE_NAME] = {
                     'input': PortMap(origin=origin_name, port=port_name),
-                    'spec': OutputSpec(
+                    'spec': PortSpecs(
                         payload_type=node.input_specs['value'].payload_type,
                         shape=node.input_specs['value'].shape,
                         dtype=node.input_specs['value'].dtype,
@@ -337,11 +361,26 @@ class SparkNodeGraph(NodeGraph):
                     config = node.node_config,
                 )
         # Construct brain config.
-        brain_config = BrainConfig(
-            input_map=input_map, 
-            output_map=output_map, 
-            modules_map=modules_map
-        )
+        if is_partial:
+            brain_config = BrainConfig._create_partial(
+                input_map=input_map, 
+                output_map=output_map, 
+                modules_map=modules_map
+            )
+        else:
+            if errors is not None:
+                brain_config = BrainConfig._create_partial(
+                    input_map=input_map, 
+                    output_map=output_map, 
+                    modules_map=modules_map
+                )
+                brain_config.validate(errors=errors)
+            else:
+                brain_config = BrainConfig(
+                    input_map=input_map, 
+                    output_map=output_map, 
+                    modules_map=modules_map
+                )
         brain_config.__graph_editor_metadata__ = io_nodes_metadata
         return brain_config
 

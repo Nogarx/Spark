@@ -5,7 +5,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.specs import InputSpec
+    from spark.core.specs import PortSpecs
     
 import jax
 import jax.numpy as jnp
@@ -41,13 +41,13 @@ class NDelaysConfig(DelaysConfig):
             ],
             'description': 'Maximum synaptic delay. Note: Final max delay is computed as ⌈max/dt⌉.',
         })
-    delay_initializer: InitializerConfig = dc.field(
-        default_factory = lambda **kwargs: UniformInitializerConfig( **({'dtype': jnp.uint8, **kwargs}) ),
+    delays: jax.Array | Initializer = dc.field(
+        default_factory = UniformInitializerConfig,
         metadata = {
             'validators': [
                 TypeValidator,
             ], 
-            'description': 'Synaptic delays initializer method.',
+            'description': 'Synaptic delays array / initializer method.',
         })
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -76,7 +76,7 @@ class NDelays(Delays):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
-    def build(self, input_specs: dict[str, InputSpec]):
+    def build(self, input_specs: dict[str, PortSpecs]):
         # Initialize shapes
         self._shape = utils.validate_shape(input_specs['in_spikes'].shape)
         self._units = prod(self._shape)
@@ -87,18 +87,12 @@ class NDelays(Delays):
         self._padding = (0, num_bytes * 8 - self._units)
         self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
         self._current_idx = Variable(0, dtype=jnp.int32)
-        # Get kernel initializer
-        initializer_cls: type[Initializer] = self.config.delay_initializer.class_ref
-        # Override initializer config
-        initializer = initializer_cls(
-            config=self.config.delay_initializer, 
-            scale=self._buffer_size+1,
-            min_value=1, 
-            dtype=jnp.uint8
-        )
         # Initialize kernel
-        delay_kernel = initializer(self.get_rng_keys(1), (self._units,))
-        self.delay_kernel = Constant(delay_kernel, dtype=jnp.uint8)
+        delays_kernel = self.config.delays.init(
+            init_kwargs = {'scale':self._buffer_size+1, 'min_value':1,},
+            key=self.get_rng_keys(1), shape=(self._units,), dtype=jnp.uint8,
+        )
+        self.delays_kernel = Constant(delays_kernel, dtype=jnp.uint8)
 
     def reset(self) -> None:
         """
@@ -112,8 +106,7 @@ class NDelays(Delays):
             Push operation.
         """
         # Pad and pack the binary vector (MSB-first)
-        #padded_vec = jnp.pad(spikes.value.reshape(-1), self._padding)
-        padded_vec = jnp.pad(jnp.abs(spikes.value).reshape(-1), self._padding)
+        padded_vec = jnp.pad(spikes.spikes.reshape(-1), self._padding)
         reshaped = padded_vec.reshape(-1, 8)
         bits = jnp.left_shift(1, jnp.arange(7, -1, step=-1, dtype=jnp.uint8))
         new_bitmask_row = jnp.dot(reshaped.astype(jnp.uint8), bits).astype(jnp.uint8)
@@ -121,17 +114,21 @@ class NDelays(Delays):
         self._bitmask.value = self._bitmask.value.at[self._current_idx.value].set(new_bitmask_row)
         self._current_idx.value = (self._current_idx.value + 1) % self._buffer_size
 
-    def _gather(self, sign: jax.Array) -> SpikeArray:
+    def _gather(self, inhibition_mask: jax.Array) -> SpikeArray:
         """
             Gather operation.
         """
         j_indices = jnp.arange(self._units)
         byte_indices = j_indices // 8
         bit_indices = 7 - (j_indices % 8)  # MSB-first adjustment
-        delay_idx = (self._current_idx.value - self.delay_kernel.value - 1) % self._buffer_size
+        delay_idx = (self._current_idx.value - self.delays_kernel.value - 1) % self._buffer_size
         selected_bytes = self._bitmask.value[delay_idx, byte_indices]
         selected_bits = (selected_bytes >> bit_indices) & 1
-        return SpikeArray(selected_bits.astype(self._dtype).reshape(self._shape) * sign)
+        return SpikeArray(
+            selected_bits.reshape(self._shape), 
+            inhibition_mask=inhibition_mask, 
+            async_spikes=True,
+        )
 
     def get_dense(self,) -> jax.Array:
         """
@@ -140,11 +137,11 @@ class NDelays(Delays):
         # Unpack all bitmasks into bits (shape: [buffer_size, num_bytes, 8])
         unpacked = jnp.unpackbits(self._bitmask.value, axis=1, count=self._units)
         # Flatten to [buffer_size, num_bytes*8] and truncate to vector_size
-        return unpacked.reshape(self._buffer_size, -1)[:, :self._units].astype(self._dtype).reshape((self._buffer_size,self._units))
+        return unpacked.reshape(self._buffer_size, -1)[:, :self._units].reshape((self._buffer_size,self._units))
 
     def __call__(self, in_spikes: SpikeArray) -> DelaysOutput:
         self._push(in_spikes)
-        out_spikes = self._gather(1 - 2 *jnp.signbit(in_spikes.value))
+        out_spikes = self._gather(in_spikes.inhibition_mask)
         return {
             'out_spikes': out_spikes
         }

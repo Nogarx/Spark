@@ -11,11 +11,12 @@ from math import prod
 import spark.core.utils as utils
 from spark.core.cache import Cache
 from spark.core.module import SparkModule, SparkMeta
-from spark.core.specs import PortSpecs, PortMap, OutputSpec, InputSpec, ModuleSpecs
+from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
 from spark.core.variables import Variable
-from spark.core.payloads import SparkPayload, FloatArray
+from spark.core.payloads import SparkPayload, FloatArray, SpikeArray, ValueSparkPayload
 from spark.core.registry import register_config, REGISTRY
 from spark.core.config import BaseSparkConfig
+import jax
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -34,7 +35,7 @@ class BrainConfig(BaseSparkConfig):
 	"""
 		Configuration class for Brain's.
 	"""
-	input_map: dict[str, InputSpec] = dc.field(
+	input_map: dict[str, PortSpecs] = dc.field(
 		metadata = {
 			'description': 'Input map configuration.',
 		})
@@ -63,9 +64,9 @@ class BrainConfig(BaseSparkConfig):
 				raise TypeError(
 					f'All keys in \"input_map\" must be strings, but found key \"{key}\" of type {type(key).__name__}.'
 				)
-			if not isinstance(self.input_map[key], InputSpec):
+			if not isinstance(self.input_map[key], PortSpecs):
 				raise TypeError(
-					f'All values in \"input_map\" must be InputSpec, but found value \"{self.input_map[key]}\" '
+					f'All values in \"input_map\" must be PortSpecs, but found value \"{self.input_map[key]}\" '
 					f'of type {type(self.input_map[key]).__name__}.'
 				)
 		# Output map validation
@@ -89,9 +90,9 @@ class BrainConfig(BaseSparkConfig):
 					f'Expected \"output_map[\"{output_name}\"][\"input\"]\" to be of type PortMap, but got \"{_input}\".'
 				)
 			spec = output_details.get('spec', None)
-			if not isinstance(spec, OutputSpec):
+			if not isinstance(spec, PortSpecs):
 				raise TypeError(
-					f'Expected \"output_map[\"{output_name}\"][\"spec\"]\" to be of type OutputSpec, but got \"{spec}\".'
+					f'Expected \"output_map[\"{output_name}\"][\"spec\"]\" to be of type PortSpecs, but got \"{spec}\".'
 				)
 		# Modules map validation
 		if not isinstance(self.modules_map, dict):
@@ -122,19 +123,78 @@ class BrainConfig(BaseSparkConfig):
 
 
 
-	def validate(self,) -> None:
+	def validate(self, is_partial: bool = False, errors: list | None = None, current_path: list[str] = ['brain']) -> dict[str] | None:
 		# Brain specific validation.
-		self._validate_maps()
+		if not is_partial:
+			try:
+				self._validate_maps()
+			except Exception as e:
+				if errors is not None:
+					errors.append((current_path[0], e))
+				else:
+					raise
 		# Standard config validation.
-		super().validate()
+		for module_spec in self.modules_map.values():
+			try:
+				module_spec.config.validate(is_partial=is_partial, errors=errors, current_path=current_path+[module_spec.name])
+			except Exception as e:
+				raise ValueError(
+					f'Error on module \"{module_spec.name}\": {e}'
+				)
 
+
+
+	def _parse_tree_structure(self, current_depth: int, simplified: bool = False, header: str | None= None) -> str:
+		"""
+			Parses the tree to produce a string with the appropiate format for the ascii_tree method.
+		"""
+		level_header = f'{header}: ' if header else ''
+		rep = current_depth * ' ' + f'{level_header}{self.__class__.__name__}\n'
+
+		# Expand inputs specs
+		rep += (current_depth + 1) * ' ' + f'Input Map:\n'
+		for spec_name, spec in self.input_map.items():
+			rep += (current_depth + 2) * ' ' + f'{spec_name} <- {spec}\n'
+		# Expand outputs specs
+		rep += (current_depth + 1) * ' ' + f'Output Map:\n'
+		for spec_name, spec in self.output_map.items():
+			rep += (current_depth + 2) * ' ' + f'{spec_name} <- {spec['input']} | {spec['spec']}\n'
+		# Expand module specs
+		rep += (current_depth + 1) * ' ' + f'Modules Map:\n'
+		for spec_name, module_spec in self.modules_map.items():
+			if not simplified:
+				rep += (current_depth + 2) * ' ' + f'{spec_name}: {module_spec.module_cls.__name__}\n'
+				rep += (current_depth + 3) * ' ' + f'Inputs:\n'
+				for input_name, port_spec_list in module_spec.inputs.items():
+					rep += (current_depth + 4) * ' ' + f'{input_name}:\n'
+					for port in port_spec_list:
+						rep += (current_depth + 5) * ' ' + f'{port}\n'
+				rep += module_spec.config._parse_tree_structure(current_depth+3, simplified=simplified)
+			else:
+				rep += module_spec.config._parse_tree_structure(current_depth+2, simplified=simplified)
+		return rep
+
+
+
+	def refresh_seeds(self):
+		"""
+			Utility method to recompute all seed variables within the SparkConfig.
+			Useful when creating several populations from the same config.
+		"""
+		for spec in self.modules_map.values():
+			spec.config = spec.config.with_new_seeds()
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class Brain(SparkModule, metaclass=BrainMeta):
 	"""
-		Abstract brain model.
-		This is more a convenience class used to synchronize data more easily.
+		Brain model.
+
+		A brain is a pipeline object used to represent and coordinate a collection of neurons and interfaces.
+		This implementation relies on a cache system to simplify parallel computations; every timestep all the modules
+		in the Brain read from the cache, update its internal state and update the cache state. 
+		Note that this introduces a small latency between elements of the brain, which for most cases is negligible, and for
+		such a reason it is recommended that only full neuron models and interfaces are used within a Brain.
 	"""
 	config: BrainConfig
 
@@ -142,8 +202,8 @@ class Brain(SparkModule, metaclass=BrainMeta):
 	_modules_list: list[str]
 	_cache: dict[str, dict[str, Cache]]
 	_modules_input_map: dict[str, dict[str, list[PortMap]]]
-	_modules_input_specs: dict[str, dict[str, InputSpec]]
-	_modules_output_specs: dict[str, dict[str, OutputSpec]]
+	_modules_input_specs: dict[str, dict[str, PortSpecs]]
+	_modules_output_specs: dict[str, dict[str, PortSpecs]]
 
 	def __init__(self, config: BrainConfig = None, **kwargs):
 		# Initialize super.
@@ -232,29 +292,29 @@ class Brain(SparkModule, metaclass=BrainMeta):
 							) 
 				
 				# Validate shapes
-				shape = 0
+				expected_shape = 0
 				if len(ports_list) > 1:
 					# Many-to-one input-output. Inputs need to be merged, default merged behaviour is to flat everything.
 					for port_map in ports_list:
 						if port_map.origin == '__call__':
-							shape += prod(self.config.input_map[port_map.port].shape)
+							expected_shape += prod(self.config.input_map[port_map.port].shape)
 						else:
-							output_specs: OutputSpec = getattr(self, port_map.origin).get_output_specs()[port_map.port]
-							shape += prod(output_specs.shape)
+							output_specs: PortSpecs = getattr(self, port_map.origin).get_output_specs()[port_map.port]
+							expected_shape += prod(output_specs.shape)
 				else:
 					# One-to-one input-output.
 					if port_map.origin == '__call__':
-						shape = self.config.input_map[port_map.port].shape
+						expected_shape = self.config.input_map[port_map.port].shape
 					else:
-						output_specs: OutputSpec = getattr(self, port_map.origin).get_output_specs()[port_map.port]
-						shape = output_specs.shape
+						output_specs: PortSpecs = getattr(self, port_map.origin).get_output_specs()[port_map.port]
+						expected_shape = output_specs.shape
 				# Normalize and compare shapes.
-				shape = utils.validate_shape(shape)
-				expected_input_shape = self._modules_input_specs[module_name][port_name].shape
-				if expected_input_shape != shape:
+				expected_shape = utils.validate_shape(expected_shape)
+				shape = self._modules_input_specs[module_name][port_name].shape
+				if expected_shape != shape:
 					raise ValueError(
 						f'Input port \"{port_name}\" for module \"{module_name}\" expected input shape '
-						f'{expected_input_shape} but got shape \"{shape}\".'
+						f'{expected_shape} but got shape \"{shape}\".'
 					) 
 
 
@@ -283,60 +343,56 @@ class Brain(SparkModule, metaclass=BrainMeta):
 
 
 	# TODO: Current approach to build the cache is rather silly, there should be a better more robust way to construct it.
-	def build(self, input_specs: dict[str, InputSpec]):
+	def build(self, input_specs: dict[str, PortSpecs]):
 		# Get build order.
 		order = self.resolve_initialization_order()
 		# Build cache. Cache needs to be computed a step at a time. 
-		self._cache = {
-			'__call__': {
-				name: Cache(
-					Variable(jnp.zeros(spec.shape), dtype=spec.dtype), FloatArray
-				) for name, spec in input_specs.items()
-			}
-		}
-		# Build cache. Cache needs to be computed a step at a time. 
+		modules_output_specs = {'__call__': {name: spec for name, spec in input_specs.items()}}
 		for group in order:
 			for module_name in group:
 				# Skip __call__
 				if module_name == '__call__':
 					continue
-				# Collect module initialization specs
-				dummy_input: dict[str, SparkPayload] = {}
+				# Collect module specs and construct a mock input
+				mock_input = {}
+				validate_async = True
 				for port_name, port_map_list in self.config.modules_map[module_name].inputs.items():
-					shapes = []
+					portspecs_list = []
 					for port_map in port_map_list:
-						if port_map.origin in self._cache:
-							# If origin module is in cache it was already been built; use it shape.
-							shapes.append(self._cache[port_map.origin][port_map.port].shape)
-							dtype = self._cache[port_map.origin][port_map.port].dtype
-							payload_type = self._cache[port_map.origin][port_map.port].payload_type
+						if port_map.origin in modules_output_specs:
+							# Modules was already built grab, get the spec.
+							portspecs_list.append(
+								modules_output_specs[port_map.origin][port_map.port]
+							)
 						elif port_map.origin in group:
-							# If origin is in group it must predefine its output shape in order to be part of a cyclic dependency.
+							# Module is not built yet, it must define a recurrent spec to be part of a cyclic dependency.
 							origin_module: SparkModule = getattr(self, port_map.origin)
-							recurrent_shape_contract = origin_module.get_recurrent_shape_contract()
-							shapes.append(recurrent_shape_contract[port_map.port])
-							dtype = origin_module._dtype
-							module_output_specs = origin_module.__class__._get_output_specs()
-							payload_type = module_output_specs[port_map.port].payload_type
+							portspecs_list.append(
+								origin_module.get_contract_output_specs()[port_map.port]
+							)
+							# Turn off async validation.
+							
+							
+							validate_async = False
 						else:
 							# Something weird happend. System is trying to get something from a module that should have been called later.
 							raise RuntimeError(
 								f'Trying to get port from module "{port_map.origin}" for "{module_name}"... '
 								f'418 I\'m a teapot.'
 							)
-					# TODO: This is extremely brittle, it will fall apart as soon as we allow more interesting shape mixin.
-					# Construct a dummy input
-					dummy_value = jnp.concatenate([jnp.zeros(s).reshape(-1) for s in shapes]).astype(dtype)
-					dummy_input[port_name] = payload_type(dummy_value)
+					mock_port_spec = PortSpecs.from_portspecs_list(portspecs_list, validate_async=validate_async)
+					mock_input[port_name] = mock_port_spec._create_mock_input()
 				# Initialize module
 				module: SparkModule = getattr(self, module_name)
-				dummy_output = module(**dummy_input)
-				# Update cache
-				self._cache[module_name] = {
-					name: Cache(
-						Variable(jnp.zeros(payload.shape), dtype=payload.dtype), payload.__class__
-					) for name, payload in dummy_output.items()
-				}
+				abc_output = module(**mock_input)
+				# Add output specs to list
+				modules_output_specs[module_name] = module.get_output_specs()
+		# Build cache.
+		self._cache = {
+			module_name : {
+				port: Cache._from_spec(spec) for port, spec in module_output_specs.items()
+			} for module_name, module_output_specs in modules_output_specs.items()
+		}
 		# Set built flag
 		self.__built__ = True
 		# Get a simplified version of the output map for __call__ iteration.
@@ -350,7 +406,7 @@ class Brain(SparkModule, metaclass=BrainMeta):
 
 	# NOTE: We need to override _construct_input_specs since sig_parser.get_input_specs will lead to an incorrect 
 	# signature because Brain can have an arbitrary number of inputs all under the key "inputs".
-	def _construct_input_specs(self, abc_args: dict[str, dict[str, SparkPayload]]) -> dict[str, InputSpec]:
+	def _construct_input_specs(self, abc_args: dict[str, dict[str, SparkPayload]]) -> dict[str, PortSpecs]:
 		# Extract the real inputs from abc_args, they are all under the key 'inputs'
 		abc_args = abc_args['inputs']
 		# Validate specs and abc_args match.
@@ -377,31 +433,36 @@ class Brain(SparkModule, metaclass=BrainMeta):
 					f'Expected non-optional input payload \"{key}\" of module \"{self.name}\" to be '
 					f'of type \"{SparkPayload.__name__}\" but got type {type(payload)}'
 				)
-			# InputSpec are immutable, we need to create a new one.
-			input_specs[key] = InputSpec(
+			# PortSpecs are immutable, we need to create a new one.
+			input_specs[key] = PortSpecs(
 				payload_type=payload.__class__,
 				shape=payload.shape,
 				dtype=payload.dtype,
 				description=f'Auto-generated input spec for input \"{key}\" of module \"{self.name}\".',
+				# Payload specific build metadata
+				async_spikes=payload.async_spikes if isinstance(payload, SpikeArray) else None,
+				inhibition_mask=payload.inhibition_mask if isinstance(payload, SpikeArray) else None
 			)
 		return input_specs
-
-
+	
 
 	# NOTE: We need to override _construct_output_specs since sig_parser.get_output_specs will lead to an incorrect 
 	# signature because Brain can have an arbitrary number of outputs all under the key "outputs".
-	def _construct_output_specs(self, abc_args: dict[str, SparkPayload]) -> dict[str, OutputSpec]:
+	def _construct_output_specs(self, abc_args: dict[str, SparkPayload]) -> dict[str, PortSpecs]:
 		# Output is constructed dynamically from the output map, there is no ground truth.
 		expected_output = self.config.output_map
 		output_specs = {}
 		for output_name in expected_output.keys():
 			port_map: PortMap = expected_output[output_name]['input']
-			port_spec: OutputSpec = expected_output[output_name]['spec']
-			output_specs[output_name] = OutputSpec(
+			port_spec: PortSpecs = expected_output[output_name]['spec']
+			output_specs[output_name] = PortSpecs(
 				payload_type=port_spec.payload_type,
 				shape=abc_args[output_name].shape,
 				dtype=abc_args[output_name].dtype,
 				description=f'Auto-generated output spec for output \"{output_name}\".',
+                # Payload specific build metadata
+                async_spikes=abc_args[output_name].async_spikes if isinstance(abc_args[output_name], SpikeArray) else None,
+                inhibition_mask=abc_args[output_name].inhibition_mask if isinstance(abc_args[output_name], SpikeArray) else None
 			)
 		return output_specs
 
@@ -442,20 +503,23 @@ class Brain(SparkModule, metaclass=BrainMeta):
 			getattr(self, name).reset()
 
 
-
-	def _concatenate_payloads(self, args: list[SparkPayload]):
+	
+	def _concatenate_payloads(self, args: list[SparkPayload]) -> SparkPayload:
 		payload_type = type(args[0])
-		return payload_type(jnp.concatenate([x.value.reshape(-1) for x in args]))
+		if issubclass(payload_type, SpikeArray):
+			return payload_type._from_encoding(jnp.concatenate([x._encoding.reshape(-1) for x in args]))
+		else:
+			return payload_type(jnp.concatenate([x.value.reshape(-1) for x in args]))
 
 
 
-	def __call__(self, **inputs: SparkPayload) -> tuple[SparkPayload]:
+	def __call__(self, **inputs: SparkPayload) -> dict[str, SparkPayload]:
 		"""
 			Update brain's states.
 		"""
 		# Put input into the cache.
 		for input_name in self.config.input_map.keys():
-			self._cache['__call__'][input_name].value = inputs[input_name].value
+			self._cache['__call__'][input_name].set(inputs[input_name])
 		# Update modules
 		outputs = {}
 		for module_name in self._modules_list:
@@ -464,17 +528,18 @@ class Brain(SparkModule, metaclass=BrainMeta):
 			for port_name, ports_list in self._modules_input_map[module_name].items():
 				# TODO: This does not support unflatten inputs.
 				input_args[port_name] = self._concatenate_payloads(
-					[self._cache[port_map.origin][port_map.port].value for port_map in ports_list])
+					[self._cache[port_map.origin][port_map.port].get() for port_map in ports_list])
 			outputs[module_name] = getattr(self, module_name)(**input_args)
 		# Update cache
 		for module_name in self._modules_list:
 			for port_name in self._modules_output_specs[module_name].keys():
-				self._cache[module_name][port_name].value = outputs[module_name][port_name].value
+				self._cache[module_name][port_name].set(outputs[module_name][port_name])
 		# Gather output
 		brain_output = {
 			name: outputs[origin][port] for name, origin, port in self._flat_output_map 
 		}
 		return brain_output
+
 
 
 	# TODO: This needs to be set differently, perhaps through some sort of mask. 
@@ -485,10 +550,25 @@ class Brain(SparkModule, metaclass=BrainMeta):
 		brain_spikes = {}
 		for module_name in self._modules_list:
 			if 'spikes' in self._cache[module_name]:
-				brain_spikes[module_name] = self._cache[module_name]['spikes'].value
+				brain_spikes[module_name] = self._cache[module_name]['spikes'].get()
 			elif 'out_spikes' in self._cache[module_name]:
-				brain_spikes[module_name] = self._cache[module_name]['out_spikes'].value
+				brain_spikes[module_name] = self._cache[module_name]['out_spikes'].get()
 		return brain_spikes
+
+
+
+	def _parse_tree_structure(self, current_depth: int = 0, name: str | None = None) -> str:
+		"""
+			Parses the tree with to produce a string with the appropiate format for the ascii_tree method.
+		"""
+		if name:
+			rep = current_depth * ' ' + f'{name} ({self.__class__.__name__})\n'
+		else:
+			rep = current_depth * ' ' + f'{self.__class__.__name__}\n'
+		for module_name in self._modules_list:
+			module: SparkModule = getattr(self, module_name)
+			rep += module._parse_tree_structure(current_depth+1, name=module_name)
+		return rep
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

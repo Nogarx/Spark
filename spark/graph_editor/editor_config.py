@@ -43,14 +43,16 @@ class GraphEditorConfig:
 
 
     # ?
-    
+    input_field_height = 24
+
+
     input_field_bg_color: str = '#2A2A2A'
     input_field_border_radius: int = 4
     input_field_margin: QtCore.QMargins = dc.field(default_factory = lambda: QtCore.QMargins(4, 4, 4, 4))
     label_field_margin: QtCore.QMargins = dc.field(default_factory = lambda: QtCore.QMargins(4, 0, 0, 0))
     field_bg_color: str = '#3A3A3A'
     field_border_radius: int = 4
-    field_margin: QtCore.QMargins = dc.field(default_factory = lambda: QtCore.QMargins(4,4,4,4))
+    field_margin: QtCore.QMargins = dc.field(default_factory = lambda: QtCore.QMargins(2,2,2,2))
     button_bg_color: str = '#2A2A2A' 
     button_border_radius: int = 4
     section_bg_color: str = '#3A3A3A'

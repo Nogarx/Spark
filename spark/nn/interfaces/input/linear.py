@@ -5,7 +5,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.specs import InputSpec
+    from spark.core.specs import PortSpecs
 
 import jax.numpy as jnp
 import dataclasses as dc
@@ -47,7 +47,7 @@ class LinearSpikerConfig(InputInterfaceConfig):
             'description': '(Cooldown) Refractory period of the units of the spiker.',
         })
     max_freq: float = dc.field(
-        default = 50.0, 
+        default = 100.0, 
         metadata = {
             'units': 'Hz',
             'validators': [
@@ -86,14 +86,14 @@ class LinearSpiker(InputInterface):
         self.tau = self.config.tau
         self.cd = self.config.cd
         self.max_freq = self.config.max_freq
-        exp_term = jnp.exp((1/self.tau) * ((1000-self.cd*self.max_freq) / self.max_freq)) # dt cancels out
+        exp_term = jnp.exp((self._dt/self.tau) * ((1000-self.cd*self.max_freq) / self.max_freq)) # dt cancels out
         scale = ((1 / (exp_term - 1)) + 1)
         self._tau = Constant(self.tau, dtype=self._dtype)
         self._scale = Constant(scale, dtype=self._dtype)
         self._decay = Constant(jnp.exp(-self._dt / self.tau), dtype=self._dtype)
         self._gain = Constant(1 - self._decay, dtype=self._dtype)
 
-    def build(self, input_specs: dict[str, InputSpec]) -> None:
+    def build(self, input_specs: dict[str, PortSpecs]) -> None:
         # Initialize shapes
         self._shape = utils.validate_shape(input_specs['signal'].shape)
         # Initialize variables
@@ -120,7 +120,7 @@ class LinearSpiker(InputInterface):
         # Update potential
         is_ready = jnp.greater_equal(self._refractory.value, self._cooldown).astype(self._dtype)
         dV = is_ready * self._tau * self._gain * self._scale * signal.value
-        self.potential.value = self._decay * self.potential.value + dV
+        self.potential.value = self._decay * self.potential.value + self._dt * dV
         # Spike
         spikes = (self.potential.value > self._tau).astype(self._dtype)
         # Reset neuron 

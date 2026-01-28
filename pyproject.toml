@@ -42,4 +42,4 @@ classifiers = [
 Homepage = "https://github.com/Nogarx/Spark"
 Issues = "https://github.com/Nogarx/Spark/issues"
 [tool.setuptools.packages.find]
-where = ["spark"]
+where = ["."]

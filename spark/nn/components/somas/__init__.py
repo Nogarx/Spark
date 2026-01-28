@@ -2,6 +2,7 @@ from spark.nn.components.somas.base import Soma, SomaOutput
 from spark.nn.components.somas.leaky import (
     LeakySoma, LeakySomaConfig,
     RefractoryLeakySoma, RefractoryLeakySomaConfig,
+    StrictRefractoryLeakySoma, StrictRefractoryLeakySomaConfig,
     AdaptiveLeakySoma, AdaptiveLeakySomaConfig,
 )
 from spark.nn.components.somas.exponential import (
@@ -20,6 +21,7 @@ __all__ = [
     # Leaky
     'LeakySoma', 'LeakySomaConfig',
     'RefractoryLeakySoma', 'RefractoryLeakySomaConfig',
+    'StrictRefractoryLeakySoma', 'StrictRefractoryLeakySomaConfig',
     'AdaptiveLeakySoma', 'AdaptiveLeakySomaConfig',
     # Exponential
     'ExponentialSoma', 'ExponentialSomaConfig',

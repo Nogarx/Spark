@@ -4,18 +4,13 @@
 
 from __future__ import annotations
 
-# GPU is not required in the editor
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = ''     
-os.environ['XLA_FLAGS'] = '--xla_force_host_platform_device_count=1'
-
-import jax.numpy as jnp
+import numpy as np
 import typing as tp
 from PySide6 import QtCore, QtWidgets, QtGui
 import spark.core.utils as utils
-from spark.graph_editor.widgets.base import SparkQWidget
+from spark.graph_editor.widgets.base import QInput
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
-
+from spark.core.registry import REGISTRY
 # TODO: QComboBox is functional but a QLineEdit + QListView could be better for a more standardize look.
 
 #################################################################################################################################################
@@ -29,11 +24,11 @@ class QComboBoxEdit(QtWidgets.QComboBox):
 
     def __init__(
             self, 
-            initial_value: jnp.dtype, 
+            value: tp.Any, 
             options_list: list[tuple[str, tp.Any]], 
-            parent: QtWidgets.QWidget = None
+            **kwargs,
         ) -> None:
-        super().__init__(parent)
+        super().__init__()
 
         # Populate ComboBox
         if not len(options_list) > 0:
@@ -43,12 +38,12 @@ class QComboBoxEdit(QtWidgets.QComboBox):
         self.options_list = options_list
         for (option_name, option_data) in self.options_list:
             self.addItem(option_name, userData=option_data)
-        self.set_value(initial_value)
-
+        self.set_value(value)
         # Set style
+        self.setFixedHeight(GRAPH_EDITOR_CONFIG.input_field_height)
         self.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
-            QtWidgets.QSizePolicy.Policy.Expanding
+            QtWidgets.QSizePolicy.Policy.Fixed
         )
         # NOTE: Left padding seems to be missing 4px to match standard QLineEdit style.
         self.setStyleSheet(
@@ -92,54 +87,52 @@ class QComboBoxEdit(QtWidgets.QComboBox):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class QDtype(SparkQWidget):
+class QDtype(QInput):
     """
         Custom QWidget used for dtypes fields in the SparkGraphEditor's Inspector.
     """
 
     def __init__(
             self,
-            initial_value: jnp.dtype,
-            values_options: list[jnp.dtype],
-            parent: QtWidgets.QWidget = None
+            value: np.dtype,
+            value_options: list[np.dtype],
+            **kwargs,
         ) -> None:
-        super().__init__(parent=parent)
+        super().__init__()
         # Add layout
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        # Add QShapeEdit
-        options_list = [(utils.to_human_readable(dtype.__name__), dtype) for dtype in values_options]
-        self._dtype_edit = QComboBoxEdit(initial_value, options_list, self)
+        options_list = [(utils.to_human_readable(dtype.__name__), dtype) for dtype in value_options]
+        self._dtype_edit = QComboBoxEdit(value, options_list)
         # Update callback
         self._dtype_edit.currentIndexChanged.connect(self._on_update)
         # Finalize
         layout.addWidget(self._dtype_edit)
         self.setLayout(layout)
 
-    def get_value(self) -> jnp.dtype:
+    def get_value(self) -> np.dtype:
         return self._dtype_edit.get_value()
     
-    def set_value(self, value: jnp.dtype) -> None:
+    def set_value(self, value: np.dtype) -> None:
         return self._dtype_edit.set_value(value)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class QBool(SparkQWidget):
+class QBool(QInput):
     """
         Custom QWidget used for bool fields in the SparkGraphEditor's Inspector.
     """
 
     def __init__(
             self,
-            initial_value: bool = True,
-            parent: QtWidgets.QWidget = None
+            value: bool = True,
+            **kwargs,
         ) -> None:
-        super().__init__(parent=parent)
+        super().__init__()
         # Add layout
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        # Add QShapeEdit
-        self._bool_edit = QComboBoxEdit(initial_value, [('True', True), ('False', False)], self)
+        self._bool_edit = QComboBoxEdit(value, [('True', True), ('False', False)])
         # Update callback
         self._bool_edit.currentIndexChanged.connect(self._on_update)
         # Finalize
@@ -154,24 +147,23 @@ class QBool(SparkQWidget):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class QGenericComboBox(SparkQWidget):
+class QGenericComboBox(QInput):
     """
         Custom QWidget used for arbitrary selectable fields fields in the SparkGraphEditor's Inspector.
     """
 
     def __init__(
             self,
-            initial_value: str,
-            values_options: dict[str, tp.Any],
-            parent: QtWidgets.QWidget = None
+            value: str,
+            value_options: dict[str, tp.Any],
+            **kwargs,
         ) -> None:
-        super().__init__(parent=parent)
+        super().__init__()
         # Add layout
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        # Add QShapeEdit
-        options_list = [(key, value) for key, value in values_options.items()]
-        self._value_edit = QComboBoxEdit(initial_value, options_list, self)
+        options_list = [(key, value) for key, value in value_options.items()]
+        self._value_edit = QComboBoxEdit(value, options_list)
         # Update callback
         self._value_edit.currentIndexChanged.connect(self._on_update)
         # Finalize

@@ -25,13 +25,12 @@ class NodesPanel(QDockPanel):
             self, 
             node_graph: SparkNodeGraph, 
             name: str = 'Nodes', 
-            parent: QtWidgets.QWidget = None, 
             **kwargs
         ) -> None:
-        super().__init__(name, parent=parent, **kwargs)
+        super().__init__(name, **kwargs)
         self.setMinimumWidth(GRAPH_EDITOR_CONFIG.nodes_panel_min_width)
         self._target_node = None
-        self.node_list = QNodeList(node_graph, parent=self)
+        self.node_list = QNodeList(node_graph)
         self.setContent(self.node_list)
 
 #################################################################################################################################################
@@ -43,8 +42,8 @@ class QNodeList(QtWidgets.QWidget):
         Constructs the nodes list associated with the SparkNodeGraph.
     """
 
-    def __init__(self, node_graph: SparkNodeGraph, parent: QtWidgets.QWidget = None, **kwargs):
-        super().__init__(parent=parent, **kwargs)
+    def __init__(self, node_graph: SparkNodeGraph, **kwargs):
+        super().__init__(**kwargs)
         # Graph reference
         self._node_graph = node_graph
         self._node_widget_map: dict[str, ListEntry] = {}
@@ -101,7 +100,7 @@ class QNodeList(QtWidgets.QWidget):
 
     def _add_widget_from_node(self, node: AbstractNode) -> None:
         # Add widget
-        entry = ListEntry(node.id, node.NODE_NAME, parent=self)
+        entry = ListEntry(node.id, node.NODE_NAME)
         entry.clicked.connect(self.on_entry_clicked)
         self.addWidget(entry)
         # Add to registry
@@ -179,8 +178,8 @@ class ListEntry(QtWidgets.QWidget):
 
     clicked = QtCore.Signal(str)
 
-    def __init__(self, node_id: str, node_name: str, parent: QtWidgets.QWidget = None) -> None:
-        super().__init__(parent=parent)
+    def __init__(self, node_id: str, node_name: str) -> None:
+        super().__init__()
         self._node_id = node_id
         self._selected = False
         # Styles
@@ -199,7 +198,7 @@ class ListEntry(QtWidgets.QWidget):
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
         # Add QLineEdit
-        self.label = QtWidgets.QLabel(node_name, parent=self)
+        self.label = QtWidgets.QLabel(node_name)
         self.label.setFixedHeight(24)
         self.label.setStyleSheet(
             f"""

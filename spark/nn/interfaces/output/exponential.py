@@ -5,13 +5,13 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from spark.core.specs import InputSpec
+    from spark.core.specs import PortSpecs
 
 import jax
 import jax.numpy as jnp
 import dataclasses as dc
 from math import prod
-from spark.core.tracers import SaturableTracer, SaturableDoubleTracer
+from spark.core.tracers import Tracer, RDTracer
 from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Variable
 from spark.core.registry import register_module
@@ -48,7 +48,7 @@ class ExponentialIntegratorConfig(OutputInterfaceConfig):
             'description': 'Approximate average firing frequency at which the population needs to fire to sature the integrator.',
         })
     tau: float = dc.field(
-        default = 20.0, 
+        default = 5.0, 
         metadata = {
             'units': 'ms',
             'validators': [
@@ -56,6 +56,14 @@ class ExponentialIntegratorConfig(OutputInterfaceConfig):
                 PositiveValidator,
             ],
             'description': 'Decay time constant of the membrane potential of the units of the spiker.',
+        })
+    output_map: jax.Array | None = dc.field(
+        default = None, 
+        metadata = {
+            'validators': [
+                TypeValidator,
+            ],
+            'description': 'Integer array that assigns each input to each output integrator. Must have the same (flatten) shape as the input',
         })
     shuffle: bool = dc.field(
         default = True, 
@@ -108,7 +116,7 @@ class ExponentialIntegrator(OutputInterface):
         self.shuffle = self.config.shuffle
         self.smooth_trace = self.config.smooth_trace
 
-    def build(self, input_specs: dict[str, InputSpec]) -> None:
+    def build(self, input_specs: dict[str, PortSpecs]) -> None:
         # Output mapping.
         in_dim = prod(input_specs['spikes'].shape)
         out_dim = self.num_outputs
@@ -118,26 +126,29 @@ class ExponentialIntegrator(OutputInterface):
             jnp.full(remainder, base + 1, dtype=jnp.int32),
             jnp.full(out_dim - remainder, base, dtype=jnp.int32)
         ])
-        output_map = jnp.repeat(jnp.arange(out_dim, dtype=jnp.int32), counts)
-        if not self.shuffle:
-            output_map = output_map
-        else: 
-            output_map = jax.random.permutation(self.get_rng_keys(1), output_map)
+        if self.config.output_map is not None:
+            output_map = self.config.output_map
+        else:
+            output_map = jnp.repeat(jnp.arange(out_dim, dtype=jnp.int32), counts)
+            if not self.shuffle:
+                output_map = output_map
+            else: 
+                output_map = jax.random.permutation(self.get_rng_keys(1), output_map)
         self._indices = Variable(output_map, dtype=jnp.uint32)
 
         # Initialize tracer
         if self.smooth_trace:
-            self.trace = SaturableDoubleTracer(
+            self.trace = RDTracer(
                 shape=self.num_outputs, 
-                tau_1=self.tau, 
-                tau_2=10,
-                scale_1=(1000/self.saturation_freq)/(self._dt*self.tau*counts), 
-                scale_2=1/10,
+                tau_rise=self.tau, 
+                tau_decay=10.0,
+                scale_rise=(1000/self.saturation_freq)/(self._dt*self.tau*counts), 
+                scale_decay=1/10,
                 dt=self._dt, 
                 dtype=self._dtype
             )
         else:
-            self.trace = SaturableTracer(
+            self.trace = Tracer(
                 shape=self.num_outputs, 
                 tau=self.tau, 
                 scale=(1000/self.saturation_freq)/(self._dt*self.tau*counts), 
@@ -153,7 +164,7 @@ class ExponentialIntegrator(OutputInterface):
 
     def __call__(self, spikes: SpikeArray) -> OutputInterfaceOutput:
         # Flat array
-        x = spikes.value.reshape(-1)
+        x = spikes.spikes.reshape(-1).astype(self._dtype)
         # Count spikes in each output group.
         x = jax.ops.segment_sum(
             x, 
