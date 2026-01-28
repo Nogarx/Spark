@@ -1,11 +1,9 @@
-notebooks/
-.env2/
 _run_tests.py
+.env/
 .env_docs/
 .env_benchmarks/
-dev_tmp_files/
-benchmarks/
 hidden/
+Spark_paper/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

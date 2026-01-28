@@ -7,7 +7,7 @@ from __future__ import annotations
 from PySide6 import QtCore, QtWidgets, QtGui
 import spark.core.utils as utils
 from spark.graph_editor.widgets.line_edits import QIntLineEdit
-from spark.graph_editor.widgets.base import SparkQWidget
+from spark.graph_editor.widgets.base import QInput
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 
 #################################################################################################################################################
@@ -45,9 +45,9 @@ class QShapeEdit(QtWidgets.QWidget):
         min_dims: int = 1,
         max_dims: int = 8,
         max_shape: int = 1E9,
-        parent: QtWidgets.QWidget = None
+        **kwargs,
     ):
-        super().__init__(parent)
+        super().__init__()
         self.min_dims = min_dims
         self.max_dims = max_dims
         self.max_shape = int(max_shape)
@@ -178,7 +178,7 @@ class QShapeEdit(QtWidgets.QWidget):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class QShape(SparkQWidget):
+class QShape(QInput):
     """
         Custom QWidget used for integer fields in the SparkGraphEditor's Inspector.
     """
@@ -189,15 +189,15 @@ class QShape(SparkQWidget):
             min_dims: int = 1,
             max_dims: int = 8,
             max_shape: int = 1E9,
-            parent: QtWidgets.QWidget = None
+            **kwargs,
         ) -> None:
-        super().__init__(parent=parent)
+        super().__init__()
 
         # Add layout
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         # Add QShapeEdit
-        self._shape_edit = QShapeEdit(initial_shape, min_dims, max_dims, max_shape, self)
+        self._shape_edit = QShapeEdit(initial_shape, min_dims, max_dims, max_shape)
         # Update callback
         self._shape_edit.editingFinished.connect(self._on_update)
         # Finalize

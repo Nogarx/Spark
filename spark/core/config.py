@@ -26,6 +26,12 @@ from spark.core.signature_parser import normalize_typehint, is_instance
 from functools import partial, wraps
 from math import prod
 
+import logging
+logger = logging.getLogger('Spark')
+
+# TODO: We used the word partial across the entire code. 
+# This is not okay since we already use partial for the homonymous functool's method
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
@@ -562,11 +568,11 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             # Generic case
             if field_name in kwargs_fold:
                 # Use kwargs attribute if provided
-                self._validate_and_set(field_name, kwargs_fold[field_name], field_type)
+                self._validate_and_set(field_name, kwargs_fold[field_name], field_type, __skip_validation__=__skip_validation__)
                 continue
             elif not isinstance(field_value, type(None)):
                 # Use field_value attribute if provided
-                self._validate_and_set(field_name, field_value, field_type)
+                self._validate_and_set(field_name, field_value, field_type,  __skip_validation__=__skip_validation__)
                 continue
             elif isinstance(field_value, type(None)) and field.default_factory is not dc.MISSING:
                 # Fallback to default factory.
@@ -600,8 +606,9 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                         )
 
 
-
-    def _validate_and_set(self, field_name, value, field_type):
+    # NOTE: If __skip_validation__ is set to True we still use default logic to try to match the value to the best 
+    # possible candidate and we force the value in case it was not possible to find a good match.
+    def _validate_and_set(self, field_name, value, field_type, __skip_validation__: bool = False) -> None:
         # Use kwargs attribute if provided
         if is_instance(value, field_type):
             # kwargs_fold provides a valid type:
@@ -618,10 +625,13 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                         return
                     except:
                         pass
-            raise TypeError(
-                f'Field {field_name} got value of type {type(value)} but ' \
-                f'it is not possible to safely promote it to the types: {field_type}.'
-            )
+            if __skip_validation__:
+                setattr(self, field_name, value)
+            else:
+                raise TypeError(
+                    f'Field {field_name} got value of type {type(value)} but ' \
+                    f'it is not possible to safely promote it to the types: {field_type}.'
+                )
 
 
 
@@ -637,11 +647,12 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def _get_nested_configs_names(self,) -> list[tuple[type,...]]:
+    def _get_nested_configs_names(self, exclude_initializers=False) -> list[tuple[type,...]]:
         """
             Returns a list containing all nested SparkConfigs' names.
         """
         # Get type hints
+        from spark.nn.initializers import InitializerConfig
         type_hints = tp.get_type_hints(self.__class__)
         for key in type_hints.keys():
             if tp.get_origin(type_hints[key]): 
@@ -654,9 +665,12 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         nested_configs = []
         for field in dc.fields(self):
             # Check if field is another SparkConfig
-            if any([isinstance(t, type) and issubclass(t, BaseSparkConfig) for t in type_hints[field.name]]):
-                nested_configs.append(field.name)
-
+            for t in type_hints[field.name]:
+                if isinstance(t, type) and issubclass(t, BaseSparkConfig):
+                    if exclude_initializers and issubclass(t, InitializerConfig):
+                        continue
+                    nested_configs.append(field.name)
+                    break
         return nested_configs
 
 
@@ -681,7 +695,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
     
 
 
-    def validate(self,) -> None:
+    def validate(self, is_partial: bool = False, errors: list | None = None, current_path: list[str] = ['main']) -> None:
         """
             Validates all fields in the configuration class.
         """
@@ -708,27 +722,53 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     value_attr = value_attr.__obj__
                 # TODO: Add a wrapper to init to perform dynamic validation
                 if isinstance(value_attr, BaseSparkConfig):
-                    continue
-                validator_instance.validate(value_attr)
+                    value_attr.validate(is_partial=is_partial, errors=errors, current_path=current_path+[field.name])
+
+                if is_partial:
+                    # If the program crash replace the value with a None value and skip
+                    try:
+                        validator_instance.validate(value_attr)
+                    except:
+                        setattr(self, field.name, None)
+                        logger.info(
+                            f'Field \"{field.name}\" with path \"{'/'.join(current_path)}\" set to \"None\" due to partial validation.'
+                        )
+                        break
+                else:
+                    try:
+                        validator_instance.validate(value_attr)
+                    except Exception as e:
+                        msg = f'Error at field \"{field.name}\" with path \"{'/'.join(current_path)}\": {e}'
+                        logger.error(e)
+                        if errors is not None:
+                            # Stack error
+                            errors.append((current_path+[field.name], e))
+                        else:
+                            # Let the program crash if an error is found
+                            raise ValueError(msg)
 
 
 
+    # TODO: This method could be blended with validate
     def get_field_errors(self, field_name: str) -> list[str]:
         """
             Validates all fields in the configuration class.
         """
         # Validate field
-        field: dc.Field = getattr(self, '__dataclass_fields__').get(field_name, None)
+        field: dc.Field | None = getattr(self, '__dataclass_fields__').get(field_name, None)
         if field is None:
-            raise KeyError(
-                f'SparkConfig \"{self.__class__}\" does not define a field with name \"{field_name}\".'
-            )
+            msg = f'SparkConfig \"{self.__class__}\" does not define a field with name \"{field_name}\".'
+            logger.error(msg)
+            raise KeyError(msg)
         # Try to validate field
         errors = []
         for validator in field.metadata.get('validators', []):
             validator_instance = validator(field)
             try:
-                validator_instance.validate(getattr(self, field.name))
+                value = getattr(self, field.name)
+                if isinstance(value, InitializableField):
+                    value = value.__obj__
+                validator_instance.validate(value)
             except Exception as e:
                 errors.append(f'{validator.__name__}: {e}')
         return errors
@@ -805,7 +845,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def to_dict(self) -> dict[str, dict[str, tp.Any]]:
+    def to_dict(self, is_partial: bool = False) -> dict[str, dict[str, tp.Any]]:
         """
             Serialize config to dictionary
         """
@@ -813,7 +853,17 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         # Collect all fields and map into a dict
         dataclass_dict = {}
         for field in dc.fields(self):
-            value = getattr(self, field.name)
+            if is_partial:
+                # Set all missing values to None
+                value = getattr(self, field.name, None)
+            else:
+                # Try get value
+                try:
+                    value = getattr(self, field.name)
+                except:
+                    raise ValueError(
+                        f'Undefined value for field "{field.name}" in configuration class "{self.__name__}".'
+                    )
             if isinstance(value, BaseSparkConfig):
                 dataclass_dict[field.name] = value
             elif isinstance(value, InitializableField) and isinstance(value.__obj__, Initializer):
@@ -854,43 +904,47 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def to_file(self, file_path: str) -> None:
+    def to_file(self, file_path: str, is_partial: bool = False) -> None:
         """
             Export a config instance from a .scfg file.
         """
-        try:
-            # Validate path
-            path = pl.Path(file_path)
-            # Add suffix to file to clarify is a spark config.
-            path = path.with_suffix('.scfg')
-            # Ensure the parent directory exists.
-            path.parent.mkdir(parents=True, exist_ok=True)
-            # Write to file.
-            from spark.core.serializer import SparkJSONEncoder
-            with open(path, 'w', encoding='utf-8') as json_file:
-                reg = REGISTRY.CONFIG.get_by_cls(self.__class__)
-                if not reg:
-                    raise RuntimeError(
-                        f'Config class \"{self.__class__}\" is not in the registry.'
-                        f'Reconstruction from unregistered classes is not currently possible.'
-                        f'Use the \"register_config\" decorator to add the class to the registry.'
-                    )
-                # Add top config metadata
-                json_dict = {
-                    '__type__': reg.name,
-                    '__cfg__': self.to_dict(),
-                }
-                json.dump(json_dict, json_file, cls=SparkJSONEncoder, indent=4)
-            print(f'Successfully exported data to {path}')
-        except Exception as e:
-            raise Exception(
-                f'ERROR: Could not write file \"{file_path}\". Reason: {e}'
-            )
+        #try:
+        # Validate the config
+        # If partial is True, values with errors are replaced with a None.
+        self.validate(is_partial=is_partial)
+        # Validate path
+        path = pl.Path(file_path)
+        # Add suffix to file to clarify is a spark config or a partial (SparkGraphEditor vs SparkConfiguration).
+        path = path.with_suffix('.sge' if is_partial else '.scfg')
+        # Ensure the parent directory exists.
+        path.parent.mkdir(parents=True, exist_ok=True)
+        # Write to file.
+        from spark.core.serializer import SparkJSONEncoder
+        with open(path, 'w', encoding='utf-8') as json_file:
+            reg = REGISTRY.CONFIG.get_by_cls(self.__class__)
+            if not reg:
+                raise RuntimeError(
+                    f'Config class \"{self.__class__}\" is not in the registry.'
+                    f'Reconstruction from unregistered classes is not currently possible.'
+                    f'Use the \"register_config\" decorator to add the class to the registry.'
+                )
+            # Add top config metadata
+            json_dict = {
+                '__type__': reg.name,
+                '__cfg__': self.to_dict(is_partial=is_partial),
+            }
+            encoder_cls = partial(SparkJSONEncoder, is_partial=is_partial)
+            json.dump(json_dict, json_file, cls=encoder_cls, indent=4)
+        print(f'Successfully exported data to {path}')
+        #except Exception as e:
+        #    raise Exception(
+        #        f'ERROR: Could not write file \"{file_path}\". Reason: {e}'
+        #    )
 
 
 
     @classmethod
-    def from_file(cls: type['BaseSparkConfig'], file_path: str) -> 'BaseSparkConfig':
+    def from_file(cls: type['BaseSparkConfig'], file_path: str, is_partial: bool = False) -> 'BaseSparkConfig':
         """
             Create config instance from a .scfg file.
         """
@@ -904,7 +958,8 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 # Try to decode
                 from spark.core.serializer import SparkJSONDecoder
                 try:
-                    obj = json.load(json_file, cls=SparkJSONDecoder) 
+                    decoder_cls = partial(SparkJSONDecoder, is_partial=is_partial)
+                    obj = json.load(json_file, cls=decoder_cls) 
                 except Exception as e:
                     raise RuntimeError(
                         f'An unexpected error ocurred when trying to decode... '
@@ -946,7 +1001,10 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 continue
 
             # Yield the field name and its corresponding value
-            yield (f.name, f, getattr(self, f.name, None))
+            value = getattr(self, f.name, None)
+            if isinstance(value, InitializableField):
+                value = value.__obj__
+            yield (f.name, f, value)
 
 
 

@@ -123,11 +123,24 @@ class BrainConfig(BaseSparkConfig):
 
 
 
-	def validate(self,) -> None:
+	def validate(self, is_partial: bool = False, errors: list | None = None, current_path: list[str] = ['brain']) -> dict[str] | None:
 		# Brain specific validation.
-		self._validate_maps()
+		if not is_partial:
+			try:
+				self._validate_maps()
+			except Exception as e:
+				if errors is not None:
+					errors.append((current_path[0], e))
+				else:
+					raise
 		# Standard config validation.
-		super().validate()
+		for module_spec in self.modules_map.values():
+			try:
+				module_spec.config.validate(is_partial=is_partial, errors=errors, current_path=current_path+[module_spec.name])
+			except Exception as e:
+				raise ValueError(
+					f'Error on module \"{module_spec.name}\": {e}'
+				)
 
 
 
@@ -279,29 +292,29 @@ class Brain(SparkModule, metaclass=BrainMeta):
 							) 
 				
 				# Validate shapes
-				shape = 0
+				expected_shape = 0
 				if len(ports_list) > 1:
 					# Many-to-one input-output. Inputs need to be merged, default merged behaviour is to flat everything.
 					for port_map in ports_list:
 						if port_map.origin == '__call__':
-							shape += prod(self.config.input_map[port_map.port].shape)
+							expected_shape += prod(self.config.input_map[port_map.port].shape)
 						else:
 							output_specs: PortSpecs = getattr(self, port_map.origin).get_output_specs()[port_map.port]
-							shape += prod(output_specs.shape)
+							expected_shape += prod(output_specs.shape)
 				else:
 					# One-to-one input-output.
 					if port_map.origin == '__call__':
-						shape = self.config.input_map[port_map.port].shape
+						expected_shape = self.config.input_map[port_map.port].shape
 					else:
 						output_specs: PortSpecs = getattr(self, port_map.origin).get_output_specs()[port_map.port]
-						shape = output_specs.shape
+						expected_shape = output_specs.shape
 				# Normalize and compare shapes.
-				shape = utils.validate_shape(shape)
-				expected_input_shape = self._modules_input_specs[module_name][port_name].shape
-				if expected_input_shape != shape:
+				expected_shape = utils.validate_shape(expected_shape)
+				shape = self._modules_input_specs[module_name][port_name].shape
+				if expected_shape != shape:
 					raise ValueError(
 						f'Input port \"{port_name}\" for module \"{module_name}\" expected input shape '
-						f'{expected_input_shape} but got shape \"{shape}\".'
+						f'{expected_shape} but got shape \"{shape}\".'
 					) 
 
 

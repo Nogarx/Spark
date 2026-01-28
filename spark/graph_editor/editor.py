@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 import os
 import sys
 import enum
+import pathlib
 import typing as tp
 from PySide6 import QtWidgets, QtCore, QtGui
 from spark.nn.brain import BrainConfig
@@ -17,9 +18,10 @@ from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 from spark.graph_editor.ui.menu_bar import MenuBar
 from spark.graph_editor.ui.status_bar import StatusBar
 
-# TODO: Initializer selection missing
 # TODO: Allow to set the specific class of subconfigs.
 # TODO: Allow to set optional configs to None in the inspector.
+# TODO: Allow basic shortcuts: ctrl+c, ctrl+v, etc.
+# TODO: Create undo/redo stack (ctrl+z, ctrl+y).
 
 # NOTE: We use numpy to  manage dtypes. Jax sometimes tries to move data (?) to the GPU,
 # which in turn slows down the editor unnecesarily.
@@ -34,6 +36,9 @@ from spark.graph_editor.ui.graph_panel import GraphPanel
 from spark.graph_editor.ui.nodes_panel import NodesPanel
 from spark.graph_editor.ui.inspector_panel import InspectorPanel
 from spark.graph_editor.ui.console_panel import ConsolePanel, MessageLevel
+
+import logging
+logger = logging.getLogger('Spark')
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -63,8 +68,11 @@ class SparkGraphEditor:
         if self.app is None:
             self.app = QtWidgets.QApplication(sys.argv)
         self._panels: dict[DockPanels, QDockPanel] = {}
-        self._current_session_path = None
-        self._current_model_path = None
+        self._session_path = None
+        self._model_path = None
+        self._is_dirty = False
+
+
 
     def launch(self) -> None:
         """
@@ -81,6 +89,8 @@ class SparkGraphEditor:
         # Create base window.
         self.window = EditorWindow()
         self.window.windowClosed.connect(self.exit_editor)
+        # BUG: Part of the Ctrl+S workaround.
+        self.window.editor = self
         # Default layout
         self._setup_layout()
         # General style
@@ -93,11 +103,15 @@ class SparkGraphEditor:
         # Start loop
         self.app.exec_()
 
+
+
     def exit_editor(self,) -> None:
         """
             Exit editor.
         """
         self.app.quit()
+
+
 
     def closeEvent(self, event)-> None:
         """
@@ -107,6 +121,8 @@ class SparkGraphEditor:
             event.accept()
         else:
             event.ignore()
+
+
 
     def _setup_layout(self,) -> None:
         """
@@ -145,7 +161,13 @@ class SparkGraphEditor:
         graph_panel.graph.broadcast_message.connect(console_panel.publish_message)
         graph_panel.graph.node_selection_changed.connect(inspector_panel.on_selection_update)
         graph_panel.graph.nodes_deleted.connect(lambda: inspector_panel.set_node(None))
-        graph_panel.graph.stateChanged.connect(lambda _: self._update_ui_state())
+        #graph_panel.graph.on_update.connect(lambda _: self._update_ui_state())
+
+        self.graph.on_update.connect(self._on_graph_update)
+        self._panels[DockPanels.INSPECTOR].on_update.connect(self._on_inspector_update)
+
+        # BUG: Patch because NodeGraph keeps overriding the Save shortcut >:|
+        self.graph._viewer.BUGFIX_on_save.connect(self.save_session)
 
     def _maybe_save(self) -> bool:
         """
@@ -153,12 +175,13 @@ class SparkGraphEditor:
             Returns True if the operation should proceed (user saved or discarded),
             and False if the operation should be cancelled.
         """
-        if self.graph._is_modified:
+
+        if not self.graph._is_dirty:
             return True
         
         msg_box = QtWidgets.QMessageBox(None)
-        msg_box.setText("The document has been modified.")
-        msg_box.setInformativeText("Do you want to save your changes?")
+        msg_box.setText('The document has been modified.')
+        msg_box.setInformativeText('Do you want to save your changes?')
         msg_box.setStandardButtons(
             QtWidgets.QMessageBox.StandardButton.Save |
             QtWidgets.QMessageBox.StandardButton.Discard |
@@ -174,6 +197,8 @@ class SparkGraphEditor:
             return False
         return True
 
+
+
     def new_session(self) -> None:
         """
             Clears the current session after checking for unsaved changes.
@@ -181,37 +206,42 @@ class SparkGraphEditor:
         if self._maybe_save():
             self._clear_session()
 
+
+
     def _clear_session(self,) -> None:
         self.graph.clear_session()
-        self._current_session_path = None
-        self._current_model_path = None
-        self.graph._is_modified = False
+        self._session_path = None
+        self._model_path = None
+        self._clear_dirty_flags()
         self._update_ui_state()
         self._panels[DockPanels.CONSOLE].clear()
+
+
 
     def save_session(self) -> bool:
         """
             Saves the current session to a Spark Graph Editor file.
         """
-        if self._current_session_path is None:
+        if self._session_path is None:
             return self.save_session_as()
         else:
             try:
-                self.graph.save_session(self._current_session_path)
-                self.graph._is_modified = False
+                brain_config = self.graph.build_brain_config(is_partial=True)
+                brain_config.to_file(self._model_path, is_partial=True)
+                self._clear_dirty_flags()
                 self._update_ui_state()
-                self._panels[DockPanels.CONSOLE].publish_message(
-                    MessageLevel.SUCCESS, 
-                    f'Session sucessfully saved to \"{self._current_session_path}\".'
-                )
+                msg = f'Session sucessfully saved to \"{self._session_path}\".'
+                self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.SUCCESS, msg)
+                logger.info(msg)
                 return True
             except Exception as e:
-                QtWidgets.QMessageBox.critical(self, "Error", f"Could not save file:\n{e}")
-                self._panels[DockPanels.CONSOLE].publish_message(
-                    MessageLevel.ERROR, 
-                    f'Failed to save session to \"{self._current_session_path}\": {e}'
-                )
+                msg = f'Failed to save session to \"{self._session_path}\": {e}'
+                QtWidgets.QMessageBox.critical(None, "Error", f"Could not save file:\n{e}")
+                self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.ERROR, msg)
+                logger.error(msg)
                 return False
+            
+
 
     def save_session_as(self) -> bool:
         """
@@ -222,26 +252,25 @@ class SparkGraphEditor:
         dialog.setNameFilter('Spark Graph Files (*.sge);;All Files (*)')
         dialog.setDefaultSuffix('sge')
         while dialog.exec():
-            path = dialog.selectedFiles()[0]
-            if os.path.exists(path):
+            path = pathlib.Path(dialog.selectedFiles()[0])
+            if path.exists():
                 ret = QtWidgets.QMessageBox.question(
                     None,
                     'Confirm Overwrite',
-                    f'The file "{os.path.basename(path)}" already exists.<br>Do you want to replace it?',
+                    f'The file "{path.name}" already exists.<br>Do you want to replace it?',
                     QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
                     QtWidgets.QMessageBox.StandardButton.No
                 )
                 if ret == QtWidgets.QMessageBox.StandardButton.No:
                     continue 
-            self._current_session_path = path
+            self._session_path = path.with_suffix('.sge')
             # Try to also set the model_path
-            try:
-                self._current_model_path = f'{self._current_session_path.strip('.sge')}.scfg'
-            except:
-                pass
+            if self._model_path is None:
+                self._model_path = path.with_suffix('.scfg')
             return self.save_session()
-        
         return False
+
+
 
     def load_session(self) -> None:
         """
@@ -256,22 +285,26 @@ class SparkGraphEditor:
                         filter='Spark Graph Files (*.sge);;All Files (*)'
         )
         if path:
+            path = pathlib.Path(path)
             try:
                 self._clear_session()
-                self.graph.load_session(path)
-                self._current_session_path = path
-                self.graph._is_modified = False
-                self._panels[DockPanels.CONSOLE].publish_message(
-                    MessageLevel.SUCCESS, 
-                    f'Session loaded sucessfully from \"{self._current_session_path}\".'
-                )
+                config = BrainConfig.from_file(path, is_partial=True)
+                self.graph.load_from_model(config)
+                self._clear_dirty_flags()
+                self._panels[DockPanels.INSPECTOR].clear_selection()
+                msg = f'Session loaded sucessfully from \"{path}\".'
+                self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.SUCCESS, msg)
+                logger.info(msg)
+                self._session_path = path.with_suffix('.sge')
+                self._model_path = path.with_suffix('.scfg')
                 self._update_ui_state()
             except Exception as e:
-                QtWidgets.QMessageBox.critical(self, "Error", f"Could not load file:\n{e}")
-                self._panels[DockPanels.CONSOLE].publish_message(
-                    MessageLevel.ERROR, 
-                    f'Failed to load session from \"{self._current_session_path}\": {e}'
-                )
+                msg = f'Failed to load session from \"{path}\": {e}'
+                QtWidgets.QMessageBox.critical(None, 'Error', msg)
+                self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.ERROR, msg)
+                logger.critical(msg)
+
+
 
     def load_from_model(self) -> None:
         """
@@ -286,33 +319,36 @@ class SparkGraphEditor:
                         filter='Spark Cfg Files (*.scfg);;All Files (*)'
         )
         if path:
+            path = pathlib.Path(path)
             try:
                 self._clear_session()
-                self._current_model_path = path
-                config = BrainConfig.from_file(self._current_model_path)
+                config = BrainConfig.from_file(path, is_partial=False)
                 self.graph.load_from_model(config)
-                self.graph._is_modified = False
-                self._panels[DockPanels.CONSOLE].publish_message(
-                    MessageLevel.SUCCESS, 
-                    f'Model loaded sucessfully from \"{self._current_model_path}\".'
-                )
+                self._clear_dirty_flags()
+                self._panels[DockPanels.INSPECTOR].clear_selection()
+                msg = f'Model loaded sucessfully from \"{path}\".'
+                self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.SUCCESS, msg)
+                logger.info(msg)
+                self._session_path = path.with_suffix('.sge')
+                self._model_path = path.with_suffix('.scfg')
                 self._update_ui_state()
             except Exception as e:
-                QtWidgets.QMessageBox.critical(self, "Error", f"Could not load file:\n{e}")
-                self._panels[DockPanels.CONSOLE].publish_message(
-                    MessageLevel.ERROR, 
-                    f'Failed to load model from \"{self._current_model_path}\": {e}'
-                )
+                msg = f'Failed to load model from \"{path}\": {e}'
+                QtWidgets.QMessageBox.critical(None, 'Error', msg)
+                self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.ERROR, msg)
+                logger.critical(msg)
+
+
 
     def export_model(self) -> bool:
         """
             Exports the graph state to a Spark configuration file.
         """
-        if self._current_model_path is None:
+        if self._model_path is None:
             return self.export_model_as()
         else:
-            #try:
-                # Validate model.
+            try:
+                # Validate connectivity.
                 errors = self.graph.validate_graph()
                 if len(errors) > 0: 
                     QtWidgets.QMessageBox.warning(
@@ -320,22 +356,46 @@ class SparkGraphEditor:
                         'Invalid Model', 'The following errors were detected:\n\n  •  '+'\n\n  •  '.join(errors)+'\n'
                     )
                     for e in errors:
-                        self._panels[DockPanels.CONSOLE].publish_message(
-                            MessageLevel.ERROR, 
-                            f'Failed to export model to \"{self._current_model_path}\": {e}'
-                        )
-                    return 
+                        msg = f'Failed to export model to \"{self._model_path}\": {e}'
+                        self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.ERROR, msg)
+                        logger.error(msg)
+                    return False
                 
-                brain_config = self.graph.build_brain_config()
-                brain_config.to_file(self._current_model_path)
-                self._panels[DockPanels.CONSOLE].publish_message(
-                    MessageLevel.SUCCESS, 
-                    f'Model exported sucessfully to \"{self._current_model_path}\".'
-                )
-                return True
-            #except Exception as e:
-            #    QtWidgets.QMessageBox.critical(None, 'Error', f'Could not save file:\n{e}')
-            #    return False
+                # Validate configuration.
+                errors = []
+                brain_config = self.graph.build_brain_config(is_partial=False, errors=errors)
+                if len(errors) > 0: 
+                    QtWidgets.QMessageBox.warning(
+                        self.graph.viewer(), 
+                        'Invalid Model', 'The following errors were detected:\n\n  •  '+'\n\n  •  '.join(f'{'/'.join(o)}: {e}' for o,e in errors)+'\n'
+                    )
+                    for e in errors:
+                        # Validate errors are tuples (path, error)
+                        msg = f'Failed to export model to \"{self._model_path}\": {f'{'/'.join(e[0])}: {e[1]}'}'
+                        self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.ERROR, msg)
+                        logger.error(msg)
+                    return False
+
+                # Write file.
+                try:
+                    brain_config.to_file(self._model_path, is_partial=False)
+                    msg = f'Model exported sucessfully to \"{self._model_path}\".'
+                    self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.SUCCESS, msg)
+                    logger.info(msg)
+                    return True
+                except Exception as e:
+                    msg = f'Failed to export model to \"{self._model_path}\": {e}'
+                    self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.ERROR, msg)
+                    logger.error(msg)
+                    return False
+                
+            except Exception as e:
+                msg = f'Could not save file:\n{e}'
+                QtWidgets.QMessageBox.critical(None, 'Error', msg)
+                logger.critical(msg)
+                return False
+
+
 
     def export_model_as(self) -> bool:
         """
@@ -347,26 +407,26 @@ class SparkGraphEditor:
         dialog.setDefaultSuffix('scfg')
 
         while dialog.exec():
-            path = dialog.selectedFiles()[0]
-            if os.path.exists(path):
+            path = pathlib.Path(dialog.selectedFiles()[0])
+            if path.exists():
                 ret = QtWidgets.QMessageBox.question(
                     None,
                     'Confirm Overwrite',
-                    f'The file \"{os.path.basename(path)}\" already exists.<br>Do you want to replace it?',
+                    f'The file \"{path.name}\" already exists.<br>Do you want to replace it?',
                     QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
                     QtWidgets.QMessageBox.StandardButton.No
                 )
                 if ret == QtWidgets.QMessageBox.StandardButton.No:
                     continue 
-            self._current_model_path = path
+            self._model_path = path.with_suffix('.scfg')
             # Try to also set the session_path
-            try:
-                self._current_session_path = self._current_model_path.strip('.scfg') + '.sge'
-            except:
-                pass
+            if self._session_path is None:
+                self._session_path = path.with_suffix('.sge')
             return self.export_model()
         
         return False
+
+
 
     def _update_ui_state(self) -> None:
         """
@@ -374,14 +434,25 @@ class SparkGraphEditor:
         """
         # Update window title to show file name and modification status
         base_title = 'Spark Graph Editor'
-        if self._current_session_path:
-            file_name = os.path.basename(self._current_session_path)
-            modified_marker = ' *' if self.graph._is_modified else ''
-            self.window.setWindowTitle(f'{base_title} - {file_name if file_name else 'Untitled'}{modified_marker}')
-        else:
-            modified_marker = ' *' if self.graph._is_modified else ''
-            self.window.setWindowTitle(f'{base_title} - Untitled{modified_marker}')
-        self.menu_bar._on_graph_modified(self.graph._is_modified, self._current_model_path)
+        file_name = self._session_path.stem  if self._session_path else 'Untitled'
+        export_path = self._model_path.name if self._model_path else ''
+        modified_marker = ' *' if self._is_dirty else ''
+        self.window.setWindowTitle(f'{base_title} - {file_name}{modified_marker}')
+        self.menu_bar._on_graph_modified(self._is_dirty, export_path)
+
+    def _on_graph_update(self, *args, **kwargs) -> None:
+        self._is_dirty = True
+        self._update_ui_state()
+
+    def _on_inspector_update(self, *args, **kwargs) -> None:
+        self._is_dirty = True
+        self._update_ui_state()
+
+    def _clear_dirty_flags(self,) -> None:
+        self.graph._is_dirty = False
+        self._panels[DockPanels.INSPECTOR].set_dirty_flag(False)
+        self._is_dirty = False
+        self._update_ui_state()
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

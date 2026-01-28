@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from PySide6 import QtWidgets, QtGui, QtCore
-from spark.graph_editor.widgets.base import SparkQWidget
+from spark.graph_editor.widgets.base import QInput
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 import spark.graph_editor.style.resources_rc
 
@@ -21,13 +21,16 @@ class QStrLineEdit(QtWidgets.QLineEdit):
             self,
             initial_value: str,
             placeholder: str = '',
-            parent: QtWidgets.QWidget | None = None,
             **kwargs,
         ) -> None:
         initial_value = str(initial_value) if initial_value is not None else ''
-        super().__init__(initial_value, parent=parent)
+        super().__init__(initial_value)
         self.setPlaceholderText(placeholder)
         self.setTextMargins(GRAPH_EDITOR_CONFIG.input_field_margin)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Expanding
+        )
         self.setStyleSheet(
             f"""
                 font-size: {GRAPH_EDITOR_CONFIG.medium_font_size}px;
@@ -40,7 +43,7 @@ class QStrLineEdit(QtWidgets.QLineEdit):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class QString(SparkQWidget):
+class QString(QInput):
     """
         Custom QWidget used for string fields in the SparkGraphEditor's Inspector.
     """
@@ -49,15 +52,15 @@ class QString(SparkQWidget):
             self, 
             initial_value: str , 
             placeholder: str = '', 
-            parent: QtWidgets.QWidget = None
+            **kwargs,
         ) -> None:
-        super().__init__(parent=parent)
+        super().__init__()
         # Add layout
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
         # Add QLineEdit
-        self._line_edit = QStrLineEdit(initial_value, placeholder, parent=self)
-        self._line_edit.setFixedHeight(20)
+        self._line_edit = QStrLineEdit(initial_value, placeholder)
+        self._line_edit.setFixedHeight(GRAPH_EDITOR_CONFIG.input_field_height)
         self._line_edit.editingFinished.connect(self._on_update)
         layout.addWidget(self._line_edit)
         # Finalize
@@ -80,11 +83,10 @@ class QIntLineEdit(QtWidgets.QLineEdit):
             initial_value: int,
             bottom_value: int | None = None,
             placeholder: int | None = None,
-            parent: QtWidgets.QWidget = None,
             **kwargs,
         ) -> None:
         initial_value = str(initial_value) if initial_value is not None else ''
-        super().__init__(initial_value, parent=parent)
+        super().__init__(initial_value)
         validator = QtGui.QIntValidator()
         if bottom_value:
             validator.setBottom(bottom_value)
@@ -105,7 +107,7 @@ class QIntLineEdit(QtWidgets.QLineEdit):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class QInt(SparkQWidget):
+class QInt(QInput):
     """
         Custom QWidget used for int fields in the SparkGraphEditor's Inspector.
     """
@@ -115,15 +117,15 @@ class QInt(SparkQWidget):
             initial_value: int = 0, 
             bottom_value: int | None = None,
             placeholder: int | None = None, 
-            parent: QtWidgets.QWidget = None
+            **kwargs,
         ) -> None:
-        super().__init__(parent=parent)
+        super().__init__()
         # Add layout
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
         # Add QLineEdit
-        self._line_edit = QIntLineEdit(initial_value, bottom_value=bottom_value, placeholder=placeholder, parent=self)
-        self._line_edit.setFixedHeight(20)
+        self._line_edit = QIntLineEdit(initial_value, bottom_value=bottom_value, placeholder=placeholder)
+        self._line_edit.setFixedHeight(GRAPH_EDITOR_CONFIG.input_field_height)
         self._line_edit.editingFinished.connect(self._on_update)
         layout.addWidget(self._line_edit)
         # Finalize
@@ -146,11 +148,10 @@ class QFloatLineEdit(QtWidgets.QLineEdit):
             initial_value: float, 
             bottom_value: float | None = None, 
             placeholder: float | None = None, 
-            parent: QtWidgets.QWidget = None,
             **kwargs,
         ) -> None:
         initial_value = str(initial_value) if initial_value is not None else ''
-        super().__init__(initial_value, parent=parent)
+        super().__init__(initial_value)
         validator = QtGui.QDoubleValidator()
         validator.setNotation(QtGui.QDoubleValidator.Notation.ScientificNotation)
         if bottom_value:
@@ -171,7 +172,7 @@ class QFloatLineEdit(QtWidgets.QLineEdit):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class QFloat(SparkQWidget):
+class QFloat(QInput):
     """
         Custom QWidget used for float fields in the SparkGraphEditor's Inspector.
     """
@@ -181,15 +182,15 @@ class QFloat(SparkQWidget):
             initial_value: float = 0, 
             bottom_value: float | None = None,
             placeholder: float | None = None, 
-            parent: QtWidgets.QWidget = None
+            **kwargs,
         ) -> None:
-        super().__init__(parent=parent)
+        super().__init__()
         # Add layout
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
         # Add QLineEdit
-        self._line_edit = QFloatLineEdit(initial_value, bottom_value=bottom_value, placeholder=placeholder, parent=self)
-        self._line_edit.setFixedHeight(20)
+        self._line_edit = QFloatLineEdit(initial_value, bottom_value=bottom_value, placeholder=placeholder)
+        self._line_edit.setFixedHeight(GRAPH_EDITOR_CONFIG.input_field_height)
         self._line_edit.editingFinished.connect(self._on_update)
         layout.addWidget(self._line_edit)
         # Finalize

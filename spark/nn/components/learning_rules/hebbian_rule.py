@@ -114,9 +114,9 @@ class HebbianRule(LearningRule):
             Computes next kernel update.
         """
         # Squeeze
-        _pre_spikes = pre_spikes.spikes.squeeze()
-        _post_spikes = post_spikes.spikes.squeeze()
-        _kernel = kernel.value.squeeze()
+        _pre_spikes = pre_spikes.spikes
+        _post_spikes = post_spikes.spikes
+        _kernel = kernel.value
         # Update and get current trace value
         pre_trace = self.pre_trace(_pre_spikes)
         post_trace = self.post_trace(_post_spikes)
@@ -212,9 +212,9 @@ class OjaRule(LearningRule):
             Computes next kernel update.
         """
         # Squeeze
-        _pre_spikes = pre_spikes.spikes.squeeze()
-        _post_spikes = post_spikes.spikes.squeeze()
-        _kernel = kernel.value.squeeze()
+        _pre_spikes = pre_spikes.spikes
+        _post_spikes = post_spikes.spikes
+        _kernel = kernel.value
         # Update and get current trace value
         post_trace = self.post_trace(_post_spikes)
         # Compute rule

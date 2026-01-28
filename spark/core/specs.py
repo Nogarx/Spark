@@ -77,7 +77,7 @@ class PortSpecs:
         self.async_spikes = async_spikes
         self.inhibition_mask = inhibition_mask
 
-    def to_dict(self) -> dict[str, tp.Any]:
+    def to_dict(self, is_partial: bool = False) -> dict[str, tp.Any]:
         """
             Serialize PortSpecs to dictionary
         """
@@ -92,7 +92,7 @@ class PortSpecs:
         }
     
     @classmethod
-    def from_dict(cls, dct: dict) -> tp.Self:
+    def from_dict(cls, dct: dict, is_partial: bool = False) -> tp.Self:
         """
             Deserialize dictionary to  PortSpecs
         """
@@ -190,7 +190,7 @@ class PortMap:
         self.origin = origin
         self.port = port
 
-    def to_dict(self) -> dict[str, tp.Any]:
+    def to_dict(self, is_partial: bool = False) -> dict[str, tp.Any]:
         """
             Serialize PortMap to dictionary
         """
@@ -200,7 +200,7 @@ class PortMap:
         }
     
     @classmethod
-    def from_dict(cls, dct: dict) -> tp.Self:
+    def from_dict(cls, dct: dict, is_partial: bool = False) -> tp.Self:
         """
             Deserialize dictionary to PortMap
         """
@@ -261,7 +261,7 @@ class ModuleSpecs:
         self.inputs = inputs
         self.config = config
 
-    def to_dict(self) -> dict[str, tp.Any]:
+    def to_dict(self, is_partial: bool = False) -> dict[str, tp.Any]:
         """
             Serialize ModuleSpecs to dictionary
         """
@@ -272,11 +272,11 @@ class ModuleSpecs:
                 '__module_type__': reg.name if reg else None,
             },
             'inputs': self.inputs,
-            'config': self.config.to_dict()
+            'config': self.config.to_dict(is_partial=is_partial)
         }
     
     @classmethod
-    def from_dict(cls, dct: dict) -> tp.Self:
+    def from_dict(cls, dct: dict, is_partial: bool = False) -> tp.Self:
         """
             Deserialize dictionary to ModuleSpecs
         """
@@ -296,7 +296,10 @@ class ModuleSpecs:
             raise TypeError(
                 f'Expected \"config\" to be of type \"type[BaseSparkConfig]\" | dict, but got \"{config}\".'
             )
-        config = module_cls.get_config_spec()(**config) if isinstance(config, dict) else config
+        if is_partial:
+            config = module_cls.get_config_spec()._create_partial(**config) if isinstance(config, dict) else config
+        else:
+            config = module_cls.get_config_spec()(**config) if isinstance(config, dict) else config
         inputs: dict | None = dct.get('inputs', None)
         if not inputs or not isinstance(inputs, dict):
             raise TypeError(

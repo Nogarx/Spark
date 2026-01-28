@@ -103,7 +103,7 @@ class Initializer(abc.ABC):
             self.config.merge(partial=kwargs)
 
     @classmethod 
-    def get_config_spec(cls) -> type[BaseSparkConfig]:
+    def get_config_spec(cls) -> type[InitializerConfig]:
         """
             Returns the default configuration class associated with this module.
         """

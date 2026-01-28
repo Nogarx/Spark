@@ -136,12 +136,12 @@ class AbstractNode(BaseNode, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def node_config_metadata(self,) -> dict:
+    def metadata(self,) -> dict:
         pass
     
     def _update_graph_metadata(self,) -> None:
         # Update metadata for model graph editor model reconstruction.
-        self.node_config_metadata['pos'] = self.pos()
+        self.metadata['pos'] = self.pos()
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -173,7 +173,7 @@ class SourceNode(AbstractNode):
             )
         
     @property
-    def node_config_metadata(self,) -> dict:
+    def metadata(self,) -> dict:
         return None
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -206,7 +206,7 @@ class SinkNode(AbstractNode):
             )
 
     @property
-    def node_config_metadata(self,) -> dict:
+    def metadata(self,) -> dict:
         return None
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -245,9 +245,8 @@ class SparkModuleNode(AbstractNode, abc.ABC):
         node_config_type = self.module_cls.get_config_spec()
         self.node_config = node_config_type._create_partial(_s_units=(1,))
 
-
     @property
-    def node_config_metadata(self,) -> dict:
+    def metadata(self,) -> dict:
         return self.node_config.__graph_editor_metadata__
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

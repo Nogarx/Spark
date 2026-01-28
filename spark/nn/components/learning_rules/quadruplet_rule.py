@@ -160,9 +160,9 @@ class QuadrupletRule(LearningRule):
             Computes next kernel update.
         """
         # Update and get current trace value
-        _pre_spikes = pre_spikes.spikes.squeeze()
-        _post_spikes = post_spikes.spikes.squeeze()
-        _kernel = kernel.value.squeeze()
+        _pre_spikes = pre_spikes.spikes#.squeeze()
+        _post_spikes = post_spikes.spikes#.squeeze()
+        _kernel = kernel.value#.squeeze()
         pre_trace = self.pre_trace(_pre_spikes)
         post_trace = self.post_trace(_post_spikes)
         # Compute rule
@@ -361,9 +361,9 @@ class QuadrupletRuleTensor(LearningRule):
             Computes next kernel update.
         """
         # Update and get current trace value
-        _pre_spikes = pre_spikes.spikes.squeeze()
-        _post_spikes = post_spikes.spikes.squeeze()
-        _kernel = kernel.value.squeeze()
+        _pre_spikes = pre_spikes.spikes#.squeeze()
+        _post_spikes = post_spikes.spikes#.squeeze()
+        _kernel = kernel.value#.squeeze()
         pre_trace = self.pre_trace(_pre_spikes)
         post_trace = self.post_trace(_post_spikes.reshape(self._post_reshape))
         # Compute rule

@@ -229,7 +229,7 @@ def get_einsum_dot_red_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def get_einsum_dot_exp_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one_dims: bool = True, side: str = 'right') -> str:
+def get_einsum_dot_exp_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one_dims: bool = False, side: str = 'right') -> str:
     """
         Generates labels for a generalized dot expansion product using Einstein notation.
             right:	(a,b)•(a,b,c,d)=(a,b,c,d) - ab,abcd->abcd   |   (a,b,c,d)•(a,b)=(a,b,c,d) - abcd,ab->abcd
@@ -554,6 +554,13 @@ class InheritanceLeaf:
     break_inheritance: bool = False
     parent: InheritanceTree = None
 
+    def __post_init__(self,) -> None:
+        if isinstance(self.type_string, tp.Iterable):
+            type_string = set(self.type_string)
+            self.type_string = [t.__name__ if isinstance(t, type) else str(t) for t in type_string if t is not None]
+        elif isinstance(self.type_string, type):
+            self.type_string = self.type_string.__name__
+
     def __repr__(self,) -> str:
         rep = f'{self.name}\n'
         rep += ' ' + f'type_string: {self.type_string}\n'
@@ -563,6 +570,7 @@ class InheritanceLeaf:
         for c in self.inheritance_childs:
             rep += 2*' ' + f'{c}\n' 
         return ascii_tree(rep)
+
 
     def to_dict(self,) -> dict:
         return {
@@ -602,6 +610,13 @@ class InheritanceLeaf:
             Cheks the leaf node is receiving.
         """
         return bool(self.flags & InheritanceFlags.IS_RECEIVING)
+
+    @property
+    def path(self,) -> list[str]:
+        """
+            Returns the path of the leaf node.
+        """
+        return self.parent.path + [self.name]
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -817,8 +832,43 @@ class InheritanceTree:
         elif len(path) > 1:
             branch = path.pop(0)
             subtree = self._branches.get(branch, None)
-            return subtree.get_leaf(path) if subtree else None
+            if subtree is None:
+                raise KeyError(
+                    f'Subtree \"{path}\" not found.'
+                )
+            else:
+                return subtree.get_leaf(path)
     
+    def get_subtree(self, path: list[str]) -> InheritanceTree:
+        """
+            Returns a subtree of the leaf node.
+
+            Input:
+                path: list[str], path to the subtree node, with the last entry the name of the branch
+
+            Returns:
+                InheritanceTree, returns the branch node instance.
+        """
+        if not self._is_valid:
+            self.validate()
+        # Make a copy of the path to prevent overrides
+        path = copy.deepcopy(path if isinstance(path, list) else list(path))
+        if len(path) == 1:
+            # Add branch to current level.
+            subtree = self._branches.get(path[0], None)
+            if subtree is None:
+                raise KeyError(
+                    f'Subtree \"{path}\" not found.'
+                )
+        elif len(path) > 1:
+            branch = path.pop(0)
+            subtree = self._branches.get(branch, None)
+            if subtree is None:
+                raise KeyError(
+                    f'Subtree \"{path}\" not found.'
+                )
+            return subtree.get_subtree(path) if subtree else None
+        
     def to_dict(self,) -> dict:
         """
             InheritanceTree dict serializer.
@@ -849,6 +899,13 @@ class InheritanceTree:
                     f'Expected \"v\" to be a dict, but got \"{v}\".'
                 )
         return tree
+
+    @property
+    def path(self,) -> list[str]:
+        """
+            Returns the path of the branch node.
+        """
+        return self._current_path
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

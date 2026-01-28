@@ -26,8 +26,8 @@ class QDockPanel(CDockWidget):
     """
     #visibilityChanged = QtCore.Signal(bool)
 
-    def __init__(self, name: str, parent: QtWidgets.QWidget = None, **kwargs):
-        super().__init__(name, parent=parent, **kwargs)
+    def __init__(self, name: str, **kwargs):
+        super().__init__(name, **kwargs)
         layout = QtWidgets.QVBoxLayout()
         self.setLayout(layout)
         # Content widget
