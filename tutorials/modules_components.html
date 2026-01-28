@@ -1,0 +1,824 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial #1: Modules and Components &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=30646c52"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/modules_components';</script>
+    <link rel="icon" href="../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tutorial #2: Execution" href="execution.html" />
+    <link rel="prev" title="Tutorials" href="../tutorials.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <script>document.write(`<img src="../_static/spark_250px.png" class="logo__image only-dark" alt="Spark  documentation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brains.html">Tutorial #3: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph_editor.html">Tutorial #4: Graph Editor</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../autoapi/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../autoapi/spark/index.html">spark</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/flax_imports/index.html">spark.core.flax_imports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/validation/index.html">spark.core.validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/variables/index.html">spark.core.variables</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/editor_config/index.html">spark.graph_editor.editor_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/style/index.html">spark.graph_editor.style</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/ui/index.html">spark.graph_editor.ui</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/window/index.html">spark.graph_editor.window</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/nn/index.html">spark.nn</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/brain/index.html">spark.nn.brain</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/components/index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../tutorials.html" class="nav-link">Tutorials</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">Tutorial...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/tutorials/modules_components.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Tutorial #1: Modules and Components</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-header">
+<section id="tutorial-1-modules-and-components">
+<h1>Tutorial #1: Modules and Components<a class="headerlink" href="#tutorial-1-modules-and-components" title="Link to this heading">#</a></h1>
+</div><link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p><b><i>Spark</i></b> is intended as a research framework. As such one of the first things that one may want is to add a new element to the systems. <br>
+<br>
+Fortunately, adding new components is quite straight forward, although it may be a little confusing the first time. Let’s start from the beginning. In <b><i>Spark</i></b>, as in any other major library, every module inherits from <b>spark.nn.Module</b>. This class is at the heart of most of the <b><i>Spark</i></b>’s magic. Depending on the specificity of the module you are trying to build it could make sense to subclass other classes:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>spark.nn.Component</p></td>
+<td><p>Arbitrary component of a neuron</p></td>
+</tr>
+<tr class="row-odd"><td><p>spark.nn.somas.Soma</p></td>
+<td><p>Soma models</p></td>
+</tr>
+<tr class="row-even"><td><p>spark.nn.synapses.Synanpses</p></td>
+<td><p>Synaptic models</p></td>
+</tr>
+<tr class="row-odd"><td><p>spark.nn.learning_rules.LearningRule</p></td>
+<td><p>Learning rules</p></td>
+</tr>
+<tr class="row-even"><td><p>spark.nn.delays.Delays</p></td>
+<td><p>Spike delay mechanisms</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>This list is not exhaustive, but it contains the most important subclasses of <b>spark.nn.Module</b>.</p>
+<p><b> REMARK: </b>One important thing to mention before we start is that Python does not strictly enforce typing, however, Spark does rely on typing for a few of our core features. Although some of your code may work without enforcing typing there are a few things that will require it if you like for your components to play nicely with the Spark ecosystem. In general, it is quite straight forward and is only required in a few parts, so if you really despise typing most of your code can still be typeless.</p>
+<p>For the time being let’s just create a simple module.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;./..&#39;</span><span class="p">)</span>
+
+<span class="c1"># Imports</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">spark</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tp</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>One of the first things to notice is new components are defined in pairs of Module - Configurations, where the Module defines the logic and the Configurations defines all the parameters required to initialize that Module. By convention we simply name these pairs as Module - ModuleConfig.</p>
+<p>Every time a new module is defined we need to link it to its default configuration. This is done by simply adding  <b>config: ConfigClass</b> to the Module class definition.</p>
+<p>Another thing to notice at this point is that the signature of all the init methods is common across all modules, it should only accept a configuration class, which by default can be empty and keywords arguments. Similarly, the first thing to do in any <b>__init__</b> method is to invoke the <b>__init__</b> method of the super class with the pattern indicated below.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyAwesomeModuleConfig</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Config</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyAwesomeModule</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">MyAwesomeModuleConfig</span>       <span class="c1"># &lt;--- Default configuration class MUST always be indicated</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">MyAwesomeModuleConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>       <span class="c1"># &lt;--- super().__init__ should always be invoked first as follows</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>At this point you will be wondering where are all your important init arguments go? The answer is the configuration class.<br>
+<br>
+Spark modules separate model definition from model logic. This allow us to do some neat tricks on the back and it is extremely useful for reproducibility. Configuration classes should always be typed, this is done using the notation <b>variable_name: variable_type = default_value</b>.</p>
+<p>All the variables defined inside the configuration class are available in the <b>__init__</b> method, after calling <b>super().__init__</b>, under the namespace <b>self.config</b>.</p>
+<p>Another important thing to notice here is that we cannot store arrays directly. Every array, must be properly wrapper within a <b>spark.Constant</b> or a <b>spark.Variable</b>. This wrappers are necessary when we JIT compile the model to let Jax know that some arrays may are mutable and some are simple constants. By default, some base python classes play well with JIT but we highly recomed to wrap everything around a Constant or a Variable according to its role in your model.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyAwesomeModuleConfig</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Config</span><span class="p">):</span>
+    <span class="n">foo</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">bar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyAwesomeModule</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">MyAwesomeModuleConfig</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">MyAwesomeModuleConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1">#self.foo = jnp.array(self.config.foo) &lt;--- # Will throw an error later when we start with JIT!.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">foo</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">foo</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bar</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">bar</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Now, <b>spark.nn.Module</b> is an abstract class and as such it cannot be instantiated if some methods are not defined first. In this case we only need the <b>__init__</b> and the <b>__call__</b> methods. However, note that depending on the particular subclass of <b>Module</b> other functions may be necessary.</p>
+<p>Apart from the configuration class, <b>__call__</b> is the other strongly typed element in <b><i>Spark</i></b>. The first thing to notice is that <b>__call__</b> does NOT accept positional arguments only keyword arguments (you can still pass then by position if you want but this is not encouraged as we see later on the JIT section). This keyword arguments must always be typed and the type must always inherit from <b>spark.SparkPayload</b>. Payloads are just wrappers around arrays that helps the internal machinery to know what can connect with what. Every array withing any default payload can be access via <b>my_payload.value</b>.</p>
+<p>Next, <b>__call__</b> must always specify what it returns. This is done through the arrow indication <b>-&gt;</b> at the end of the <b>__call__</b>. The return type is always a TypedDict, that defines the names and the types of each variable that you intend to return after the <b>__call__</b>. Note that, again, all return types must inherit from <b>spark.SparkPayload</b>.</p>
+<p>Finally, the return of the <b>__call__</b> is a dictionary that contains all the variables that you specified in TypedDict, with their respective format.
+This few type hints really provide the internal machinery with guides on what to do under certain circumstances.</p>
+<p>And this is all typing that you need to do!. No more typing after this if you do not like it!.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyAwesomeOutput</span><span class="p">(</span><span class="n">tp</span><span class="o">.</span><span class="n">TypedDict</span><span class="p">):</span>
+    <span class="n">my_awesome_output</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyAwesomeModuleConfig</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Config</span><span class="p">):</span>
+    <span class="n">foo</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">bar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyAwesomeModule</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">MyAwesomeModuleConfig</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">MyAwesomeModuleConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">foo</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">foo</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bar</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">bar</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">my_awesome_input</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MyAwesomeOutput</span><span class="p">:</span>
+        <span class="n">awesome_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">foo</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bar</span> <span class="o">+</span> <span class="n">my_awesome_input</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;my_awesome_output&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">awesome_output</span><span class="p">)</span>
+        <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Now, <b><i>Spark</i></b>, similar to other modern machine learning frameworks, implements lazy initialization. This allows you to build your until you know the other information about the inputs it receives.</p>
+<p>To access this feature you need to define the <b>build</b> method. This method takes input_specs as argument, which is a dictionary containing specifications of all input variables, like shape and payload type.</p>
+<p>Note that you can define any other method as any other python object and it will still play nicely with <b><i>Spark</i></b>.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyAwesomeOutput</span><span class="p">(</span><span class="n">tp</span><span class="o">.</span><span class="n">TypedDict</span><span class="p">):</span>
+	<span class="n">my_awesome_output</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyAwesomeModuleConfig</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Config</span><span class="p">):</span>
+	<span class="n">foo</span><span class="p">:</span> <span class="nb">int</span>
+	<span class="n">bar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyAwesomeModule</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+	<span class="n">config</span><span class="p">:</span> <span class="n">MyAwesomeModuleConfig</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">MyAwesomeModuleConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">foo</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">foo</span><span class="p">))</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_specs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">spark</span><span class="o">.</span><span class="n">PortSpecs</span><span class="p">]):</span>
+		<span class="n">mai_spec</span> <span class="o">=</span> <span class="n">input_specs</span><span class="p">[</span><span class="s1">&#39;my_awesome_input&#39;</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">bar</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span>
+			<span class="n">mai_spec</span><span class="o">.</span><span class="n">payload_type</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">bar</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">mai_spec</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="p">)</span>
+		<span class="p">)</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="nf">boring_non_typed_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">c</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">my_awesome_input</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MyAwesomeOutput</span><span class="p">:</span>
+		<span class="n">awesome_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boring_non_typed_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">foo</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bar</span><span class="p">,</span> <span class="n">my_awesome_input</span><span class="p">)</span>
+		<span class="k">return</span> <span class="p">{</span>
+			<span class="s1">&#39;my_awesome_output&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">awesome_output</span><span class="p">)</span>
+		<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>This is everything you need to know to build a custom module.</p>
+<p>At this point you may be thinking that this pairs of Module - Configuration is going to be really annoying to manage and you could not be more wrong. Informaly, the configuration class is more like a specification than a component of the module. There are several ways to initialize a module.</p>
+<ol class="arabic simple">
+<li><p>Passing a keyword arguments that do not provide a default inside the configuration. <br><br></p></li>
+<li><p>Initialize the configuration and feeding it into the module. Note that it must be provided using the keyword “config”. <br><br></p></li>
+<li><p>A mixture of both. You can pass some configuration and keyword arguments. Note that in this case, keyworded arguments take preference over variables defined in the configuration class.</p></li>
+</ol>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Method 1</span>
+<span class="n">awesome</span> <span class="o">=</span> <span class="n">MyAwesomeModule</span><span class="p">(</span><span class="n">foo</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">my_awesome_input</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">awesome</span><span class="p">(</span><span class="n">my_awesome_input</span><span class="o">=</span><span class="n">my_awesome_input</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Method 1</span><span class="se">\n</span><span class="s1"> </span><span class="si">{</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;my_awesome_output&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="c1"># Method 2</span>
+<span class="n">awesome_config</span> <span class="o">=</span> <span class="n">MyAwesomeModuleConfig</span><span class="p">(</span><span class="n">foo</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">awesome</span> <span class="o">=</span> <span class="n">MyAwesomeModule</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">awesome_config</span><span class="p">)</span>
+<span class="n">my_awesome_input</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">awesome</span><span class="p">(</span><span class="n">my_awesome_input</span><span class="o">=</span><span class="n">my_awesome_input</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Method 2</span><span class="se">\n</span><span class="s1"> </span><span class="si">{</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;my_awesome_output&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="c1"># Method 3</span>
+<span class="n">awesome_config</span> <span class="o">=</span> <span class="n">MyAwesomeModuleConfig</span><span class="p">(</span><span class="n">foo</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">awesome</span> <span class="o">=</span> <span class="n">MyAwesomeModule</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">awesome_config</span><span class="p">,</span> <span class="n">bar</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">my_awesome_input</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">awesome</span><span class="p">(</span><span class="n">my_awesome_input</span><span class="o">=</span><span class="n">my_awesome_input</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Method 3</span><span class="se">\n</span><span class="s1"> </span><span class="si">{</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;my_awesome_output&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>We want to highlight that the configuration class is significantly more powerful that it was shown until this point.</p>
+<p>To make full use of the power inside of the configuration class it is highly recomended that you use <b>dc.field</b>; this allows you define significantly more complex configurations and they are particuarly useful to add metadata to variables (Do not lie to me!, you have also meet that horrible programmer that took your code 2 months ago and said that he did not needed to annote the code because he wrote it!.).</p>
+<p>Internally, there is one metadata field that have an important functional behaviour:</p>
+<ol class="arabic simple">
+<li><p><b>validators</b>: A list of validators that inherit from <b>spark.validation.ConfigurationValidator</b> that is used to validate the arguments of the configuration class.</p></li>
+</ol>
+<p>Additionally, there are a few other metadata fields that hold some special meaning:</p>
+<ol class="arabic simple">
+<li><p><b>units</b>: Since most of the time, spiking neural network works with parameters that are closely related to real equations/measurements it is ideal to know the expect units. Units are a simple string and its sole purpose is to inform other users of the expected value for some argument. <br><br></p></li>
+<li><p><b>valid_types</b>: Used for some broadcasting checks. <br><br></p></li>
+<li><p><b>description</b>: A string description of the purpose of this variable.</p></li>
+</ol>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dc</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyAwesomeModuleConfig</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Config</span><span class="p">):</span>
+    <span class="n">foo</span><span class="p">:</span> <span class="nb">int</span>												<span class="c1"># &lt;-- You can still mix it with non-fields.</span>
+    <span class="n">bar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">dc</span><span class="o">.</span><span class="n">field</span><span class="p">(</span>
+        <span class="n">default</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+			<span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;nA&#39;</span><span class="p">,</span> 									<span class="c1"># &lt;-- nano Awesomes.</span>
+			<span class="s1">&#39;valid_types&#39;</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span>							<span class="c1"># &lt;-- Valid broadcastable to one of your default types.</span>
+			<span class="s1">&#39;validators&#39;</span><span class="p">:</span> <span class="p">[</span>			
+                <span class="n">spark</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">TypeValidator</span><span class="p">,</span>				<span class="c1"># &lt;-- Extra logic to validate your configuration.</span>
+                <span class="n">spark</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">PositiveValidator</span><span class="p">,</span>
+			<span class="p">],</span> 		
+			<span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;My awesome bar&#39;</span><span class="p">,</span>				<span class="c1"># &lt;-- Text description of this variable.</span>
+		<span class="p">}</span>
+	<span class="p">)</span>
+    <span class="n">baz</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">dc</span><span class="o">.</span><span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span> <span class="o">=</span> <span class="k">lambda</span> <span class="p">:</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>	<span class="c1"># &lt;-- Factories are also useful to define variables.</span>
+	<span class="p">)</span>
+    
+<span class="k">try</span><span class="p">:</span>
+	<span class="n">MyAwesomeModuleConfig</span><span class="p">(</span><span class="n">foo</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bar</span> <span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Oh now, something went wrong: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    
+<span class="k">try</span><span class="p">:</span>
+	<span class="n">MyAwesomeModuleConfig</span><span class="p">(</span><span class="n">foo</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bar</span> <span class="o">=</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">])</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Oh now, something went wrong: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Another important feature of configuration files is that they can be nested. Initializing configurations that hold childs with arguments that do not define a value is still simple, we provide several ways to initialize this configurations:</p>
+<ol class="arabic simple">
+<li><p>Keyworded arguments. <br><br></p></li>
+<li><p>Keyworded dictionaries. <br><br></p></li>
+<li><p>Shared arguments. <br><br></p></li>
+<li><p>Direct initialization.</p></li>
+</ol>
+<p>Note that this also work for module initialization!</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dc</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tp</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ChildConfig</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Config</span><span class="p">):</span>
+    <span class="n">foo</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">bar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span>
+    
+<span class="k">class</span><span class="w"> </span><span class="nc">ParentConfig</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Config</span><span class="p">):</span>
+    <span class="n">foo</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">child_bar</span><span class="p">:</span> <span class="n">ChildConfig</span>
+    <span class="n">child_baz</span><span class="p">:</span> <span class="n">ChildConfig</span> <span class="o">=</span> <span class="n">dc</span><span class="o">.</span><span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">ChildConfig</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;foo&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">})</span>	
+	<span class="p">)</span>
+    
+<span class="c1"># Method 1</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">ParentConfig</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">child_bar__foo</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">child_baz__foo</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Method 1</span><span class="se">\n</span><span class="s1">-&gt;Parent:</span><span class="se">\t</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">foo</span><span class="si">}</span><span class="se">\n</span><span class="s1">---&gt;Child Bar:</span><span class="se">\t</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">child_bar</span><span class="o">.</span><span class="n">foo</span><span class="si">}</span><span class="se">\n</span><span class="s1">---&gt;Child Baz:</span><span class="se">\t</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">child_baz</span><span class="o">.</span><span class="n">foo</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="c1"># Method 2</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">ParentConfig</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">child_bar</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;foo&#39;</span><span class="p">:</span><span class="mi">5</span><span class="p">},</span> <span class="n">child_baz</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;foo&#39;</span><span class="p">:</span><span class="mi">6</span><span class="p">})</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Method 1</span><span class="se">\n</span><span class="s1">-&gt;Parent:</span><span class="se">\t</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">foo</span><span class="si">}</span><span class="se">\n</span><span class="s1">---&gt;Child Bar:</span><span class="se">\t</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">child_bar</span><span class="o">.</span><span class="n">foo</span><span class="si">}</span><span class="se">\n</span><span class="s1">---&gt;Child Baz:</span><span class="se">\t</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">child_baz</span><span class="o">.</span><span class="n">foo</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="c1"># Method 3</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">ParentConfig</span><span class="p">(</span><span class="n">_s_foo</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Method 3</span><span class="se">\n</span><span class="s1">-&gt;Parent:</span><span class="se">\t</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">foo</span><span class="si">}</span><span class="se">\n</span><span class="s1">---&gt;Child Bar:</span><span class="se">\t</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">child_bar</span><span class="o">.</span><span class="n">foo</span><span class="si">}</span><span class="se">\n</span><span class="s1">---&gt;Child Baz:</span><span class="se">\t</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">child_baz</span><span class="o">.</span><span class="n">foo</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="c1"># Method 4</span>
+<span class="n">bar</span> <span class="o">=</span> <span class="n">ChildConfig</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+<span class="n">baz</span> <span class="o">=</span> <span class="n">ChildConfig</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">ParentConfig</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">child_bar</span><span class="o">=</span><span class="n">bar</span><span class="p">,</span> <span class="n">child_baz</span><span class="o">=</span><span class="n">baz</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Method 4</span><span class="se">\n</span><span class="s1">-&gt;Parent:</span><span class="se">\t</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">foo</span><span class="si">}</span><span class="se">\n</span><span class="s1">---&gt;Child Bar:</span><span class="se">\t</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">child_bar</span><span class="o">.</span><span class="n">foo</span><span class="si">}</span><span class="se">\n</span><span class="s1">---&gt;Child Baz:</span><span class="se">\t</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">child_baz</span><span class="o">.</span><span class="n">foo</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Finally, in order to let spark know about your awesome Module there is one final step: register your module. This is achieved with a simple decorator. This simple step will allow spark to discover your module and use it more robustly. Note this step is optional but required if you want to use your modules within the Graph Editor.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Final module is register as &#39;my_awesome_module&#39;</span>
+<span class="nd">@spark</span><span class="o">.</span><span class="n">register_module</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyAwesomeModule</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Alternatively, you can set a specific name to the module. This is useful when you encounter a name conflict.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Final module is register as &#39;my_better_awesome_module&#39;</span>
+<span class="nd">@spark</span><span class="o">.</span><span class="n">register_module</span><span class="p">(</span><span class="s1">&#39;my_even_more_awesome_module&#39;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyAwesomeModule</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Another feature that sometimes is useful is obtaining the class reference directly from the configuration class. This feature is rather useful when you are defining templates of modules. For example, you may want to test whether a one type of synapse is better in a particular scenario, you may not want to define two different neuron models, to swap two set of synapses; in many scenarios, simply swapping configurations will do the trick.</p>
+<p>If you are following the naming convention of Module - ModuleConfig, then everything is already settle, it is a simple matter of calling <b>config.class_ref</b>. If this naming convention is not of your liking or you are defining custom paths in the registry then you need to set up the reference manually. This is done fairly easy, just add the registry name of your module to the configuration under <b>__class_ref__</b>.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyAwesomeModuleNotFollowingConvention</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Config</span><span class="p">):</span>
+    <span class="n">__class_ref__</span> <span class="o">=</span> <span class="s1">&#39;my_even_more_awesome_module&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>This should be everything you need to know to start creating new modules!</p>
+</div></section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../tutorials.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorials</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="execution.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tutorial #2: Execution</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,1377 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spark.core.utils &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=30646c52"></script>
+    <script src="../../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/spark/core/utils/index';</script>
+    <link rel="icon" href="../../../../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="spark.core.validation" href="../validation/index.html" />
+    <link rel="prev" title="spark.core.tracers" href="../tracers/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <script>document.write(`<img src="../../../../_static/spark_250px.png" class="logo__image only-dark" alt="Spark  documentation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/brains.html">Tutorial #3: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/graph_editor.html">Tutorial #4: Graph Editor</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../index.html">spark</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../index.html">spark.core</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../flax_imports/index.html">spark.core.flax_imports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4 current active"><a class="current reference internal" href="#">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validation/index.html">spark.core.validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../variables/index.html">spark.core.variables</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/editor_config/index.html">spark.graph_editor.editor_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/style/index.html">spark.graph_editor.style</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/ui/index.html">spark.graph_editor.ui</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/window/index.html">spark.graph_editor.window</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../nn/index.html">spark.nn</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/brain/index.html">spark.nn.brain</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/components/index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><i class="fa-solid fa-ellipsis"></i></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">spark.core</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">spark.core.utils</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../../_sources/autoapi/spark/core/utils/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>spark.core.utils</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.normalize_str"><code class="docutils literal notranslate"><span class="pre">normalize_str()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.to_human_readable"><code class="docutils literal notranslate"><span class="pre">to_human_readable()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.get_einsum_labels"><code class="docutils literal notranslate"><span class="pre">get_einsum_labels()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.get_axes_einsum_labels"><code class="docutils literal notranslate"><span class="pre">get_axes_einsum_labels()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.get_einsum_dot_string"><code class="docutils literal notranslate"><span class="pre">get_einsum_dot_string()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.get_einsum_dot_red_string"><code class="docutils literal notranslate"><span class="pre">get_einsum_dot_red_string()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.get_einsum_dot_exp_string"><code class="docutils literal notranslate"><span class="pre">get_einsum_dot_exp_string()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.validate_shape"><code class="docutils literal notranslate"><span class="pre">validate_shape()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.validate_list_shape"><code class="docutils literal notranslate"><span class="pre">validate_list_shape()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.merge_shape_list"><code class="docutils literal notranslate"><span class="pre">merge_shape_list()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.is_shape"><code class="docutils literal notranslate"><span class="pre">is_shape()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.is_list_shape"><code class="docutils literal notranslate"><span class="pre">is_list_shape()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.is_dict_of"><code class="docutils literal notranslate"><span class="pre">is_dict_of()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.is_list_of"><code class="docutils literal notranslate"><span class="pre">is_list_of()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.is_dtype"><code class="docutils literal notranslate"><span class="pre">is_dtype()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.is_float"><code class="docutils literal notranslate"><span class="pre">is_float()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.ascii_tree"><code class="docutils literal notranslate"><span class="pre">ascii_tree()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceFlags"><code class="docutils literal notranslate"><span class="pre">InheritanceFlags</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceFlags.CAN_INHERIT"><code class="docutils literal notranslate"><span class="pre">InheritanceFlags.CAN_INHERIT</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceFlags.IS_INHERITING"><code class="docutils literal notranslate"><span class="pre">InheritanceFlags.IS_INHERITING</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceFlags.CAN_RECEIVE"><code class="docutils literal notranslate"><span class="pre">InheritanceFlags.CAN_RECEIVE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceFlags.IS_RECEIVING"><code class="docutils literal notranslate"><span class="pre">InheritanceFlags.IS_RECEIVING</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.name"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.type_string"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.type_string</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.inheritance_childs"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.inheritance_childs</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.flags"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.flags</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.break_inheritance"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.break_inheritance</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.parent"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.parent</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.__post_init__"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.__post_init__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.__repr__"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.__repr__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.to_dict"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.to_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.from_dict"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.from_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.can_inherit"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.can_inherit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.is_inheriting"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.is_inheriting()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.can_receive"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.can_receive()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.is_receiving"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.is_receiving()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.path"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.path</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree"><code class="docutils literal notranslate"><span class="pre">InheritanceTree</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.__repr__"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.__repr__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.add_leaf"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.add_leaf()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.add_branch"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.add_branch()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.validate"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.validate()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.get_leaf"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.get_leaf()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.get_subtree"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.get_subtree()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.to_dict"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.to_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.from_dict"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.from_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.path"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.path</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-spark.core.utils">
+<span id="spark-core-utils"></span><h1>spark.core.utils<a class="headerlink" href="#module-spark.core.utils" title="Link to this heading">#</a></h1>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.utils.InheritanceFlags" title="spark.core.utils.InheritanceFlags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InheritanceFlags</span></code></a></p></td>
+<td><p>Support for integer-based Flags</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.core.utils.InheritanceLeaf" title="spark.core.utils.InheritanceLeaf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InheritanceLeaf</span></code></a></p></td>
+<td><p>Leaf object for the InheritanceTree data structure.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.utils.InheritanceTree" title="spark.core.utils.InheritanceTree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InheritanceTree</span></code></a></p></td>
+<td><p>Tree-like data structure to manage the inheritance status of variables in the Spark Graph Editor.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.utils.normalize_str" title="spark.core.utils.normalize_str"><code class="xref py py-obj docutils literal notranslate"><span class="pre">normalize_str</span></code></a>(s)</p></td>
+<td><p>Converts any string into a consistent lowercase_snake_case format.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.core.utils.to_human_readable" title="spark.core.utils.to_human_readable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_human_readable</span></code></a>(s[, capitalize_all])</p></td>
+<td><p>Converts a string from various programming cases into a human-readable format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.utils.get_einsum_labels" title="spark.core.utils.get_einsum_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_einsum_labels</span></code></a>(num_dims[, offset])</p></td>
+<td><p>Generates labels for a generalized dot product using Einstein notation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.core.utils.get_axes_einsum_labels" title="spark.core.utils.get_axes_einsum_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_axes_einsum_labels</span></code></a>(axes[, ignore_repeated])</p></td>
+<td><p>Generates labels for a generalized dot product using Einstein notation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.utils.get_einsum_dot_string" title="spark.core.utils.get_einsum_dot_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_einsum_dot_string</span></code></a>(x, y[, ignore_one_dims, side])</p></td>
+<td><p>Generates labels for a generalized dot product using Einstein notation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.core.utils.get_einsum_dot_red_string" title="spark.core.utils.get_einsum_dot_red_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_einsum_dot_red_string</span></code></a>(x, y[, ignore_one_dims, side])</p></td>
+<td><p>Generates labels for a generalized dot reduction product using Einstein notation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.utils.get_einsum_dot_exp_string" title="spark.core.utils.get_einsum_dot_exp_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_einsum_dot_exp_string</span></code></a>(x, y[, ignore_one_dims, side])</p></td>
+<td><p>Generates labels for a generalized dot expansion product using Einstein notation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.core.utils.validate_shape" title="spark.core.utils.validate_shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_shape</span></code></a>(obj)</p></td>
+<td><p>Verifies that the object is broadcastable to a valid shape (tuple of integers).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.utils.validate_list_shape" title="spark.core.utils.validate_list_shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_list_shape</span></code></a>(obj)</p></td>
+<td><p>Verifies that the object is broadcastable to a valid list ofshape (a list of tuple of integers).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.core.utils.merge_shape_list" title="spark.core.utils.merge_shape_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_shape_list</span></code></a>(shape_list)</p></td>
+<td><p>Merges a list of shapes into a single shape.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.utils.is_shape" title="spark.core.utils.is_shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_shape</span></code></a>(obj)</p></td>
+<td><p>Checks if the obj is broadcastable to a shape.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.core.utils.is_list_shape" title="spark.core.utils.is_list_shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_list_shape</span></code></a>(obj)</p></td>
+<td><p>Checks if the obj is broadcastable to a shape.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.utils.is_dict_of" title="spark.core.utils.is_dict_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_dict_of</span></code></a>(obj, value_cls[, key_cls])</p></td>
+<td><p>Check if an object instance is of 'dict[key_cls, value_cls]'.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.core.utils.is_list_of" title="spark.core.utils.is_list_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_list_of</span></code></a>(obj, cls)</p></td>
+<td><p>Check if an object instance is of 'list[cls]'.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.utils.is_dtype" title="spark.core.utils.is_dtype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_dtype</span></code></a>(obj)</p></td>
+<td><p>Check if an object is a 'DTypeLike'.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.core.utils.is_float" title="spark.core.utils.is_float"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_float</span></code></a>(obj)</p></td>
+<td><p>Check if an object is a 'DTypeLike'.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.utils.ascii_tree" title="spark.core.utils.ascii_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ascii_tree</span></code></a>(text)</p></td>
+<td><p>Build an ASCII tree from indentation-based text.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.normalize_str">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">normalize_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.normalize_str" title="Link to this definition">#</a></dt>
+<dd><p>Converts any string into a consistent lowercase_snake_case format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>s</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – str, string to normalize</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>str, normalized string</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.to_human_readable">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">to_human_readable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">capitalize_all</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.to_human_readable" title="Link to this definition">#</a></dt>
+<dd><p>Converts a string from various programming cases into a human-readable format.</p>
+<dl class="simple">
+<dt>Input:</dt><dd><p>s: str, string to normalize</p>
+</dd>
+<dt>Output:</dt><dd><p>str, human readable string</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>s</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>capitalize_all</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.get_einsum_labels">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">get_einsum_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_dims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.get_einsum_labels" title="Link to this definition">#</a></dt>
+<dd><p>Generates labels for a generalized dot product using Einstein notation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_dims</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – int, number of dimensions (labels) to generate</p></li>
+<li><p><strong>offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – int, initial dimension (label) offset</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>str, a string with num_dims different labels, skipping the first offset characters</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.get_axes_einsum_labels">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">get_axes_einsum_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_repeated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.get_axes_einsum_labels" title="Link to this definition">#</a></dt>
+<dd><p>Generates labels for a generalized dot product using Einstein notation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axes</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>Ellipsis</em><em>]</em>) – tuple[int, …], requested dimensions (labels) to generate</p></li>
+<li><p><strong>ignore_repeated</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>str, a string with num_dims different labels, skipping the first offset characters</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.get_einsum_dot_string">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">get_einsum_dot_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_one_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'right'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.get_einsum_dot_string" title="Link to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Generates labels for a generalized dot product using Einstein notation.</dt><dd><p>right:      (c,d)•(a,b,c,d)=(a,b) - cd,abcd-&gt;ab     |    (a,b,c,d)•(c,d)=(a,b) - abcd,cd-&gt;ab
+left:       (a,b)•(a,b,c,d)=(c,d) - ab,abcd-&gt;cd         |    (a,b,c,d)•(c,d)=(c,d) - abcd,ab-&gt;cd</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>Ellipsis</em><em>]</em>) – tuple[int, …], shape for the first variable of the dot product</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>Ellipsis</em><em>]</em>) – tuple[int, …], shape for the second variable of the dot product</p></li>
+<li><p><strong>ignore_one_dims</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – bool, ignore one dimensions when computing the labels (squeeze shapes), default: True</p></li>
+<li><p><strong>side</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – str, side of the dot product, default: “right”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>str, a string representing the dot product operation</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.get_einsum_dot_red_string">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">get_einsum_dot_red_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_one_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'right'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.get_einsum_dot_red_string" title="Link to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Generates labels for a generalized dot reduction product using Einstein notation.</dt><dd><p>right:      (a,b)•(a,b,c,d)=(a,b) - ab,abcd-&gt;ab     |    (a,b,c,d)•(a,b)=(a,b) - abcd,ab-&gt;ab
+left:       (c,d)•(a,b,c,d)=(c,d) - cd,abcd-&gt;cd         |    (a,b,c,d)•(c,d)=(c,d) - abcd,ab-&gt;ab</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>Ellipsis</em><em>]</em>) – tuple[int, …], shape for the first variable of the dot product</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>Ellipsis</em><em>]</em>) – tuple[int, …], shape for the second variable of the dot product</p></li>
+<li><p><strong>ignore_one_dims</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – bool, ignore one dimensions when computing the labels (squeeze shapes), default: True</p></li>
+<li><p><strong>side</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – str, side of the reduction-dot product, default: “right”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>str, a string representing the dot product operation</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.get_einsum_dot_exp_string">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">get_einsum_dot_exp_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_one_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'right'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.get_einsum_dot_exp_string" title="Link to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Generates labels for a generalized dot expansion product using Einstein notation.</dt><dd><p>right:      (a,b)•(a,b,c,d)=(a,b,c,d) - ab,abcd-&gt;abcd   |   (a,b,c,d)•(a,b)=(a,b,c,d) - abcd,ab-&gt;abcd
+left:       (c,d)•(a,b,c,d)=(a,b,c,d) - cd,abcd-&gt;abcd       |       (c,d)•(a,b,c,d)=(a,b,c,d) - abcd,cd-&gt;abcd
+none:       (a,b)•(c,d)=(a,b,c,d) - ab,cd-&gt;abcd                 |   (a)•(b,c,d)=(a,b,c,d) - a,bcde-&gt;abcde</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>Ellipsis</em><em>]</em>) – tuple[int, …], shape for the first variable of the dot product</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>Ellipsis</em><em>]</em>) – tuple[int, …], shape for the second variable of the dot product</p></li>
+<li><p><strong>ignore_one_dims</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – bool, ignore one dimensions when computing the labels (squeeze shapes), default: True</p></li>
+<li><p><strong>side</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – str, side of the expansion-dot, default: “right”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>str, a string representing the dot product operation</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.validate_shape">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">validate_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.validate_shape" title="Link to this definition">#</a></dt>
+<dd><p>Verifies that the object is broadcastable to a valid shape (tuple of integers).
+Returns the shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<em>Any</em>) – tp.Any: the instance to validate</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[tuple[int, …]], the shape</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>, Ellipsis]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.validate_list_shape">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">validate_list_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.validate_list_shape" title="Link to this definition">#</a></dt>
+<dd><p>Verifies that the object is broadcastable to a valid list ofshape (a list of tuple of integers).
+Returns the list of shapes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<em>Any</em>) – tp.Any: the instance to validate</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[tuple[int, …]], the list of shapes</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>, Ellipsis]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.merge_shape_list">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">merge_shape_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape_list</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.merge_shape_list" title="Link to this definition">#</a></dt>
+<dd><p>Merges a list of shapes into a single shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>shape_list</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>Ellipsis</em><em>]</em><em>]</em>) – list[tuple[int, …]]: the list of shapes</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[int, …], the merged shape</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>, Ellipsis]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.is_shape">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">is_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.is_shape" title="Link to this definition">#</a></dt>
+<dd><p>Checks if the obj is broadcastable to a shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<em>Any</em>) – tp.Any: the instance to check.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool, True if the object is broadcastable to a shape, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.is_list_shape">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">is_list_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.is_list_shape" title="Link to this definition">#</a></dt>
+<dd><p>Checks if the obj is broadcastable to a shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<em>Any</em>) – tp.Any: the instance to check.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool, True if the object is broadcastable to a list of shapes, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.is_dict_of">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">is_dict_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_cls</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.is_dict_of" title="Link to this definition">#</a></dt>
+<dd><p>Check if an object instance is of ‘dict[key_cls, value_cls]’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<em>Any</em>) – tp.Any: the instance to check.</p></li>
+<li><p><strong>key_cls</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em>[</em><em>Any</em><em>]</em>) – type[tp.Any], the class to compare keys against.</p></li>
+<li><p><strong>value_cls</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em>[</em><em>Any</em><em>]</em>) – type[tp.Any], the class to compare values against.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool, True if the object is an instance of ‘dict[key_cls, value_cls]’, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.is_list_of">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">is_list_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cls</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.is_list_of" title="Link to this definition">#</a></dt>
+<dd><p>Check if an object instance is of ‘list[cls]’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<em>Any</em>) – tp.Any, the instance to check.</p></li>
+<li><p><strong>cls</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em>[</em><em>Any</em><em>]</em>) – type[tp.Any], the class to compare values against.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool, True if the object is an instance of ‘list[cls]’, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.is_dtype">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">is_dtype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.is_dtype" title="Link to this definition">#</a></dt>
+<dd><p>Check if an object is a ‘DTypeLike’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<em>tp.Any</em>) – The instance to check.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool, True if the object is a ‘DTypeLike’, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.is_float">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">is_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.is_float" title="Link to this definition">#</a></dt>
+<dd><p>Check if an object is a ‘DTypeLike’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<em>tp.Any</em>) – The instance to check.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool, True if the object is a ‘DTypeLike’, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.utils.ascii_tree">
+<span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">ascii_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.ascii_tree" title="Link to this definition">#</a></dt>
+<dd><p>Build an ASCII tree from indentation-based text.
+Each level is inferred from leading spaces.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>text</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceFlags">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">InheritanceFlags</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceFlags" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.IntFlag" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.IntFlag</span></code></a></p>
+<p>Support for integer-based Flags</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceFlags.CAN_INHERIT">
+<span class="sig-name descname"><span class="pre">CAN_INHERIT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceFlags.CAN_INHERIT" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceFlags.IS_INHERITING">
+<span class="sig-name descname"><span class="pre">IS_INHERITING</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceFlags.IS_INHERITING" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceFlags.CAN_RECEIVE">
+<span class="sig-name descname"><span class="pre">CAN_RECEIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceFlags.CAN_RECEIVE" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceFlags.IS_RECEIVING">
+<span class="sig-name descname"><span class="pre">IS_RECEIVING</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceFlags.IS_RECEIVING" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceLeaf">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">InheritanceLeaf</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceLeaf" title="Link to this definition">#</a></dt>
+<dd><p>Leaf object for the InheritanceTree data structure.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceLeaf.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceLeaf.name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceLeaf.type_string">
+<span class="sig-name descname"><span class="pre">type_string</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceLeaf.type_string" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceLeaf.inheritance_childs">
+<span class="sig-name descname"><span class="pre">inheritance_childs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceLeaf.inheritance_childs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceLeaf.flags">
+<span class="sig-name descname"><span class="pre">flags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.core.utils.InheritanceFlags" title="spark.core.utils.InheritanceFlags"><span class="pre">InheritanceFlags</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceLeaf.flags" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceLeaf.break_inheritance">
+<span class="sig-name descname"><span class="pre">break_inheritance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceLeaf.break_inheritance" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceLeaf.parent">
+<span class="sig-name descname"><span class="pre">parent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.core.utils.InheritanceTree" title="spark.core.utils.InheritanceTree"><span class="pre">InheritanceTree</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceLeaf.parent" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceLeaf.__post_init__">
+<span class="sig-name descname"><span class="pre">__post_init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceLeaf.__post_init__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceLeaf.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceLeaf.__repr__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceLeaf.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceLeaf.to_dict" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceLeaf.from_dict">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceLeaf.from_dict" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>d</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#spark.core.utils.InheritanceLeaf" title="spark.core.utils.InheritanceLeaf">InheritanceLeaf</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceLeaf.can_inherit">
+<span class="sig-name descname"><span class="pre">can_inherit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceLeaf.can_inherit" title="Link to this definition">#</a></dt>
+<dd><p>Cheks the leaf node can inherit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceLeaf.is_inheriting">
+<span class="sig-name descname"><span class="pre">is_inheriting</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceLeaf.is_inheriting" title="Link to this definition">#</a></dt>
+<dd><p>Cheks the leaf node is inheriting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceLeaf.can_receive">
+<span class="sig-name descname"><span class="pre">can_receive</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceLeaf.can_receive" title="Link to this definition">#</a></dt>
+<dd><p>Cheks the leaf node can receive.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceLeaf.is_receiving">
+<span class="sig-name descname"><span class="pre">is_receiving</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceLeaf.is_receiving" title="Link to this definition">#</a></dt>
+<dd><p>Cheks the leaf node is receiving.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceLeaf.path">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceLeaf.path" title="Link to this definition">#</a></dt>
+<dd><p>Returns the path of the leaf node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceTree">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.core.utils.</span></span><span class="sig-name descname"><span class="pre">InheritanceTree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceTree" title="Link to this definition">#</a></dt>
+<dd><p>Tree-like data structure to manage the inheritance status of variables in the Spark Graph Editor.</p>
+<p>This data structure is used to link variables with the same names and types for simultaneous updates within the GUI.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>]</em>)</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceTree.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceTree.__repr__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceTree.add_leaf">
+<span class="sig-name descname"><span class="pre">add_leaf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_string</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inheritance_childs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">break_inheritance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceTree.add_leaf" title="Link to this definition">#</a></dt>
+<dd><p>Adds a new leaf to the tree.</p>
+<dl class="simple">
+<dt>Input:</dt><dd><p>path: list[str], path to the new leaf node, with the last entry the name of the leaf
+type_string: str, string representation of the types this variable manages
+inheritance_childs: list[list[str]]=[], list of children that can inherit from this variable (Note: do not set by hand)
+flags: InheritanceFlags, 4-bit flags that represent inheritance possibilities (Note: do not set by hand)
+break_inheritance: bool, boolean flag to disconnect this variable from the inheritance dynamics</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>]</em>)</p></li>
+<li><p><strong>type_string</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>inheritance_childs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>]</em><em>]</em>)</p></li>
+<li><p><strong>flags</strong> (<a class="reference internal" href="#spark.core.utils.InheritanceFlags" title="spark.core.utils.InheritanceFlags"><em>InheritanceFlags</em></a>)</p></li>
+<li><p><strong>break_inheritance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceTree.add_branch">
+<span class="sig-name descname"><span class="pre">add_branch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceTree.add_branch" title="Link to this definition">#</a></dt>
+<dd><p>Adds a new branch to the tree.</p>
+<dl class="simple">
+<dt>Input:</dt><dd><p>path: list[str], path to the new branch, with the last entry the name of the branch</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceTree.validate">
+<span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inheriting_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceTree.validate" title="Link to this definition">#</a></dt>
+<dd><p>Validates the flags and the inheritance childs of the tree.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inheriting_labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceTree.get_leaf">
+<span class="sig-name descname"><span class="pre">get_leaf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceTree.get_leaf" title="Link to this definition">#</a></dt>
+<dd><p>Returns the status of the leaf node.</p>
+<dl class="simple">
+<dt>Input:</dt><dd><p>path: list[str], path to the leaf node, with the last entry the name of the leaf</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>InheritanceLeaf, returns the leaf node instance.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#spark.core.utils.InheritanceLeaf" title="spark.core.utils.InheritanceLeaf">InheritanceLeaf</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceTree.get_subtree">
+<span class="sig-name descname"><span class="pre">get_subtree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceTree.get_subtree" title="Link to this definition">#</a></dt>
+<dd><p>Returns a subtree of the leaf node.</p>
+<dl class="simple">
+<dt>Input:</dt><dd><p>path: list[str], path to the subtree node, with the last entry the name of the branch</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>InheritanceTree, returns the branch node instance.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#spark.core.utils.InheritanceTree" title="spark.core.utils.InheritanceTree">InheritanceTree</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceTree.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceTree.to_dict" title="Link to this definition">#</a></dt>
+<dd><p>InheritanceTree dict serializer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceTree.from_dict">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceTree.from_dict" title="Link to this definition">#</a></dt>
+<dd><p>InheritanceTree dict deserializer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>d</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a>)</p></li>
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#spark.core.utils.InheritanceTree" title="spark.core.utils.InheritanceTree">InheritanceTree</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.core.utils.InheritanceTree.path">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/utils.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.utils.InheritanceTree.path" title="Link to this definition">#</a></dt>
+<dd><p>Returns the path of the branch node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../tracers/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">spark.core.tracers</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../validation/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">spark.core.validation</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.normalize_str"><code class="docutils literal notranslate"><span class="pre">normalize_str()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.to_human_readable"><code class="docutils literal notranslate"><span class="pre">to_human_readable()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.get_einsum_labels"><code class="docutils literal notranslate"><span class="pre">get_einsum_labels()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.get_axes_einsum_labels"><code class="docutils literal notranslate"><span class="pre">get_axes_einsum_labels()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.get_einsum_dot_string"><code class="docutils literal notranslate"><span class="pre">get_einsum_dot_string()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.get_einsum_dot_red_string"><code class="docutils literal notranslate"><span class="pre">get_einsum_dot_red_string()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.get_einsum_dot_exp_string"><code class="docutils literal notranslate"><span class="pre">get_einsum_dot_exp_string()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.validate_shape"><code class="docutils literal notranslate"><span class="pre">validate_shape()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.validate_list_shape"><code class="docutils literal notranslate"><span class="pre">validate_list_shape()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.merge_shape_list"><code class="docutils literal notranslate"><span class="pre">merge_shape_list()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.is_shape"><code class="docutils literal notranslate"><span class="pre">is_shape()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.is_list_shape"><code class="docutils literal notranslate"><span class="pre">is_list_shape()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.is_dict_of"><code class="docutils literal notranslate"><span class="pre">is_dict_of()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.is_list_of"><code class="docutils literal notranslate"><span class="pre">is_list_of()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.is_dtype"><code class="docutils literal notranslate"><span class="pre">is_dtype()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.is_float"><code class="docutils literal notranslate"><span class="pre">is_float()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.ascii_tree"><code class="docutils literal notranslate"><span class="pre">ascii_tree()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceFlags"><code class="docutils literal notranslate"><span class="pre">InheritanceFlags</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceFlags.CAN_INHERIT"><code class="docutils literal notranslate"><span class="pre">InheritanceFlags.CAN_INHERIT</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceFlags.IS_INHERITING"><code class="docutils literal notranslate"><span class="pre">InheritanceFlags.IS_INHERITING</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceFlags.CAN_RECEIVE"><code class="docutils literal notranslate"><span class="pre">InheritanceFlags.CAN_RECEIVE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceFlags.IS_RECEIVING"><code class="docutils literal notranslate"><span class="pre">InheritanceFlags.IS_RECEIVING</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.name"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.type_string"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.type_string</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.inheritance_childs"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.inheritance_childs</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.flags"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.flags</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.break_inheritance"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.break_inheritance</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.parent"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.parent</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.__post_init__"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.__post_init__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.__repr__"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.__repr__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.to_dict"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.to_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.from_dict"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.from_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.can_inherit"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.can_inherit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.is_inheriting"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.is_inheriting()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.can_receive"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.can_receive()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.is_receiving"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.is_receiving()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceLeaf.path"><code class="docutils literal notranslate"><span class="pre">InheritanceLeaf.path</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree"><code class="docutils literal notranslate"><span class="pre">InheritanceTree</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.__repr__"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.__repr__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.add_leaf"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.add_leaf()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.add_branch"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.add_branch()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.validate"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.validate()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.get_leaf"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.get_leaf()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.get_subtree"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.get_subtree()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.to_dict"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.to_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.from_dict"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.from_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.utils.InheritanceTree.path"><code class="docutils literal notranslate"><span class="pre">InheritanceTree.path</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

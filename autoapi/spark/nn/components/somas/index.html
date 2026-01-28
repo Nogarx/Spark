@@ -1,0 +1,1680 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spark.nn.components.somas &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../../_static/copybutton.js?v=30646c52"></script>
+    <script src="../../../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/spark/nn/components/somas/index';</script>
+    <link rel="icon" href="../../../../../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <link rel="next" title="spark.nn.components.somas.base" href="base/index.html" />
+    <link rel="prev" title="spark.nn.components.learning_rules.zenke_rule" href="../learning_rules/zenke_rule/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <script>document.write(`<img src="../../../../../_static/spark_250px.png" class="logo__image only-dark" alt="Spark  documentation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/brains.html">Tutorial #3: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/graph_editor.html">Tutorial #4: Graph Editor</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../../index.html">spark</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/flax_imports/index.html">spark.core.flax_imports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/validation/index.html">spark.core.validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/variables/index.html">spark.core.variables</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/editor_config/index.html">spark.graph_editor.editor_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/style/index.html">spark.graph_editor.style</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/ui/index.html">spark.graph_editor.ui</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/window/index.html">spark.graph_editor.window</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../../index.html">spark.nn</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../brain/index.html">spark.nn.brain</a></li>
+<li class="toctree-l4 current active"><a class="reference internal" href="../index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><i class="fa-solid fa-ellipsis"></i></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">spark.nn.components</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">spark.nn.com...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../../../_sources/autoapi/spark/nn/components/somas/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>spark.nn.components.somas</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#package-contents">Package Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.Soma"><code class="docutils literal notranslate"><span class="pre">Soma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.Soma.config"><code class="docutils literal notranslate"><span class="pre">Soma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.Soma.build"><code class="docutils literal notranslate"><span class="pre">Soma.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.Soma.reset"><code class="docutils literal notranslate"><span class="pre">Soma.reset()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.Soma.__call__"><code class="docutils literal notranslate"><span class="pre">Soma.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SomaOutput"><code class="docutils literal notranslate"><span class="pre">SomaOutput</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SomaOutput.spikes"><code class="docutils literal notranslate"><span class="pre">SomaOutput.spikes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SomaOutput.potential"><code class="docutils literal notranslate"><span class="pre">SomaOutput.potential</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySoma"><code class="docutils literal notranslate"><span class="pre">LeakySoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySoma.config"><code class="docutils literal notranslate"><span class="pre">LeakySoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySoma.build"><code class="docutils literal notranslate"><span class="pre">LeakySoma.build()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySomaConfig"><code class="docutils literal notranslate"><span class="pre">LeakySomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySomaConfig.potential_rest"><code class="docutils literal notranslate"><span class="pre">LeakySomaConfig.potential_rest</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySomaConfig.potential_reset"><code class="docutils literal notranslate"><span class="pre">LeakySomaConfig.potential_reset</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySomaConfig.potential_tau"><code class="docutils literal notranslate"><span class="pre">LeakySomaConfig.potential_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySomaConfig.resistance"><code class="docutils literal notranslate"><span class="pre">LeakySomaConfig.resistance</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySomaConfig.threshold"><code class="docutils literal notranslate"><span class="pre">LeakySomaConfig.threshold</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryLeakySoma"><code class="docutils literal notranslate"><span class="pre">RefractoryLeakySoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryLeakySoma.config"><code class="docutils literal notranslate"><span class="pre">RefractoryLeakySoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryLeakySoma.build"><code class="docutils literal notranslate"><span class="pre">RefractoryLeakySoma.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryLeakySoma.reset"><code class="docutils literal notranslate"><span class="pre">RefractoryLeakySoma.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryLeakySomaConfig"><code class="docutils literal notranslate"><span class="pre">RefractoryLeakySomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryLeakySomaConfig.cooldown"><code class="docutils literal notranslate"><span class="pre">RefractoryLeakySomaConfig.cooldown</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.StrictRefractoryLeakySoma"><code class="docutils literal notranslate"><span class="pre">StrictRefractoryLeakySoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.StrictRefractoryLeakySoma.config"><code class="docutils literal notranslate"><span class="pre">StrictRefractoryLeakySoma.config</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.StrictRefractoryLeakySomaConfig"><code class="docutils literal notranslate"><span class="pre">StrictRefractoryLeakySomaConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveLeakySoma"><code class="docutils literal notranslate"><span class="pre">AdaptiveLeakySoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveLeakySoma.config"><code class="docutils literal notranslate"><span class="pre">AdaptiveLeakySoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveLeakySoma.build"><code class="docutils literal notranslate"><span class="pre">AdaptiveLeakySoma.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveLeakySoma.reset"><code class="docutils literal notranslate"><span class="pre">AdaptiveLeakySoma.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveLeakySomaConfig"><code class="docutils literal notranslate"><span class="pre">AdaptiveLeakySomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveLeakySomaConfig.threshold_tau"><code class="docutils literal notranslate"><span class="pre">AdaptiveLeakySomaConfig.threshold_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveLeakySomaConfig.threshold_delta"><code class="docutils literal notranslate"><span class="pre">AdaptiveLeakySomaConfig.threshold_delta</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSoma"><code class="docutils literal notranslate"><span class="pre">ExponentialSoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSoma.config"><code class="docutils literal notranslate"><span class="pre">ExponentialSoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSoma.build"><code class="docutils literal notranslate"><span class="pre">ExponentialSoma.build()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSomaConfig"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSomaConfig.potential_rest"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.potential_rest</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSomaConfig.potential_reset"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.potential_reset</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSomaConfig.potential_tau"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.potential_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSomaConfig.resistance"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.resistance</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSomaConfig.threshold"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.threshold</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSomaConfig.rheobase_threshold"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.rheobase_threshold</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSomaConfig.spike_slope"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.spike_slope</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryExponentialSoma"><code class="docutils literal notranslate"><span class="pre">RefractoryExponentialSoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryExponentialSoma.config"><code class="docutils literal notranslate"><span class="pre">RefractoryExponentialSoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryExponentialSoma.build"><code class="docutils literal notranslate"><span class="pre">RefractoryExponentialSoma.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryExponentialSoma.reset"><code class="docutils literal notranslate"><span class="pre">RefractoryExponentialSoma.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryExponentialSomaConfig"><code class="docutils literal notranslate"><span class="pre">RefractoryExponentialSomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryExponentialSomaConfig.cooldown"><code class="docutils literal notranslate"><span class="pre">RefractoryExponentialSomaConfig.cooldown</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveExponentialSoma"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveExponentialSoma.config"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveExponentialSoma.build"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSoma.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveExponentialSoma.reset"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSoma.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveExponentialSomaConfig"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveExponentialSomaConfig.adaptation_tau"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSomaConfig.adaptation_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveExponentialSomaConfig.adaptation_delta"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSomaConfig.adaptation_delta</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveExponentialSomaConfig.adaptation_subthreshold"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSomaConfig.adaptation_subthreshold</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma"><code class="docutils literal notranslate"><span class="pre">SimplifiedAdaptiveExponentialSoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma.config"><code class="docutils literal notranslate"><span class="pre">SimplifiedAdaptiveExponentialSoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma.build"><code class="docutils literal notranslate"><span class="pre">SimplifiedAdaptiveExponentialSoma.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma.reset"><code class="docutils literal notranslate"><span class="pre">SimplifiedAdaptiveExponentialSoma.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig"><code class="docutils literal notranslate"><span class="pre">SimplifiedAdaptiveExponentialSomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig.threshold_tau"><code class="docutils literal notranslate"><span class="pre">SimplifiedAdaptiveExponentialSomaConfig.threshold_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig.threshold_delta"><code class="docutils literal notranslate"><span class="pre">SimplifiedAdaptiveExponentialSomaConfig.threshold_delta</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSoma"><code class="docutils literal notranslate"><span class="pre">IzhikevichSoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSoma.config"><code class="docutils literal notranslate"><span class="pre">IzhikevichSoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSoma.build"><code class="docutils literal notranslate"><span class="pre">IzhikevichSoma.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSoma.reset"><code class="docutils literal notranslate"><span class="pre">IzhikevichSoma.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSomaConfig"><code class="docutils literal notranslate"><span class="pre">IzhikevichSomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSomaConfig.potential_rest"><code class="docutils literal notranslate"><span class="pre">IzhikevichSomaConfig.potential_rest</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSomaConfig.potential_reset"><code class="docutils literal notranslate"><span class="pre">IzhikevichSomaConfig.potential_reset</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSomaConfig.resistance"><code class="docutils literal notranslate"><span class="pre">IzhikevichSomaConfig.resistance</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSomaConfig.threshold"><code class="docutils literal notranslate"><span class="pre">IzhikevichSomaConfig.threshold</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSomaConfig.recovery_timescale"><code class="docutils literal notranslate"><span class="pre">IzhikevichSomaConfig.recovery_timescale</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSomaConfig.recovery_sensitivity"><code class="docutils literal notranslate"><span class="pre">IzhikevichSomaConfig.recovery_sensitivity</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSomaConfig.recovery_update"><code class="docutils literal notranslate"><span class="pre">IzhikevichSomaConfig.recovery_update</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-spark.nn.components.somas">
+<span id="spark-nn-components-somas"></span><h1>spark.nn.components.somas<a class="headerlink" href="#module-spark.nn.components.somas" title="Link to this heading">#</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="base/index.html">spark.nn.components.somas.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exponential/index.html">spark.nn.components.somas.exponential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="izhikevich/index.html">spark.nn.components.somas.izhikevich</a></li>
+<li class="toctree-l1"><a class="reference internal" href="leaky/index.html">spark.nn.components.somas.leaky</a></li>
+</ul>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.somas.Soma" title="spark.nn.components.somas.Soma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Soma</span></code></a></p></td>
+<td><p>Abstract soma model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.somas.SomaOutput" title="spark.nn.components.somas.SomaOutput"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SomaOutput</span></code></a></p></td>
+<td><p>Generic soma model output spec.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.somas.LeakySoma" title="spark.nn.components.somas.LeakySoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LeakySoma</span></code></a></p></td>
+<td><p>Leaky soma model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.somas.LeakySomaConfig" title="spark.nn.components.somas.LeakySomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LeakySomaConfig</span></code></a></p></td>
+<td><p>LeakySoma model configuration class.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.somas.RefractoryLeakySoma" title="spark.nn.components.somas.RefractoryLeakySoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RefractoryLeakySoma</span></code></a></p></td>
+<td><p>Leaky soma with refractory time model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.somas.RefractoryLeakySomaConfig" title="spark.nn.components.somas.RefractoryLeakySomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RefractoryLeakySomaConfig</span></code></a></p></td>
+<td><p>RefractoryLeakySoma model configuration class.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.somas.StrictRefractoryLeakySoma" title="spark.nn.components.somas.StrictRefractoryLeakySoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StrictRefractoryLeakySoma</span></code></a></p></td>
+<td><p>Leaky soma with strict refractory time model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.somas.StrictRefractoryLeakySomaConfig" title="spark.nn.components.somas.StrictRefractoryLeakySomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StrictRefractoryLeakySomaConfig</span></code></a></p></td>
+<td><p>StrictRefractoryLeakySoma model configuration class.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.somas.AdaptiveLeakySoma" title="spark.nn.components.somas.AdaptiveLeakySoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AdaptiveLeakySoma</span></code></a></p></td>
+<td><p>Adaptive leaky soma model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.somas.AdaptiveLeakySomaConfig" title="spark.nn.components.somas.AdaptiveLeakySomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AdaptiveLeakySomaConfig</span></code></a></p></td>
+<td><p>AdaptiveLeakySoma model configuration class.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.somas.ExponentialSoma" title="spark.nn.components.somas.ExponentialSoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExponentialSoma</span></code></a></p></td>
+<td><p>Exponential soma model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.somas.ExponentialSomaConfig" title="spark.nn.components.somas.ExponentialSomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExponentialSomaConfig</span></code></a></p></td>
+<td><p>ExponentialSoma model configuration class.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.somas.RefractoryExponentialSoma" title="spark.nn.components.somas.RefractoryExponentialSoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RefractoryExponentialSoma</span></code></a></p></td>
+<td><p>Exponential soma with refractory time model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.somas.RefractoryExponentialSomaConfig" title="spark.nn.components.somas.RefractoryExponentialSomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RefractoryExponentialSomaConfig</span></code></a></p></td>
+<td><p>RefractoryExponentialSoma model configuration class.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.somas.AdaptiveExponentialSoma" title="spark.nn.components.somas.AdaptiveExponentialSoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AdaptiveExponentialSoma</span></code></a></p></td>
+<td><p>Adaptive Exponential soma model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.somas.AdaptiveExponentialSomaConfig" title="spark.nn.components.somas.AdaptiveExponentialSomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AdaptiveExponentialSomaConfig</span></code></a></p></td>
+<td><p>AdaptiveExponentialSoma model configuration class.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma" title="spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SimplifiedAdaptiveExponentialSoma</span></code></a></p></td>
+<td><p>Simplified Adaptive Exponential soma model. This model drops the subthreshold adaptation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig" title="spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SimplifiedAdaptiveExponentialSomaConfig</span></code></a></p></td>
+<td><p>SimplifiedAdaptiveExponentialSoma model configuration class.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.somas.IzhikevichSoma" title="spark.nn.components.somas.IzhikevichSoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IzhikevichSoma</span></code></a></p></td>
+<td><p>Izhikevich soma model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.somas.IzhikevichSomaConfig" title="spark.nn.components.somas.IzhikevichSomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IzhikevichSomaConfig</span></code></a></p></td>
+<td><p>IzhikevichSoma model configuration class.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="package-contents">
+<h2>Package Contents<a class="headerlink" href="#package-contents" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.Soma">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">Soma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.Soma" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../base/index.html#spark.nn.components.base.Component" title="spark.nn.components.base.Component"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.base.Component</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">ConfigT</span></code>]</p>
+<p>Abstract soma model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>ConfigT</em><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.Soma.config">
+<span class="sig-name descname"><span class="pre">config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ConfigT</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.Soma.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.Soma.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_specs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.Soma.build" title="Link to this definition">#</a></dt>
+<dd><p>Build method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_specs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference internal" href="../../../core/specs/index.html#spark.core.specs.PortSpecs" title="spark.core.specs.PortSpecs"><em>spark.core.specs.PortSpecs</em></a><em>]</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.Soma.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.Soma.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets neuron states to their initial values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.Soma.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.Soma.__call__" title="Link to this definition">#</a></dt>
+<dd><p>Update neuron’s states and compute spikes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>current</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.CurrentArray" title="spark.core.payloads.CurrentArray"><em>spark.core.payloads.CurrentArray</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#spark.nn.components.somas.SomaOutput" title="spark.nn.components.somas.SomaOutput">SomaOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.SomaOutput">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">SomaOutput</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.SomaOutput" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
+<p>Generic soma model output spec.</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.SomaOutput.spikes">
+<span class="sig-name descname"><span class="pre">spikes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><span class="pre">spark.core.payloads.SpikeArray</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.SomaOutput.spikes" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.SomaOutput.potential">
+<span class="sig-name descname"><span class="pre">potential</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.PotentialArray" title="spark.core.payloads.PotentialArray"><span class="pre">spark.core.payloads.PotentialArray</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.SomaOutput.potential" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.LeakySoma">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">LeakySoma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.LeakySoma" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.somas.base.Soma" title="spark.nn.components.somas.base.Soma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.somas.base.Soma</span></code></a></p>
+<p>Leaky soma model.</p>
+<dl class="simple">
+<dt>Init:</dt><dd><p>units: tuple[int, …]
+potential_rest: float | jax.Array
+potential_reset: float | jax.Array
+potential_tau: float | jax.Array
+resistance: float | jax.Array
+threshold: float | jax.Array</p>
+</dd>
+<dt>Input:</dt><dd><p>in_spikes: SpikeArray</p>
+</dd>
+<dt>Output:</dt><dd><p>out_spikes: SpikeArray</p>
+</dd>
+<dt>Reference:</dt><dd><p>Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition.
+Gerstner W, Kistler WM, Naud R, Paninski L.
+Chapter 1.3 Integrate-And-Fire Models
+<a class="reference external" href="https://neuronaldynamics.epfl.ch/online/Ch1.S3.html">https://neuronaldynamics.epfl.ch/online/Ch1.S3.html</a></p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.somas.LeakySomaConfig" title="spark.nn.components.somas.LeakySomaConfig"><em>LeakySomaConfig</em></a><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.LeakySoma.config">
+<span class="sig-name descname"><span class="pre">config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.somas.LeakySomaConfig" title="spark.nn.components.somas.LeakySomaConfig"><span class="pre">LeakySomaConfig</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.LeakySoma.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.LeakySoma.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_specs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.LeakySoma.build" title="Link to this definition">#</a></dt>
+<dd><p>Build method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_specs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference internal" href="../../../core/specs/index.html#spark.core.specs.PortSpecs" title="spark.core.specs.PortSpecs"><em>spark.core.specs.PortSpecs</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.LeakySomaConfig">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">LeakySomaConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">__skip_validation__</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.LeakySomaConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.somas.base.SomaConfig" title="spark.nn.components.somas.base.SomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.somas.base.SomaConfig</span></code></a></p>
+<p>LeakySoma model configuration class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>__skip_validation__</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.LeakySomaConfig.potential_rest">
+<span class="sig-name descname"><span class="pre">potential_rest</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.LeakySomaConfig.potential_rest" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.LeakySomaConfig.potential_reset">
+<span class="sig-name descname"><span class="pre">potential_reset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.LeakySomaConfig.potential_reset" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.LeakySomaConfig.potential_tau">
+<span class="sig-name descname"><span class="pre">potential_tau</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.LeakySomaConfig.potential_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.LeakySomaConfig.resistance">
+<span class="sig-name descname"><span class="pre">resistance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.LeakySomaConfig.resistance" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.LeakySomaConfig.threshold">
+<span class="sig-name descname"><span class="pre">threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.LeakySomaConfig.threshold" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.RefractoryLeakySoma">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">RefractoryLeakySoma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.RefractoryLeakySoma" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.nn.components.somas.LeakySoma" title="spark.nn.components.somas.LeakySoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LeakySoma</span></code></a></p>
+<p>Leaky soma with refractory time model.</p>
+<dl class="simple">
+<dt>Init:</dt><dd><p>units: tuple[int, …]
+potential_rest: float | jax.Array
+potential_reset: float | jax.Array
+potential_tau: float | jax.Array
+resistance: float | jax.Array
+threshold: float | jax.Array
+cooldown: float | jax.Array</p>
+</dd>
+<dt>Input:</dt><dd><p>in_spikes: SpikeArray</p>
+</dd>
+<dt>Output:</dt><dd><p>out_spikes: SpikeArray</p>
+</dd>
+<dt>Reference:</dt><dd><p>Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition.
+Gerstner W, Kistler WM, Naud R, Paninski L.
+Chapter 1.3 Integrate-And-Fire Models
+<a class="reference external" href="https://neuronaldynamics.epfl.ch/online/Ch1.S3.html">https://neuronaldynamics.epfl.ch/online/Ch1.S3.html</a></p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.somas.RefractoryLeakySomaConfig" title="spark.nn.components.somas.RefractoryLeakySomaConfig"><em>RefractoryLeakySomaConfig</em></a><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.RefractoryLeakySoma.config">
+<span class="sig-name descname"><span class="pre">config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.somas.RefractoryLeakySomaConfig" title="spark.nn.components.somas.RefractoryLeakySomaConfig"><span class="pre">RefractoryLeakySomaConfig</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.RefractoryLeakySoma.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.RefractoryLeakySoma.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_specs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.RefractoryLeakySoma.build" title="Link to this definition">#</a></dt>
+<dd><p>Build method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_specs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference internal" href="../../../core/specs/index.html#spark.core.specs.PortSpecs" title="spark.core.specs.PortSpecs"><em>spark.core.specs.PortSpecs</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.RefractoryLeakySoma.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.RefractoryLeakySoma.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets component state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.RefractoryLeakySomaConfig">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">RefractoryLeakySomaConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">__skip_validation__</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.RefractoryLeakySomaConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.nn.components.somas.LeakySomaConfig" title="spark.nn.components.somas.LeakySomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LeakySomaConfig</span></code></a></p>
+<p>RefractoryLeakySoma model configuration class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>__skip_validation__</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.RefractoryLeakySomaConfig.cooldown">
+<span class="sig-name descname"><span class="pre">cooldown</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.RefractoryLeakySomaConfig.cooldown" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.StrictRefractoryLeakySoma">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">StrictRefractoryLeakySoma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.StrictRefractoryLeakySoma" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.nn.components.somas.RefractoryLeakySoma" title="spark.nn.components.somas.RefractoryLeakySoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RefractoryLeakySoma</span></code></a></p>
+<p>Leaky soma with strict refractory time model.
+Note: This model is here mostly for didactic/historical reasons.</p>
+<dl class="simple">
+<dt>Init:</dt><dd><p>units: tuple[int, …]
+potential_rest: float | jax.Array
+potential_reset: float | jax.Array
+potential_tau: float | jax.Array
+resistance: float | jax.Array
+threshold: float | jax.Array
+cooldown: float | jax.Array</p>
+</dd>
+<dt>Input:</dt><dd><p>in_spikes: SpikeArray</p>
+</dd>
+<dt>Output:</dt><dd><p>out_spikes: SpikeArray</p>
+</dd>
+<dt>Reference:</dt><dd><p>Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition.
+Gerstner W, Kistler WM, Naud R, Paninski L.
+Chapter 1.3 Integrate-And-Fire Models
+<a class="reference external" href="https://neuronaldynamics.epfl.ch/online/Ch1.S3.html">https://neuronaldynamics.epfl.ch/online/Ch1.S3.html</a></p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.somas.RefractoryLeakySomaConfig" title="spark.nn.components.somas.RefractoryLeakySomaConfig"><em>RefractoryLeakySomaConfig</em></a><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.StrictRefractoryLeakySoma.config">
+<span class="sig-name descname"><span class="pre">config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.somas.StrictRefractoryLeakySomaConfig" title="spark.nn.components.somas.StrictRefractoryLeakySomaConfig"><span class="pre">StrictRefractoryLeakySomaConfig</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.StrictRefractoryLeakySoma.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.StrictRefractoryLeakySomaConfig">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">StrictRefractoryLeakySomaConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">__skip_validation__</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.StrictRefractoryLeakySomaConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.nn.components.somas.RefractoryLeakySomaConfig" title="spark.nn.components.somas.RefractoryLeakySomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RefractoryLeakySomaConfig</span></code></a></p>
+<p>StrictRefractoryLeakySoma model configuration class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>__skip_validation__</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.AdaptiveLeakySoma">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">AdaptiveLeakySoma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.AdaptiveLeakySoma" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.nn.components.somas.RefractoryLeakySoma" title="spark.nn.components.somas.RefractoryLeakySoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RefractoryLeakySoma</span></code></a></p>
+<p>Adaptive leaky soma model.</p>
+<dl class="simple">
+<dt>Init:</dt><dd><p>units: tuple[int, …]
+potential_rest: float | jax.Array
+potential_reset: float | jax.Array
+potential_tau: float | jax.Array
+resistance: float | jax.Array
+threshold: float | jax.Array
+cooldown: float | jax.Array
+threshold_tau: float | jax.Array
+threshold_delta: float | jax.Array</p>
+</dd>
+<dt>Input:</dt><dd><p>in_spikes: SpikeArray</p>
+</dd>
+<dt>Output:</dt><dd><p>out_spikes: SpikeArray</p>
+</dd>
+<dt>Reference:</dt><dd><p>Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition.
+Gerstner W, Kistler WM, Naud R, Paninski L.
+Chapter 5.1 Thresholds in a nonlinear integrate-and-fire model
+<a class="reference external" href="https://neuronaldynamics.epfl.ch/online/Ch5.S1.html">https://neuronaldynamics.epfl.ch/online/Ch5.S1.html</a></p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.somas.AdaptiveLeakySomaConfig" title="spark.nn.components.somas.AdaptiveLeakySomaConfig"><em>AdaptiveLeakySomaConfig</em></a><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.AdaptiveLeakySoma.config">
+<span class="sig-name descname"><span class="pre">config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.somas.AdaptiveLeakySomaConfig" title="spark.nn.components.somas.AdaptiveLeakySomaConfig"><span class="pre">AdaptiveLeakySomaConfig</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.AdaptiveLeakySoma.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.AdaptiveLeakySoma.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_specs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.AdaptiveLeakySoma.build" title="Link to this definition">#</a></dt>
+<dd><p>Build method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_specs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference internal" href="../../../core/specs/index.html#spark.core.specs.PortSpecs" title="spark.core.specs.PortSpecs"><em>spark.core.specs.PortSpecs</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.AdaptiveLeakySoma.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.AdaptiveLeakySoma.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets component state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.AdaptiveLeakySomaConfig">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">AdaptiveLeakySomaConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">__skip_validation__</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.AdaptiveLeakySomaConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.nn.components.somas.RefractoryLeakySomaConfig" title="spark.nn.components.somas.RefractoryLeakySomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RefractoryLeakySomaConfig</span></code></a></p>
+<p>AdaptiveLeakySoma model configuration class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>__skip_validation__</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.AdaptiveLeakySomaConfig.threshold_tau">
+<span class="sig-name descname"><span class="pre">threshold_tau</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.AdaptiveLeakySomaConfig.threshold_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.AdaptiveLeakySomaConfig.threshold_delta">
+<span class="sig-name descname"><span class="pre">threshold_delta</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.AdaptiveLeakySomaConfig.threshold_delta" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.ExponentialSoma">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">ExponentialSoma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.ExponentialSoma" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.somas.base.Soma" title="spark.nn.components.somas.base.Soma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.somas.base.Soma</span></code></a></p>
+<p>Exponential soma model.</p>
+<dl class="simple">
+<dt>Init:</dt><dd><p>units: tuple[int, …]
+potential_rest: float | jax.Array
+potential_reset: float | jax.Array
+potential_tau: float | jax.Array
+resistance: float | jax.Array
+threshold: float | jax.Array</p>
+</dd>
+<dt>Input:</dt><dd><p>in_spikes: SpikeArray</p>
+</dd>
+<dt>Output:</dt><dd><p>out_spikes: SpikeArray</p>
+</dd>
+<dt>Reference:</dt><dd><p>How Spike Generation Mechanisms Determine the Neuronal Response to Fluctuating Inputs
+Nicolas Fourcaud-Trocmé, David Hansel, Carl van Vreeswijk, and Nicolas Brunel
+The Journal of Neuroscience, December 17, 2003
+<a class="reference external" href="https://www.jneurosci.org/content/23/37/11628">https://www.jneurosci.org/content/23/37/11628</a>
+Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition.
+Gerstner W, Kistler WM, Naud R, Paninski L.
+Chapter 5.2 Exponential Integrate-and-Fire Model
+<a class="reference external" href="https://neuronaldynamics.epfl.ch/online/Ch5.S2.html">https://neuronaldynamics.epfl.ch/online/Ch5.S2.html</a></p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.somas.ExponentialSomaConfig" title="spark.nn.components.somas.ExponentialSomaConfig"><em>ExponentialSomaConfig</em></a><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.ExponentialSoma.config">
+<span class="sig-name descname"><span class="pre">config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.somas.ExponentialSomaConfig" title="spark.nn.components.somas.ExponentialSomaConfig"><span class="pre">ExponentialSomaConfig</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.ExponentialSoma.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.ExponentialSoma.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_specs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.ExponentialSoma.build" title="Link to this definition">#</a></dt>
+<dd><p>Build method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_specs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference internal" href="../../../core/specs/index.html#spark.core.specs.PortSpecs" title="spark.core.specs.PortSpecs"><em>spark.core.specs.PortSpecs</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.ExponentialSomaConfig">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">ExponentialSomaConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">__skip_validation__</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.ExponentialSomaConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.somas.base.SomaConfig" title="spark.nn.components.somas.base.SomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.somas.base.SomaConfig</span></code></a></p>
+<p>ExponentialSoma model configuration class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>__skip_validation__</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.ExponentialSomaConfig.potential_rest">
+<span class="sig-name descname"><span class="pre">potential_rest</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.ExponentialSomaConfig.potential_rest" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.ExponentialSomaConfig.potential_reset">
+<span class="sig-name descname"><span class="pre">potential_reset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.ExponentialSomaConfig.potential_reset" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.ExponentialSomaConfig.potential_tau">
+<span class="sig-name descname"><span class="pre">potential_tau</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.ExponentialSomaConfig.potential_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.ExponentialSomaConfig.resistance">
+<span class="sig-name descname"><span class="pre">resistance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.ExponentialSomaConfig.resistance" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.ExponentialSomaConfig.threshold">
+<span class="sig-name descname"><span class="pre">threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.ExponentialSomaConfig.threshold" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.ExponentialSomaConfig.rheobase_threshold">
+<span class="sig-name descname"><span class="pre">rheobase_threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.ExponentialSomaConfig.rheobase_threshold" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.ExponentialSomaConfig.spike_slope">
+<span class="sig-name descname"><span class="pre">spike_slope</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.ExponentialSomaConfig.spike_slope" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.RefractoryExponentialSoma">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">RefractoryExponentialSoma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.RefractoryExponentialSoma" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.nn.components.somas.ExponentialSoma" title="spark.nn.components.somas.ExponentialSoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExponentialSoma</span></code></a></p>
+<p>Exponential soma with refractory time model.</p>
+<dl class="simple">
+<dt>Init:</dt><dd><p>units: tuple[int, …]
+potential_rest: float | jax.Array
+potential_reset: float | jax.Array
+potential_tau: float | jax.Array
+resistance: float | jax.Array
+threshold: float | jax.Array
+cooldown: float | jax.Array</p>
+</dd>
+<dt>Input:</dt><dd><p>in_spikes: SpikeArray</p>
+</dd>
+<dt>Output:</dt><dd><p>out_spikes: SpikeArray</p>
+</dd>
+<dt>Reference:</dt><dd><p>How Spike Generation Mechanisms Determine the Neuronal Response to Fluctuating Inputs
+Nicolas Fourcaud-Trocmé, David Hansel, Carl van Vreeswijk, and Nicolas Brunel
+The Journal of Neuroscience, December 17, 2003
+<a class="reference external" href="https://www.jneurosci.org/content/23/37/11628">https://www.jneurosci.org/content/23/37/11628</a>
+Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition.
+Gerstner W, Kistler WM, Naud R, Paninski L.
+Chapter 5.2 Exponential Integrate-and-Fire Model
+<a class="reference external" href="https://neuronaldynamics.epfl.ch/online/Ch5.S2.html">https://neuronaldynamics.epfl.ch/online/Ch5.S2.html</a></p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.somas.RefractoryExponentialSomaConfig" title="spark.nn.components.somas.RefractoryExponentialSomaConfig"><em>RefractoryExponentialSomaConfig</em></a><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.RefractoryExponentialSoma.config">
+<span class="sig-name descname"><span class="pre">config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.somas.RefractoryExponentialSomaConfig" title="spark.nn.components.somas.RefractoryExponentialSomaConfig"><span class="pre">RefractoryExponentialSomaConfig</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.RefractoryExponentialSoma.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.RefractoryExponentialSoma.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_specs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.RefractoryExponentialSoma.build" title="Link to this definition">#</a></dt>
+<dd><p>Build method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_specs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference internal" href="../../../core/specs/index.html#spark.core.specs.PortSpecs" title="spark.core.specs.PortSpecs"><em>spark.core.specs.PortSpecs</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.RefractoryExponentialSoma.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.RefractoryExponentialSoma.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets component state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.RefractoryExponentialSomaConfig">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">RefractoryExponentialSomaConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">__skip_validation__</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.RefractoryExponentialSomaConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.nn.components.somas.ExponentialSomaConfig" title="spark.nn.components.somas.ExponentialSomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExponentialSomaConfig</span></code></a></p>
+<p>RefractoryExponentialSoma model configuration class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>__skip_validation__</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.RefractoryExponentialSomaConfig.cooldown">
+<span class="sig-name descname"><span class="pre">cooldown</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.RefractoryExponentialSomaConfig.cooldown" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.AdaptiveExponentialSoma">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">AdaptiveExponentialSoma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.AdaptiveExponentialSoma" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.nn.components.somas.ExponentialSoma" title="spark.nn.components.somas.ExponentialSoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExponentialSoma</span></code></a></p>
+<p>Adaptive Exponential soma model.</p>
+<dl class="simple">
+<dt>Init:</dt><dd><p>units: tuple[int, …]
+potential_rest: float | jax.Array
+potential_reset: float | jax.Array
+potential_tau: float | jax.Array
+resistance: float | jax.Array
+threshold: float | jax.Array
+cooldown: float | jax.Array
+threshold_tau: float | jax.Array
+threshold_delta: float | jax.Array</p>
+</dd>
+<dt>Input:</dt><dd><p>in_spikes: SpikeArray</p>
+</dd>
+<dt>Output:</dt><dd><p>out_spikes: SpikeArray</p>
+</dd>
+</dl>
+<p>Reference:</p>
+<blockquote>
+<div><p>Adaptive Exponential Integrate-and-Fire Model as an Effective Description of Neuronal Activity.
+Romain Brette and Gerstner Wulfram
+Gerstner W, Kistler WM, Naud R, Paninski L.
+Journal of Neurophysiology vol. 94, no. 5, pp. 3637-3642, 2005
+<a class="reference external" href="https://doi.org/10.1152/jn.00686.2005">https://doi.org/10.1152/jn.00686.2005</a>
+Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition.
+Gerstner W, Kistler WM, Naud R, Paninski L.
+Chapter 5.2 Exponential Integrate-and-Fire Model
+<a class="reference external" href="https://neuronaldynamics.epfl.ch/online/Ch5.S2.html">https://neuronaldynamics.epfl.ch/online/Ch5.S2.html</a></p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.somas.AdaptiveExponentialSomaConfig" title="spark.nn.components.somas.AdaptiveExponentialSomaConfig"><em>AdaptiveExponentialSomaConfig</em></a><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.AdaptiveExponentialSoma.config">
+<span class="sig-name descname"><span class="pre">config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.somas.AdaptiveExponentialSomaConfig" title="spark.nn.components.somas.AdaptiveExponentialSomaConfig"><span class="pre">AdaptiveExponentialSomaConfig</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.AdaptiveExponentialSoma.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.AdaptiveExponentialSoma.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_specs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.AdaptiveExponentialSoma.build" title="Link to this definition">#</a></dt>
+<dd><p>Build method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_specs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference internal" href="../../../core/specs/index.html#spark.core.specs.PortSpecs" title="spark.core.specs.PortSpecs"><em>spark.core.specs.PortSpecs</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.AdaptiveExponentialSoma.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.AdaptiveExponentialSoma.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets neuron states to their initial values.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.AdaptiveExponentialSomaConfig">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">AdaptiveExponentialSomaConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">__skip_validation__</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.AdaptiveExponentialSomaConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.nn.components.somas.ExponentialSomaConfig" title="spark.nn.components.somas.ExponentialSomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExponentialSomaConfig</span></code></a></p>
+<p>AdaptiveExponentialSoma model configuration class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>__skip_validation__</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.AdaptiveExponentialSomaConfig.adaptation_tau">
+<span class="sig-name descname"><span class="pre">adaptation_tau</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.AdaptiveExponentialSomaConfig.adaptation_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.AdaptiveExponentialSomaConfig.adaptation_delta">
+<span class="sig-name descname"><span class="pre">adaptation_delta</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.AdaptiveExponentialSomaConfig.adaptation_delta" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.AdaptiveExponentialSomaConfig.adaptation_subthreshold">
+<span class="sig-name descname"><span class="pre">adaptation_subthreshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.AdaptiveExponentialSomaConfig.adaptation_subthreshold" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">SimplifiedAdaptiveExponentialSoma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.nn.components.somas.RefractoryExponentialSoma" title="spark.nn.components.somas.RefractoryExponentialSoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RefractoryExponentialSoma</span></code></a></p>
+<p>Simplified Adaptive Exponential soma model. This model drops the subthreshold adaptation.</p>
+<dl class="simple">
+<dt>Init:</dt><dd><p>units: tuple[int, …]
+potential_rest: float | jax.Array
+potential_reset: float | jax.Array
+potential_tau: float | jax.Array
+resistance: float | jax.Array
+threshold: float | jax.Array
+cooldown: float | jax.Array
+threshold_tau: float | jax.Array
+threshold_delta: float | jax.Array</p>
+</dd>
+<dt>Input:</dt><dd><p>in_spikes: SpikeArray</p>
+</dd>
+<dt>Output:</dt><dd><p>out_spikes: SpikeArray</p>
+</dd>
+</dl>
+<p>Reference:</p>
+<blockquote>
+<div><p>Adaptive Exponential Integrate-and-Fire Model as an Effective Description of Neuronal Activity.
+Romain Brette and Gerstner Wulfram
+Gerstner W, Kistler WM, Naud R, Paninski L.
+Journal of Neurophysiology vol. 94, no. 5, pp. 3637-3642, 2005
+<a class="reference external" href="https://doi.org/10.1152/jn.00686.2005">https://doi.org/10.1152/jn.00686.2005</a>
+Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition.
+Gerstner W, Kistler WM, Naud R, Paninski L.
+Chapter 5.2 Exponential Integrate-and-Fire Model
+<a class="reference external" href="https://neuronaldynamics.epfl.ch/online/Ch5.S2.html">https://neuronaldynamics.epfl.ch/online/Ch5.S2.html</a></p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig" title="spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig"><em>SimplifiedAdaptiveExponentialSomaConfig</em></a><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma.config">
+<span class="sig-name descname"><span class="pre">config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig" title="spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig"><span class="pre">SimplifiedAdaptiveExponentialSomaConfig</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_specs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma.build" title="Link to this definition">#</a></dt>
+<dd><p>Build method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_specs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference internal" href="../../../core/specs/index.html#spark.core.specs.PortSpecs" title="spark.core.specs.PortSpecs"><em>spark.core.specs.PortSpecs</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets component state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">SimplifiedAdaptiveExponentialSomaConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">__skip_validation__</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.nn.components.somas.RefractoryExponentialSomaConfig" title="spark.nn.components.somas.RefractoryExponentialSomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RefractoryExponentialSomaConfig</span></code></a></p>
+<p>SimplifiedAdaptiveExponentialSoma model configuration class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>__skip_validation__</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig.threshold_tau">
+<span class="sig-name descname"><span class="pre">threshold_tau</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig.threshold_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig.threshold_delta">
+<span class="sig-name descname"><span class="pre">threshold_delta</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig.threshold_delta" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.IzhikevichSoma">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">IzhikevichSoma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.IzhikevichSoma" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.somas.base.Soma" title="spark.nn.components.somas.base.Soma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.somas.base.Soma</span></code></a></p>
+<p>Izhikevich soma model.</p>
+<dl class="simple">
+<dt>Init:</dt><dd><p>units: tuple[int, …]
+potential_rest: float | jax.Array
+potential_reset: float | jax.Array
+resistance: float | jax.Array
+threshold: float | jax.Array
+recovery_timescale: float | jax.Array
+recovery_sensitivity: float | jax.Array
+recovery_update: float | jax.Array</p>
+</dd>
+<dt>Input:</dt><dd><p>in_spikes: SpikeArray</p>
+</dd>
+<dt>Output:</dt><dd><p>out_spikes: SpikeArray</p>
+</dd>
+<dt>Reference:</dt><dd><p>Simple Model of Spiking Neurons
+Eugene M. Izhikevich
+IEEE Transactions on Neural Networks, vol. 14, no. 6, pp. 1569-1572, Nov. 2003
+<a class="reference external" href="https://doi.org/10.1109/TNN.2003.820440">https://doi.org/10.1109/TNN.2003.820440</a></p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.somas.IzhikevichSomaConfig" title="spark.nn.components.somas.IzhikevichSomaConfig"><em>IzhikevichSomaConfig</em></a><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.IzhikevichSoma.config">
+<span class="sig-name descname"><span class="pre">config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.somas.IzhikevichSomaConfig" title="spark.nn.components.somas.IzhikevichSomaConfig"><span class="pre">IzhikevichSomaConfig</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.IzhikevichSoma.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.IzhikevichSoma.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_specs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.IzhikevichSoma.build" title="Link to this definition">#</a></dt>
+<dd><p>Build method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_specs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference internal" href="../../../core/specs/index.html#spark.core.specs.PortSpecs" title="spark.core.specs.PortSpecs"><em>spark.core.specs.PortSpecs</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.IzhikevichSoma.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.IzhikevichSoma.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets component state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.IzhikevichSomaConfig">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.</span></span><span class="sig-name descname"><span class="pre">IzhikevichSomaConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">__skip_validation__</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.IzhikevichSomaConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.somas.base.SomaConfig" title="spark.nn.components.somas.base.SomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.somas.base.SomaConfig</span></code></a></p>
+<p>IzhikevichSoma model configuration class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>__skip_validation__</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.IzhikevichSomaConfig.potential_rest">
+<span class="sig-name descname"><span class="pre">potential_rest</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.IzhikevichSomaConfig.potential_rest" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.IzhikevichSomaConfig.potential_reset">
+<span class="sig-name descname"><span class="pre">potential_reset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.IzhikevichSomaConfig.potential_reset" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.IzhikevichSomaConfig.resistance">
+<span class="sig-name descname"><span class="pre">resistance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.IzhikevichSomaConfig.resistance" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.IzhikevichSomaConfig.threshold">
+<span class="sig-name descname"><span class="pre">threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.IzhikevichSomaConfig.threshold" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.IzhikevichSomaConfig.recovery_timescale">
+<span class="sig-name descname"><span class="pre">recovery_timescale</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.IzhikevichSomaConfig.recovery_timescale" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.IzhikevichSomaConfig.recovery_sensitivity">
+<span class="sig-name descname"><span class="pre">recovery_sensitivity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.IzhikevichSomaConfig.recovery_sensitivity" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.IzhikevichSomaConfig.recovery_update">
+<span class="sig-name descname"><span class="pre">recovery_update</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.IzhikevichSomaConfig.recovery_update" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../learning_rules/zenke_rule/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">spark.nn.components.learning_rules.zenke_rule</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="base/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">spark.nn.components.somas.base</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#package-contents">Package Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.Soma"><code class="docutils literal notranslate"><span class="pre">Soma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.Soma.config"><code class="docutils literal notranslate"><span class="pre">Soma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.Soma.build"><code class="docutils literal notranslate"><span class="pre">Soma.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.Soma.reset"><code class="docutils literal notranslate"><span class="pre">Soma.reset()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.Soma.__call__"><code class="docutils literal notranslate"><span class="pre">Soma.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SomaOutput"><code class="docutils literal notranslate"><span class="pre">SomaOutput</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SomaOutput.spikes"><code class="docutils literal notranslate"><span class="pre">SomaOutput.spikes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SomaOutput.potential"><code class="docutils literal notranslate"><span class="pre">SomaOutput.potential</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySoma"><code class="docutils literal notranslate"><span class="pre">LeakySoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySoma.config"><code class="docutils literal notranslate"><span class="pre">LeakySoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySoma.build"><code class="docutils literal notranslate"><span class="pre">LeakySoma.build()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySomaConfig"><code class="docutils literal notranslate"><span class="pre">LeakySomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySomaConfig.potential_rest"><code class="docutils literal notranslate"><span class="pre">LeakySomaConfig.potential_rest</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySomaConfig.potential_reset"><code class="docutils literal notranslate"><span class="pre">LeakySomaConfig.potential_reset</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySomaConfig.potential_tau"><code class="docutils literal notranslate"><span class="pre">LeakySomaConfig.potential_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySomaConfig.resistance"><code class="docutils literal notranslate"><span class="pre">LeakySomaConfig.resistance</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.LeakySomaConfig.threshold"><code class="docutils literal notranslate"><span class="pre">LeakySomaConfig.threshold</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryLeakySoma"><code class="docutils literal notranslate"><span class="pre">RefractoryLeakySoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryLeakySoma.config"><code class="docutils literal notranslate"><span class="pre">RefractoryLeakySoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryLeakySoma.build"><code class="docutils literal notranslate"><span class="pre">RefractoryLeakySoma.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryLeakySoma.reset"><code class="docutils literal notranslate"><span class="pre">RefractoryLeakySoma.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryLeakySomaConfig"><code class="docutils literal notranslate"><span class="pre">RefractoryLeakySomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryLeakySomaConfig.cooldown"><code class="docutils literal notranslate"><span class="pre">RefractoryLeakySomaConfig.cooldown</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.StrictRefractoryLeakySoma"><code class="docutils literal notranslate"><span class="pre">StrictRefractoryLeakySoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.StrictRefractoryLeakySoma.config"><code class="docutils literal notranslate"><span class="pre">StrictRefractoryLeakySoma.config</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.StrictRefractoryLeakySomaConfig"><code class="docutils literal notranslate"><span class="pre">StrictRefractoryLeakySomaConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveLeakySoma"><code class="docutils literal notranslate"><span class="pre">AdaptiveLeakySoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveLeakySoma.config"><code class="docutils literal notranslate"><span class="pre">AdaptiveLeakySoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveLeakySoma.build"><code class="docutils literal notranslate"><span class="pre">AdaptiveLeakySoma.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveLeakySoma.reset"><code class="docutils literal notranslate"><span class="pre">AdaptiveLeakySoma.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveLeakySomaConfig"><code class="docutils literal notranslate"><span class="pre">AdaptiveLeakySomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveLeakySomaConfig.threshold_tau"><code class="docutils literal notranslate"><span class="pre">AdaptiveLeakySomaConfig.threshold_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveLeakySomaConfig.threshold_delta"><code class="docutils literal notranslate"><span class="pre">AdaptiveLeakySomaConfig.threshold_delta</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSoma"><code class="docutils literal notranslate"><span class="pre">ExponentialSoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSoma.config"><code class="docutils literal notranslate"><span class="pre">ExponentialSoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSoma.build"><code class="docutils literal notranslate"><span class="pre">ExponentialSoma.build()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSomaConfig"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSomaConfig.potential_rest"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.potential_rest</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSomaConfig.potential_reset"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.potential_reset</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSomaConfig.potential_tau"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.potential_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSomaConfig.resistance"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.resistance</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSomaConfig.threshold"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.threshold</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSomaConfig.rheobase_threshold"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.rheobase_threshold</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.ExponentialSomaConfig.spike_slope"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.spike_slope</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryExponentialSoma"><code class="docutils literal notranslate"><span class="pre">RefractoryExponentialSoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryExponentialSoma.config"><code class="docutils literal notranslate"><span class="pre">RefractoryExponentialSoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryExponentialSoma.build"><code class="docutils literal notranslate"><span class="pre">RefractoryExponentialSoma.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryExponentialSoma.reset"><code class="docutils literal notranslate"><span class="pre">RefractoryExponentialSoma.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryExponentialSomaConfig"><code class="docutils literal notranslate"><span class="pre">RefractoryExponentialSomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.RefractoryExponentialSomaConfig.cooldown"><code class="docutils literal notranslate"><span class="pre">RefractoryExponentialSomaConfig.cooldown</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveExponentialSoma"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveExponentialSoma.config"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveExponentialSoma.build"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSoma.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveExponentialSoma.reset"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSoma.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveExponentialSomaConfig"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveExponentialSomaConfig.adaptation_tau"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSomaConfig.adaptation_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveExponentialSomaConfig.adaptation_delta"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSomaConfig.adaptation_delta</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.AdaptiveExponentialSomaConfig.adaptation_subthreshold"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSomaConfig.adaptation_subthreshold</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma"><code class="docutils literal notranslate"><span class="pre">SimplifiedAdaptiveExponentialSoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma.config"><code class="docutils literal notranslate"><span class="pre">SimplifiedAdaptiveExponentialSoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma.build"><code class="docutils literal notranslate"><span class="pre">SimplifiedAdaptiveExponentialSoma.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSoma.reset"><code class="docutils literal notranslate"><span class="pre">SimplifiedAdaptiveExponentialSoma.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig"><code class="docutils literal notranslate"><span class="pre">SimplifiedAdaptiveExponentialSomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig.threshold_tau"><code class="docutils literal notranslate"><span class="pre">SimplifiedAdaptiveExponentialSomaConfig.threshold_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.SimplifiedAdaptiveExponentialSomaConfig.threshold_delta"><code class="docutils literal notranslate"><span class="pre">SimplifiedAdaptiveExponentialSomaConfig.threshold_delta</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSoma"><code class="docutils literal notranslate"><span class="pre">IzhikevichSoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSoma.config"><code class="docutils literal notranslate"><span class="pre">IzhikevichSoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSoma.build"><code class="docutils literal notranslate"><span class="pre">IzhikevichSoma.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSoma.reset"><code class="docutils literal notranslate"><span class="pre">IzhikevichSoma.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSomaConfig"><code class="docutils literal notranslate"><span class="pre">IzhikevichSomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSomaConfig.potential_rest"><code class="docutils literal notranslate"><span class="pre">IzhikevichSomaConfig.potential_rest</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSomaConfig.potential_reset"><code class="docutils literal notranslate"><span class="pre">IzhikevichSomaConfig.potential_reset</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSomaConfig.resistance"><code class="docutils literal notranslate"><span class="pre">IzhikevichSomaConfig.resistance</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSomaConfig.threshold"><code class="docutils literal notranslate"><span class="pre">IzhikevichSomaConfig.threshold</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSomaConfig.recovery_timescale"><code class="docutils literal notranslate"><span class="pre">IzhikevichSomaConfig.recovery_timescale</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSomaConfig.recovery_sensitivity"><code class="docutils literal notranslate"><span class="pre">IzhikevichSomaConfig.recovery_sensitivity</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.IzhikevichSomaConfig.recovery_update"><code class="docutils literal notranslate"><span class="pre">IzhikevichSomaConfig.recovery_update</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

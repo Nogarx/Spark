@@ -1,0 +1,899 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spark.core.registry &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=30646c52"></script>
+    <script src="../../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/spark/core/registry/index';</script>
+    <link rel="icon" href="../../../../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="spark.core.serializer" href="../serializer/index.html" />
+    <link rel="prev" title="spark.core.payloads" href="../payloads/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <script>document.write(`<img src="../../../../_static/spark_250px.png" class="logo__image only-dark" alt="Spark  documentation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/brains.html">Tutorial #3: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/graph_editor.html">Tutorial #4: Graph Editor</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../index.html">spark</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../index.html">spark.core</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../flax_imports/index.html">spark.core.flax_imports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4 current active"><a class="current reference internal" href="#">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validation/index.html">spark.core.validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../variables/index.html">spark.core.variables</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/editor_config/index.html">spark.graph_editor.editor_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/style/index.html">spark.graph_editor.style</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/ui/index.html">spark.graph_editor.ui</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/window/index.html">spark.graph_editor.window</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../nn/index.html">spark.nn</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/brain/index.html">spark.nn.brain</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/components/index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><i class="fa-solid fa-ellipsis"></i></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">spark.core</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">spark.core.registry</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../../_sources/autoapi/spark/core/registry/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>spark.core.registry</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.RegistryEntry"><code class="docutils literal notranslate"><span class="pre">RegistryEntry</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.RegistryEntry.name"><code class="docutils literal notranslate"><span class="pre">RegistryEntry.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.RegistryEntry.class_ref"><code class="docutils literal notranslate"><span class="pre">RegistryEntry.class_ref</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.RegistryEntry.path"><code class="docutils literal notranslate"><span class="pre">RegistryEntry.path</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry"><code class="docutils literal notranslate"><span class="pre">SubRegistry</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.__built__"><code class="docutils literal notranslate"><span class="pre">SubRegistry.__built__</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.__getitem__"><code class="docutils literal notranslate"><span class="pre">SubRegistry.__getitem__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.__iter__"><code class="docutils literal notranslate"><span class="pre">SubRegistry.__iter__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.__len__"><code class="docutils literal notranslate"><span class="pre">SubRegistry.__len__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.items"><code class="docutils literal notranslate"><span class="pre">SubRegistry.items()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.register"><code class="docutils literal notranslate"><span class="pre">SubRegistry.register()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.get"><code class="docutils literal notranslate"><span class="pre">SubRegistry.get()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.get_by_cls"><code class="docutils literal notranslate"><span class="pre">SubRegistry.get_by_cls()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.is_finalized"><code class="docutils literal notranslate"><span class="pre">SubRegistry.is_finalized</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.Registry"><code class="docutils literal notranslate"><span class="pre">Registry</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.Registry.MODULES"><code class="docutils literal notranslate"><span class="pre">Registry.MODULES</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.Registry.PAYLOADS"><code class="docutils literal notranslate"><span class="pre">Registry.PAYLOADS</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.Registry.INITIALIZERS"><code class="docutils literal notranslate"><span class="pre">Registry.INITIALIZERS</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.Registry.CONFIG"><code class="docutils literal notranslate"><span class="pre">Registry.CONFIG</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.Registry.CFG_VALIDATORS"><code class="docutils literal notranslate"><span class="pre">Registry.CFG_VALIDATORS</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.REGISTRY"><code class="docutils literal notranslate"><span class="pre">REGISTRY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.create_registry_decorator"><code class="docutils literal notranslate"><span class="pre">create_registry_decorator()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.register_module"><code class="docutils literal notranslate"><span class="pre">register_module</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.register_payload"><code class="docutils literal notranslate"><span class="pre">register_payload</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.register_initializer"><code class="docutils literal notranslate"><span class="pre">register_initializer</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.register_config"><code class="docutils literal notranslate"><span class="pre">register_config</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.register_cfg_validator"><code class="docutils literal notranslate"><span class="pre">register_cfg_validator</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.MRO_PATH_ALIAS_MAP"><code class="docutils literal notranslate"><span class="pre">MRO_PATH_ALIAS_MAP</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.INITIALIZERS_ALIAS_MAP"><code class="docutils literal notranslate"><span class="pre">INITIALIZERS_ALIAS_MAP</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-spark.core.registry">
+<span id="spark-core-registry"></span><h1>spark.core.registry<a class="headerlink" href="#module-spark.core.registry" title="Link to this heading">#</a></h1>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.registry.REGISTRY" title="spark.core.registry.REGISTRY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">REGISTRY</span></code></a></p></td>
+<td><p>Registry singleton.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.core.registry.register_module" title="spark.core.registry.register_module"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_module</span></code></a></p></td>
+<td><p>Decorator used to register a new SparkModule.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.registry.register_payload" title="spark.core.registry.register_payload"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_payload</span></code></a></p></td>
+<td><p>Decorator used to register a new SparkPayload.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.core.registry.register_initializer" title="spark.core.registry.register_initializer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_initializer</span></code></a></p></td>
+<td><p>Decorator used to register a new Initializer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.registry.register_config" title="spark.core.registry.register_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_config</span></code></a></p></td>
+<td><p>Decorator used to register a new SparkConfig.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.core.registry.register_cfg_validator" title="spark.core.registry.register_cfg_validator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_cfg_validator</span></code></a></p></td>
+<td><p>Decorator used to register a new ConfigurationValidator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.registry.MRO_PATH_ALIAS_MAP" title="spark.core.registry.MRO_PATH_ALIAS_MAP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MRO_PATH_ALIAS_MAP</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.core.registry.INITIALIZERS_ALIAS_MAP" title="spark.core.registry.INITIALIZERS_ALIAS_MAP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">INITIALIZERS_ALIAS_MAP</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.registry.RegistryEntry" title="spark.core.registry.RegistryEntry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RegistryEntry</span></code></a></p></td>
+<td><p>Structured entry for the registry.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.core.registry.SubRegistry" title="spark.core.registry.SubRegistry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SubRegistry</span></code></a></p></td>
+<td><p>Registry for registry_base_type.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.registry.Registry" title="spark.core.registry.Registry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Registry</span></code></a></p></td>
+<td><p>Registry object.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.core.registry.create_registry_decorator" title="spark.core.registry.create_registry_decorator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_registry_decorator</span></code></a>(sub_registry, ...[, ...])</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.core.registry.RegistryEntry">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.core.registry.</span></span><span class="sig-name descname"><span class="pre">RegistryEntry</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.RegistryEntry" title="Link to this definition">#</a></dt>
+<dd><p>Structured entry for the registry.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.registry.RegistryEntry.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.RegistryEntry.name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.registry.RegistryEntry.class_ref">
+<span class="sig-name descname"><span class="pre">class_ref</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><span class="pre">type</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.RegistryEntry.class_ref" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.registry.RegistryEntry.path">
+<span class="sig-name descname"><span class="pre">path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.RegistryEntry.path" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.core.registry.SubRegistry">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.core.registry.</span></span><span class="sig-name descname"><span class="pre">SubRegistry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">registry_base_type</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.SubRegistry" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">collections.abc.Mapping</span></code></a></p>
+<p>Registry for registry_base_type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>registry_base_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.registry.SubRegistry.__built__">
+<span class="sig-name descname"><span class="pre">__built__</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.SubRegistry.__built__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.registry.SubRegistry.__getitem__">
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.SubRegistry.__getitem__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#spark.core.registry.RegistryEntry" title="spark.core.registry.RegistryEntry">RegistryEntry</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.registry.SubRegistry.__iter__">
+<span class="sig-name descname"><span class="pre">__iter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.SubRegistry.__iter__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Iterator[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.registry.SubRegistry.__len__">
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.SubRegistry.__len__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.registry.SubRegistry.items">
+<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.SubRegistry.items" title="Link to this definition">#</a></dt>
+<dd><p>D.items() -&gt; a set-like object providing a view on D’s items</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.ItemsView" title="(in Python v3.14)">collections.abc.ItemsView</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference internal" href="#spark.core.registry.RegistryEntry" title="spark.core.registry.RegistryEntry">RegistryEntry</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.registry.SubRegistry.register">
+<span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.SubRegistry.register" title="Link to this definition">#</a></dt>
+<dd><p>Register new registry_base_type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>cls</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><em>object</em></a><em>]</em>)</p></li>
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.registry.SubRegistry.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.SubRegistry.get" title="Link to this definition">#</a></dt>
+<dd><p>Safely retrieves a component entry by name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>default</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#spark.core.registry.RegistryEntry" title="spark.core.registry.RegistryEntry">RegistryEntry</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.core.registry.SubRegistry.get_by_cls">
+<span class="sig-name descname"><span class="pre">get_by_cls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.SubRegistry.get_by_cls" title="Link to this definition">#</a></dt>
+<dd><p>Safely retrieves a component entry by name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cls</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em> | </em><em>None</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#spark.core.registry.RegistryEntry" title="spark.core.registry.RegistryEntry">RegistryEntry</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.core.registry.SubRegistry.is_finalized">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_finalized</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.SubRegistry.is_finalized" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.core.registry.Registry">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.core.registry.</span></span><span class="sig-name descname"><span class="pre">Registry</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.Registry" title="Link to this definition">#</a></dt>
+<dd><p>Registry object.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.registry.Registry.MODULES">
+<span class="sig-name descname"><span class="pre">MODULES</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.Registry.MODULES" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.registry.Registry.PAYLOADS">
+<span class="sig-name descname"><span class="pre">PAYLOADS</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.Registry.PAYLOADS" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.registry.Registry.INITIALIZERS">
+<span class="sig-name descname"><span class="pre">INITIALIZERS</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.Registry.INITIALIZERS" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.registry.Registry.CONFIG">
+<span class="sig-name descname"><span class="pre">CONFIG</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.Registry.CONFIG" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.core.registry.Registry.CFG_VALIDATORS">
+<span class="sig-name descname"><span class="pre">CFG_VALIDATORS</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.Registry.CFG_VALIDATORS" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.core.registry.REGISTRY">
+<span class="sig-prename descclassname"><span class="pre">spark.core.registry.</span></span><span class="sig-name descname"><span class="pre">REGISTRY</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.REGISTRY" title="Link to this definition">#</a></dt>
+<dd><p>Registry singleton.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.core.registry.create_registry_decorator">
+<span class="sig-prename descclassname"><span class="pre">spark.core.registry.</span></span><span class="sig-name descname"><span class="pre">create_registry_decorator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub_registry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_class_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_class_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_class_abr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.create_registry_decorator" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sub_registry</strong> (<a class="reference internal" href="#spark.core.registry.SubRegistry" title="spark.core.registry.SubRegistry"><em>SubRegistry</em></a>)</p></li>
+<li><p><strong>base_class_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>base_class_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>base_class_abr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.core.registry.register_module">
+<span class="sig-prename descclassname"><span class="pre">spark.core.registry.</span></span><span class="sig-name descname"><span class="pre">register_module</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.register_module" title="Link to this definition">#</a></dt>
+<dd><p>Decorator used to register a new SparkModule.
+Note that module must inherit from spark.nn.Module (spark.core.module.SparkModule)</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.core.registry.register_payload">
+<span class="sig-prename descclassname"><span class="pre">spark.core.registry.</span></span><span class="sig-name descname"><span class="pre">register_payload</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.register_payload" title="Link to this definition">#</a></dt>
+<dd><p>Decorator used to register a new SparkPayload.
+Note that module must inherit from spark.SparkPayload (spark.core.payloads.SparkPayload)</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.core.registry.register_initializer">
+<span class="sig-prename descclassname"><span class="pre">spark.core.registry.</span></span><span class="sig-name descname"><span class="pre">register_initializer</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.register_initializer" title="Link to this definition">#</a></dt>
+<dd><p>Decorator used to register a new Initializer.
+Note that module must inherit from spark.nn.initializers.base.Initializer</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.core.registry.register_config">
+<span class="sig-prename descclassname"><span class="pre">spark.core.registry.</span></span><span class="sig-name descname"><span class="pre">register_config</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.register_config" title="Link to this definition">#</a></dt>
+<dd><p>Decorator used to register a new SparkConfig.
+Note that module must inherit from spark.nn.BaseConfig (spark.core.config.BaseSparkConfig)</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.core.registry.register_cfg_validator">
+<span class="sig-prename descclassname"><span class="pre">spark.core.registry.</span></span><span class="sig-name descname"><span class="pre">register_cfg_validator</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.register_cfg_validator" title="Link to this definition">#</a></dt>
+<dd><p>Decorator used to register a new ConfigurationValidator.
+Note that module must inherit from spark.core.config_validation.ConfigurationValidator</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.core.registry.MRO_PATH_ALIAS_MAP">
+<span class="sig-prename descclassname"><span class="pre">spark.core.registry.</span></span><span class="sig-name descname"><span class="pre">MRO_PATH_ALIAS_MAP</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.MRO_PATH_ALIAS_MAP" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.core.registry.INITIALIZERS_ALIAS_MAP">
+<span class="sig-prename descclassname"><span class="pre">spark.core.registry.</span></span><span class="sig-name descname"><span class="pre">INITIALIZERS_ALIAS_MAP</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/core/registry.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.core.registry.INITIALIZERS_ALIAS_MAP" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../payloads/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">spark.core.payloads</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../serializer/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">spark.core.serializer</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.RegistryEntry"><code class="docutils literal notranslate"><span class="pre">RegistryEntry</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.RegistryEntry.name"><code class="docutils literal notranslate"><span class="pre">RegistryEntry.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.RegistryEntry.class_ref"><code class="docutils literal notranslate"><span class="pre">RegistryEntry.class_ref</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.RegistryEntry.path"><code class="docutils literal notranslate"><span class="pre">RegistryEntry.path</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry"><code class="docutils literal notranslate"><span class="pre">SubRegistry</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.__built__"><code class="docutils literal notranslate"><span class="pre">SubRegistry.__built__</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.__getitem__"><code class="docutils literal notranslate"><span class="pre">SubRegistry.__getitem__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.__iter__"><code class="docutils literal notranslate"><span class="pre">SubRegistry.__iter__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.__len__"><code class="docutils literal notranslate"><span class="pre">SubRegistry.__len__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.items"><code class="docutils literal notranslate"><span class="pre">SubRegistry.items()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.register"><code class="docutils literal notranslate"><span class="pre">SubRegistry.register()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.get"><code class="docutils literal notranslate"><span class="pre">SubRegistry.get()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.get_by_cls"><code class="docutils literal notranslate"><span class="pre">SubRegistry.get_by_cls()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.SubRegistry.is_finalized"><code class="docutils literal notranslate"><span class="pre">SubRegistry.is_finalized</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.Registry"><code class="docutils literal notranslate"><span class="pre">Registry</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.Registry.MODULES"><code class="docutils literal notranslate"><span class="pre">Registry.MODULES</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.Registry.PAYLOADS"><code class="docutils literal notranslate"><span class="pre">Registry.PAYLOADS</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.Registry.INITIALIZERS"><code class="docutils literal notranslate"><span class="pre">Registry.INITIALIZERS</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.Registry.CONFIG"><code class="docutils literal notranslate"><span class="pre">Registry.CONFIG</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.Registry.CFG_VALIDATORS"><code class="docutils literal notranslate"><span class="pre">Registry.CFG_VALIDATORS</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.REGISTRY"><code class="docutils literal notranslate"><span class="pre">REGISTRY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.create_registry_decorator"><code class="docutils literal notranslate"><span class="pre">create_registry_decorator()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.register_module"><code class="docutils literal notranslate"><span class="pre">register_module</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.register_payload"><code class="docutils literal notranslate"><span class="pre">register_payload</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.register_initializer"><code class="docutils literal notranslate"><span class="pre">register_initializer</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.register_config"><code class="docutils literal notranslate"><span class="pre">register_config</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.register_cfg_validator"><code class="docutils literal notranslate"><span class="pre">register_cfg_validator</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.MRO_PATH_ALIAS_MAP"><code class="docutils literal notranslate"><span class="pre">MRO_PATH_ALIAS_MAP</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.core.registry.INITIALIZERS_ALIAS_MAP"><code class="docutils literal notranslate"><span class="pre">INITIALIZERS_ALIAS_MAP</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

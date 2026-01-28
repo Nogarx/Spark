@@ -1,0 +1,659 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial #2: Execution &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=30646c52"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/execution';</script>
+    <link rel="icon" href="../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tutorial #3: Brains" href="brains.html" />
+    <link rel="prev" title="Tutorial #1: Modules and Components" href="modules_components.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <script>document.write(`<img src="../_static/spark_250px.png" class="logo__image only-dark" alt="Spark  documentation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brains.html">Tutorial #3: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph_editor.html">Tutorial #4: Graph Editor</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../autoapi/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../autoapi/spark/index.html">spark</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/flax_imports/index.html">spark.core.flax_imports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/validation/index.html">spark.core.validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/variables/index.html">spark.core.variables</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/editor_config/index.html">spark.graph_editor.editor_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/style/index.html">spark.graph_editor.style</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/ui/index.html">spark.graph_editor.ui</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/window/index.html">spark.graph_editor.window</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/nn/index.html">spark.nn</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/brain/index.html">spark.nn.brain</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/components/index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../tutorials.html" class="nav-link">Tutorials</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">Tutorial...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/tutorials/execution.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Tutorial #2: Execution</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-header">
+<section id="tutorial-2-execution">
+<h1>Tutorial #2: Execution<a class="headerlink" href="#tutorial-2-execution" title="Link to this heading">#</a></h1>
+</div><link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p><b><i>Spark</i></b>, is built on top of Jax and the one of the core features of Jax is Just-In-Time compilation, or JIT for short. JIT is extremely good at optimizing how your code executes. Therefore, it is important to have a minimum understanding of how to play with JIT. So, let’s start with a simple JIT example.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+
+<span class="c1"># Some really cool function</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">my_awesome_function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span>
+
+<span class="c1"># Two random arrays</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">key</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">key_x</span><span class="p">,</span> <span class="n">key_y</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">key_x</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">4096</span><span class="p">,</span><span class="mi">4096</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">key_y</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">4096</span><span class="p">,</span><span class="mi">4096</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+<span class="c1"># Test it!</span>
+<span class="o">%</span><span class="k">timeit</span> my_awesome_function(x, y)
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>1.41 ms ± 308 ns per loop (mean ± std. dev. of 7 runs, 1,000 loops each)
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Now, this is fast, but can it be better?</p>
+<p>Let’s JIT the funtion and run it again.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Some really cool and fast function</span>
+<span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">my_awesome_function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span>
+
+<span class="o">%</span><span class="k">timeit</span> my_awesome_function(x, y)
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>528 μs ± 302 ns per loop (mean ± std. dev. of 7 runs, 1,000 loops each)
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Note that, JIT as its name suggest, compiles the code just before running it, this leads to longer execution times the first the function is executed. Depending on the code being JITted this can lead to really long compilation times, for example, it is possible to compile and entire for loop that executes thousands of operations in total (note that this is not recommended but may be a useful trick depending on the circumstances).</p>
+<p>Unfortunately, it is slightly more complicated in <b><i>Spark</i></b> (but do not worry, it is not that complicated!).</p>
+<p>Under the hood Jax unfolds the computation graph and tries to optimize it, this however is not trivial when you have to do some state management. In <b><i>Spark</i></b> we borrow one of the core element of Flax, an excellent machine learning library, that allow us to not care to much about state management at the expense of a slightly more complicated JIT execution. Although this may change as <b><i>Spark</i></b> matures, right now this is the standard approach to execute your code.</p>
+<p>Let’s start by initializing some simple ALIF model.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Imports</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">spark</span>
+
+<span class="c1"># Number of neurons</span>
+<span class="n">units</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,)</span>
+
+<span class="c1"># Input shape</span>
+<span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">16</span><span class="p">,)</span>
+
+<span class="c1"># Model initialization</span>
+<span class="n">alif_neurons</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">neurons</span><span class="o">.</span><span class="n">ALIFNeuron</span><span class="p">(</span>
+    <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
+	<span class="n">max_delay</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+	<span class="n">inhibitory_rate</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+	<span class="n">_s_async_spikes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">_s_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Test the model.</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">key</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">rng</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">in_spikes</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">SpikeArray</span><span class="p">(</span> 
+    <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.5</span> 
+<span class="p">)</span>
+
+<span class="c1"># Note that the model the first time is called.</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">alif_neurons</span><span class="o">.</span><span class="n">soma</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Those are some nice somas!.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Oh no!, alif_neurons do not have a soma property.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="c1"># First call to alif_neurons </span>
+<span class="n">out_spikes</span> <span class="o">=</span> <span class="n">alif_neurons</span><span class="p">(</span><span class="n">in_spikes</span><span class="o">=</span><span class="n">in_spikes</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">out_spikes</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="c1"># Now the soma property exists.</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">alif_neurons</span><span class="o">.</span><span class="n">soma</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Those are some nice somas!.&#39;</span><span class="p">)</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Oh no!, alif_neurons do not have a soma property.&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Oh no!, alif_neurons do not have a soma property.
+
+{&#39;out_spikes&#39;: SpikeArray(value=Array([ 0.,  0., -0.,  0.,  0.,  0.,  0.,  0.], dtype=float16))} 
+
+Those are some nice somas!.
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Similarly, to the cases above, we just need to wrap the execution of the model inside a function that we can then compile. Remember that the first time the function is executed it can take a little bit more time (important if you want to benchmark your own models!).</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># JITted function for execution</span>
+<span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">inputs</span><span class="p">):</span>
+	<span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">inputs</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">model</span>		<span class="c1"># &lt;-- Return and replace the model. Otherwise the model will not change</span>
+
+<span class="c1"># Execution</span>
+<span class="n">outputs</span><span class="p">,</span> <span class="n">alif_neurons</span> <span class="o">=</span> <span class="n">run_model</span><span class="p">(</span><span class="n">alif_neurons</span><span class="p">,</span> <span class="n">in_spikes</span><span class="o">=</span><span class="n">in_spikes</span><span class="p">)</span> <span class="c1"># Note that we overwrite the model after the execution.</span>
+
+<span class="o">%</span><span class="k">timeit</span> run_model(alif_neurons, in_spikes=in_spikes)
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>126 μs ± 7.46 μs per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Although we can feed directly our model to JAX and it will execute fine and fast, it is almost always faster to split the model into a graph and a state (quirks of the code ¯\<em>(ツ)</em>/¯).</p>
+<p>To separate the logic of our model into a graph and an state we can use <b>spark.split</b> and to glue it back for execution we use <b>spark.merge</b>. Note that currently this is just a convinience wrapper arounds Flax’s nnx.split and nnx.merge, respectively, although it may change in the future. That’s it, this is as much as JIT as you need to know. Just remember, when you define your own models use <b>spark.Constant</b>  and <b>spark.Variable</b> to wrap your code, otherwise JIT is going to complain!.</p>
+<p>As a small observation, note that we feed everything to the model with <b>**inputs</b> since the <b>__call__</b> method only allows for keyworded arguments (which can still be received by position). This could be really advantageous when we encounter models that have more than one input stream or we have many different models that we want to try since it allows us to create code that is more reusable and flexible.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># JITted function for execution</span>
+<span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_model_split</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="o">**</span><span class="n">inputs</span><span class="p">):</span>
+	<span class="n">model</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>	<span class="c1"># Merge the graph and the state into a single executable model equivalent to ALIFNeuron.</span>
+	<span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">inputs</span><span class="p">)</span>
+	<span class="n">_</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">model</span><span class="p">))</span>		<span class="c1"># Split the model back into a graph and a state. Here we are discarding the graph since typically it doesn&#39;t change.</span>
+	<span class="k">return</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">state</span>
+
+<span class="c1"># Execution</span>
+<span class="n">graph</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">alif_neurons</span><span class="p">))</span>	<span class="c1"># &lt;-- Note that model is inside another parenthesis, this will be important for more complex cases.</span>
+<span class="n">outputs</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">run_model_split</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">in_spikes</span><span class="o">=</span><span class="n">in_spikes</span><span class="p">)</span>	<span class="c1"># Note that we overwrite the state after the execution.</span>
+
+<span class="o">%</span><span class="k">timeit</span> run_model_split(graph, state, in_spikes=in_spikes)
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>80.8 μs ± 3.18 μs per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>This is basically all the JAX &amp; JIT you need to know to get the most out of <b><i>Spark</i></b>!</p>
+</div></section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="modules_components.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorial #1: Modules and Components</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="brains.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tutorial #3: Brains</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

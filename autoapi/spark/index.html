@@ -1,0 +1,1807 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spark &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=30646c52"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/spark/index';</script>
+    <link rel="icon" href="../../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="spark.core" href="core/index.html" />
+    <link rel="prev" title="API Reference" href="../index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <script>document.write(`<img src="../../_static/spark_250px.png" class="logo__image only-dark" alt="Spark  documentation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/brains.html">Tutorial #3: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/graph_editor.html">Tutorial #4: Graph Editor</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="current reference internal" href="#">spark</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/flax_imports/index.html">spark.core.flax_imports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/validation/index.html">spark.core.validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/variables/index.html">spark.core.variables</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="graph_editor/editor_config/index.html">spark.graph_editor.editor_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="graph_editor/style/index.html">spark.graph_editor.style</a></li>
+<li class="toctree-l4"><a class="reference internal" href="graph_editor/ui/index.html">spark.graph_editor.ui</a></li>
+<li class="toctree-l4"><a class="reference internal" href="graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="graph_editor/window/index.html">spark.graph_editor.window</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="nn/index.html">spark.nn</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="nn/brain/index.html">spark.nn.brain</a></li>
+<li class="toctree-l4"><a class="reference internal" href="nn/components/index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="nn/initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="nn/interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="nn/neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API Reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">spark</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/autoapi/spark/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>spark</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#package-contents">Package Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant"><code class="docutils literal notranslate"><span class="pre">Constant</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.value"><code class="docutils literal notranslate"><span class="pre">Constant.value</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__jax_array__"><code class="docutils literal notranslate"><span class="pre">Constant.__jax_array__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__array__"><code class="docutils literal notranslate"><span class="pre">Constant.__array__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.shape"><code class="docutils literal notranslate"><span class="pre">Constant.shape</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.dtype"><code class="docutils literal notranslate"><span class="pre">Constant.dtype</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.ndim"><code class="docutils literal notranslate"><span class="pre">Constant.ndim</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.size"><code class="docutils literal notranslate"><span class="pre">Constant.size</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.T"><code class="docutils literal notranslate"><span class="pre">Constant.T</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__neg__"><code class="docutils literal notranslate"><span class="pre">Constant.__neg__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__pos__"><code class="docutils literal notranslate"><span class="pre">Constant.__pos__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__abs__"><code class="docutils literal notranslate"><span class="pre">Constant.__abs__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__invert__"><code class="docutils literal notranslate"><span class="pre">Constant.__invert__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__add__"><code class="docutils literal notranslate"><span class="pre">Constant.__add__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__sub__"><code class="docutils literal notranslate"><span class="pre">Constant.__sub__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__mul__"><code class="docutils literal notranslate"><span class="pre">Constant.__mul__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__truediv__"><code class="docutils literal notranslate"><span class="pre">Constant.__truediv__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__floordiv__"><code class="docutils literal notranslate"><span class="pre">Constant.__floordiv__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__mod__"><code class="docutils literal notranslate"><span class="pre">Constant.__mod__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__matmul__"><code class="docutils literal notranslate"><span class="pre">Constant.__matmul__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__pow__"><code class="docutils literal notranslate"><span class="pre">Constant.__pow__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__radd__"><code class="docutils literal notranslate"><span class="pre">Constant.__radd__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__rsub__"><code class="docutils literal notranslate"><span class="pre">Constant.__rsub__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__rmul__"><code class="docutils literal notranslate"><span class="pre">Constant.__rmul__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__rtruediv__"><code class="docutils literal notranslate"><span class="pre">Constant.__rtruediv__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__rfloordiv__"><code class="docutils literal notranslate"><span class="pre">Constant.__rfloordiv__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__rmod__"><code class="docutils literal notranslate"><span class="pre">Constant.__rmod__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__rmatmul__"><code class="docutils literal notranslate"><span class="pre">Constant.__rmatmul__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__rpow__"><code class="docutils literal notranslate"><span class="pre">Constant.__rpow__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Variable"><code class="docutils literal notranslate"><span class="pre">Variable</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Variable.value"><code class="docutils literal notranslate"><span class="pre">Variable.value</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Variable.__jax_array__"><code class="docutils literal notranslate"><span class="pre">Variable.__jax_array__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Variable.__array__"><code class="docutils literal notranslate"><span class="pre">Variable.__array__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Variable.shape"><code class="docutils literal notranslate"><span class="pre">Variable.shape</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SparkPayload"><code class="docutils literal notranslate"><span class="pre">SparkPayload</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SparkPayload.tree_flatten"><code class="docutils literal notranslate"><span class="pre">SparkPayload.tree_flatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SparkPayload.tree_unflatten"><code class="docutils literal notranslate"><span class="pre">SparkPayload.tree_unflatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SparkPayload.shape"><code class="docutils literal notranslate"><span class="pre">SparkPayload.shape</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SparkPayload.dtype"><code class="docutils literal notranslate"><span class="pre">SparkPayload.dtype</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray"><code class="docutils literal notranslate"><span class="pre">SpikeArray</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.async_spikes"><code class="docutils literal notranslate"><span class="pre">SpikeArray.async_spikes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.tree_flatten"><code class="docutils literal notranslate"><span class="pre">SpikeArray.tree_flatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.tree_unflatten"><code class="docutils literal notranslate"><span class="pre">SpikeArray.tree_unflatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.__jax_array__"><code class="docutils literal notranslate"><span class="pre">SpikeArray.__jax_array__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.__array__"><code class="docutils literal notranslate"><span class="pre">SpikeArray.__array__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.spikes"><code class="docutils literal notranslate"><span class="pre">SpikeArray.spikes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.inhibition_mask"><code class="docutils literal notranslate"><span class="pre">SpikeArray.inhibition_mask</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.value"><code class="docutils literal notranslate"><span class="pre">SpikeArray.value</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.shape"><code class="docutils literal notranslate"><span class="pre">SpikeArray.shape</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.dtype"><code class="docutils literal notranslate"><span class="pre">SpikeArray.dtype</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.CurrentArray"><code class="docutils literal notranslate"><span class="pre">CurrentArray</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PotentialArray"><code class="docutils literal notranslate"><span class="pre">PotentialArray</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.FloatArray"><code class="docutils literal notranslate"><span class="pre">FloatArray</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.IntegerArray"><code class="docutils literal notranslate"><span class="pre">IntegerArray</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.BooleanMask"><code class="docutils literal notranslate"><span class="pre">BooleanMask</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs"><code class="docutils literal notranslate"><span class="pre">PortSpecs</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.payload_type"><code class="docutils literal notranslate"><span class="pre">PortSpecs.payload_type</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.shape"><code class="docutils literal notranslate"><span class="pre">PortSpecs.shape</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.dtype"><code class="docutils literal notranslate"><span class="pre">PortSpecs.dtype</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.description"><code class="docutils literal notranslate"><span class="pre">PortSpecs.description</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.async_spikes"><code class="docutils literal notranslate"><span class="pre">PortSpecs.async_spikes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.inhibition_mask"><code class="docutils literal notranslate"><span class="pre">PortSpecs.inhibition_mask</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.to_dict"><code class="docutils literal notranslate"><span class="pre">PortSpecs.to_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.from_dict"><code class="docutils literal notranslate"><span class="pre">PortSpecs.from_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.from_portspecs_list"><code class="docutils literal notranslate"><span class="pre">PortSpecs.from_portspecs_list()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortMap"><code class="docutils literal notranslate"><span class="pre">PortMap</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortMap.origin"><code class="docutils literal notranslate"><span class="pre">PortMap.origin</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortMap.port"><code class="docutils literal notranslate"><span class="pre">PortMap.port</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortMap.to_dict"><code class="docutils literal notranslate"><span class="pre">PortMap.to_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortMap.from_dict"><code class="docutils literal notranslate"><span class="pre">PortMap.from_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.ModuleSpecs"><code class="docutils literal notranslate"><span class="pre">ModuleSpecs</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.ModuleSpecs.name"><code class="docutils literal notranslate"><span class="pre">ModuleSpecs.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.ModuleSpecs.module_cls"><code class="docutils literal notranslate"><span class="pre">ModuleSpecs.module_cls</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.ModuleSpecs.inputs"><code class="docutils literal notranslate"><span class="pre">ModuleSpecs.inputs</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.ModuleSpecs.config"><code class="docutils literal notranslate"><span class="pre">ModuleSpecs.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.ModuleSpecs.to_dict"><code class="docutils literal notranslate"><span class="pre">ModuleSpecs.to_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.ModuleSpecs.from_dict"><code class="docutils literal notranslate"><span class="pre">ModuleSpecs.from_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.split"><code class="docutils literal notranslate"><span class="pre">split()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.merge"><code class="docutils literal notranslate"><span class="pre">merge()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.register_module"><code class="docutils literal notranslate"><span class="pre">register_module</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.register_initializer"><code class="docutils literal notranslate"><span class="pre">register_initializer</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.register_payload"><code class="docutils literal notranslate"><span class="pre">register_payload</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.register_config"><code class="docutils literal notranslate"><span class="pre">register_config</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.register_cfg_validator"><code class="docutils literal notranslate"><span class="pre">register_cfg_validator</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.REGISTRY"><code class="docutils literal notranslate"><span class="pre">REGISTRY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor"><code class="docutils literal notranslate"><span class="pre">GraphEditor</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.app"><code class="docutils literal notranslate"><span class="pre">GraphEditor.app</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.launch"><code class="docutils literal notranslate"><span class="pre">GraphEditor.launch()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.exit_editor"><code class="docutils literal notranslate"><span class="pre">GraphEditor.exit_editor()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.closeEvent"><code class="docutils literal notranslate"><span class="pre">GraphEditor.closeEvent()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.new_session"><code class="docutils literal notranslate"><span class="pre">GraphEditor.new_session()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.save_session"><code class="docutils literal notranslate"><span class="pre">GraphEditor.save_session()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.save_session_as"><code class="docutils literal notranslate"><span class="pre">GraphEditor.save_session_as()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.load_session"><code class="docutils literal notranslate"><span class="pre">GraphEditor.load_session()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.load_from_model"><code class="docutils literal notranslate"><span class="pre">GraphEditor.load_from_model()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.export_model"><code class="docutils literal notranslate"><span class="pre">GraphEditor.export_model()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.export_model_as"><code class="docutils literal notranslate"><span class="pre">GraphEditor.export_model_as()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-spark">
+<span id="spark"></span><h1>spark<a class="headerlink" href="#module-spark" title="Link to this heading">#</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="core/index.html">spark.core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_editor/index.html">spark.graph_editor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nn/index.html">spark.nn</a></li>
+</ul>
+</div>
+</section>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.register_module" title="spark.register_module"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_module</span></code></a></p></td>
+<td><p>Decorator used to register a new SparkModule.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.register_initializer" title="spark.register_initializer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_initializer</span></code></a></p></td>
+<td><p>Decorator used to register a new Initializer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.register_payload" title="spark.register_payload"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_payload</span></code></a></p></td>
+<td><p>Decorator used to register a new SparkPayload.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.register_config" title="spark.register_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_config</span></code></a></p></td>
+<td><p>Decorator used to register a new SparkConfig.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.register_cfg_validator" title="spark.register_cfg_validator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_cfg_validator</span></code></a></p></td>
+<td><p>Decorator used to register a new ConfigurationValidator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.REGISTRY" title="spark.REGISTRY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">REGISTRY</span></code></a></p></td>
+<td><p>Registry singleton.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.Constant" title="spark.Constant"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Constant</span></code></a></p></td>
+<td><p>Jax.Array wrapper for constant arrays.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.Variable" title="spark.Variable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Variable</span></code></a></p></td>
+<td><p>The base class for all <code class="docutils literal notranslate"><span class="pre">Variable</span></code> types.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.SparkPayload" title="spark.SparkPayload"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SparkPayload</span></code></a></p></td>
+<td><p>Abstract payload definition to validate exchanges between SparkModule's.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.SpikeArray" title="spark.SpikeArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpikeArray</span></code></a></p></td>
+<td><p>Representation of a collection of spike events.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.CurrentArray" title="spark.CurrentArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CurrentArray</span></code></a></p></td>
+<td><p>Representation of a collection of currents.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.PotentialArray" title="spark.PotentialArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PotentialArray</span></code></a></p></td>
+<td><p>Representation of a collection of membrane potentials.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.FloatArray" title="spark.FloatArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FloatArray</span></code></a></p></td>
+<td><p>Representation of a float array.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.IntegerArray" title="spark.IntegerArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IntegerArray</span></code></a></p></td>
+<td><p>Representation of an integer array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.BooleanMask" title="spark.BooleanMask"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BooleanMask</span></code></a></p></td>
+<td><p>Representation of an inhibitory boolean mask.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.PortSpecs" title="spark.PortSpecs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PortSpecs</span></code></a></p></td>
+<td><p>Base specification for a port of an SparkModule.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.PortMap" title="spark.PortMap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PortMap</span></code></a></p></td>
+<td><p>Specification for an output port of an SparkModule.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.ModuleSpecs" title="spark.ModuleSpecs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModuleSpecs</span></code></a></p></td>
+<td><p>Specification for SparkModule automatic constructor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.GraphEditor" title="spark.GraphEditor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GraphEditor</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.split" title="spark.split"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split</span></code></a>(node, *filters)</p></td>
+<td><p>Wrapper around flax.nnx.split to simply imports.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.merge" title="spark.merge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge</span></code></a>(graphdef, state, /, *states)</p></td>
+<td><p>Wrapper around flax.nnx.merge to simply imports.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="package-contents">
+<h2>Package Contents<a class="headerlink" href="#package-contents" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.Constant">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">Constant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant" title="Link to this definition">#</a></dt>
+<dd><p>Jax.Array wrapper for constant arrays.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>Any</em>)</p></li>
+<li><p><strong>dtype</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.Constant.value">
+<span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.value" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__jax_array__">
+<span class="sig-name descname"><span class="pre">__jax_array__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__jax_array__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__array__">
+<span class="sig-name descname"><span class="pre">__array__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__array__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.Constant.shape">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Ellipsis</span><span class="p"><span class="pre">]</span></span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.shape" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>, Ellipsis]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.Constant.dtype">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dtype</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.dtype" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.Constant.ndim">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ndim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.ndim" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.Constant.size">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.size" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.Constant.T">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">T</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.T" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__neg__">
+<span class="sig-name descname"><span class="pre">__neg__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__neg__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__pos__">
+<span class="sig-name descname"><span class="pre">__pos__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__pos__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__abs__">
+<span class="sig-name descname"><span class="pre">__abs__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__abs__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__invert__">
+<span class="sig-name descname"><span class="pre">__invert__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__invert__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__add__">
+<span class="sig-name descname"><span class="pre">__add__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__add__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__sub__">
+<span class="sig-name descname"><span class="pre">__sub__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__sub__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__mul__">
+<span class="sig-name descname"><span class="pre">__mul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__mul__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__truediv__">
+<span class="sig-name descname"><span class="pre">__truediv__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__truediv__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__floordiv__">
+<span class="sig-name descname"><span class="pre">__floordiv__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__floordiv__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__mod__">
+<span class="sig-name descname"><span class="pre">__mod__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__mod__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__matmul__">
+<span class="sig-name descname"><span class="pre">__matmul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__matmul__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__pow__">
+<span class="sig-name descname"><span class="pre">__pow__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__pow__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__radd__">
+<span class="sig-name descname"><span class="pre">__radd__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__radd__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__rsub__">
+<span class="sig-name descname"><span class="pre">__rsub__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__rsub__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__rmul__">
+<span class="sig-name descname"><span class="pre">__rmul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__rmul__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__rtruediv__">
+<span class="sig-name descname"><span class="pre">__rtruediv__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__rtruediv__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__rfloordiv__">
+<span class="sig-name descname"><span class="pre">__rfloordiv__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__rfloordiv__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__rmod__">
+<span class="sig-name descname"><span class="pre">__rmod__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__rmod__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__rmatmul__">
+<span class="sig-name descname"><span class="pre">__rmatmul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__rmatmul__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Constant.__rpow__">
+<span class="sig-name descname"><span class="pre">__rpow__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Constant.__rpow__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.Variable">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">Variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Variable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://flax.readthedocs.io/en/stable/api_reference/flax.nnx/variables.html#flax.nnx.Variable" title="(in Flax)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">flax.nnx.Variable</span></code></a></p>
+<p>The base class for all <code class="docutils literal notranslate"><span class="pre">Variable</span></code> types.
+Note that this is just a convinience wrapper around Flax’s nnx.Variable to simplify imports.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>Any</em>)</p></li>
+<li><p><strong>dtype</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.Variable.value">
+<span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Variable.value" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Variable.__jax_array__">
+<span class="sig-name descname"><span class="pre">__jax_array__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Variable.__jax_array__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.Variable.__array__">
+<span class="sig-name descname"><span class="pre">__array__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Variable.__array__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.Variable.shape">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Ellipsis</span><span class="p"><span class="pre">]</span></span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.Variable.shape" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>, Ellipsis]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.SparkPayload">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">SparkPayload</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.SparkPayload" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Abstract payload definition to validate exchanges between SparkModule’s.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.SparkPayload.tree_flatten">
+<span class="sig-name descname"><span class="pre">tree_flatten</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.SparkPayload.tree_flatten" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a>], None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.SparkPayload.tree_unflatten">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tree_unflatten</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aux_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">children</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.SparkPayload.tree_unflatten" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.SparkPayload.shape">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.SparkPayload.shape" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.SparkPayload.dtype">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dtype</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.SparkPayload.dtype" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.SpikeArray">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">SpikeArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inhibition_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">async_spikes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.SpikeArray" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.SparkPayload" title="spark.SparkPayload"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SparkPayload</span></code></a></p>
+<p>Representation of a collection of spike events.</p>
+<dl class="simple">
+<dt>Init:</dt><dd><p>spikes: jax.Array[bool], True if neuron spiked, False otherwise
+inhibition_mask: jax.Array[bool], True if neuron is inhibitory, False otherwise</p>
+</dd>
+</dl>
+<p>The async_spikes flag is automatically set True by delay mechanisms that perform neuron-to-neuron specific delays.
+Note that when async_spikes is True the shape of the spikes changes from (origin_units,) to (origin_units, target_units).
+This is important when implementing new synaptic models, since fully valid synaptic models should be able to handle both cases.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spikes</strong> (<a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a>)</p></li>
+<li><p><strong>inhibition_mask</strong> (<a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a>)</p></li>
+<li><p><strong>async_spikes</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.SpikeArray.async_spikes">
+<span class="sig-name descname"><span class="pre">async_spikes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.SpikeArray.async_spikes" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.SpikeArray.tree_flatten">
+<span class="sig-name descname"><span class="pre">tree_flatten</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.SpikeArray.tree_flatten" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.SpikeArray.tree_unflatten">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tree_unflatten</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aux_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">children</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.SpikeArray.tree_unflatten" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.SpikeArray.__jax_array__">
+<span class="sig-name descname"><span class="pre">__jax_array__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.SpikeArray.__jax_array__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>jax.numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.SpikeArray.__array__">
+<span class="sig-name descname"><span class="pre">__array__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.SpikeArray.__array__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.SpikeArray.spikes">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spikes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.SpikeArray.spikes" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.SpikeArray.inhibition_mask">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inhibition_mask</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.SpikeArray.inhibition_mask" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.SpikeArray.value">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.SpikeArray.value" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.SpikeArray.shape">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Ellipsis</span><span class="p"><span class="pre">]</span></span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.SpikeArray.shape" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>, Ellipsis]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.SpikeArray.dtype">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dtype</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">jax.typing.DTypeLike</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.SpikeArray.dtype" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>jax.typing.DTypeLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.CurrentArray">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">CurrentArray</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.CurrentArray" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">ValueSparkPayload</span></code></p>
+<p>Representation of a collection of currents.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.PotentialArray">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">PotentialArray</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.PotentialArray" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">ValueSparkPayload</span></code></p>
+<p>Representation of a collection of membrane potentials.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.FloatArray">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">FloatArray</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.FloatArray" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">ValueSparkPayload</span></code></p>
+<p>Representation of a float array.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.IntegerArray">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">IntegerArray</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.IntegerArray" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">ValueSparkPayload</span></code></p>
+<p>Representation of an integer array.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.BooleanMask">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">BooleanMask</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.BooleanMask" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">ValueSparkPayload</span></code></p>
+<p>Representation of an inhibitory boolean mask.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.PortSpecs">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">PortSpecs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">async_spikes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inhibition_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.PortSpecs" title="Link to this definition">#</a></dt>
+<dd><p>Base specification for a port of an SparkModule.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>payload_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em>[</em><a class="reference internal" href="core/payloads/index.html#spark.core.payloads.SparkPayload" title="spark.core.payloads.SparkPayload"><em>spark.core.payloads.SparkPayload</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>Ellipsis</em><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>Ellipsis</em><em>]</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>dtype</strong> (<em>jax.typing.DTypeLike</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>async_spikes</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>inhibition_mask</strong> (<a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.PortSpecs.payload_type">
+<span class="sig-name descname"><span class="pre">payload_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><span class="pre">type</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core/payloads/index.html#spark.core.payloads.SparkPayload" title="spark.core.payloads.SparkPayload"><span class="pre">spark.core.payloads.SparkPayload</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.PortSpecs.payload_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.PortSpecs.shape">
+<span class="sig-name descname"><span class="pre">shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Ellipsis</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Ellipsis</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.PortSpecs.shape" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.PortSpecs.dtype">
+<span class="sig-name descname"><span class="pre">dtype</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">jax.typing.DTypeLike</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.PortSpecs.dtype" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.PortSpecs.description">
+<span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.PortSpecs.description" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.PortSpecs.async_spikes">
+<span class="sig-name descname"><span class="pre">async_spikes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(None,)</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.PortSpecs.async_spikes" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.PortSpecs.inhibition_mask">
+<span class="sig-name descname"><span class="pre">inhibition_mask</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(None,)</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.PortSpecs.inhibition_mask" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.PortSpecs.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_partial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.PortSpecs.to_dict" title="Link to this definition">#</a></dt>
+<dd><p>Serialize PortSpecs to dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>is_partial</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.PortSpecs.from_dict">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dct</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_partial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.PortSpecs.from_dict" title="Link to this definition">#</a></dt>
+<dd><p>Deserialize dictionary to  PortSpecs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dct</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a>)</p></li>
+<li><p><strong>is_partial</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.PortSpecs.from_portspecs_list">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_portspecs_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">portspec_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate_async</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.PortSpecs.from_portspecs_list" title="Link to this definition">#</a></dt>
+<dd><p>Merges a list of PortSpecs into a single PortSpecs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>portspec_list</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference internal" href="#spark.PortSpecs" title="spark.PortSpecs"><em>PortSpecs</em></a><em>]</em>)</p></li>
+<li><p><strong>validate_async</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Self</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.PortMap">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">PortMap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">origin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.PortMap" title="Link to this definition">#</a></dt>
+<dd><p>Specification for an output port of an SparkModule.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>origin</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>port</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.PortMap.origin">
+<span class="sig-name descname"><span class="pre">origin</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.PortMap.origin" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.PortMap.port">
+<span class="sig-name descname"><span class="pre">port</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.PortMap.port" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.PortMap.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_partial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.PortMap.to_dict" title="Link to this definition">#</a></dt>
+<dd><p>Serialize PortMap to dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>is_partial</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.PortMap.from_dict">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dct</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_partial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.PortMap.from_dict" title="Link to this definition">#</a></dt>
+<dd><p>Deserialize dictionary to PortMap</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dct</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a>)</p></li>
+<li><p><strong>is_partial</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Self</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.ModuleSpecs">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">ModuleSpecs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.ModuleSpecs" title="Link to this definition">#</a></dt>
+<dd><p>Specification for SparkModule automatic constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>module_cls</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a>)</p></li>
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference internal" href="#spark.PortMap" title="spark.PortMap"><em>PortMap</em></a><em>]</em><em>]</em>)</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="core/config/index.html#spark.core.config.BaseSparkConfig" title="spark.core.config.BaseSparkConfig"><em>spark.core.config.BaseSparkConfig</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.ModuleSpecs.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.ModuleSpecs.name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.ModuleSpecs.module_cls">
+<span class="sig-name descname"><span class="pre">module_cls</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><span class="pre">type</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core/module/index.html#spark.core.module.SparkModule" title="spark.core.module.SparkModule"><span class="pre">spark.core.module.SparkModule</span></a><span class="p"><span class="pre">]</span></span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.ModuleSpecs.module_cls" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.ModuleSpecs.inputs">
+<span class="sig-name descname"><span class="pre">inputs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#spark.PortMap" title="spark.PortMap"><span class="pre">PortMap</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.ModuleSpecs.inputs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.ModuleSpecs.config">
+<span class="sig-name descname"><span class="pre">config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core/config/index.html#spark.core.config.BaseSparkConfig" title="spark.core.config.BaseSparkConfig"><span class="pre">spark.core.config.BaseSparkConfig</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.ModuleSpecs.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.ModuleSpecs.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_partial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.ModuleSpecs.to_dict" title="Link to this definition">#</a></dt>
+<dd><p>Serialize ModuleSpecs to dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>is_partial</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.ModuleSpecs.from_dict">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dct</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_partial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.ModuleSpecs.from_dict" title="Link to this definition">#</a></dt>
+<dd><p>Deserialize dictionary to ModuleSpecs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dct</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a>)</p></li>
+<li><p><strong>is_partial</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Self</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.split">
+<span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">filters</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.split" title="Link to this definition">#</a></dt>
+<dd><p>Wrapper around flax.nnx.split to simply imports.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node</strong> (<em>A</em>)</p></li>
+<li><p><strong>filters</strong> (<em>flax.nnx.filterlib.Filter</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://flax.readthedocs.io/en/stable/api_reference/flax.nnx/graph.html#flax.nnx.GraphDef" title="(in Flax)">flax.nnx.graph.GraphDef</a>[A], flax.nnx.graph.GraphState | flax.nnx.variablelib.VariableState, typing_extensions.Unpack[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[flax.nnx.graph.GraphState | flax.nnx.variablelib.VariableState, Ellipsis]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.merge">
+<span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graphdef</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">states</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.merge" title="Link to this definition">#</a></dt>
+<dd><p>Wrapper around flax.nnx.merge to simply imports.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graphdef</strong> (<a class="reference external" href="https://flax.readthedocs.io/en/stable/api_reference/flax.nnx/graph.html#flax.nnx.GraphDef" title="(in Flax)"><em>flax.nnx.graph.GraphDef</em></a><em>[</em><em>A</em><em>]</em>)</p></li>
+<li><p><strong>state</strong> (<em>Any</em>)</p></li>
+<li><p><strong>states</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>A</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.register_module">
+<span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">register_module</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.register_module" title="Link to this definition">#</a></dt>
+<dd><p>Decorator used to register a new SparkModule.
+Note that module must inherit from spark.nn.Module (spark.core.module.SparkModule)</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.register_initializer">
+<span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">register_initializer</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.register_initializer" title="Link to this definition">#</a></dt>
+<dd><p>Decorator used to register a new Initializer.
+Note that module must inherit from spark.nn.initializers.base.Initializer</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.register_payload">
+<span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">register_payload</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.register_payload" title="Link to this definition">#</a></dt>
+<dd><p>Decorator used to register a new SparkPayload.
+Note that module must inherit from spark.SparkPayload (spark.core.payloads.SparkPayload)</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.register_config">
+<span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">register_config</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.register_config" title="Link to this definition">#</a></dt>
+<dd><p>Decorator used to register a new SparkConfig.
+Note that module must inherit from spark.nn.BaseConfig (spark.core.config.BaseSparkConfig)</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.register_cfg_validator">
+<span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">register_cfg_validator</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.register_cfg_validator" title="Link to this definition">#</a></dt>
+<dd><p>Decorator used to register a new ConfigurationValidator.
+Note that module must inherit from spark.core.config_validation.ConfigurationValidator</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.REGISTRY">
+<span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">REGISTRY</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.REGISTRY" title="Link to this definition">#</a></dt>
+<dd><p>Registry singleton.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.GraphEditor">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.</span></span><span class="sig-name descname"><span class="pre">GraphEditor</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.GraphEditor" title="Link to this definition">#</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="spark.GraphEditor.app">
+<span class="sig-name descname"><span class="pre">app</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.GraphEditor.app" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.GraphEditor.launch">
+<span class="sig-name descname"><span class="pre">launch</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.GraphEditor.launch" title="Link to this definition">#</a></dt>
+<dd><p>Creates and shows the editor window without blocking.
+This method is safe to call multiple times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.GraphEditor.exit_editor">
+<span class="sig-name descname"><span class="pre">exit_editor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.GraphEditor.exit_editor" title="Link to this definition">#</a></dt>
+<dd><p>Exit editor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.GraphEditor.closeEvent">
+<span class="sig-name descname"><span class="pre">closeEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.GraphEditor.closeEvent" title="Link to this definition">#</a></dt>
+<dd><p>Overrides the default close event to check for unsaved changes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.GraphEditor.new_session">
+<span class="sig-name descname"><span class="pre">new_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.GraphEditor.new_session" title="Link to this definition">#</a></dt>
+<dd><p>Clears the current session after checking for unsaved changes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.GraphEditor.save_session">
+<span class="sig-name descname"><span class="pre">save_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.GraphEditor.save_session" title="Link to this definition">#</a></dt>
+<dd><p>Saves the current session to a Spark Graph Editor file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.GraphEditor.save_session_as">
+<span class="sig-name descname"><span class="pre">save_session_as</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.GraphEditor.save_session_as" title="Link to this definition">#</a></dt>
+<dd><p>Saves the current session to a new Spark Graph Editor file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.GraphEditor.load_session">
+<span class="sig-name descname"><span class="pre">load_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.GraphEditor.load_session" title="Link to this definition">#</a></dt>
+<dd><p>Loads a graph state from a Spark Graph Editor file after checking for unsaved changes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.GraphEditor.load_from_model">
+<span class="sig-name descname"><span class="pre">load_from_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.GraphEditor.load_from_model" title="Link to this definition">#</a></dt>
+<dd><p>Loads a graph state from a Spark configuration file after checking for unsaved changes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.GraphEditor.export_model">
+<span class="sig-name descname"><span class="pre">export_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.GraphEditor.export_model" title="Link to this definition">#</a></dt>
+<dd><p>Exports the graph state to a Spark configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.GraphEditor.export_model_as">
+<span class="sig-name descname"><span class="pre">export_model_as</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.GraphEditor.export_model_as" title="Link to this definition">#</a></dt>
+<dd><p>Exports the graph state to a new Spark configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">API Reference</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="core/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">spark.core</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#package-contents">Package Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant"><code class="docutils literal notranslate"><span class="pre">Constant</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.value"><code class="docutils literal notranslate"><span class="pre">Constant.value</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__jax_array__"><code class="docutils literal notranslate"><span class="pre">Constant.__jax_array__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__array__"><code class="docutils literal notranslate"><span class="pre">Constant.__array__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.shape"><code class="docutils literal notranslate"><span class="pre">Constant.shape</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.dtype"><code class="docutils literal notranslate"><span class="pre">Constant.dtype</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.ndim"><code class="docutils literal notranslate"><span class="pre">Constant.ndim</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.size"><code class="docutils literal notranslate"><span class="pre">Constant.size</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.T"><code class="docutils literal notranslate"><span class="pre">Constant.T</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__neg__"><code class="docutils literal notranslate"><span class="pre">Constant.__neg__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__pos__"><code class="docutils literal notranslate"><span class="pre">Constant.__pos__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__abs__"><code class="docutils literal notranslate"><span class="pre">Constant.__abs__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__invert__"><code class="docutils literal notranslate"><span class="pre">Constant.__invert__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__add__"><code class="docutils literal notranslate"><span class="pre">Constant.__add__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__sub__"><code class="docutils literal notranslate"><span class="pre">Constant.__sub__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__mul__"><code class="docutils literal notranslate"><span class="pre">Constant.__mul__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__truediv__"><code class="docutils literal notranslate"><span class="pre">Constant.__truediv__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__floordiv__"><code class="docutils literal notranslate"><span class="pre">Constant.__floordiv__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__mod__"><code class="docutils literal notranslate"><span class="pre">Constant.__mod__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__matmul__"><code class="docutils literal notranslate"><span class="pre">Constant.__matmul__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__pow__"><code class="docutils literal notranslate"><span class="pre">Constant.__pow__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__radd__"><code class="docutils literal notranslate"><span class="pre">Constant.__radd__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__rsub__"><code class="docutils literal notranslate"><span class="pre">Constant.__rsub__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__rmul__"><code class="docutils literal notranslate"><span class="pre">Constant.__rmul__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__rtruediv__"><code class="docutils literal notranslate"><span class="pre">Constant.__rtruediv__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__rfloordiv__"><code class="docutils literal notranslate"><span class="pre">Constant.__rfloordiv__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__rmod__"><code class="docutils literal notranslate"><span class="pre">Constant.__rmod__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__rmatmul__"><code class="docutils literal notranslate"><span class="pre">Constant.__rmatmul__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Constant.__rpow__"><code class="docutils literal notranslate"><span class="pre">Constant.__rpow__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Variable"><code class="docutils literal notranslate"><span class="pre">Variable</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Variable.value"><code class="docutils literal notranslate"><span class="pre">Variable.value</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Variable.__jax_array__"><code class="docutils literal notranslate"><span class="pre">Variable.__jax_array__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Variable.__array__"><code class="docutils literal notranslate"><span class="pre">Variable.__array__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.Variable.shape"><code class="docutils literal notranslate"><span class="pre">Variable.shape</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SparkPayload"><code class="docutils literal notranslate"><span class="pre">SparkPayload</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SparkPayload.tree_flatten"><code class="docutils literal notranslate"><span class="pre">SparkPayload.tree_flatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SparkPayload.tree_unflatten"><code class="docutils literal notranslate"><span class="pre">SparkPayload.tree_unflatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SparkPayload.shape"><code class="docutils literal notranslate"><span class="pre">SparkPayload.shape</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SparkPayload.dtype"><code class="docutils literal notranslate"><span class="pre">SparkPayload.dtype</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray"><code class="docutils literal notranslate"><span class="pre">SpikeArray</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.async_spikes"><code class="docutils literal notranslate"><span class="pre">SpikeArray.async_spikes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.tree_flatten"><code class="docutils literal notranslate"><span class="pre">SpikeArray.tree_flatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.tree_unflatten"><code class="docutils literal notranslate"><span class="pre">SpikeArray.tree_unflatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.__jax_array__"><code class="docutils literal notranslate"><span class="pre">SpikeArray.__jax_array__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.__array__"><code class="docutils literal notranslate"><span class="pre">SpikeArray.__array__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.spikes"><code class="docutils literal notranslate"><span class="pre">SpikeArray.spikes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.inhibition_mask"><code class="docutils literal notranslate"><span class="pre">SpikeArray.inhibition_mask</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.value"><code class="docutils literal notranslate"><span class="pre">SpikeArray.value</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.shape"><code class="docutils literal notranslate"><span class="pre">SpikeArray.shape</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.SpikeArray.dtype"><code class="docutils literal notranslate"><span class="pre">SpikeArray.dtype</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.CurrentArray"><code class="docutils literal notranslate"><span class="pre">CurrentArray</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PotentialArray"><code class="docutils literal notranslate"><span class="pre">PotentialArray</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.FloatArray"><code class="docutils literal notranslate"><span class="pre">FloatArray</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.IntegerArray"><code class="docutils literal notranslate"><span class="pre">IntegerArray</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.BooleanMask"><code class="docutils literal notranslate"><span class="pre">BooleanMask</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs"><code class="docutils literal notranslate"><span class="pre">PortSpecs</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.payload_type"><code class="docutils literal notranslate"><span class="pre">PortSpecs.payload_type</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.shape"><code class="docutils literal notranslate"><span class="pre">PortSpecs.shape</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.dtype"><code class="docutils literal notranslate"><span class="pre">PortSpecs.dtype</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.description"><code class="docutils literal notranslate"><span class="pre">PortSpecs.description</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.async_spikes"><code class="docutils literal notranslate"><span class="pre">PortSpecs.async_spikes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.inhibition_mask"><code class="docutils literal notranslate"><span class="pre">PortSpecs.inhibition_mask</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.to_dict"><code class="docutils literal notranslate"><span class="pre">PortSpecs.to_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.from_dict"><code class="docutils literal notranslate"><span class="pre">PortSpecs.from_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortSpecs.from_portspecs_list"><code class="docutils literal notranslate"><span class="pre">PortSpecs.from_portspecs_list()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortMap"><code class="docutils literal notranslate"><span class="pre">PortMap</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortMap.origin"><code class="docutils literal notranslate"><span class="pre">PortMap.origin</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortMap.port"><code class="docutils literal notranslate"><span class="pre">PortMap.port</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortMap.to_dict"><code class="docutils literal notranslate"><span class="pre">PortMap.to_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.PortMap.from_dict"><code class="docutils literal notranslate"><span class="pre">PortMap.from_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.ModuleSpecs"><code class="docutils literal notranslate"><span class="pre">ModuleSpecs</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.ModuleSpecs.name"><code class="docutils literal notranslate"><span class="pre">ModuleSpecs.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.ModuleSpecs.module_cls"><code class="docutils literal notranslate"><span class="pre">ModuleSpecs.module_cls</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.ModuleSpecs.inputs"><code class="docutils literal notranslate"><span class="pre">ModuleSpecs.inputs</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.ModuleSpecs.config"><code class="docutils literal notranslate"><span class="pre">ModuleSpecs.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.ModuleSpecs.to_dict"><code class="docutils literal notranslate"><span class="pre">ModuleSpecs.to_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.ModuleSpecs.from_dict"><code class="docutils literal notranslate"><span class="pre">ModuleSpecs.from_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.split"><code class="docutils literal notranslate"><span class="pre">split()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.merge"><code class="docutils literal notranslate"><span class="pre">merge()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.register_module"><code class="docutils literal notranslate"><span class="pre">register_module</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.register_initializer"><code class="docutils literal notranslate"><span class="pre">register_initializer</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.register_payload"><code class="docutils literal notranslate"><span class="pre">register_payload</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.register_config"><code class="docutils literal notranslate"><span class="pre">register_config</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.register_cfg_validator"><code class="docutils literal notranslate"><span class="pre">register_cfg_validator</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.REGISTRY"><code class="docutils literal notranslate"><span class="pre">REGISTRY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor"><code class="docutils literal notranslate"><span class="pre">GraphEditor</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.app"><code class="docutils literal notranslate"><span class="pre">GraphEditor.app</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.launch"><code class="docutils literal notranslate"><span class="pre">GraphEditor.launch()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.exit_editor"><code class="docutils literal notranslate"><span class="pre">GraphEditor.exit_editor()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.closeEvent"><code class="docutils literal notranslate"><span class="pre">GraphEditor.closeEvent()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.new_session"><code class="docutils literal notranslate"><span class="pre">GraphEditor.new_session()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.save_session"><code class="docutils literal notranslate"><span class="pre">GraphEditor.save_session()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.save_session_as"><code class="docutils literal notranslate"><span class="pre">GraphEditor.save_session_as()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.load_session"><code class="docutils literal notranslate"><span class="pre">GraphEditor.load_session()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.load_from_model"><code class="docutils literal notranslate"><span class="pre">GraphEditor.load_from_model()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.export_model"><code class="docutils literal notranslate"><span class="pre">GraphEditor.export_model()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.GraphEditor.export_model_as"><code class="docutils literal notranslate"><span class="pre">GraphEditor.export_model_as()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

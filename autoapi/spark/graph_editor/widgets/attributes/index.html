@@ -1,0 +1,1117 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spark.graph_editor.widgets.attributes &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../../_static/copybutton.js?v=30646c52"></script>
+    <script src="../../../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/spark/graph_editor/widgets/attributes/index';</script>
+    <link rel="icon" href="../../../../../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <link rel="next" title="spark.graph_editor.widgets.base" href="../base/index.html" />
+    <link rel="prev" title="spark.graph_editor.widgets" href="../index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <script>document.write(`<img src="../../../../../_static/spark_250px.png" class="logo__image only-dark" alt="Spark  documentation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/brains.html">Tutorial #3: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/graph_editor.html">Tutorial #4: Graph Editor</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../../index.html">spark</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/flax_imports/index.html">spark.core.flax_imports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/validation/index.html">spark.core.validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/variables/index.html">spark.core.variables</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../../index.html">spark.graph_editor</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../editor_config/index.html">spark.graph_editor.editor_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../style/index.html">spark.graph_editor.style</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../ui/index.html">spark.graph_editor.ui</a></li>
+<li class="toctree-l4 current active"><a class="reference internal" href="../index.html">spark.graph_editor.widgets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../window/index.html">spark.graph_editor.window</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../nn/index.html">spark.nn</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../nn/brain/index.html">spark.nn.brain</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../nn/components/index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../nn/initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../nn/interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../nn/neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><i class="fa-solid fa-ellipsis"></i></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">spark.graph_editor.widgets</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">spark.graph_...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../../../_sources/autoapi/spark/graph_editor/widgets/attributes/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>spark.graph_editor.widgets.attributes</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags"><code class="docutils literal notranslate"><span class="pre">QControlFlags</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags.SHOW"><code class="docutils literal notranslate"><span class="pre">QControlFlags.SHOW</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags.INTERACTIVE"><code class="docutils literal notranslate"><span class="pre">QControlFlags.INTERACTIVE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags.EMPTY_SPACE"><code class="docutils literal notranslate"><span class="pre">QControlFlags.EMPTY_SPACE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags.ACTIVE"><code class="docutils literal notranslate"><span class="pre">QControlFlags.ACTIVE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags.SHOW_INTERACTIVE"><code class="docutils literal notranslate"><span class="pre">QControlFlags.SHOW_INTERACTIVE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags.SHOW_INTERACTIVE_ACTIVE"><code class="docutils literal notranslate"><span class="pre">QControlFlags.SHOW_INTERACTIVE_ACTIVE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags.SHOW_ACTIVE"><code class="docutils literal notranslate"><span class="pre">QControlFlags.SHOW_ACTIVE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags.ALL"><code class="docutils literal notranslate"><span class="pre">QControlFlags.ALL</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttrControls"><code class="docutils literal notranslate"><span class="pre">QAttrControls</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttrControls.on_update"><code class="docutils literal notranslate"><span class="pre">QAttrControls.on_update</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute"><code class="docutils literal notranslate"><span class="pre">QAttribute</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.on_initializer_toggled"><code class="docutils literal notranslate"><span class="pre">QAttribute.on_initializer_toggled</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.on_inheritance_toggled"><code class="docutils literal notranslate"><span class="pre">QAttribute.on_inheritance_toggled</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.on_field_update"><code class="docutils literal notranslate"><span class="pre">QAttribute.on_field_update</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.on_size_change"><code class="docutils literal notranslate"><span class="pre">QAttribute.on_size_change</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.attr_label"><code class="docutils literal notranslate"><span class="pre">QAttribute.attr_label</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.config_widget"><code class="docutils literal notranslate"><span class="pre">QAttribute.config_widget</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.init_config"><code class="docutils literal notranslate"><span class="pre">QAttribute.init_config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.main_row"><code class="docutils literal notranslate"><span class="pre">QAttribute.main_row</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.control_widgets"><code class="docutils literal notranslate"><span class="pre">QAttribute.control_widgets</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.secondary_row"><code class="docutils literal notranslate"><span class="pre">QAttribute.secondary_row</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.set_initializer_status"><code class="docutils literal notranslate"><span class="pre">QAttribute.set_initializer_status()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.set_inheritance_status"><code class="docutils literal notranslate"><span class="pre">QAttribute.set_inheritance_status()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.set_error_status"><code class="docutils literal notranslate"><span class="pre">QAttribute.set_error_status()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.set_value"><code class="docutils literal notranslate"><span class="pre">QAttribute.set_value()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.get_value"><code class="docutils literal notranslate"><span class="pre">QAttribute.get_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QConfigBody"><code class="docutils literal notranslate"><span class="pre">QConfigBody</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QConfigBody.on_error_detected"><code class="docutils literal notranslate"><span class="pre">QConfigBody.on_error_detected</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QConfigBody.on_size_change"><code class="docutils literal notranslate"><span class="pre">QConfigBody.on_size_change</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QConfigBody.on_update"><code class="docutils literal notranslate"><span class="pre">QConfigBody.on_update</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QConfigBody.config"><code class="docutils literal notranslate"><span class="pre">QConfigBody.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QConfigBody.get_value"><code class="docutils literal notranslate"><span class="pre">QConfigBody.get_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.TypeParser"><code class="docutils literal notranslate"><span class="pre">TypeParser</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.TypeParser.GENERIC_TYPES"><code class="docutils literal notranslate"><span class="pre">TypeParser.GENERIC_TYPES</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.TypeParser.SPECIAL_TYPES"><code class="docutils literal notranslate"><span class="pre">TypeParser.SPECIAL_TYPES</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.TypeParser.CONTAINER_TYPES"><code class="docutils literal notranslate"><span class="pre">TypeParser.CONTAINER_TYPES</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.TypeParser.typify"><code class="docutils literal notranslate"><span class="pre">TypeParser.typify()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata"><code class="docutils literal notranslate"><span class="pre">WidgetParserMetadata</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata.allows_init"><code class="docutils literal notranslate"><span class="pre">WidgetParserMetadata.allows_init</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata.requires_init"><code class="docutils literal notranslate"><span class="pre">WidgetParserMetadata.requires_init</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata.allows_inheritance"><code class="docutils literal notranslate"><span class="pre">WidgetParserMetadata.allows_inheritance</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata.missing"><code class="docutils literal notranslate"><span class="pre">WidgetParserMetadata.missing</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata.second_option"><code class="docutils literal notranslate"><span class="pre">WidgetParserMetadata.second_option</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParser"><code class="docutils literal notranslate"><span class="pre">WidgetParser</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParser.WIDGET_TYPE_MAP"><code class="docutils literal notranslate"><span class="pre">WidgetParser.WIDGET_TYPE_MAP</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParser.WIDGET_PRIORITY_MAP"><code class="docutils literal notranslate"><span class="pre">WidgetParser.WIDGET_PRIORITY_MAP</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParser.get_possible_widgets"><code class="docutils literal notranslate"><span class="pre">WidgetParser.get_possible_widgets()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParser.get_possible_widgets_raw"><code class="docutils literal notranslate"><span class="pre">WidgetParser.get_possible_widgets_raw()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParser.get_widget"><code class="docutils literal notranslate"><span class="pre">WidgetParser.get_widget()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParser.get_widget_raw"><code class="docutils literal notranslate"><span class="pre">WidgetParser.get_widget_raw()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.TYPE_PARSER"><code class="docutils literal notranslate"><span class="pre">TYPE_PARSER</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WIDGET_PARSER"><code class="docutils literal notranslate"><span class="pre">WIDGET_PARSER</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-spark.graph_editor.widgets.attributes">
+<span id="spark-graph-editor-widgets-attributes"></span><h1>spark.graph_editor.widgets.attributes<a class="headerlink" href="#module-spark.graph_editor.widgets.attributes" title="Link to this heading">#</a></h1>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.graph_editor.widgets.attributes.TYPE_PARSER" title="spark.graph_editor.widgets.attributes.TYPE_PARSER"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TYPE_PARSER</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.graph_editor.widgets.attributes.WIDGET_PARSER" title="spark.graph_editor.widgets.attributes.WIDGET_PARSER"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WIDGET_PARSER</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.graph_editor.widgets.attributes.QControlFlags" title="spark.graph_editor.widgets.attributes.QControlFlags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QControlFlags</span></code></a></p></td>
+<td><p>Support for integer-based Flags</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.graph_editor.widgets.attributes.QAttrControls" title="spark.graph_editor.widgets.attributes.QAttrControls"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QAttrControls</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.graph_editor.widgets.attributes.QAttribute" title="spark.graph_editor.widgets.attributes.QAttribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QAttribute</span></code></a></p></td>
+<td><p>Base QWidget class for the graph editor attributes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.graph_editor.widgets.attributes.QConfigBody" title="spark.graph_editor.widgets.attributes.QConfigBody"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QConfigBody</span></code></a></p></td>
+<td><p>QWidget for the body of configuration object.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.graph_editor.widgets.attributes.TypeParser" title="spark.graph_editor.widgets.attributes.TypeParser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TypeParser</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata" title="spark.graph_editor.widgets.attributes.WidgetParserMetadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WidgetParserMetadata</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.graph_editor.widgets.attributes.WidgetParser" title="spark.graph_editor.widgets.attributes.WidgetParser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WidgetParser</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QControlFlags">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.graph_editor.widgets.attributes.</span></span><span class="sig-name descname"><span class="pre">QControlFlags</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QControlFlags" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.IntFlag" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.IntFlag</span></code></a></p>
+<p>Support for integer-based Flags</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QControlFlags.SHOW">
+<span class="sig-name descname"><span class="pre">SHOW</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QControlFlags.SHOW" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QControlFlags.INTERACTIVE">
+<span class="sig-name descname"><span class="pre">INTERACTIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QControlFlags.INTERACTIVE" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QControlFlags.EMPTY_SPACE">
+<span class="sig-name descname"><span class="pre">EMPTY_SPACE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QControlFlags.EMPTY_SPACE" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QControlFlags.ACTIVE">
+<span class="sig-name descname"><span class="pre">ACTIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QControlFlags.ACTIVE" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QControlFlags.SHOW_INTERACTIVE">
+<span class="sig-name descname"><span class="pre">SHOW_INTERACTIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">12</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QControlFlags.SHOW_INTERACTIVE" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QControlFlags.SHOW_INTERACTIVE_ACTIVE">
+<span class="sig-name descname"><span class="pre">SHOW_INTERACTIVE_ACTIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">13</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QControlFlags.SHOW_INTERACTIVE_ACTIVE" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QControlFlags.SHOW_ACTIVE">
+<span class="sig-name descname"><span class="pre">SHOW_ACTIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">9</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QControlFlags.SHOW_ACTIVE" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QControlFlags.ALL">
+<span class="sig-name descname"><span class="pre">ALL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">15</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QControlFlags.ALL" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttrControls">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.graph_editor.widgets.attributes.</span></span><span class="sig-name descname"><span class="pre">QAttrControls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">on_initializer_toggled_callback</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_inheritance_toggled_callback</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warning_flags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inheritance_flags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer_flags</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttrControls" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">PySide6.QtWidgets.QWidget</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>on_initializer_toggled_callback</strong> (<em>Callable</em>)</p></li>
+<li><p><strong>on_inheritance_toggled_callback</strong> (<em>Callable</em>)</p></li>
+<li><p><strong>warning_flags</strong> (<a class="reference internal" href="#spark.graph_editor.widgets.attributes.QControlFlags" title="spark.graph_editor.widgets.attributes.QControlFlags"><em>QControlFlags</em></a>)</p></li>
+<li><p><strong>inheritance_flags</strong> (<a class="reference internal" href="#spark.graph_editor.widgets.attributes.QControlFlags" title="spark.graph_editor.widgets.attributes.QControlFlags"><em>QControlFlags</em></a>)</p></li>
+<li><p><strong>initializer_flags</strong> (<a class="reference internal" href="#spark.graph_editor.widgets.attributes.QControlFlags" title="spark.graph_editor.widgets.attributes.QControlFlags"><em>QControlFlags</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttrControls.on_update">
+<span class="sig-name descname"><span class="pre">on_update</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttrControls.on_update" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttribute">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.graph_editor.widgets.attributes.</span></span><span class="sig-name descname"><span class="pre">QAttribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attr_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attr_widget</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attr_init_mandatory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attr_metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warning_flags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">QControlFlags.SHOW_INTERACTIVE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inheritance_flags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">QControlFlags.EMPTY_SPACE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer_flags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">QControlFlags.EMPTY_SPACE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_post_callback_stack</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_initializer_attr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttribute" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">PySide6.QtWidgets.QWidget</span></code></p>
+<p>Base QWidget class for the graph editor attributes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attr_label</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>attr_value</strong> (<em>Any</em>)</p></li>
+<li><p><strong>attr_widget</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em>[</em><a class="reference internal" href="../base/index.html#spark.graph_editor.widgets.base.QInput" title="spark.graph_editor.widgets.base.QInput"><em>spark.graph_editor.widgets.base.QInput</em></a><em>]</em>)</p></li>
+<li><p><strong>attr_init_mandatory</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+<li><p><strong>attr_metadata</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>warning_flags</strong> (<a class="reference internal" href="#spark.graph_editor.widgets.attributes.QControlFlags" title="spark.graph_editor.widgets.attributes.QControlFlags"><em>QControlFlags</em></a>)</p></li>
+<li><p><strong>inheritance_flags</strong> (<a class="reference internal" href="#spark.graph_editor.widgets.attributes.QControlFlags" title="spark.graph_editor.widgets.attributes.QControlFlags"><em>QControlFlags</em></a>)</p></li>
+<li><p><strong>initializer_flags</strong> (<a class="reference internal" href="#spark.graph_editor.widgets.attributes.QControlFlags" title="spark.graph_editor.widgets.attributes.QControlFlags"><em>QControlFlags</em></a>)</p></li>
+<li><p><strong>ref_post_callback_stack</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>is_initializer_attr</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttribute.on_initializer_toggled">
+<span class="sig-name descname"><span class="pre">on_initializer_toggled</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttribute.on_initializer_toggled" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttribute.on_inheritance_toggled">
+<span class="sig-name descname"><span class="pre">on_inheritance_toggled</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttribute.on_inheritance_toggled" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttribute.on_field_update">
+<span class="sig-name descname"><span class="pre">on_field_update</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttribute.on_field_update" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttribute.on_size_change">
+<span class="sig-name descname"><span class="pre">on_size_change</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttribute.on_size_change" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttribute.attr_label">
+<span class="sig-name descname"><span class="pre">attr_label</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttribute.attr_label" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttribute.config_widget">
+<span class="sig-name descname"><span class="pre">config_widget</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttribute.config_widget" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttribute.init_config">
+<span class="sig-name descname"><span class="pre">init_config</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttribute.init_config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttribute.main_row">
+<span class="sig-name descname"><span class="pre">main_row</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttribute.main_row" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttribute.control_widgets">
+<span class="sig-name descname"><span class="pre">control_widgets</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttribute.control_widgets" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttribute.secondary_row">
+<span class="sig-name descname"><span class="pre">secondary_row</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttribute.secondary_row" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttribute.set_initializer_status">
+<span class="sig-name descname"><span class="pre">set_initializer_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttribute.set_initializer_status" title="Link to this definition">#</a></dt>
+<dd><p>Sets the error status of widget.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttribute.set_inheritance_status">
+<span class="sig-name descname"><span class="pre">set_inheritance_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttribute.set_inheritance_status" title="Link to this definition">#</a></dt>
+<dd><p>Sets the error status of widget.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="../checkbox/index.html#spark.graph_editor.widgets.checkbox.InheritStatus" title="spark.graph_editor.widgets.checkbox.InheritStatus"><em>spark.graph_editor.widgets.checkbox.InheritStatus</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttribute.set_error_status">
+<span class="sig-name descname"><span class="pre">set_error_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttribute.set_error_status" title="Link to this definition">#</a></dt>
+<dd><p>Sets the error status of widget.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>messages</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttribute.set_value">
+<span class="sig-name descname"><span class="pre">set_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttribute.set_value" title="Link to this definition">#</a></dt>
+<dd><p>Set the widget value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>Any</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QAttribute.get_value">
+<span class="sig-name descname"><span class="pre">get_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QAttribute.get_value" title="Link to this definition">#</a></dt>
+<dd><p>Get the widget value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QConfigBody">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.graph_editor.widgets.attributes.</span></span><span class="sig-name descname"><span class="pre">QConfigBody</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_initializer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_widgets_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_post_callback_stack</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inheritance_tree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_inheritance_toggle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QConfigBody" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">PySide6.QtWidgets.QWidget</span></code></p>
+<p>QWidget for the body of configuration object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference internal" href="../../../core/config/index.html#spark.core.config.BaseSparkConfig" title="spark.core.config.BaseSparkConfig"><em>spark.core.config.BaseSparkConfig</em></a>)</p></li>
+<li><p><strong>is_initializer</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+<li><p><strong>config_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>ref_widgets_map</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>Ellipsis</em><em>]</em><em>, </em><em>PySide6.QtWidgets.QWidget</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>ref_post_callback_stack</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>inheritance_tree</strong> (<a class="reference internal" href="../../../core/utils/index.html#spark.core.utils.InheritanceTree" title="spark.core.utils.InheritanceTree"><em>spark.core.utils.InheritanceTree</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>on_inheritance_toggle</strong> (<em>Callable</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QConfigBody.on_error_detected">
+<span class="sig-name descname"><span class="pre">on_error_detected</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QConfigBody.on_error_detected" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QConfigBody.on_size_change">
+<span class="sig-name descname"><span class="pre">on_size_change</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QConfigBody.on_size_change" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QConfigBody.on_update">
+<span class="sig-name descname"><span class="pre">on_update</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QConfigBody.on_update" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QConfigBody.config">
+<span class="sig-name descname"><span class="pre">config</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QConfigBody.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.QConfigBody.get_value">
+<span class="sig-name descname"><span class="pre">get_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.QConfigBody.get_value" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../../core/config/index.html#spark.core.config.BaseSparkConfig" title="spark.core.config.BaseSparkConfig">spark.core.config.BaseSparkConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.TypeParser">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.graph_editor.widgets.attributes.</span></span><span class="sig-name descname"><span class="pre">TypeParser</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.TypeParser" title="Link to this definition">#</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.TypeParser.GENERIC_TYPES">
+<span class="sig-name descname"><span class="pre">GENERIC_TYPES</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><span class="pre">type</span></a><span class="p"><span class="pre">]</span></span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.TypeParser.GENERIC_TYPES" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.TypeParser.SPECIAL_TYPES">
+<span class="sig-name descname"><span class="pre">SPECIAL_TYPES</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><span class="pre">type</span></a><span class="p"><span class="pre">]</span></span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.TypeParser.SPECIAL_TYPES" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.TypeParser.CONTAINER_TYPES">
+<span class="sig-name descname"><span class="pre">CONTAINER_TYPES</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/re.html#re.Pattern" title="(in Python v3.14)"><span class="pre">re.Pattern</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.TypeParser.CONTAINER_TYPES" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.TypeParser.typify">
+<span class="sig-name descname"><span class="pre">typify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_types</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.TypeParser.typify" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>raw_types</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)">type</a>, Ellipsis]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.WidgetParserMetadata">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.graph_editor.widgets.attributes.</span></span><span class="sig-name descname"><span class="pre">WidgetParserMetadata</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata" title="Link to this definition">#</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.WidgetParserMetadata.allows_init">
+<span class="sig-name descname"><span class="pre">allows_init</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata.allows_init" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.WidgetParserMetadata.requires_init">
+<span class="sig-name descname"><span class="pre">requires_init</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata.requires_init" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.WidgetParserMetadata.allows_inheritance">
+<span class="sig-name descname"><span class="pre">allows_inheritance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata.allows_inheritance" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.WidgetParserMetadata.missing">
+<span class="sig-name descname"><span class="pre">missing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata.missing" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.WidgetParserMetadata.second_option">
+<span class="sig-name descname"><span class="pre">second_option</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><span class="pre">type</span></a><span class="p"><span class="pre">[</span></span><span class="pre">PySide6.QtWidgets.QWidget</span><span class="p"><span class="pre">]</span></span></em><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata.second_option" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.WidgetParser">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spark.graph_editor.widgets.attributes.</span></span><span class="sig-name descname"><span class="pre">WidgetParser</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.WidgetParser" title="Link to this definition">#</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.WidgetParser.WIDGET_TYPE_MAP">
+<span class="sig-name descname"><span class="pre">WIDGET_TYPE_MAP</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.WidgetParser.WIDGET_TYPE_MAP" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.WidgetParser.WIDGET_PRIORITY_MAP">
+<span class="sig-name descname"><span class="pre">WIDGET_PRIORITY_MAP</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.WidgetParser.WIDGET_PRIORITY_MAP" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.WidgetParser.get_possible_widgets">
+<span class="sig-name descname"><span class="pre">get_possible_widgets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr_type</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.WidgetParser.get_possible_widgets" title="Link to this definition">#</a></dt>
+<dd><p>Maps an argument type to a corresponding type of possible widgets classes.
+Returns an ordered list of widgets and metadata to format the inspector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>attr_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em>, </em><em>Ellipsis</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)">type</a>[PySide6.QtWidgets.QWidget]], <a class="reference internal" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata" title="spark.graph_editor.widgets.attributes.WidgetParserMetadata">WidgetParserMetadata</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.WidgetParser.get_possible_widgets_raw">
+<span class="sig-name descname"><span class="pre">get_possible_widgets_raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_types</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.WidgetParser.get_possible_widgets_raw" title="Link to this definition">#</a></dt>
+<dd><p>Maps an argument raw type to a corresponding type of possible widgets classes.
+Returns an ordered list of widgets and metadata to format the inspector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>raw_types</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)">type</a>[PySide6.QtWidgets.QWidget]], <a class="reference internal" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata" title="spark.graph_editor.widgets.attributes.WidgetParserMetadata">WidgetParserMetadata</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.WidgetParser.get_widget">
+<span class="sig-name descname"><span class="pre">get_widget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr_type</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.WidgetParser.get_widget" title="Link to this definition">#</a></dt>
+<dd><p>Maps an argument type to a corresponding widget class, according to the priority list.
+Returns the best widget fit and metadata to format the inspector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>attr_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em>, </em><em>Ellipsis</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)">type</a>[PySide6.QtWidgets.QWidget], <a class="reference internal" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata" title="spark.graph_editor.widgets.attributes.WidgetParserMetadata">WidgetParserMetadata</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.WidgetParser.get_widget_raw">
+<span class="sig-name descname"><span class="pre">get_widget_raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_types</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.WidgetParser.get_widget_raw" title="Link to this definition">#</a></dt>
+<dd><p>Maps an argument raw type to a corresponding widget class, according to the priority list.
+Returns the best widget fit and metadata to format the inspector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>raw_types</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)">type</a>[PySide6.QtWidgets.QWidget], <a class="reference internal" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata" title="spark.graph_editor.widgets.attributes.WidgetParserMetadata">WidgetParserMetadata</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.TYPE_PARSER">
+<span class="sig-prename descclassname"><span class="pre">spark.graph_editor.widgets.attributes.</span></span><span class="sig-name descname"><span class="pre">TYPE_PARSER</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.TYPE_PARSER" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.graph_editor.widgets.attributes.WIDGET_PARSER">
+<span class="sig-prename descclassname"><span class="pre">spark.graph_editor.widgets.attributes.</span></span><span class="sig-name descname"><span class="pre">WIDGET_PARSER</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/widgets/attributes.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.widgets.attributes.WIDGET_PARSER" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">spark.graph_editor.widgets</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../base/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">spark.graph_editor.widgets.base</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags"><code class="docutils literal notranslate"><span class="pre">QControlFlags</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags.SHOW"><code class="docutils literal notranslate"><span class="pre">QControlFlags.SHOW</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags.INTERACTIVE"><code class="docutils literal notranslate"><span class="pre">QControlFlags.INTERACTIVE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags.EMPTY_SPACE"><code class="docutils literal notranslate"><span class="pre">QControlFlags.EMPTY_SPACE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags.ACTIVE"><code class="docutils literal notranslate"><span class="pre">QControlFlags.ACTIVE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags.SHOW_INTERACTIVE"><code class="docutils literal notranslate"><span class="pre">QControlFlags.SHOW_INTERACTIVE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags.SHOW_INTERACTIVE_ACTIVE"><code class="docutils literal notranslate"><span class="pre">QControlFlags.SHOW_INTERACTIVE_ACTIVE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags.SHOW_ACTIVE"><code class="docutils literal notranslate"><span class="pre">QControlFlags.SHOW_ACTIVE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QControlFlags.ALL"><code class="docutils literal notranslate"><span class="pre">QControlFlags.ALL</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttrControls"><code class="docutils literal notranslate"><span class="pre">QAttrControls</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttrControls.on_update"><code class="docutils literal notranslate"><span class="pre">QAttrControls.on_update</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute"><code class="docutils literal notranslate"><span class="pre">QAttribute</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.on_initializer_toggled"><code class="docutils literal notranslate"><span class="pre">QAttribute.on_initializer_toggled</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.on_inheritance_toggled"><code class="docutils literal notranslate"><span class="pre">QAttribute.on_inheritance_toggled</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.on_field_update"><code class="docutils literal notranslate"><span class="pre">QAttribute.on_field_update</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.on_size_change"><code class="docutils literal notranslate"><span class="pre">QAttribute.on_size_change</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.attr_label"><code class="docutils literal notranslate"><span class="pre">QAttribute.attr_label</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.config_widget"><code class="docutils literal notranslate"><span class="pre">QAttribute.config_widget</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.init_config"><code class="docutils literal notranslate"><span class="pre">QAttribute.init_config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.main_row"><code class="docutils literal notranslate"><span class="pre">QAttribute.main_row</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.control_widgets"><code class="docutils literal notranslate"><span class="pre">QAttribute.control_widgets</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.secondary_row"><code class="docutils literal notranslate"><span class="pre">QAttribute.secondary_row</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.set_initializer_status"><code class="docutils literal notranslate"><span class="pre">QAttribute.set_initializer_status()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.set_inheritance_status"><code class="docutils literal notranslate"><span class="pre">QAttribute.set_inheritance_status()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.set_error_status"><code class="docutils literal notranslate"><span class="pre">QAttribute.set_error_status()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.set_value"><code class="docutils literal notranslate"><span class="pre">QAttribute.set_value()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QAttribute.get_value"><code class="docutils literal notranslate"><span class="pre">QAttribute.get_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QConfigBody"><code class="docutils literal notranslate"><span class="pre">QConfigBody</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QConfigBody.on_error_detected"><code class="docutils literal notranslate"><span class="pre">QConfigBody.on_error_detected</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QConfigBody.on_size_change"><code class="docutils literal notranslate"><span class="pre">QConfigBody.on_size_change</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QConfigBody.on_update"><code class="docutils literal notranslate"><span class="pre">QConfigBody.on_update</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QConfigBody.config"><code class="docutils literal notranslate"><span class="pre">QConfigBody.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.QConfigBody.get_value"><code class="docutils literal notranslate"><span class="pre">QConfigBody.get_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.TypeParser"><code class="docutils literal notranslate"><span class="pre">TypeParser</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.TypeParser.GENERIC_TYPES"><code class="docutils literal notranslate"><span class="pre">TypeParser.GENERIC_TYPES</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.TypeParser.SPECIAL_TYPES"><code class="docutils literal notranslate"><span class="pre">TypeParser.SPECIAL_TYPES</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.TypeParser.CONTAINER_TYPES"><code class="docutils literal notranslate"><span class="pre">TypeParser.CONTAINER_TYPES</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.TypeParser.typify"><code class="docutils literal notranslate"><span class="pre">TypeParser.typify()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata"><code class="docutils literal notranslate"><span class="pre">WidgetParserMetadata</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata.allows_init"><code class="docutils literal notranslate"><span class="pre">WidgetParserMetadata.allows_init</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata.requires_init"><code class="docutils literal notranslate"><span class="pre">WidgetParserMetadata.requires_init</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata.allows_inheritance"><code class="docutils literal notranslate"><span class="pre">WidgetParserMetadata.allows_inheritance</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata.missing"><code class="docutils literal notranslate"><span class="pre">WidgetParserMetadata.missing</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParserMetadata.second_option"><code class="docutils literal notranslate"><span class="pre">WidgetParserMetadata.second_option</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParser"><code class="docutils literal notranslate"><span class="pre">WidgetParser</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParser.WIDGET_TYPE_MAP"><code class="docutils literal notranslate"><span class="pre">WidgetParser.WIDGET_TYPE_MAP</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParser.WIDGET_PRIORITY_MAP"><code class="docutils literal notranslate"><span class="pre">WidgetParser.WIDGET_PRIORITY_MAP</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParser.get_possible_widgets"><code class="docutils literal notranslate"><span class="pre">WidgetParser.get_possible_widgets()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParser.get_possible_widgets_raw"><code class="docutils literal notranslate"><span class="pre">WidgetParser.get_possible_widgets_raw()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParser.get_widget"><code class="docutils literal notranslate"><span class="pre">WidgetParser.get_widget()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WidgetParser.get_widget_raw"><code class="docutils literal notranslate"><span class="pre">WidgetParser.get_widget_raw()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.TYPE_PARSER"><code class="docutils literal notranslate"><span class="pre">TYPE_PARSER</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.widgets.attributes.WIDGET_PARSER"><code class="docutils literal notranslate"><span class="pre">WIDGET_PARSER</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

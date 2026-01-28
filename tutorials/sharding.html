@@ -1,0 +1,897 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial #5: Sharding &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=30646c52"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/sharding';</script>
+    <link rel="icon" href="../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <script>document.write(`<img src="../_static/spark_250px.png" class="logo__image only-dark" alt="Spark  documentation - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brains.html">Tutorial #3: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph_editor.html">Tutorial #4: Graph Editor</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../autoapi/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../autoapi/spark/index.html">spark</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/flax_imports/index.html">spark.core.flax_imports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/validation/index.html">spark.core.validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/variables/index.html">spark.core.variables</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/editor_config/index.html">spark.graph_editor.editor_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/style/index.html">spark.graph_editor.style</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/ui/index.html">spark.graph_editor.ui</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/window/index.html">spark.graph_editor.window</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/nn/index.html">spark.nn</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/brain/index.html">spark.nn.brain</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/components/index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">Tutorial...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/tutorials/sharding.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Tutorial #5: Sharding</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-header">
+<section id="tutorial-5-sharding">
+<h1>Tutorial #5: Sharding<a class="headerlink" href="#tutorial-5-sharding" title="Link to this heading">#</a></h1>
+</div><link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Although <b><i>Spark</i></b> is relatively fast, some pipelines simply require more power in order to achieve acceptable performances or even to be able to run them to begin with. This is often achieved by distributing the computation across multiple devices.</p>
+<p>Often, transforming a model from a single-device paradigm into a multi-device paradigm can be challenging and extremely time consuming. However this can be easily achieved in <b><i>Spark</i></b> thanks to JAX’s sharding system. In this tutorial will not go deeper into the details of sharding since JAX already does a fantastic job, but for a detailed explanation on sharding we refer the reader to:</p>
+<ol class="arabic simple">
+<li><p><a class="reference external" href="https://docs.jax.dev/en/latest/notebooks/Distributed_arrays_and_automatic_parallelization.html">Distributed arrays and automatic parallelization</a></p></li>
+<li><p><a class="reference external" href="https://docs.jax.dev/en/latest/notebooks/explicit-sharding.html">Explicit sharding</a></p></li>
+</ol>
+<p>Let’s start by instructing XLA to simulate 6 physical devices!</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set XLA flags</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;XLA_FLAGS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;--xla_force_host_platform_device_count=6&#39;</span>
+
+<span class="c1"># Indicate Jax to use CPU&#39;s</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;JAX_PLATFORM_NAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;cpu&#39;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">devices</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[CpuDevice(id=0), CpuDevice(id=1), CpuDevice(id=2), CpuDevice(id=3), CpuDevice(id=4), CpuDevice(id=5)]
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Let’s also import the model from the previous tutorial.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;..&#39;</span><span class="p">)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">spark</span>
+
+<span class="c1"># Load the Brain.</span>
+<span class="n">brain_config</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BrainConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s1">&#39;example_ab_model.scfg&#39;</span><span class="p">)</span>
+
+<span class="c1"># Initialize the Brain.</span>
+<span class="n">brain</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Brain</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">brain_config</span><span class="p">)</span>
+
+<span class="c1"># Build the Brain.</span>
+<span class="n">brain</span><span class="p">(</span><span class="n">drive</span><span class="o">=</span><span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">4</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)))</span>
+
+<span class="c1"># Inspect the Brain.</span>
+<span class="n">brain</span><span class="o">.</span><span class="n">inspect</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Brain
+├── spiker (TopologicalLinearSpiker)
+├── A_ex (ALIFNeuron)
+│   ├── soma (AdaptiveLeakySoma)
+│   ├── delays (N2NDelays)
+│   ├── synapses (LinearSynapses)
+│   └── learning_rule (ZenkeRule)
+├── A_in (ALIFNeuron)
+│   ├── soma (AdaptiveLeakySoma)
+│   ├── delays (N2NDelays)
+│   ├── synapses (LinearSynapses)
+│   └── learning_rule (ZenkeRule)
+├── B_ex (ALIFNeuron)
+│   ├── soma (AdaptiveLeakySoma)
+│   ├── delays (N2NDelays)
+│   ├── synapses (LinearSynapses)
+│   └── learning_rule (ZenkeRule)
+├── B_in (ALIFNeuron)
+│   ├── soma (AdaptiveLeakySoma)
+│   ├── delays (N2NDelays)
+│   ├── synapses (LinearSynapses)
+│   └── learning_rule (ZenkeRule)
+└── integrator (ExponentialIntegrator)
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>By default, JAX arrays and, as a consequence, <b><i>Spark</i></b> models are not commited to any particular device. To see this, we can inspect the internal values of the brain to see where the variables are located. Since there are many many variables inside a Brain, let’s just look at three of them.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Array: brain.A_ex.soma.potential&#39;</span><span class="p">)</span>
+<span class="n">jax</span><span class="o">.</span><span class="n">debug</span><span class="o">.</span><span class="n">visualize_array_sharding</span><span class="p">(</span><span class="n">brain</span><span class="o">.</span><span class="n">A_ex</span><span class="o">.</span><span class="n">soma</span><span class="o">.</span><span class="n">potential</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Array: brain.B_ex.synapses.kernel&#39;</span><span class="p">)</span>
+<span class="n">jax</span><span class="o">.</span><span class="n">debug</span><span class="o">.</span><span class="n">visualize_array_sharding</span><span class="p">(</span><span class="n">brain</span><span class="o">.</span><span class="n">B_ex</span><span class="o">.</span><span class="n">synapses</span><span class="o">.</span><span class="n">kernel</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Array: brain.integrator.trace.trace_1&#39;</span><span class="p">)</span>
+<span class="n">jax</span><span class="o">.</span><span class="n">debug</span><span class="o">.</span><span class="n">visualize_array_sharding</span><span class="p">(</span><span class="n">brain</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">trace</span><span class="o">.</span><span class="n">trace_1</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Array: brain._cache[&quot;B_in&quot;][&quot;out_spikes&quot;]&#39;</span><span class="p">)</span>
+<span class="n">jax</span><span class="o">.</span><span class="n">debug</span><span class="o">.</span><span class="n">visualize_array_sharding</span><span class="p">(</span><span class="n">brain</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="s1">&#39;B_in&#39;</span><span class="p">][</span><span class="s1">&#39;out_spikes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="c1"># &lt;-- The cache has a weird internal structure ¯\_(ツ)_/¯ </span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Array: brain.A_ex.soma.potential
+Array: brain.B_ex.synapses.kernel
+Array: brain.integrator.trace.trace_1
+Array: brain._cache[&quot;B_in&quot;][&quot;out_spikes&quot;]
+</pre></div>
+</div>
+<div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">  CPU 0  </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">         </span>
+</pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                     CPU 0                                      </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+</pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">   CPU 0    </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">            </span>
+</pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">  CPU 0  </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">         </span>
+</pre>
+</div></div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>As we can see everything is located in the CPU 0. This happens because we have not let JAX now that we wish to use multiple devices. In JAX we often use a <b>Mesh</b> (of devices) to let the JIT compiler know how we want to distribute the data. This is a simple way to define how to paralellize your pipeline across different abstract axes, e.g., the bacth and the model.</p>
+<p>In our case we don’t have batches, so let’s just start by distributing the model across all devices. This can be easily achieved by creating a mesh and letting JAX know that we want to use this mesh of devices.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create mesh</span>
+<span class="n">auto_mesh</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">sharding</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span>
+    <span class="n">jax</span><span class="o">.</span><span class="n">devices</span><span class="p">(),</span> 
+    <span class="n">axis_names</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;device&#39;</span><span class="p">),</span> 
+    <span class="n">axis_types</span><span class="o">=</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">sharding</span><span class="o">.</span><span class="n">AxisType</span><span class="o">.</span><span class="n">Auto</span><span class="p">,)</span>
+<span class="p">)</span>
+
+<span class="c1"># Set mesh</span>
+<span class="n">jax</span><span class="o">.</span><span class="n">set_mesh</span><span class="p">(</span><span class="n">auto_mesh</span><span class="p">)</span>
+
+<span class="c1"># Rebuild the Brain.</span>
+<span class="n">brain</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Brain</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">brain_config</span><span class="p">)</span>
+<span class="n">brain</span><span class="p">(</span><span class="n">drive</span><span class="o">=</span><span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">4</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)));</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>We can now inspect the brain again, and see that everything is now in all our devices!</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Array: brain.A_ex.soma.potential&#39;</span><span class="p">)</span>
+<span class="n">jax</span><span class="o">.</span><span class="n">debug</span><span class="o">.</span><span class="n">visualize_array_sharding</span><span class="p">(</span><span class="n">brain</span><span class="o">.</span><span class="n">A_ex</span><span class="o">.</span><span class="n">soma</span><span class="o">.</span><span class="n">potential</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Array: brain.B_ex.synapses.kernel&#39;</span><span class="p">)</span>
+<span class="n">jax</span><span class="o">.</span><span class="n">debug</span><span class="o">.</span><span class="n">visualize_array_sharding</span><span class="p">(</span><span class="n">brain</span><span class="o">.</span><span class="n">B_ex</span><span class="o">.</span><span class="n">synapses</span><span class="o">.</span><span class="n">kernel</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Array: brain.integrator.trace.trace_1&#39;</span><span class="p">)</span>
+<span class="n">jax</span><span class="o">.</span><span class="n">debug</span><span class="o">.</span><span class="n">visualize_array_sharding</span><span class="p">(</span><span class="n">brain</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">trace</span><span class="o">.</span><span class="n">trace_1</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Array: brain._cache[&quot;B_in&quot;][&quot;out_spikes&quot;]&#39;</span><span class="p">)</span>
+<span class="n">jax</span><span class="o">.</span><span class="n">debug</span><span class="o">.</span><span class="n">visualize_array_sharding</span><span class="p">(</span><span class="n">brain</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="s1">&#39;B_in&#39;</span><span class="p">][</span><span class="s1">&#39;out_spikes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="c1"># &lt;-- The cache has a weird internal structure ¯\_(ツ)_/¯ </span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Array: brain.A_ex.soma.potential
+Array: brain.B_ex.synapses.kernel
+Array: brain.integrator.trace.trace_1
+Array: brain._cache[&quot;B_in&quot;][&quot;out_spikes&quot;]
+</pre></div>
+</div>
+<div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">CPU 0,1,2,3,4,5</span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">               </span>
+</pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                CPU 0,1,2,3,4,5                                 </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+</pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">CPU 0,1,2,3,4,5</span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">               </span>
+</pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">CPU 0,1,2,3,4,5</span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">               </span>
+</pre>
+</div></div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>However, it is important to note that this is not necessarily a good layout. When working with multiple devices, communication matters; a bad distribution of devices may lead to no gain at all from having multiple devices. Therefore, in some cases it may be beneficial to manually assign the devices to sections of our model.</p>
+<p>Fortunately this can still be easily achieved, although a little bit more convoluted. For simplicity, let’s map all the arrays within a <b><i>Spark</i></b> module to the same devices and everything else to all the devices.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">jax.sharding</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mesh</span><span class="p">,</span> <span class="n">NamedSharding</span><span class="p">,</span> <span class="n">PartitionSpec</span>
+
+<span class="c1"># Shard to device maps.</span>
+<span class="n">devices</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">devices</span><span class="p">()</span>
+<span class="n">shard_to_all_devices</span>  <span class="o">=</span> <span class="n">NamedSharding</span><span class="p">(</span><span class="n">Mesh</span><span class="p">(</span><span class="n">devices</span><span class="p">,</span> <span class="n">axis_names</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;device&#39;</span><span class="p">)),</span> <span class="n">PartitionSpec</span><span class="p">())</span>
+<span class="n">shard_to_device</span> <span class="o">=</span> <span class="p">[</span>
+	<span class="n">NamedSharding</span><span class="p">(</span><span class="n">Mesh</span><span class="p">([</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="n">axis_names</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;device&#39;</span><span class="p">)),</span> <span class="n">PartitionSpec</span><span class="p">())</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">devices</span><span class="p">))</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Next, we need to create a map between arrays and shards, but before that lets explore how this map looks like. We achieve this through the method <b>tree_map_with_path</b>. This allow us to create a map for a pytree using the structure of such pytree. However, in order to use that function, we need to split our model into its graph and its state component.</p>
+<p>Now, let’s create a dummy map to None just to print all leaf nodes in our pytree, which correspond to all the arrays in our model. The thing to notice here is the path, which we can use to distribute our computation across devices.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">dummy_map</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">jax</span><span class="o">.</span><span class="n">tree_util</span><span class="o">.</span><span class="n">DictKey</span> <span class="o">|</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_util</span><span class="o">.</span><span class="n">GetAttrKey</span><span class="p">],</span> <span class="n">leaf</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+	<span class="n">leaf_path</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">key</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">path</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">)])</span>
+	<span class="c1"># Print the path of the leaf</span>
+	<span class="nb">print</span><span class="p">(</span><span class="n">leaf_path</span><span class="p">)</span>
+	<span class="k">return</span> <span class="kc">None</span>
+
+<span class="n">graph</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">brain</span><span class="p">))</span>
+<span class="n">sharding_rules</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_util</span><span class="o">.</span><span class="n">tree_map_with_path</span><span class="p">(</span><span class="n">dummy_map</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>A_ex.delays._bitmask
+A_ex.delays._current_idx
+A_ex.delays.rng
+A_ex.learning_rule.post_slow_trace.rng
+A_ex.learning_rule.post_slow_trace.trace
+A_ex.learning_rule.post_trace.rng
+A_ex.learning_rule.post_trace.trace
+A_ex.learning_rule.pre_trace.rng
+A_ex.learning_rule.pre_trace.trace
+A_ex.learning_rule.rng
+A_ex.learning_rule.target_trace.rng
+A_ex.learning_rule.target_trace.trace
+A_ex.rng
+A_ex.soma.is_ready
+A_ex.soma.potential
+A_ex.soma.refractory
+A_ex.soma.rng
+A_ex.soma.threshold.rng
+A_ex.soma.threshold.trace
+A_ex.synapses.kernel
+A_ex.synapses.rng
+A_in.delays._bitmask
+A_in.delays._current_idx
+A_in.delays.rng
+A_in.learning_rule.post_slow_trace.rng
+A_in.learning_rule.post_slow_trace.trace
+A_in.learning_rule.post_trace.rng
+A_in.learning_rule.post_trace.trace
+A_in.learning_rule.pre_trace.rng
+A_in.learning_rule.pre_trace.trace
+A_in.learning_rule.rng
+A_in.learning_rule.target_trace.rng
+A_in.learning_rule.target_trace.trace
+A_in.rng
+A_in.soma.is_ready
+A_in.soma.potential
+A_in.soma.refractory
+A_in.soma.rng
+A_in.soma.threshold.rng
+A_in.soma.threshold.trace
+A_in.synapses.kernel
+A_in.synapses.rng
+B_ex.delays._bitmask
+B_ex.delays._current_idx
+B_ex.delays.rng
+B_ex.learning_rule.post_slow_trace.rng
+B_ex.learning_rule.post_slow_trace.trace
+B_ex.learning_rule.post_trace.rng
+B_ex.learning_rule.post_trace.trace
+B_ex.learning_rule.pre_trace.rng
+B_ex.learning_rule.pre_trace.trace
+B_ex.learning_rule.rng
+B_ex.learning_rule.target_trace.rng
+B_ex.learning_rule.target_trace.trace
+B_ex.rng
+B_ex.soma.is_ready
+B_ex.soma.potential
+B_ex.soma.refractory
+B_ex.soma.rng
+B_ex.soma.threshold.rng
+B_ex.soma.threshold.trace
+B_ex.synapses.kernel
+B_ex.synapses.rng
+B_in.delays._bitmask
+B_in.delays._current_idx
+B_in.delays.rng
+B_in.learning_rule.post_slow_trace.rng
+B_in.learning_rule.post_slow_trace.trace
+B_in.learning_rule.post_trace.rng
+B_in.learning_rule.post_trace.trace
+B_in.learning_rule.pre_trace.rng
+B_in.learning_rule.pre_trace.trace
+B_in.learning_rule.rng
+B_in.learning_rule.target_trace.rng
+B_in.learning_rule.target_trace.trace
+B_in.rng
+B_in.soma.is_ready
+B_in.soma.potential
+B_in.soma.refractory
+B_in.soma.rng
+B_in.soma.threshold.rng
+B_in.soma.threshold.trace
+B_in.synapses.kernel
+B_in.synapses.rng
+_cache.A_ex.out_spikes.variable
+_cache.A_in.out_spikes.variable
+_cache.B_ex.out_spikes.variable
+_cache.B_in.out_spikes.variable
+_cache.__call__.drive.variable
+_cache.integrator.signal.variable
+_cache.spiker.spikes.variable
+integrator._indices
+integrator.rng
+integrator.trace.rng
+integrator.trace.trace_1
+integrator.trace.trace_2
+spiker._refractory
+spiker.potential
+spiker.rng
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>In our current context it makes sense to allocate specific <b><i>Spark</i></b> modules to specific devices, since most modules take similar times to compute and once the input of a module is given most of the computation is performed locally, so no external variables should be required past the input.</p>
+<p>As we can see from the previous dummy map, we can use the name of the main modules of the brain to create this mapping.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_sharding_map</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">jax</span><span class="o">.</span><span class="n">tree_util</span><span class="o">.</span><span class="n">DictKey</span> <span class="o">|</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_util</span><span class="o">.</span><span class="n">GetAttrKey</span><span class="p">],</span> <span class="n">leaf</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NamedSharding</span><span class="p">:</span>
+	<span class="n">leaf_path</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">key</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">path</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">)]</span>
+	<span class="c1"># Sharding rules</span>
+	<span class="k">if</span> <span class="s1">&#39;spiker&#39;</span> <span class="ow">in</span> <span class="n">leaf_path</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+		<span class="k">return</span> <span class="n">shard_to_device</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+	<span class="k">elif</span> <span class="s1">&#39;integrator&#39;</span> <span class="ow">in</span> <span class="n">leaf_path</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+		<span class="k">return</span> <span class="n">shard_to_device</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+	<span class="k">elif</span> <span class="s1">&#39;A_ex&#39;</span> <span class="ow">in</span> <span class="n">leaf_path</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+		<span class="k">return</span> <span class="n">shard_to_device</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+	<span class="k">elif</span> <span class="s1">&#39;A_in&#39;</span> <span class="ow">in</span> <span class="n">leaf_path</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+		<span class="k">return</span> <span class="n">shard_to_device</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+	<span class="k">elif</span> <span class="s1">&#39;B_ex&#39;</span> <span class="ow">in</span> <span class="n">leaf_path</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+		<span class="k">return</span> <span class="n">shard_to_device</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+	<span class="k">elif</span> <span class="s1">&#39;B_in&#39;</span> <span class="ow">in</span> <span class="n">leaf_path</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+		<span class="k">return</span> <span class="n">shard_to_device</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">return</span> <span class="n">shard_to_all_devices</span>
+
+
+<span class="c1"># Get sharding map</span>
+<span class="n">graph</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">brain</span><span class="p">))</span>
+<span class="n">sharding_map</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_util</span><span class="o">.</span><span class="n">tree_map_with_path</span><span class="p">(</span><span class="n">get_sharding_map</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+
+<span class="c1"># Apply the sharding map</span>
+<span class="n">state</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">device_put</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">sharding_map</span><span class="p">)</span>
+
+<span class="c1"># Reconstruct the brain</span>
+<span class="n">brain</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Finally, let’s just see the final split of our model!</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Array: brain.A_ex.soma.potential&#39;</span><span class="p">)</span>
+<span class="n">jax</span><span class="o">.</span><span class="n">debug</span><span class="o">.</span><span class="n">visualize_array_sharding</span><span class="p">(</span><span class="n">brain</span><span class="o">.</span><span class="n">A_ex</span><span class="o">.</span><span class="n">soma</span><span class="o">.</span><span class="n">potential</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Array: brain.B_ex.synapses.kernel&#39;</span><span class="p">)</span>
+<span class="n">jax</span><span class="o">.</span><span class="n">debug</span><span class="o">.</span><span class="n">visualize_array_sharding</span><span class="p">(</span><span class="n">brain</span><span class="o">.</span><span class="n">B_ex</span><span class="o">.</span><span class="n">synapses</span><span class="o">.</span><span class="n">kernel</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Array: brain.integrator.trace.trace_1&#39;</span><span class="p">)</span>
+<span class="n">jax</span><span class="o">.</span><span class="n">debug</span><span class="o">.</span><span class="n">visualize_array_sharding</span><span class="p">(</span><span class="n">brain</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">trace</span><span class="o">.</span><span class="n">trace_1</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Array: brain._cache[&quot;B_in&quot;][&quot;out_spikes&quot;]&#39;</span><span class="p">)</span>
+<span class="n">jax</span><span class="o">.</span><span class="n">debug</span><span class="o">.</span><span class="n">visualize_array_sharding</span><span class="p">(</span><span class="n">brain</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="s1">&#39;B_in&#39;</span><span class="p">][</span><span class="s1">&#39;out_spikes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="c1"># &lt;-- The cache has a weird internal structure ¯\_(ツ)_/¯ </span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Array: brain.A_ex.soma.potential
+Array: brain.B_ex.synapses.kernel
+Array: brain.integrator.trace.trace_1
+Array: brain._cache[&quot;B_in&quot;][&quot;out_spikes&quot;]
+</pre></div>
+</div>
+<div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">  CPU 2  </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">         </span>
+</pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                     CPU 4                                      </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">                                                                                </span>
+</pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">   CPU 1    </span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">            </span>
+</pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">CPU 0,1,2,3,4,5</span>
+<span style="color: #ffffff; text-decoration-color: #ffffff; background-color: #393b79">               </span>
+</pre>
+</div></div>
+</div>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
