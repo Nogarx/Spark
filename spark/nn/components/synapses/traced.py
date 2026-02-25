@@ -89,10 +89,10 @@ class TracedSynapses(LinearSynapses):
         # Initialize shapes
         super().build(input_specs)
         # Initialize variables.
-        _tau = self.config.tau.init(key=self.get_rng_keys(1), shape=self.kernel.value.shape, dtype=self._dtype)
+        _tau = self.config.tau.init(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
         # Current tracer.
         self.current_tracer = Tracer(
-            shape=self.kernel.value.shape,
+            shape=self._kernel.value.shape,
             tau=_tau,
             scale=self.config.scale,
             base=self.config.base,
@@ -107,7 +107,7 @@ class TracedSynapses(LinearSynapses):
         self.current_tracer.reset()
 
     def _dot(self, spikes: SpikeArray) -> CurrentArray:
-        trace = self.current_tracer(self.kernel.value * spikes.value)
+        trace = self.current_tracer(self._kernel.value * spikes.value)
         return CurrentArray(jnp.sum(trace, axis=self._sum_axes))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -210,11 +210,11 @@ class RDTracedSynapses(LinearSynapses):
         # Initialize shapes
         super().build(input_specs)
         # Initialize variables.
-        _tau_rise = self.config.tau_rise.init(key=self.get_rng_keys(1), shape=self.kernel.value.shape, dtype=self._dtype)
-        _tau_decay = self.config.tau_decay.init(key=self.get_rng_keys(1), shape=self.kernel.value.shape, dtype=self._dtype)
+        _tau_rise = self.config.tau_rise.init(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
+        _tau_decay = self.config.tau_decay.init(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
         # Current tracer.
         self.current_tracer = RDTracer(
-            shape=self.kernel.value.shape,
+            shape=self._kernel.value.shape,
             tau_rise=_tau_rise,
             tau_decay=_tau_decay,
             scale_rise=self.config.scale_rise,
@@ -232,7 +232,7 @@ class RDTracedSynapses(LinearSynapses):
         self.current_tracer.reset()
 
     def _dot(self, spikes: SpikeArray) -> CurrentArray:
-        trace = self.current_tracer(self.kernel.value * spikes.value)
+        trace = self.current_tracer(self._kernel.value * spikes.value)
         return CurrentArray(jnp.sum(trace, axis=self._sum_axes))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -374,12 +374,12 @@ class RFSTracedSynapses(LinearSynapses):
         # Initialize shapes
         super().build(input_specs)
         # Initialize variables.
-        _tau_rise = self.config.tau_rise.init(key=self.get_rng_keys(1), shape=self.kernel.value.shape, dtype=self._dtype)
-        _tau_fast_decay = self.config.tau_fast_decay.init(key=self.get_rng_keys(1), shape=self.kernel.value.shape, dtype=self._dtype)
-        _tau_slow_decay = self.config.tau_slow_decay.init(key=self.get_rng_keys(1), shape=self.kernel.value.shape, dtype=self._dtype)
+        _tau_rise = self.config.tau_rise.init(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
+        _tau_fast_decay = self.config.tau_fast_decay.init(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
+        _tau_slow_decay = self.config.tau_slow_decay.init(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
         # Current tracer.
         self.current_tracer = RFSTracer(
-            shape=self.kernel.value.shape,
+            shape=self._kernel.value.shape,
             alpha=self.config.alpha,
             tau_rise=_tau_rise,
             tau_fast_decay=_tau_fast_decay,
@@ -401,7 +401,7 @@ class RFSTracedSynapses(LinearSynapses):
         self.current_tracer.reset()
 
     def _dot(self, spikes: SpikeArray) -> CurrentArray:
-        trace = self.current_tracer(self.kernel.value * spikes.value)
+        trace = self.current_tracer(self._kernel.value * spikes.value)
         return CurrentArray(jnp.sum(trace, axis=self._sum_axes))
     
 #################################################################################################################################################

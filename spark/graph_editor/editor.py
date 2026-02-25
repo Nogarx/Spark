@@ -13,7 +13,7 @@ import enum
 import pathlib
 import typing as tp
 from PySide6 import QtWidgets, QtCore, QtGui
-from spark.nn.brain import BrainConfig
+from spark.nn.controllers.brain import BrainConfig
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
 from spark.graph_editor.ui.menu_bar import MenuBar
 from spark.graph_editor.ui.status_bar import StatusBar

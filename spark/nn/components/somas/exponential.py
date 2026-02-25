@@ -157,9 +157,9 @@ class ExponentialSoma(Soma):
         """
             Update neuron's soma states variables.
         """
-        self.potential.value += self.potential_scale * (
-            - self.potential.value
-            + self.spike_slope * jnp.exp((self.potential.value - self.rheobase_threshold.value)/self.spike_slope)
+        self._potential.value += self.potential_scale * (
+            - self._potential.value
+            + self.spike_slope * jnp.exp((self._potential.value - self.rheobase_threshold.value)/self.spike_slope)
             + self.resistance * current.value
         )
 
@@ -168,9 +168,9 @@ class ExponentialSoma(Soma):
             Compute neuron's spikes.
         """
         # Compute spikes.
-        spikes = jnp.greater(self.potential.value, self.threshold.value).astype(self._dtype)
+        spikes = jnp.greater(self._potential.value, self.threshold.value).astype(self._dtype)
         # Reset neurons.
-        self.potential.value = spikes * self.potential_reset + (1 - spikes) * self.potential.value
+        self._potential.value = spikes * self.potential_reset + (1 - spikes) * self._potential.value
         return SpikeArray(spikes)
     
 #################################################################################################################################################
@@ -254,9 +254,9 @@ class RefractoryExponentialSoma(ExponentialSoma):
         self.is_ready.value = jnp.greater(self.refractory.value, self.cooldown)
         is_ready = self.is_ready.value.astype(self._dtype)
         
-        self.potential.value += self.potential_scale * (
-            -self.potential.value + 
-            self.spike_slope * jnp.exp((self.potential.value - self.rheobase_threshold.value)/self.spike_slope) +
+        self._potential.value += self.potential_scale * (
+            -self._potential.value + 
+            self.spike_slope * jnp.exp((self._potential.value - self.rheobase_threshold.value)/self.spike_slope) +
             is_ready * self.resistance * current.value
         )
 
@@ -266,11 +266,11 @@ class RefractoryExponentialSoma(ExponentialSoma):
         """
         # Compute spikes.
         spikes = jnp.logical_and(
-            jnp.greater(self.potential.value, self.threshold.value), 
+            jnp.greater(self._potential.value, self.threshold.value), 
             jnp.greater(self.refractory.value, self.cooldown)
         ).astype(self._dtype)
         # Reset neurons.
-        self.potential.value = spikes * self.potential_reset + (1 - spikes) * self.potential.value
+        self._potential.value = spikes * self.potential_reset + (1 - spikes) * self._potential.value
         # Set neuron refractory period.
         self.refractory.value = (1 - spikes).astype(jnp.uint16) * (self.refractory.value + 1)
         return SpikeArray(spikes)
@@ -377,9 +377,9 @@ class AdaptiveExponentialSoma(ExponentialSoma):
         """
             Update neuron's soma states variables.
         """
-        self.potential.value += self.potential_scale * (
-            - self.potential.value
-            + self.spike_slope * jnp.exp((self.potential.value - self.rheobase_threshold.value)/self.spike_slope)
+        self._potential.value += self.potential_scale * (
+            - self._potential.value
+            + self.spike_slope * jnp.exp((self._potential.value - self.rheobase_threshold.value)/self.spike_slope)
             - self.resistance * self.adaptation.value
             + self.resistance * current.value
         )
@@ -394,7 +394,7 @@ class AdaptiveExponentialSoma(ExponentialSoma):
         # Update adaptation
         self.adaptation.value += self.adaptation_scale * (
             - self.adaptation.value 
-            + self.adaptation_subthreshold * self.potential.value
+            + self.adaptation_subthreshold * self._potential.value
         ) + self.adaptation_delta * spikes.spikes.astype(self._dtype)
         return spikes
     

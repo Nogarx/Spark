@@ -11,10 +11,11 @@ import jax
 import jax.numpy as jnp
 import dataclasses as dc
 from spark.nn.neurons import Neuron, NeuronConfig, NeuronOutput
-from spark.core.payloads import SpikeArray, FloatArray
+from spark.core.payloads import SpikeArray, PotentialArray
 from spark.core.variables import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator, ZeroOneValidator
+from spark.core.decorators import spark_property
 
 from spark.nn.components.somas.leaky import LeakySoma, LeakySomaConfig
 from spark.nn.components.delays.base import Delays, DelaysConfig
@@ -89,16 +90,21 @@ class LIFNeuron(Neuron):
         inhibition_mask = inhibition_mask.at[indices].set(True).reshape(self.units)
         self._inhibition_mask = Constant(inhibition_mask, dtype=jnp.bool)
         # Set output shapes earlier to allow cycles.
-        contract = self._get_output_specs()
-        contract['out_spikes'].shape = self.units
-        contract['out_spikes'].inhibition_mask = self._inhibition_mask
-        self.set_contract_output_specs(contract)
+        output_contract = self._get_output_specs()
+        output_contract['out_spikes'].shape = self.units
+        output_contract['out_spikes'].inhibition_mask = self._inhibition_mask
+        property_contract = self._get_property_specs()
+        property_contract['potential'].shape = self.units
+        self.set_contract_specs(
+            output_contract_specs=output_contract,
+            property_contract_specs=property_contract,
+        )
 
     def build(self, input_specs: dict[str, PortSpecs]):
         # Soma model.
         self.soma = self.config.soma.class_ref(config=self.config.soma)
         # Delays model.
-        self._delays_active = self.config.learning_rule is not None
+        self._delays_active = self.config.delays is not None
         if self._delays_active:
             self.delays = self.config.delays.class_ref(config=self.config.delays)
         # Synaptic model.
@@ -107,6 +113,10 @@ class LIFNeuron(Neuron):
         self._learning_active = self.config.learning_rule is not None
         if self._learning_active:
             self.learning_rule = self.config.learning_rule.class_ref(config=self.config.learning_rule)
+
+    @spark_property
+    def potential(self,) -> PotentialArray:
+        return PotentialArray(self.soma.potential.value)
 
     def __call__(self, in_spikes: SpikeArray) -> NeuronOutput:
         """

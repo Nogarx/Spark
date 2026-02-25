@@ -25,6 +25,8 @@ from math import prod
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+
+# TODO: We need to reliably distinguish between single and multi input ports.
 @jax.tree_util.register_dataclass
 @dc.dataclass(init=False)
 class PortSpecs:
@@ -34,12 +36,12 @@ class PortSpecs:
     payload_type: type[SparkPayload] | None
     shape: tuple[int, ...] | list[tuple[int, ...]] | None
     dtype: DTypeLike | None
-    description: str | None = None
+    description: str | None
 
     # Auxiliary metadata only used at model build time.
     # These are dynamic metadata variables that are only needed at build time.
-    async_spikes: bool | None = None,
-    inhibition_mask: bool | None = None,
+    async_spikes: bool | None
+    inhibition_mask: bool | None
 
     def __init__(
             self, 
@@ -103,6 +105,10 @@ class PortSpecs:
         """
             Merges a list of PortSpecs into a single PortSpecs
         """
+        # Return original portspec if list contains a single element
+        if len(portspec_list) == 1:
+            return portspec_list[0]
+
         # Payload validation.
         payload_type = set([spec.payload_type for spec in portspec_list])
         if len(payload_type) != 1:
@@ -177,8 +183,9 @@ class PortMap:
     """
     origin: str        
     port: str       
+    is_property: bool
 
-    def __init__(self, origin: str, port: str) -> None:
+    def __init__(self, origin: str, port: str, is_property: bool = False) -> None:
         if not isinstance(origin, str):
             raise TypeError(
                 f'Expected "origin" to be of type "str" but got "{type(origin).__name__}".'
@@ -189,6 +196,7 @@ class PortMap:
             )
         self.origin = origin
         self.port = port
+        self.is_property = is_property
 
     def to_dict(self, is_partial: bool = False) -> dict[str, tp.Any]:
         """
@@ -206,6 +214,11 @@ class PortMap:
         """
         return cls(**dct)
 
+    def __hash__(self) -> int:
+        return hash(self.origin+self.port+str(self.is_property))
+
+    def __eq__(self, other: PortMap) -> bool:
+        return self.origin == other.origin and self.port == other.port and self.is_property == other.is_property
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

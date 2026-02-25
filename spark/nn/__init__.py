@@ -1,7 +1,8 @@
 from spark.core.module import SparkModule as Module
 from spark.core.config import SparkConfig as Config
 from spark.core.config import BaseSparkConfig as BaseConfig
-from spark.nn.brain import Brain, BrainConfig
+from spark.nn.controllers.brain import Brain, BrainConfig
+from spark.nn.controllers.neuron import Neuron, NeuronConfig
 from spark.nn import interfaces
 from spark.nn import neurons
 from spark.nn import initializers
@@ -14,6 +15,7 @@ import spark.nn.components.learning_rules as learning_rules
 __all__ = [
     'Module', 'Config', 'BaseConfig',
     'Brain', 'BrainConfig',
+    'Neuron', 'NeuronConfig',
     'interfaces', 
     'neurons', 
     'initializers',

@@ -89,10 +89,14 @@ class AdExNeuron(Neuron):
         inhibition_mask = inhibition_mask.at[indices].set(True).reshape(self.units)
         self._inhibition_mask = Constant(inhibition_mask, dtype=jnp.bool)
         # Set output shapes earlier to allow cycles.
-        contract = self._get_output_specs()
-        contract['out_spikes'].shape = self.units
-        contract['out_spikes'].inhibition_mask = self._inhibition_mask
-        self.set_contract_output_specs(contract)
+        output_contract = self._get_output_specs()
+        output_contract['out_spikes'].shape = self.units
+        output_contract['out_spikes'].inhibition_mask = self._inhibition_mask
+        property_contract = {}
+        self.set_contract_specs(
+            output_contract_specs=output_contract,
+            property_contract_specs=property_contract,
+        )
 
     def build(self, input_specs: dict[str, PortSpecs]):
         # Soma model.

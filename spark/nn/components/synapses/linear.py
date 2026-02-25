@@ -93,19 +93,19 @@ class LinearSynapses(Synanpses):
             init_kwargs = {'norm_axes': tuple(s for s in range(len(self._output_shape))),},
             key=self.get_rng_keys(1), shape=self._output_shape+self._real_input_shape, dtype=self._dtype,
         )
-        self.kernel = Variable(kernel, dtype=self._dtype)
+        self._kernel = Variable(kernel, dtype=self._dtype)
         
     def get_kernel(self,) -> FloatArray:
-        return FloatArray(self.kernel.value)
+        return FloatArray(self._kernel.value)
 
     def get_flat_kernel(self,) -> FloatArray:
-        return FloatArray(self.kernel.value.reshape(prod(self._output_shape), prod(self._real_input_shape)))
+        return FloatArray(self._kernel.value.reshape(prod(self._output_shape), prod(self._real_input_shape)))
 
     def set_kernel(self, new_kernel: FloatArray) -> None:
-        self.kernel.value = new_kernel.value
+        self._kernel.value = new_kernel.value
 
     def _dot(self, spikes: SpikeArray) -> CurrentArray:
-        return CurrentArray(jnp.sum(self.kernel.value * spikes.value, axis=self._sum_axes) )#* 1000.0)
+        return CurrentArray(jnp.sum(self._kernel.value * spikes.value, axis=self._sum_axes) )#* 1000.0)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

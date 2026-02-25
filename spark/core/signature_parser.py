@@ -212,7 +212,7 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
 
 def get_output_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
     """
-        Returns a dictionary of the SparkModule's input port specifications.
+        Returns a dictionary of the SparkModule's output port specifications.
     """
 
     # Check isinstance of SparkModule.
@@ -225,9 +225,7 @@ def get_output_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
     signature = inspect.signature(module.__call__)
     signature_type_hints = tp.get_type_hints(module.__call__)
 
-    output_specs = {}
-
-    # Check that the input signature has a return annotation.
+    # Check that the output signature has a return annotation.
     if signature.return_annotation is None:
         raise SyntaxError(
             f'Module "{type(module).__name__}" does not define a return type.'
@@ -244,6 +242,7 @@ def get_output_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
     annotations = tp.get_type_hints(signature_type_hints['return'])
 
     # Build output specs
+    output_specs = {}
     for name, payload_type in annotations.items():
 
         # Check if the payload_type is a valid class and a subclass of SparkPayload
@@ -261,6 +260,58 @@ def get_output_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
             description=f'Output port for {name}',
     )
     return output_specs
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def get_property_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
+    """
+        Returns a dictionary of the SparkModule's property port specifications.
+    """
+
+    # Check isinstance of SparkModule.
+    if not validation._is_module_type(module):
+        raise TypeError(
+            f'Expected object class of type "SparkModule" but got "{type(module).__name__}".'
+        )
+
+    # Gather all properties
+    properties = module.get_properties()
+
+    property_specs = {}
+    for name in properties:
+        
+        # Get property signature.
+        spark_property = getattr(module, name)
+        payload_type = tp.get_type_hints(spark_property.fget).get('return', None)
+
+        # Check that the property signature has a return annotation.
+        if payload_type is None:
+            raise SyntaxError(
+                f'Module "{type(module).__name__}" does not define a return type for property "{name}".'
+            )
+        # Check if the annotation is a valid SparkPayload
+        origin = tp.get_origin(payload_type)
+        if origin is tp.Union or origin is types.UnionType:
+            raise SyntaxError(
+                f'Module "{type(module).__name__}" does not define a valid return type for property "{name}". '
+                f'Return type must be a single SparkPayload but got "{payload_type}".'
+            )
+        if not validation._is_payload_type(payload_type):
+            # Raise error, payload is not fully compatible with the framework.
+            raise TypeError(
+                f'Error: Output parameter "{name}" has type {type(payload_type).__name__}, '
+                f'which is not a valid SparkPayload, None or sequence of SparkPayload.'
+            )
+
+        # Build property specs
+        property_specs[name] = PortSpecs(
+            payload_type=payload_type,
+            shape=None,
+            dtype=None,
+            description=f'Property port for {name}',
+        )
+
+    return property_specs
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

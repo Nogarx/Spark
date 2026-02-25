@@ -797,7 +797,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             likely to fail in many different custom scenarios.
         """
         # Check if is a BrainConfig
-        from spark.nn.brain import Brain, BrainConfig
+        from spark.nn.controllers.brain import Brain, BrainConfig
         if isinstance(obj, BrainConfig):
             return Brain
 

@@ -11,7 +11,7 @@ from NodeGraphQt import NodeGraph, Port, BaseNode
 from NodeGraphQt.widgets.viewer import NodeViewer
 
 from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
-from spark.nn.brain import BrainConfig
+from spark.nn.controllers.brain import BrainConfig
 from spark.graph_editor.models.nodes import SourceNode, SinkNode, AbstractNode, SparkModuleNode
 from spark.graph_editor.ui.console_panel import MessageLevel
 

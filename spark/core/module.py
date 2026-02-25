@@ -24,6 +24,7 @@ import spark.core.utils as utils
 from spark.core.specs import PortSpecs
 from spark.core.config import BaseSparkConfig
 from spark.core.variables import Variable
+from spark.core.decorators import spark_property
 
 # TODO: Support for list[SparkPayloads] was implemented in a wacky manner and 
 # may have damage several parts of the module. This needs to be further validated. 
@@ -142,10 +143,12 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # Specs
         self._input_specs: dict[str, PortSpecs] | None = None
         self._output_specs: dict[str, PortSpecs] | None = None
+        self._property_specs: dict[str, PortSpecs] | None = None
         # Flags
         self.__built__: bool = False
         self.__allow_cycles__: bool = False
         self._contract_specs: dict[str, PortSpecs] | None = None
+        self._multi_input: bool = True
 
 
 
@@ -172,7 +175,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             raise TypeError(f'Error binding arguments for "{self.name}": {error}') from error
 
         # Construct input specs.
-        self._input_specs = nnx.data(self._construct_input_specs(bound_args.arguments))
+        self._construct_input_specs(bound_args.arguments)
         # Build model.
         self.build(self._input_specs)
         self.__built__ = True
@@ -198,8 +201,15 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         for key, value in self._input_specs.items():
             mock_input[key] = value._create_mock_input()
         abc_output = self.__call__(**mock_input)
-        # Contruct output sepcs.
-        self._output_specs = nnx.data(self._construct_output_specs(abc_output))
+        # Contruct output specs.
+        self._construct_output_specs(abc_output)
+        # Contruct property specs.
+        self._construct_property_specs()
+
+
+
+    def has_output_contract(self) -> bool:
+        return self.__allow_cycles__
 
 
 
@@ -219,51 +229,71 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
 
 
-    def set_contract_output_specs(self, contract_specs: dict[str, PortSpecs]) -> None:
+    def set_contract_specs(
+            self, 
+            output_contract_specs: dict[str, PortSpecs],
+            property_contract_specs: dict[str, PortSpecs]
+        ) -> None:
         """
             Recurrent shape policy pre-defines expected shapes for the output specs.
 
             This is function is a binding contract that allows the modules to accept self connections.
 
             Input:
-                contract_specs: dict[str, PortSpecs], A dictionary with a contract for the output specs.
+                output_contract_specs: dict[str, PortSpecs], A dictionary with a contract for the output specs.
+                property_contract_specs: dict[str, PortSpecs], A dictionary with a contract for the property specs.
 
             NOTE: If both, shape and output_specs, are provided, output_specs takes preference over shape.
         """
 
-        # Validate contract.
+        # Validate output contract.
         output_specs = sig_parser.get_output_specs(type(self))
         for port in output_specs.keys():
-            if port not in contract_specs:
+            if port not in output_contract_specs:
                 raise ValueError(
                     f'PortSpecs for port {port} is not defined.'
                 )
-            if not isinstance(contract_specs[port], PortSpecs):
+            if not isinstance(output_contract_specs[port], PortSpecs):
                 raise ValueError(
-                    f'PortSpecs for port got {contract_specs[port].__class__.__name__}, which is not a valid PortSpecs..'
+                    f'PortSpecs for port got {output_contract_specs[port].__class__.__name__}, which is not a valid PortSpecs..'
                 )   
-        # Set contract
-        self._contract_specs = contract_specs
+        # Set output contract
+        self._output_contract_specs = output_contract_specs
+
+        # Validate property contract.
+        property_specs = sig_parser.get_property_specs(type(self))
+        for port in property_specs.keys():
+            if port not in property_contract_specs:
+                raise ValueError(
+                    f'PortSpecs for port {port} is not defined.'
+                )
+            if not isinstance(property_contract_specs[port], PortSpecs):
+                raise ValueError(
+                    f'PortSpecs for port got {property_contract_specs[port].__class__.__name__}, which is not a valid PortSpecs..'
+                )   
+        # Set property contract
+        self._property_contract_specs = property_contract_specs
+
         # Enable recurrence flag.
         self.__allow_cycles__ = True
         
 
 
-    def get_contract_output_specs(self,) -> dict[str, PortSpecs] | None:
+    def get_contract_specs(self,) -> tuple[dict[str, PortSpecs], dict[str, PortSpecs]]:
         """
             Retrieve the recurrent spec policy of the module.
         """
         if self.__allow_cycles__:
-            return self._contract_specs
+            return self._output_contract_specs, self._property_contract_specs
         raise RuntimeError(
-            f'Trying to access the contract output specs of module \"{self.name}\", but \"set_contract_output_specs\" '
+            f'Trying to access the contract output specs of module \"{self.name}\", but \"set_contract_specs\" '
             f'has not been called. If you are trying to use \"{self.name}\" within a recurrent context '
             f'set the recurrent shape contract inside the __init__ method of \"{self.__class__.__name__}\".'
         )
 
 
 
-    def _construct_input_specs(self, abc_args: dict[str, SparkPayload | list[SparkPayload]]) -> dict[str, PortSpecs]:
+    def _construct_input_specs(self, abc_args: dict[str, SparkPayload | list[SparkPayload]]) -> None:
         """
             Input spec constructor.
         """
@@ -305,11 +335,11 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                 async_spikes=payload.async_spikes if isinstance(payload, SpikeArray) else None,
                 inhibition_mask=payload.inhibition_mask if isinstance(payload, SpikeArray) else None
             )
-        return input_specs
+        self._input_specs = nnx.data(input_specs)
 
 
 
-    def _construct_output_specs(self, abc_args: ModuleOutput) -> dict[str, PortSpecs]:
+    def _construct_output_specs(self, abc_args: ModuleOutput) -> None:
         """
             Output spec constructor.
         """
@@ -325,24 +355,45 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # Finish specs.
         from spark.core.payloads import SpikeArray
         for key in output_specs.keys():
+            output_payload: SparkPayload = abc_args[key]
             output_specs[key] = PortSpecs(
                 payload_type=output_specs[key].payload_type,
-                shape=abc_args[key].shape,
-                dtype=abc_args[key].dtype,
+                shape=output_payload.shape,
+                dtype=output_payload.dtype,
                 description=f'Auto-generated output spec for input \"{key}\" of module \"{self.name}\".',
                 # Payload specific build metadata
-                async_spikes=abc_args[key].async_spikes if isinstance(abc_args[key], SpikeArray) else None,
-                inhibition_mask=abc_args[key].inhibition_mask if isinstance(abc_args[key], SpikeArray) else None
+                async_spikes=output_payload.async_spikes if isinstance(output_payload, SpikeArray) else None,
+                inhibition_mask=output_payload.inhibition_mask if isinstance(output_payload, SpikeArray) else None
             )
-        return output_specs
+        self._output_specs = nnx.data(output_specs)
 
+
+
+    def _construct_property_specs(self,) -> None:
+        # Get default spec from signatures.
+        property_specs = sig_parser.get_property_specs(type(self))
+        # Finalize specs.
+        from spark.core.payloads import SpikeArray
+        for key in property_specs.keys():
+            property_payload: SparkPayload = getattr(self, key)
+            property_specs[key] = PortSpecs(
+                payload_type=property_specs[key].payload_type,
+                shape=property_payload.shape,
+                dtype=property_payload.dtype,
+                description=f'Auto-generated output spec for input \"{key}\" of module \"{self.name}\".',
+                # Payload specific build metadata
+                async_spikes=property_payload.async_spikes if isinstance(property_payload, SpikeArray) else None,
+                inhibition_mask=property_payload.inhibition_mask if isinstance(property_payload, SpikeArray) else None
+            )
+        self._property_specs = nnx.data(property_specs)
+        
 
 
     def get_input_specs(self) -> dict[str, PortSpecs]:
         """
             Returns a dictionary of the SparkModule's input port specifications.
         """
-        if not self._input_specs:
+        if self._input_specs is None:
             raise RuntimeError('Module not yet built.')
         return self._input_specs
 
@@ -352,9 +403,19 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         """
             Returns a dictionary of the SparkModule's input port specifications.
         """
-        if not self._output_specs:
+        if self._output_specs is None:
             raise RuntimeError('Module not yet built.')
         return self._output_specs
+
+
+
+    def get_property_specs(self) -> dict[str, PortSpecs]:
+        """
+            Returns a dictionary of the SparkModule's property port specifications.
+        """
+        if self._property_specs is None:
+            raise RuntimeError('Module not yet built.')
+        return self._property_specs
 
 
 
@@ -376,6 +437,14 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
 
 
+    @classmethod
+    def _get_property_specs(cls) -> dict[str, PortSpecs]:
+        """
+            Returns a dictionary of the SparkModule's property port specifications.
+        """
+        return sig_parser.get_property_specs(cls)
+        
+
     def get_rng_keys(self, num_keys: int) -> jax.Array | list[jax.Array]:
         """
             Generates a new collection of random keys for the JAX's random engine.
@@ -384,6 +453,16 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         if num_keys == 1:
             return keys[0]
         return keys
+
+
+    @classmethod
+    def get_properties(cls,) -> tuple[str, ...]:
+        """
+            Returns all the attributes names wrapped by the spark_property wrapper.
+        """
+        return tuple(
+            [name  for name, attr in cls.__dict__.items() if isinstance(attr, spark_property)]
+        )
 
 
 
