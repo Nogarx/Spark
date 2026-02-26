@@ -118,12 +118,14 @@ class InitializableField(metaclass=InitializableFieldMetaclass):
 
     def init(
             self, 
-            init_kwargs={}, 
+            init_kwargs=None, 
             key: jax.Array | None = None, 
             shape: tuple | None = None, 
             dtype: np.dtype | None = None,
             **kwargs
         ) -> jax.Array | int | float | complex | bool:
+        if init_kwargs is None:
+            init_kwargs = {}
         from spark.nn.initializers import Initializer, InitializerConfig
         if isinstance(self.__obj__, Initializer):
             return self.__obj__(key=key, shape=shape, **kwargs)
@@ -230,10 +232,16 @@ class SparkMetaConfig(abc.ABCMeta):
 
         return new_class
 
-    # TODO: Verify and clean code
+    @staticmethod
     def map_common_init_patterns(default: tp.Any, factory: tp.Callable = dc.MISSING) -> tuple[tp.Any, tp.Any]:
-        if default != dc.MISSING and isinstance(default, (list, dict, set, np.ndarray, jax.Array)):
-            # Map list, arrays, dicts and sets to lambdas in order to be able to use them directly as defaults.
+        if default != dc.MISSING and isinstance(default, (list, dict, set)):
+            # Map list, dicts and sets to lambdas in order to be able to use them directly as defaults.
+            return dc.MISSING, lambda value=default : copy.deepcopy(value)
+        elif default != dc.MISSING and isinstance(default, np.ndarray):
+            # Isolate numpy arrays to avoid side effects
+            return dc.MISSING, lambda value=default : value.copy()
+        elif default != dc.MISSING and isinstance(default, jax.Array):
+            # JAX arrays are immutable, so returning directly is safe
             return dc.MISSING, lambda value=default : value
         elif default != dc.MISSING and _is_config_instance(default):
             # Map already initialized configs to lambda 
@@ -299,10 +307,40 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             if field.metadata['allows_init']:
                 setattr(self, field.name, InitializableField(getattr(self, field.name)))
 
+    @classmethod
+    def _is_equal(cls, val1: tp.Any, val2: tp.Any) -> bool:
+        if type(val1) != type(val2):
+            return False
+        
+        from spark.nn.initializers import Initializer, InitializerConfig
+        
+        # Unpack InitializableField
+        if isinstance(val1, InitializableField):
+            val1 = val1.__obj__
+            val2 = val2.__obj__
+            if isinstance(val1, Initializer):
+                val1 = val1.config
+                val2 = val2.config
+
+        if isinstance(val1, BaseSparkConfig):
+            return val1 == val2
+        elif isinstance(val1, (jax.Array, np.ndarray)):
+            return val1.shape == val2.shape and np.array_equal(val1, val2)
+        elif isinstance(val1, (list, tuple, dict, set)):
+            if len(val1) != len(val2):
+                return False
+            if isinstance(val1, dict):
+                if val1.keys() != val2.keys():
+                    return False
+                return all(cls._is_equal(val1[k], val2[k]) for k in val1)
+            else:
+                return all(cls._is_equal(v1, v2) for v1, v2 in zip(val1, val2))
+        else:
+            return val1 == val2
+
     def __eq__(self, other) -> bool:
         if not isinstance(other, BaseSparkConfig):
             return False
-        from spark.nn.initializers import Initializer, InitializerConfig
         # Check both of them contain the same fields.
         fields = set([f.name for f in dc.fields(self)])
         other_fields = set([f.name for f in dc.fields(other)])
@@ -311,25 +349,9 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         # Compare fields contents.
         for name in fields:
             value = getattr(self, name)
-            other_value = getattr(self, name)
-            if type(value) != type(other_value):
+            other_value = getattr(other, name)
+            if not self._is_equal(value, other_value):
                 return False
-            if isinstance(value, BaseSparkConfig):
-                # Recursive comparison.
-                if value != other_value:
-                    return False
-            elif isinstance(value, InitializableField) and isinstance(value.__obj__, Initializer):
-                if value.__obj__.config != other_value.__obj__.config:
-                    return False
-            elif isinstance(value, InitializableField):
-                if value.__obj__ != other_value.__obj__:
-                    return False
-            elif isinstance(value, (jax.Array, np.ndarray)):
-                if np.all(value != other_value):
-                    return False
-            else:
-                if value != other_value:
-                    return False
         return True
 
     @classmethod
@@ -354,10 +376,12 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def merge(self, partial: dict[str, tp.Any] = {}, __skip_validation__: bool = False) -> None:
+    def merge(self, partial: dict[str, tp.Any] | None = None, __skip_validation__: bool = False) -> None:
         """
             Update config with partial overrides.
         """
+        if partial is None:
+            partial = {}
         # Fold partial to pass child config attributes.
         kwargs_fold, shared_partial = self._fold_partial(self, partial)
         # Get current fields and pass attributes.
@@ -642,7 +666,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         return {
             field.name: getattr(self, field.name) 
             for field in dc.fields(self) 
-            if getattr(self, field.name) != getattr(other, field.name)
+            if not self._is_equal(getattr(self, field.name), getattr(other, field.name))
         }
 
 
@@ -695,10 +719,12 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
     
 
 
-    def validate(self, is_partial: bool = False, errors: list | None = None, current_path: list[str] = ['main']) -> None:
+    def validate(self, is_partial: bool = False, errors: list | None = None, current_path: list[str] | None = None) -> None:
         """
             Validates all fields in the configuration class.
         """
+        if current_path is None:
+            current_path = ['main']
         # Get type hints
         raw_type_hints = tp.get_type_hints(self.__class__)
         optional_attrs = {}
@@ -731,14 +757,14 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     except:
                         setattr(self, field.name, None)
                         logger.info(
-                            f'Field \"{field.name}\" with path \"{'/'.join(current_path)}\" set to \"None\" due to partial validation.'
+                            f'Field "{field.name}" with path "{"/".join(current_path)}" set to "None" due to partial validation.'
                         )
                         break
                 else:
                     try:
                         validator_instance.validate(value_attr)
                     except Exception as e:
-                        msg = f'Error at field \"{field.name}\" with path \"{'/'.join(current_path)}\": {e}'
+                        msg = f'Error at field "{field.name}" with path "{"/".join(current_path)}": {e}'
                         logger.error(e)
                         if errors is not None:
                             # Stack error
@@ -836,13 +862,6 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
     def __post_init__(self,):
         self.validate()
-        # Get type hints
-        type_hints = tp.get_type_hints(self.__class__)
-        for key in type_hints.keys():
-            if tp.get_origin(type_hints[key]): 
-                hints = list(tp.get_args(type_hints[key]))
-                type_hints[key] = (h for h in hints if h is not type(None))
-
 
 
     def to_dict(self, is_partial: bool = False) -> dict[str, dict[str, tp.Any]]:
