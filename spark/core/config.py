@@ -234,28 +234,28 @@ class SparkMetaConfig(abc.ABCMeta):
 
     @staticmethod
     def map_common_init_patterns(default: tp.Any, factory: tp.Callable = dc.MISSING) -> tuple[tp.Any, tp.Any]:
-        if default != dc.MISSING and isinstance(default, (list, dict, set)):
+        if isinstance(default, (list, dict, set)):
             # Map list, dicts and sets to lambdas in order to be able to use them directly as defaults.
             return dc.MISSING, lambda value=default : copy.deepcopy(value)
-        elif default != dc.MISSING and isinstance(default, np.ndarray):
+        elif isinstance(default, np.ndarray):
             # Isolate numpy arrays to avoid side effects
             return dc.MISSING, lambda value=default : value.copy()
-        elif default != dc.MISSING and isinstance(default, jax.Array):
+        elif isinstance(default, jax.Array):
             # JAX arrays are immutable, so returning directly is safe
             return dc.MISSING, lambda value=default : value
-        elif default != dc.MISSING and _is_config_instance(default):
+        elif _is_config_instance(default):
             # Map already initialized configs to lambda 
             return dc.MISSING, lambda value=default : value
-        elif default != dc.MISSING and _is_config_type(default):
+        elif _is_config_type(default):
             # Map configs types to lambdas 
             return dc.MISSING, default
-        elif default != dc.MISSING and _is_initializer_instance(default):
+        elif _is_initializer_instance(default):
             # Map already initialized initializers to lambda of its configs
             return dc.MISSING, lambda value=default.config : value
-        elif default != dc.MISSING and _is_initializer_type(default):
+        elif _is_initializer_type(default):
             # Get config from initializer and map it to lambda of its config
             return dc.MISSING, lambda value=default.get_config_spec() : value()
-        elif default != dc.MISSING and _is_module_instance(default):
+        elif _is_module_instance(default):
             # Map already initialized modules to lambda of its config
             return dc.MISSING, lambda value=default.config : value
         elif default != dc.MISSING and callable(default) and not utils.is_dtype(default):
@@ -626,7 +626,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                         raise ValueError(
                             f'Field "{field_name}" does not define a default value, ' \
                             f'and automatic resolution failed to produce a default value. ' \
-                            f'Please define a default value for this field.'
+                            f'Please define a default value or a factory for this field.'
                         )
 
 

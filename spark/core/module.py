@@ -130,13 +130,13 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # Define default parameters.
         self.name = name if name else self.__class__.__name__
         dtype = getattr(self.config, 'dtype', None)
-        if dtype:
+        if dtype is not None:
             self._dtype = dtype
         dt = getattr(self.config, 'dt', None)
-        if dt:
+        if dt is not None:
             self._dt = dt
         seed = getattr(self.config, 'seed', None)
-        if seed:
+        if seed is not None:
             self._seed = seed
             # Random engine key.
             self.rng = Variable(jax.random.PRNGKey(self._seed))
@@ -316,6 +316,11 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # Finish specs, use abc_args to skip optional missing keys.
         from spark.core.payloads import SpikeArray
         for key, payload in abc_args.items():
+            if isinstance(payload, list) and len(payload) == 0:
+                raise ValueError(
+                    f'Module "{self.name}" received an empty list for input "{key}". '
+                    f'Shape and dtype inference cannot proceed without at least one element.'
+                )
             # NOTE: This is a particular case for modules that expect abstract variadic positional arguments. 
             # I am looking at you Concat (╯°□°）╯︵ ┻━┻.
             payload_type = input_specs[key].payload_type
@@ -375,7 +380,12 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # Finalize specs.
         from spark.core.payloads import SpikeArray
         for key in property_specs.keys():
-            property_payload: SparkPayload = getattr(self, key)
+            property_payload: SparkPayload | None = getattr(self, key, None)
+            if property_payload is None:
+                raise RuntimeError(
+                    f'Module "{self.name}" declared a property "{key}", but it was not '
+                    f'initialized during the build phase.'
+                )
             property_specs[key] = PortSpecs(
                 payload_type=property_specs[key].payload_type,
                 shape=property_payload.shape,
@@ -449,6 +459,11 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         """
             Generates a new collection of random keys for the JAX's random engine.
         """
+        if not hasattr(self, 'rng'):
+            raise RuntimeError(
+                f"Module '{self.name}' does not have a random number generator initialized. "
+                "Ensure its configuration defines a 'seed' attribute."
+            )
         self.rng.value, *keys = jax.random.split(self.rng.value, num_keys+1)
         if num_keys == 1:
             return keys[0]
@@ -522,9 +537,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                 )
             # Create temporary directory
             timestamp = datetime.datetime.now().timestamp()
-            temp_dir = pathlib.Path(
-                os.path.join('/'.join(path.split('/')[:-1]), f'tmp_{timestamp}')
-            )
+            temp_dir = pathlib.Path(path).parent / f'tmp_{timestamp}'
             temp_dir.mkdir(exist_ok=True)
             # Save config
             config_path = pathlib.Path(os.path.join(temp_dir, 'model.scfg'))
@@ -580,9 +593,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         
         # Open tar file
         timestamp = datetime.datetime.now().timestamp()
-        temp_dir = pathlib.Path(
-            os.path.join('/'.join(path.split('/')[:-1]), f'tmp_{timestamp}')
-        )
+        temp_dir = pathlib.Path(path).parent / f'tmp_{timestamp}'
         try:
             with tarfile.open(path, "r:gz") as tar:
                 config_file = tar.getmember('./model.scfg')
@@ -595,7 +606,8 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                     raise RuntimeError(
                         f'Unable to validate state. If you still want to try to extract the file set \"safe=False\"'
                     )
-                tar.extract(config_file, path=temp_dir, filter='data') 
+                kwargs = {'filter': 'data'} if hasattr(tarfile, 'data_filter') else {}
+                tar.extract(config_file, path=temp_dir, **kwargs) 
                 state_files = []
                 for member in tar.getmembers():
                     if is_child(member.name, state_dir.name):
@@ -603,9 +615,9 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                             state_files.append(member)
                         else:
                             raise RuntimeError(
-                                f'A strange possibly malicious file was detected: \"{member.name}\". If you still want to try to extract the file set \"safe=False\"'
+                                f'A strange possibly malicious file was detected: "{member.name}". If you still want to try to extract the file set "safe=False"'
                             )
-                tar.extractall(members=state_files, path=temp_dir, filter='data') 
+                tar.extractall(members=state_files, path=temp_dir, **kwargs) 
             # Restore model
             config_path = pathlib.Path(os.path.join(temp_dir, 'model.scfg'))
             config = BaseSparkConfig.from_file(config_path.absolute())
