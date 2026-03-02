@@ -179,28 +179,24 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # Build model.
         self.build(self._input_specs)
         self.__built__ = True
-
-        # TODO: The correct approach to build the model is through eval_shape. 
-        # However, Constant and Variable are clashing with JAX tracer
-        # For some reason, the tracer thinks that Constant produces a side effect 
-        # when interacting with other arrays and Variable leaks.
-        # This probably requires extending both classes to tell them what to do with ShapeDtypeStruct 
-        if False:
-            # Replace arrays with spec-backed shape proxies.
-            abc_inputs = {}
-            for key, value in bound_args.arguments.items():
-                if value and validation._is_payload_instance(value):
-                    abc_inputs[key] = self._input_specs[key].payload_type(
-                        jax.ShapeDtypeStruct(shape=self._input_specs[key].shape, dtype=self._input_specs[key].dtype))
-            # Evaluate.
-            abc_output = nnx.eval_shape(self.__call__, **abc_inputs)
-
-        # Evaluate workaround, just use the __call__ directly with some mock input. 
+        # Construct mock input to compute the module output shapes.
         from spark.core.payloads import ValueSparkPayload
         mock_input = {}
         for key, value in self._input_specs.items():
             mock_input[key] = value._create_mock_input()
+
+        # TODO: The correct approach to build the model is through eval_shape. 
+        # However, the SpikeArray doesn't know how to deal with ShapeDtypeStruct's
+        #   -> _construct_output_specs() requestes the inhibitory mask from SpikeArray's.
+        # Note that payload.inhibition_mask is used to share connections types across modules in controller settings.
+        # Additionally, the current random generator mutates the object which is not allowed in eval_shape:
+        #   -> Cannot mutate {type(self).__name__} from a different trace level
+        # This probably requires handling both cases manually to tell them what to do with ShapeDtypeStruct / eval_shape
+        #abc_output = nnx.eval_shape(self.__call__, **mock_input)
+        # NOTE: workaround, just use the __call__ directly with some mock input and reset the module. 
         abc_output = self.__call__(**mock_input)
+        self.reset()
+
         # Contruct output specs.
         self._construct_output_specs(abc_output)
         # Contruct property specs.

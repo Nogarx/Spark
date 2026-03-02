@@ -15,6 +15,7 @@ import typing as tp
 import dataclasses as dc
 from jax.typing import DTypeLike
 from spark.core.registry import register_payload
+import spark.core.utils as utils
 
 # NOTE: Direct jax.Array subclassing is not supported. Currently the best approach is to define __jax_array__ 
 # (https://docs.jax.dev/en/latest/jep/28661-jax-array-protocol.html). However it is probable that such approach will be deprecated
@@ -135,17 +136,33 @@ class SpikeArray(SparkPayload):
 
     @classmethod
     def _from_spec(cls, spec: PortSpecs) -> tp.Self:
-        obj = cls.__new__(cls)
-        spikes = jnp.zeros(spec.shape, dtype=jnp.uint8)
-        if isinstance(spec.inhibition_mask, jax.Array):
-            inhibition_mask = jnp.array(spec.inhibition_mask, dtype=jnp.uint8)
-        elif isinstance(spec.inhibition_mask, bool):
-            inhibition_mask = spec.inhibition_mask * jnp.ones(spec.shape, dtype=jnp.uint8)
+        # TODO: This is incredibly convoluted due to Concat
+        if isinstance(spec.shape, list):
+            objs = []
+            for shape in spec.shape:
+                spikes = jnp.zeros(shape, dtype=jnp.uint8)
+                if isinstance(spec.inhibition_mask, jax.Array):
+                    inhibition_mask = jnp.array(spec.inhibition_mask, dtype=jnp.uint8)
+                elif isinstance(spec.inhibition_mask, bool):
+                    inhibition_mask = spec.inhibition_mask * jnp.ones(shape, dtype=jnp.uint8)
+                else:
+                    inhibition_mask = jnp.zeros(shape, dtype=jnp.uint8)
+                obj._encoding = spikes | (inhibition_mask.reshape(shape) << 1)
+                obj.async_spikes = spec.async_spikes
+                objs.append(obj)  
+            return objs
         else:
-            inhibition_mask = jnp.zeros(spec.shape, dtype=jnp.uint8)
-        obj._encoding = spikes | (inhibition_mask << 1)
-        obj.async_spikes = spec.async_spikes
-        return obj 
+            obj = cls.__new__(cls)
+            spikes = jnp.zeros(spec.shape, dtype=jnp.uint8)
+            if isinstance(spec.inhibition_mask, jax.Array):
+                inhibition_mask = jnp.array(spec.inhibition_mask, dtype=jnp.uint8)
+            elif isinstance(spec.inhibition_mask, bool):
+                inhibition_mask = spec.inhibition_mask * jnp.ones(spec.shape, dtype=jnp.uint8)
+            else:
+                inhibition_mask = jnp.zeros(spec.shape, dtype=jnp.uint8)
+            obj._encoding = spikes | (inhibition_mask << 1)
+            obj.async_spikes = spec.async_spikes
+            return obj 
 
     @classmethod
     def _from_encoding(cls, encoding: jax.Array) -> tp.Self:
@@ -189,7 +206,10 @@ class ValueSparkPayload(SparkPayload, abc.ABC):
 
     @classmethod
     def _from_spec(cls, spec: PortSpecs) -> tp.Self:
-        return cls(jnp.zeros(spec.shape, dtype=spec.dtype))
+        if isinstance(spec.shape, list):
+            return [cls(jnp.zeros(shape, dtype=spec.dtype)) for shape in spec.shape]
+        else:
+            return cls(jnp.zeros(spec.shape, dtype=spec.dtype))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
