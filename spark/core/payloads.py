@@ -112,6 +112,9 @@ class SpikeArray(SparkPayload):
     def __array__(self, dtype=None) -> np.ndarray: 
         return np.array(self.value).astype(dtype if dtype else jnp.float16)
 
+    def __eq__(self, other: SpikeArray) -> bool:
+        return self._encoding == other._encoding
+
     @property
     def spikes(self) -> jax.Array:
         # Extract Bit 0

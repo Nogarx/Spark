@@ -194,10 +194,18 @@ class Neuron(Controller, metaclass=NeuronMeta):
 							input_args_list.append(outputs[port_map.origin][port_map.port])
 					input_args[port_name] = self._concatenate_payloads(input_args_list)
 				outputs[module_name] = getattr(self, module_name)(**input_args)
-		# Gather output
+
+				if self.config.output_map['out_spikes']['input'].origin == module_name:
+					outputs[module_name][self.config.output_map['out_spikes']['input'].port] = SpikeArray(
+						outputs[module_name][self.config.output_map['out_spikes']['input'].port].spikes, 
+						inhibition_mask=self._inhibition_mask
+					)
+		# Construct output
 		neuron_output = {
 			name: outputs[origin][port] for name, origin, port in self._flat_output_map 
 		}
+		# NOTE: out_spikes should be the same shape as self._inhibition_mask
+		#neuron_output['out_spikes'] = SpikeArray(neuron_output['out_spikes'].spikes, inhibition_mask=self._inhibition_mask)
 		return neuron_output
 
 #################################################################################################################################################
