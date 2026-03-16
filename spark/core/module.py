@@ -203,9 +203,14 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         self._construct_property_specs()
 
 
+    def output_contract(self,):
+        return None
 
-    def has_output_contract(self) -> bool:
-        return self.__allow_cycles__
+
+
+    @classmethod
+    def has_output_contract(cls) -> bool:
+        return cls.output_contract is not SparkModule.output_contract
 
 
 
@@ -324,8 +329,12 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                 payload_type = payload.__class__ if not isinstance(payload, list) else payload[0].__class__
             else:
                 payload_type = input_specs[key].payload_type
-            shape = payload.shape if not isinstance(payload, list) else [p.shape for p in payload]
-            dtype = payload.dtype if not isinstance(payload, list) else payload[0].dtype
+            if payload is not None:
+                shape = payload.shape if not isinstance(payload, list) else [p.shape for p in payload]
+                dtype = payload.dtype if not isinstance(payload, list) else payload[0].dtype
+            else:
+                shape = None
+                dtype = None
             # PortSpecs are immutable, we need to create a new one.
             input_specs[key] = PortSpecs(
                 payload_type=payload_type,

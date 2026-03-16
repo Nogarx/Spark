@@ -15,6 +15,9 @@ import typing as tp
 import dataclasses as dc
 import spark.core.validation as validation
 from spark.core.variables import Variable
+from spark.core.utils import TwoKeyDict
+from collections import defaultdict
+from collections.abc import MutableMapping
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -22,7 +25,7 @@ from spark.core.variables import Variable
 
 @jax.tree_util.register_pytree_node_class
 @dc.dataclass(init=False)
-class Cache:
+class CacheEntry:
     """
         Cache dataclass.
     """
@@ -73,6 +76,40 @@ class Cache:
     def set(self, payload: SparkPayload) -> None:
         self._variable = payload
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@jax.tree_util.register_pytree_node_class
+@dc.dataclass(init=False)
+class Cache(TwoKeyDict):
+
+    @tp.overload
+    def __setitem__(self, keys: str, value: dict[str, SparkPayload]) -> None: ...
+    @tp.overload
+    def __setitem__(self, keys: tuple[str, str], value: SparkPayload) -> None: ...
+    def __setitem__(self, keys, value) -> None:
+        if isinstance(keys, tuple):
+            self._data[keys[0]][keys[1]] = CacheEntry(value)
+        elif isinstance(value, dict):
+            self._data[keys] = {k: CacheEntry(v) for k,v in value.items()}
+        else:
+            raise ValueError(f'Invalid keys: {keys} or value: {value}.')
+
+    @tp.overload
+    def __getitem__(self, keys: tuple[str, str]) -> CacheEntry: ...
+    @tp.overload
+    def __getitem__(self, keys: str)-> dict[str, CacheEntry]: ...
+    def __getitem__(self, keys):
+        return super().__getitem__(keys)
+
+    @classmethod
+    def from_specs(cls, data: TwoKeyDict[str, str, PortSpecs]) -> tp.Self:
+        obj = cls()
+        for (key1, key2), spec in data.items():
+            # Skip optional
+            if spec.shape is not None:
+                obj[key1][key2] = CacheEntry._from_spec(spec)
+        return obj
+    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

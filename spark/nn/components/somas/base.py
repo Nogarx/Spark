@@ -13,7 +13,7 @@ import typing as tp
 import spark.core.utils as utils
 from spark.core.variables import Variable
 from spark.nn.components.base import Component, ComponentConfig
-from spark.core.payloads import SpikeArray, CurrentArray, PotentialArray
+from spark.core.payloads import SpikeArray, CurrentArray, PotentialArray, BooleanMask
 from spark.core.decorators import spark_property
 
 #################################################################################################################################################
@@ -77,13 +77,16 @@ class Soma(Component, tp.Generic[ConfigT]):
         """
         pass
 
-    def __call__(self, current: CurrentArray) -> SomaOutput:
+    def __call__(self, current: CurrentArray, inhibition_mask: BooleanMask | None = None) -> SomaOutput:
         """
             Update neuron's states and compute spikes.
         """
         self._update_states(current)
         return {
-            'spikes': self._compute_spikes(), 
+            'spikes': SpikeArray(
+                spikes=self._compute_spikes(), 
+                inhibition_mask=inhibition_mask if inhibition_mask is not None else False
+            )
         }
     
 #################################################################################################################################################

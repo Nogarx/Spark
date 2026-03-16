@@ -209,7 +209,9 @@ class ValueSparkPayload(SparkPayload, abc.ABC):
 
     @classmethod
     def _from_spec(cls, spec: PortSpecs) -> tp.Self:
-        if isinstance(spec.shape, list):
+        if isinstance(spec.shape, type(None)):
+            return None
+        elif isinstance(spec.shape, list):
             return [cls(jnp.zeros(shape, dtype=spec.dtype)) for shape in spec.shape]
         else:
             return cls(jnp.zeros(spec.shape, dtype=spec.dtype))

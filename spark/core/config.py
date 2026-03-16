@@ -447,7 +447,9 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         """
             Method to recursively set/override the attributes of the configuration instance from a dictionary of values.
         """
+
         # Get type hints
+        from spark.core.specs import ModuleSpecs
         from spark.nn.initializers.base import Initializer, InitializerConfig
         type_hints = {k: normalize_typehint(v) for k,v in tp.get_type_hints(self.__class__).items()}
         optional_attrs = {k: type(None) in v for k,v in type_hints.items()}
@@ -537,6 +539,62 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                             f'when multiple types are provided. Please define a default value for this field.'
                         )
 
+            # Check for ModuleSpecs
+            # ModuleSpecs cannot be implicitly inferred they were either passed as a kwargs or as a default value
+            # NOTE: I am not sure there is a nice way to target ModuleSpecs.config parameters that keeps the notation consistent,
+            # so for now these configs only support shared parameters.
+            # TODO: This needs a refactor since there is a lot of repeated code.
+            if any([t == ModuleSpecs for t in field_type]): 
+                module_spec: ModuleSpecs = field_value if field_value is not None else kwargs_fold.get(field_name, None)
+                # Sanity checks
+                if module_spec is None:
+                    raise ValueError(
+                        f'Field \"{self.__class__.__name__}.{field_name}\" of type "ModuleSpecs" cannot be auto-inferred. '
+                        f'A default value must be set or passed as a kwarg when creating the object. '
+                    )
+                elif not isinstance(module_spec, ModuleSpecs):
+                    raise TypeError(
+                        f'Field \"{self.__class__.__name__}.{field_name}\" expected type "ModuleSpecs" but got "{type(kwargs_fold[field_name])}"'
+                    )
+                # Check if ModuleSpecs defines a custom config
+                config: BaseSparkConfig | None = getattr(module_spec, 'config', None)
+                if config is None:
+                    # Config is not defined get default config
+                    config_cls: type[BaseSparkConfig] = module_spec.module_cls.get_config_spec()
+                    config = config_cls()
+                # Merge configs and let the it reach the end  
+                config.merge(partial={**prefixed_shared_partial}, __skip_validation__=__skip_validation__)
+                module_spec.config = config
+                setattr(self, field_name, module_spec)
+                continue
+            if any([t == list[ModuleSpecs] for t in field_type]): 
+                module_spec_list: list[ModuleSpecs] = field_value if field_value is not None else kwargs_fold.get(field_name, None)
+                # Sanity checks
+                if module_spec_list is None:
+                    raise ValueError(
+                        f'Field \"{self.__class__.__name__}.{field_name}\" of type "ModuleSpecs" cannot be auto-inferred. '
+                        f'A default value must be set or passed as a kwarg when creating the object. '
+                    )
+                elif not isinstance(module_spec_list, list):
+                    for module_spec in module_spec_list:
+                        if not isinstance(ModuleSpecs, list):
+                            raise TypeError(
+                                f'Field \"{self.__class__.__name__}.{field_name}\" expected type "ModuleSpecs" but got "{type(kwargs_fold[field_name])}"'
+                            )
+                # Iterate over specs
+                for module_spec in module_spec_list:
+                    # Check if ModuleSpecs defines a custom config
+                    config: BaseSparkConfig | None = getattr(module_spec, 'config', None)
+                    if config is None:
+                        # Config is not defined get default config
+                        config_cls: type[BaseSparkConfig] = module_spec.module_cls.get_config_spec()
+                        config = config_cls()
+                    # Merge configs and let the it reach the end  
+                    config.merge(partial={**prefixed_shared_partial}, __skip_validation__=__skip_validation__)
+                    module_spec.config = config
+                setattr(self, field_name, module_spec_list)
+                continue
+
             # Nested Config case
             if any([isinstance(t, type) and issubclass(t, BaseSparkConfig) for t in field_type]):
                 # Check if user manually set this attribute and is a SparkConfig
@@ -588,7 +646,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                         **{'__skip_validation__': __skip_validation__}
                     }))
                 continue
-            
+
             # Generic case
             if field_name in kwargs_fold:
                 # Use kwargs attribute if provided
@@ -1052,6 +1110,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         """
             Parses the tree to produce a string with the appropiate format for the ascii_tree method.
         """
+        from spark.core.specs import ModuleSpecs
         level_header = f'{header}: ' if header else ''
         rep = current_depth * ' ' + f'{level_header}{self.__class__.__name__}\n'
         for name, field, value in self:
@@ -1062,6 +1121,12 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 if isinstance(value, BaseSparkConfig):
                     rep += value._parse_tree_structure(current_depth+1, simplified=simplified, header=name)
                 else:
+                    if isinstance(value, (list, tuple)) and all([isinstance(v, ModuleSpecs) for v in value]):
+                        rep += (current_depth+1) * ' ' + f'{name}: list[ModuleSpecs]\n'
+                        for spec in value:
+                            rep += spec.config._parse_tree_structure(current_depth+2, simplified=simplified, header=spec.name)
+                        continue
+
                     if isinstance(value, (list, tuple, set)) and len(value) > 5:
                         value_str = str(value_str[:5])
                         value_str = f'{type(value)}([{value_str[1:-1]}, ...])'
@@ -1073,6 +1138,8 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
                     if field.type == jax.typing.DTypeLike:
                         field_types = 'DTypeLike'
+                    elif isinstance(field.type, type):
+                        field_types = field.type.__name__
                     else:
                         field_types = str(field.type)
                     #field_types = ' | '.join([t.replace(' ', '').split('.')[-1] for t in str(field.type).split('|')])
@@ -1080,18 +1147,29 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             else:
                 if isinstance(value, BaseSparkConfig):
                     rep += value._parse_tree_structure(current_depth+1, simplified=simplified)
+                elif isinstance(value, (list, tuple)) and all([isinstance(v, ModuleSpecs) for v in value]):
+                    rep += (current_depth+1) * ' ' + f'ModuleSpecs\n'
+                    for spec in value:
+                        rep += spec.config._parse_tree_structure(current_depth+2, simplified=simplified)
         return rep
 
-    def with_new_seeds(self, seed=None) -> 'BaseSparkConfig':
+    def with_new_seeds(self, seed: int | None = None) -> 'BaseSparkConfig':
         """
             Utility method to recompute all seed variables within the SparkConfig.
             Useful when creating several populations from the same config.
         """
+        from spark.core.specs import ModuleSpecs
         new_instance = copy.deepcopy(self)
         if seed is None:
             for name, field, value in new_instance:
                 if isinstance(value, BaseSparkConfig):
                     setattr(new_instance, name, value.with_new_seeds())
+                elif isinstance(value, ModuleSpecs):
+                    setattr(new_instance, name, value.config.with_new_seeds())
+                elif isinstance(value, list):
+                    for item in value:
+                        if isinstance(item, ModuleSpecs):
+                            setattr(new_instance, name, item.config.with_new_seeds())
                 elif name == 'seed':
                     setattr(new_instance, name, int.from_bytes(os.urandom(4), 'little'))
         else:
@@ -1101,6 +1179,12 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 new_seed = int(subkey._base_array[0])
                 if isinstance(value, BaseSparkConfig):
                     setattr(new_instance, name, value.with_new_seeds(seed=new_seed))
+                elif isinstance(value, ModuleSpecs):
+                    setattr(new_instance, name, value.config.with_new_seeds(seed=new_seed))
+                elif isinstance(value, list):
+                    for item in value:
+                        if isinstance(item, ModuleSpecs):
+                            setattr(new_instance, name, item.config.with_new_seeds(seed=new_seed))
                 elif name == 'seed':
                     setattr(new_instance, name, new_seed)
         return new_instance

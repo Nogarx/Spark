@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import re
+import jax
 import enum
 import string
 import numpy as np
@@ -13,6 +14,8 @@ import collections.abc
 import copy 
 import dataclasses as dc
 from math import prod 
+from collections import defaultdict
+from collections.abc import MutableMapping
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -528,6 +531,120 @@ def ascii_tree(text: str) -> str:
         return out
 
     return '\n'.join(render(tree))
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+# NOTE: This is just a convinience class to simplify some code inside controllers and is equivalent to two nested dictionaries. 
+# Notably, this class produces the same XLA code as using nested dictionaries (after JIT). It's only purpose is to simply notaion.
+
+_KT = tp.TypeVar('_KT')
+_VT = tp.TypeVar('_VT')
+
+@jax.tree_util.register_pytree_node_class
+@dc.dataclass(init=False)
+class TwoKeyDict(MutableMapping[_KT, _KT, _VT]):
+
+    def __init__(self, data: dict[_KT, dict[_KT, _VT]] | None = None) -> None:
+        self._data = defaultdict(dict)
+        if not data is None:
+            for k, v in data.items():
+                self._data[k] = v
+
+    @tp.overload
+    def __getitem__(self, keys: tuple[_KT, _KT] )-> _VT: ...
+    @tp.overload
+    def __getitem__(self, keys: _KT)-> dict[_KT, _VT]: ...
+    def __getitem__(self, keys):
+        try:
+            if isinstance(keys, tuple):
+                return self._data[keys[0]][keys[1]]
+            else:
+                return self._data[keys]
+        except KeyError as e:
+            raise KeyError(f'Invalid key: {keys}')
+
+    @tp.overload
+    def __setitem__(self, keys: _KT, value: dict[_KT, _VT]) -> None: ...
+    @tp.overload
+    def __setitem__(self, keys: tuple[_KT, _KT], value: _VT) -> None: ...
+    def __setitem__(self, keys, value) -> None:
+        if isinstance(keys, tuple):
+            self._data[keys[0]][keys[1]] = value
+        elif isinstance(value, dict):
+            self._data[keys] = value
+        else:
+            raise ValueError(f'Invalid keys: {keys} or value: {value}.')
+
+    @tp.overload
+    def __delitem__(self, keys: _KT) -> None: ...
+    @tp.overload
+    def __delitem__(self, keys: tuple[_KT, _KT]) -> None: ...
+    def __delitem__(self, keys) -> None:
+        try:
+            if isinstance(keys, tuple):
+                del self._data[keys[0]][keys[1]]
+            else:
+                del self._data[keys]
+        except KeyError as e:
+            raise KeyError(f'Invalid key: {keys}')
+        
+    def __len__(self,) -> int:
+        return len(self._data)
+
+    def __iter__(self,) -> tp.Iterator[tuple[str, str]]:
+        for key1, subdict in self._data.items():
+            for key2 in subdict.keys():
+                yield (key1, key2)
+
+    def __str__(self,) -> str:
+        _str = []
+        for key1, subdict in self._data.items():
+            _substr = []
+            for key2, value in subdict.items():
+                _substr_key = f'\'{key2}\'' if isinstance(key2, str) else str(key2)
+                _substr += [f'{_substr_key}: {str(value)}']
+            _substr = f'{{{', '.join(_substr)}}}' 
+            _str_key = f'\'{key1}\'' if isinstance(key1, str) else str(key1)
+            _str += [f'{_str_key}: {_substr}']
+        _str = f'{{{', '.join(_str)}}}'
+        return _str
+    
+    def __repr__(self,) -> str:
+        _str = []
+        for key1, subdict in self._data.items():
+            for key2, value in subdict.items():
+                _str_key = f'\'{key1}\'' if isinstance(key1, str) else str(key1)
+                _substr_key = f'\'{key2}\'' if isinstance(key2, str) else str(key2)
+                _str += [f'{_str_key}/{_substr_key}: {value.__repr__()}']
+        _str = f'{{{', '.join(_str)}}}'
+        return _str
+
+    @tp.overload
+    def __contains__(self, keys: _KT) -> bool: ...
+    @tp.overload
+    def __contains__(self, keys: tuple[_KT, _KT]) -> bool: ...
+    def __contains__(self, keys) -> bool:
+        try:
+            if isinstance(keys, tuple):
+                if keys[0] in self._data:
+                    return keys[1] in self._data[keys[0]]
+                else:
+                    return False
+            else:
+                return keys in self._data
+        except KeyError as e:
+            raise KeyError(f'Invalid key: {keys}')
+
+    def tree_flatten(self) -> tuple[tuple, tuple]:
+        children = (self._data,)
+        aux_data = ()
+        return (children, aux_data)
+
+    @classmethod
+    def tree_unflatten(cls, aux_data, children) -> tp.Self:
+        return cls(children[0])
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

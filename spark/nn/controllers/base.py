@@ -12,6 +12,9 @@ import typing as tp
 import dataclasses as dc
 from math import prod
 import spark.core.utils as utils
+import flax.nnx as nnx
+import copy
+import inspect
 from spark.core.module import SparkModule, SparkMeta
 from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
 from spark.core.payloads import SparkPayload, SpikeArray
@@ -19,6 +22,7 @@ from spark.core.registry import register_config, REGISTRY
 from spark.core.config import BaseSparkConfig
 from spark.core.flax_imports import data
 from spark.core.config_validation import TypeValidator
+from spark.core.typing import is_object_of_type
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -32,350 +36,281 @@ class ControllerMeta(SparkMeta):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# TODO: We need to alliviate the need to define input/output maps. Maybe build them at build time with the modules_map plus in/out info?
-@register_config
 class ControllerConfig(BaseSparkConfig):
-    """
-        Configuration class for Controller's.
-    """
-    input_map: dict[str, PortSpecs] = dc.field(
+    modules_specs: list[ModuleSpecs] = dc.field(
         metadata = {
-            'description': 'Input map configuration.',
-        })
-    output_map: dict[str, dict] = dc.field(
-        metadata = {
-            'description': 'Output map configuration.',
-        })
-    modules_map: dict[str, ModuleSpecs] = dc.field(
-        metadata = {
-            'description': 'Modules map configuration.',
-        })
-    seed: int = dc.field(
-        default_factory=lambda: int.from_bytes(os.urandom(4), 'little'), 
-        metadata={
             'validators': [
-                TypeValidator,
-            ], 
-            'description': 'Seed for internal random processes.',
+            ],
+            'description': 'Controller modules.',
         })
 
-
-
-    def _validate_maps(self,):
-        """
-            Basic validation of the configuration maps to ensure that controller can properly read the data.
-        """
-        # Input map validation
-        if not isinstance(self.input_map, dict):
-            raise TypeError(
-                f'\"input_map\" must be a dictionary, but got \"{type(self.input_map).__name__}\".'
-            )
-        for key in self.input_map.keys():
-            if not isinstance(key, str):
-                raise TypeError(
-                    f'All keys in \"input_map\" must be strings, but found key \"{key}\" of type {type(key).__name__}.'
-                )
-            if not isinstance(self.input_map[key], PortSpecs):
-                raise TypeError(
-                    f'All values in \"input_map\" must be PortSpecs, but found value \"{self.input_map[key]}\" '
-                    f'of type {type(self.input_map[key]).__name__}.'
-                )
-        # Output map validation
-        if not isinstance(self.output_map, dict):
-            raise TypeError(
-                f'\"output_map\" must be a dictionary, but got \"{type(self.output_map).__name__}\".'
-            )
-        for output_name, output_details in self.output_map.items():
-            if not isinstance(output_name, str):
-                raise TypeError(
-                    f'All keys in \"output_map\" must be strings, but found key \"{output_name}\" of type {type(output_name).__name__}.'
-                )
-            if not isinstance(output_details, dict):
-                raise TypeError(
-                    f'All values in \"output_map\" must be dict, but found value \"{output_details}\" '
-                    f'of type {type(output_details).__name__}.'
-                )		
-            _input = output_details.get('input', None)
-            if not isinstance(_input, PortMap):
-                raise TypeError(
-                    f'Expected \"output_map[\"{output_name}\"][\"input\"]\" to be of type PortMap, but got \"{_input}\".'
-                )
-            spec = output_details.get('spec', None)
-            if not isinstance(spec, PortSpecs):
-                raise TypeError(
-                    f'Expected \"output_map[\"{output_name}\"][\"spec\"]\" to be of type PortSpecs, but got \"{spec}\".'
-                )
-        # Modules map validation
-        if not isinstance(self.modules_map, dict):
-            raise TypeError(
-                f'\"modules_map\" must be a dictionary, but got \"{type(self.modules_map).__name__}\".'
-            )
-        for key in self.modules_map.keys():
-            if not isinstance(key, str):
-                raise TypeError(
-                    f'All keys in \"modules_map\" must be strings, but found key \"{key}\" of type \"{type(key).__name__}\".'
-                )
-            if not isinstance(self.modules_map[key], ModuleSpecs):
-                raise TypeError(
-                    f'All values in \"modules_map\" must be type \"ModuleSpecs\", but found value \"{self.modules_map[key]}\" '
-                    f'of type \"{type(self.modules_map[key]).__name__}\".'
-                )
-        # Validate sources.
-        valid_sources = set(self.input_map.keys()) | set(self.modules_map.keys())
-        # Does the origin exist in the set of valid sources?
-        for module_name, module_specs in self.modules_map.items():
-            for port_name, connections in module_specs.inputs.items():
-                for port_map in connections:
-                    if port_map.origin not in valid_sources and port_map.origin != '__call__':
-                        raise ValueError(
-                            f'In module \"{module_name}\", connection for port \"{port_name}\" refers to an '
-                            f'unknown origin: \"{port_map.origin}\". Valid sources are: {valid_sources}.'
-                        )
-
-
-
-    def validate(self, is_partial: bool = False, errors: list | None = None, current_path: list[str] = ['controller']) -> dict[str] | None:
-        # Controller specific validation.
-        if not is_partial:
-            try:
-                self._validate_maps()
-            except Exception as e:
-                if errors is not None:
-                    errors.append((current_path[0], e))
-                else:
-                    raise
-        # Standard config validation.
-        for module_spec in self.modules_map.values():
-            try:
-                module_spec.config.validate(is_partial=is_partial, errors=errors, current_path=current_path+[module_spec.name])
-            except Exception as e:
-                raise ValueError(
-                    f'Error on module \"{module_spec.name}\": {e}'
-                )
-
-
-
-    def _parse_tree_structure(self, current_depth: int, simplified: bool = False, header: str | None= None) -> str:
-        """
-            Parses the tree to produce a string with the appropiate format for the ascii_tree method.
-        """
-        level_header = f'{header}: ' if header else ''
-        rep = current_depth * ' ' + f'{level_header}{self.__class__.__name__}\n'
-
-        # Expand inputs specs
-        rep += (current_depth + 1) * ' ' + f'Input Map:\n'
-        for spec_name, spec in self.input_map.items():
-            rep += (current_depth + 2) * ' ' + f'{spec_name} <- {spec}\n'
-        # Expand outputs specs
-        rep += (current_depth + 1) * ' ' + f'Output Map:\n'
-        for spec_name, spec in self.output_map.items():
-            rep += (current_depth + 2) * ' ' + f'{spec_name} <- {spec['input']} | {spec['spec']}\n'
-        # Expand module specs
-        rep += (current_depth + 1) * ' ' + f'Modules Map:\n'
-        for spec_name, module_spec in self.modules_map.items():
-            if not simplified:
-                rep += (current_depth + 2) * ' ' + f'{spec_name}: {module_spec.module_cls.__name__}\n'
-                rep += (current_depth + 3) * ' ' + f'Inputs:\n'
-                for input_name, port_spec_list in module_spec.inputs.items():
-                    rep += (current_depth + 4) * ' ' + f'{input_name}:\n'
-                    for port in port_spec_list:
-                        rep += (current_depth + 5) * ' ' + f'{port}\n'
-                rep += module_spec.config._parse_tree_structure(current_depth+3, simplified=simplified)
-            else:
-                rep += module_spec.config._parse_tree_structure(current_depth+2, simplified=simplified)
-        return rep
-
-
-
-    def refresh_seeds(self):
-        """
-            Utility method to recompute all seed variables within the SparkConfig.
-            Useful when creating several populations from the same config.
-        """
-        for spec in self.modules_map.values():
-            spec.config = spec.config.with_new_seeds()
-
-
+ConfigT = tp.TypeVar("ConfigT", bound=ControllerConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-
-
-class Controller(SparkModule, metaclass=ControllerMeta):
+class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerMeta):
     """
         Controller model.
 
         A controller is a pipeline object used to represent and coordinate a collection of Spark modules.
     """
-    config: ControllerConfig
+    config: ConfigT
+    default_config: type[ConfigT]
 
-    # TODO: There is no need to have of all _modules_X_specs, we can access them directly from the module.
+    # TODO: These attributes are screaming that they need their own objects/dataclasses
     # Typing annotations.
-    _modules_list: list[str]
-    _modules_input_map: dict[str, dict[str, list[PortMap]]]
-    _modules_input_specs: dict[str, dict[str, PortSpecs]]
-    _modules_output_specs: dict[str, dict[str, PortSpecs]]
-    _modules_property_specs: dict[str, dict[str, PortSpecs]]
+    #_controller_input_specs: dict[str, dict[str, PortSpecs]]
+    #_controller_output_specs: dict[str, dict[str, dict]]
+    #_modules_inputs_map: dict[str, dict[str, list[PortMap]]]
+    #_modules_effects_map: dict[str, dict[str, list[PortMap]]]
+    #_contoller_output_map: list[tuple[str, str, str]]
 
-    def __init__(self, config: ControllerConfig = None, **kwargs):
+    # NOTE: This is a workaround to require all childs of SparkModule to define a, 
+    # default_config while at the same time allow for a lazy definition of the property. 
+    def __init_subclass__(cls, **kwargs):
+        from spark.core.config import BaseSparkConfig
+        super().__init_subclass__(**kwargs)
+        # Special cases and abstract classes dont need config yet they are SparkModules ¯\_(ツ)_/¯
+        is_abc = inspect.isabstract(cls) and len(getattr(cls, '__abstractmethods__', set())) == 0
+        if is_abc:
+            return
+        # Check if defines config
+        resolved_hints = tp.get_type_hints(cls)
+        config_type = resolved_hints.get('config', None)
+        if not config_type or config_type == ConfigT or not issubclass(config_type, BaseSparkConfig):
+            raise AttributeError('SparkModules must define a valid config: type[BaseSparkConfig] attribute.')
+        cls.default_config = tp.cast(type[ConfigT], config_type)
+
+    def __init__(self, config: ControllerConfig | None = None, **kwargs) -> None:
         # Initialize super.
-        super().__init__(config=config, **kwargs)
-        # Build modules
-        self._build_modules()
+        super().__init__()
+        # Override config if provided
+        if config is None:
+            self.config = self.default_config(**kwargs)
+        else:
+            self.config = copy.deepcopy(config)
+            self.config.merge(partial=kwargs)
+        # Input validation
+        assert is_object_of_type(self.config.modules_specs, list[ModuleSpecs]), 'Invalid modules list'
+        # Get specs and perform basic validation
+        input_specs, output_specs = self._validate_modules(self.config.modules_specs)
+        self._controller_input_specs = input_specs
+        self._controller_output_specs = output_specs
+        # Flat output mapping
+        self._contoller_output_map: list[tuple[str, str, str]] = []
+        for output_name, output_spec in self._controller_output_specs.items():
+            self._contoller_output_map.append(
+                (output_name, output_spec['map'].origin, output_spec['map'].port)
+            )
+        # Get modules map
+        self._modules_inputs_map = {spec.name: spec.inputs for spec in self.config.modules_specs}
+        self._modules_effects_map = {spec.name: spec.effects for spec in self.config.modules_specs}
+        self._modules_output_map = {spec.name: list(spec.module_cls._get_output_specs().keys()) for spec in self.config.modules_specs}
+        # Save original specs
+        self._modules_specs = copy.deepcopy(self.config.modules_specs)
+        self._modules_names = tuple([spec.name for spec in self.config.modules_specs])
+        # Create modules.
+        for spec in self.config.modules_specs:
+            setattr(self, spec.name, REGISTRY.MODULES.get(spec.module_cls.__name__).class_ref(config=spec.config))
 
 
 
-    def _build_modules(self,):
+    @classmethod
+    def _get_controller_input_specs(cls, modules_specs: list[ModuleSpecs]) -> dict[str, PortSpecs]:
         """
-            Construct the modules defined in the modules_map of the configuration class.
+            Dynamically constructs the input specs of a controller from a list of ModuleSpecs.
+            Module level validation is applied to ensure that input ports exist.
         """
-        # Construc all modules.
-        for module_name, module_specs in self.config.modules_map.items():
-            setattr(self, module_name, REGISTRY.MODULES.get(module_specs.module_cls.__name__).class_ref(config=module_specs.config))
-        self._modules_list = list(self.config.modules_map.keys())
-        # Information flow map.
-        self._modules_input_map = {}
-        for module_name, module_specs in self.config.modules_map.items():
-            self._modules_input_map[module_name] = module_specs.inputs
-
-
-
-    # TODO: I think most of this validation can be moved to ControllerConfig
-    def _validate_connections(self,):
-        """
-            Prevalidates that all modules are reachable.
-        """
-        # Collect all modules input/output specs.
-        self._modules_input_specs = {}
-        self._modules_output_specs = {}
-        self._modules_property_specs = {}
-        for module_name in self._modules_list:
-            module: SparkModule = getattr(self, module_name)
-            self._modules_input_specs[module_name] = module.get_input_specs()
-            self._modules_output_specs[module_name] = module.get_output_specs()
-            self._modules_property_specs[module_name] = module.get_property_specs()
-
-        # Validate that each module can be connected.
-        for module_name in self._modules_list:
-            
-            # Validate that every non-optional input port exists
-            module_inputs: dict[str, list[PortMap]] = self.config.modules_map[module_name].inputs
-            required_ports = set(self._modules_input_specs[module_name].keys()).difference(module_inputs.keys())
-            for port_name in required_ports:
-                class_error = REGISTRY.MODULES.get(self.config.modules_map[module_name].module_cls).class_ref
+        controller_input_specs = {}
+        # Iterate over every module.
+        for module_specs in modules_specs:
+            module_input_specs = module_specs.module_cls._get_input_specs()
+            # Validate that input names are well defined.
+            module_input_ports = set(module_input_specs.keys())
+            module_defined_input_ports = set(module_specs.inputs.keys())
+            # Missing ports
+            missing_ports = module_input_ports.difference(module_defined_input_ports)
+            if len(missing_ports) > 0:
                 raise ValueError(
-                    f'Port \"{port_name}\" for module "{module_name}\" is not defined and '
-                    f'is a mandatory input of \"{class_error.__name__}\".'
-                )
-            
-            # Validate that no extra input port were defined
-            extra_ports = set(module_inputs.keys()).difference(set(self._modules_input_specs[module_name].keys()))
-            if len(extra_ports) > 0:
+                    f'Missing input port names "{missing_ports}" in module "{module_specs.name}" specification. '
+                    f'Module "{module_specs.name}" requires the following input ports: {module_input_ports}'
+                )     
+            # Invalid ports
+            invalid_ports = module_defined_input_ports.difference(module_input_ports)
+            if len(invalid_ports) > 0:
                 raise ValueError(
-                    f'Port \"{extra_ports[0]}\" for module \"{module_name}\" is not part of the specifications '
-                    f'of \"{self.config.modules_map[module_name].module_cls}\".'
-                )
-            
-            # Validate the integrity of the ports 
-            for port_name, ports_list in module_inputs.items():
-                
-                # Check input module defines the output port
-                for port_map in ports_list:
-                    # Inspect __call__ map
-                    if port_map.origin == '__call__':
-                        if not port_map.port in self.config.input_map:
-                            raise ValueError(
-                                f'Input port \"{port_name}\" for module \"{module_name}\" request port \"{port_map.port}\" '
-                                f'from \"{port_map.origin}\", but inputs_map does not define such port.'
-                            )
-                        continue
-                    # Inspect module outputs/properties
-                    origin_module: SparkModule = getattr(self, port_map.origin)
-                    if port_map.is_property and not port_map.port in self._modules_property_specs[port_map.origin]:
-                        raise ValueError(
-                            f'Input port \"{port_name}\" for module \"{module_name}\" request spark property \"{port_map.port}\" from '
-                            f'\"{port_map.origin}\", but \"{self.config.modules_map[port_map.origin].module_cls}\" does not define such spark property.'
+                    f'Invalid input port names "{invalid_ports}" in module "{module_specs.name}". '
+                    f'Module "{module_specs.name}" only defines the following input ports: {module_input_ports}'
+                )  
+            # Get __call__ ports. 
+            for input_name, port_spec_list in module_specs.inputs.items():
+                for port_spec in port_spec_list:
+                    if port_spec.origin == '__call__':
+                        controller_input_specs[port_spec.port] = PortSpecs(
+                            payload_type = module_input_specs[input_name].payload_type,
+                            shape = module_input_specs[input_name].shape,
+                            dtype = module_input_specs[input_name].dtype,
                         )
-                    elif not port_map.port in self._modules_output_specs[port_map.origin]:
-                        raise ValueError(
-                            f'Input port \"{port_name}\" for module \"{module_name}\" request port \"{port_map.port}\" from '
-                            f'\"{port_map.origin}\", but \"{self.config.modules_map[port_map.origin].module_cls}\" does not define such port.'
-                        )
-                
-                # Validate ports can be safely merged.
-                if len(ports_list) > 1:
-                    # Grab first port as proxy
-                    if ports_list[0].is_property:
-                        payload_type = self._modules_property_specs[ports_list[0].origin][ports_list[0].port].payload_type
-                    else:
-                        payload_type = self._modules_output_specs[ports_list[0].origin][ports_list[0].port].payload_type
-                    # Test all other ports against proxy
-                    for i in range(1,len(ports_list)):
-                        if ports_list[i].is_property:
-                            target_payload_type = self._modules_property_specs[ports_list[i].origin][ports_list[i].port].payload_type
-                        else:
-                            target_payload_type = self._modules_output_specs[ports_list[i].origin][ports_list[i].port].payload_type
-                        if not payload_type == target_payload_type:
-                            raise TypeError(
-                                f'Input port \"{port_name}\" for module \"{module_name}\" request port \"{ports_list[i].port}\" '
-                                f'from \"{ports_list[i].origin}\", but payload type is not compatible, expected \"{payload_type}\" '
-                                f'and got \"{target_payload_type}\".'
-                            ) 
-                
-                # Validate shapes
-                expected_shape = 0
-                if len(ports_list) > 1:
-                    # Many-to-one input-output. Inputs need to be merged, default merged behaviour is to flat everything.
-                    for port_map in ports_list:
-                        if port_map.origin == '__call__':
-                            expected_shape += prod(self.config.input_map[port_map.port].shape)
-                        elif port_map.is_property:
-                            expected_shape += prod(self._modules_property_specs[port_map.origin][port_map.port].shape)
-                        else:
-                            expected_shape += prod(self._modules_output_specs[port_map.origin][port_map.port].shape)
-                else:
-                    # One-to-one input-output.
-                    if port_map.origin == '__call__':
-                        expected_shape = self.config.input_map[port_map.port].shape
-                    elif port_map.is_property:
-                        expected_shape = self._modules_property_specs[port_map.origin][port_map.port].shape
-                    else:
-                        expected_shape = self._modules_output_specs[port_map.origin][port_map.port].shape
-                # Normalize and compare shapes.
-                expected_shape = utils.validate_shape(expected_shape)
-                shape = self._modules_input_specs[module_name][port_name].shape
-                if expected_shape != shape:
+        return controller_input_specs
+
+
+
+    @classmethod
+    def _get_controller_output_specs(cls, modules_specs: list[ModuleSpecs]) -> dict[str, dict]:
+        """
+            Dynamically constructs the output specs of a controller from a list of ModuleSpecs.
+            Module level validation is applied to ensure that defined output ports exist and do not overlap.
+        """
+        controller_output_specs = {}
+        # Iterate over every module.
+        for module_specs in modules_specs:
+            # Iterate over every defined output. 
+            module_output_ports = None
+            module_property_ports = None
+            for out_name, port_name in module_specs.outputs.items():
+                # Check that the output name is not already registered.
+                if out_name in controller_output_specs:
+                    other = controller_output_specs[out_name]['map'].origin
                     raise ValueError(
-                        f'Input port \"{port_name}\" for module \"{module_name}\" expected input shape '
-                        f'{expected_shape} but got shape \"{shape}\".'
-                    ) 
+                        f'Repeated output names are not supported. '
+                        f'Modules "{other}" and "{module_specs.name}"define the same output variable name: "{out_name}".'
+                    )
+                # Check that the modules defines a named port port_name
+                module_output_ports = module_specs.module_cls._get_output_specs() if module_output_ports is None else module_output_ports
+                module_property_ports = module_specs.module_cls._get_property_specs() if module_property_ports is None else module_property_ports
+                if not port_name in module_output_ports and not port_name in module_property_ports:
+                    raise ValueError(
+                        f'Invalid output port name "{port_name}" in module "{module_specs.name}". '
+                        f'Module "{module_specs.name}" only defines the following ports: '
+                        f'\nOutput ports: {list(module_output_ports.keys())}. '
+                        f'\nProperty ports: {list(module_property_ports.keys())}. '
+                    )
+                # Register output
+                is_property = True if port_name in module_property_ports else False 
+                module_out_spec = module_property_ports[port_name] if is_property else module_output_ports[port_name]
+                controller_output_specs[out_name] = {
+                    'map': PortMap(origin=module_specs.name, port=port_name, is_property=is_property),
+                    'spec': PortSpecs(
+                        payload_type = module_out_spec.payload_type,
+                        shape = module_out_spec.shape,
+                        dtype = module_out_spec.dtype,
+                    )
+                }
+        return controller_output_specs
+
+
+    # TODO: Validate port shapes (broadcastable). I think this can only be done after all the modules are built.
+    @classmethod
+    def _validate_modules(cls, modules_specs: list[ModuleSpecs]) -> tuple[dict[str, PortSpecs], dict[str, dict]]:
+        
+        # Get controller specs for validation.
+        # NOTE: The following two methods perform port name validations and must be called in order to fully validate the model. 
+        controller_input_specs = cls._get_controller_input_specs(modules_specs)
+        controller_output_specs = cls._get_controller_output_specs(modules_specs)
+
+        # Gather modules specs.
+        modules_origins_specs = {
+            '__call__' : controller_input_specs
+        }
+        for spec in modules_specs:
+            output_specs = spec.module_cls._get_output_specs()
+            property_specs = spec.module_cls._get_property_specs()
+            name_intersection = list(set(output_specs.keys()).intersection(set(property_specs.keys())))
+            if len(name_intersection) > 0:
+                raise ValueError(
+                    f'Name overlap between one our more output variables and properties. '
+                    f'Module "{spec.name}" defines the names "{name_intersection}" for output '
+                    f'variables and a properties, which is not supported.'
+                )
+            modules_origins_specs[spec.name] = {
+                **spec.module_cls._get_output_specs(),
+                **spec.module_cls._get_property_specs(),
+            }
+                
+        # Validate module port expected specs.
+        for spec in modules_specs:  
+            # Call ports
+            module_input_specs = spec.module_cls._get_input_specs()
+            for input_name, port_spec_list in spec.inputs.items():
+                # Get module port specs
+                expected_port_specs = module_input_specs[input_name]
+                for port_map in port_spec_list:
+                    # Validate all input ports are well connected.
+                    if not port_map.port in modules_origins_specs[port_map.origin]:
+                        raise ValueError(
+                            f'Output port "{port_map.port}" in module "{port_map.origin}" is being '
+                            f'requested by input port "{input_name}" of module "{spec.name}" but '
+                            f'module "{port_map.origin}" only defines the following output ports: '
+                            f'{list(modules_origins_specs[port_map.origin].keys())}'
+                        )    
+                    # Validate port types
+                    other_port_specs = modules_origins_specs[port_map.origin][port_map.port]
+                    if not other_port_specs.payload_type == expected_port_specs.payload_type:
+                        raise ValueError(
+                            f'Payload type "{other_port_specs.payload_type}" at output port "{port_map.port}" '
+                            f'in module "{port_map.origin}" does not match the expected payload type "{expected_port_specs.payload_type}" '
+                            f'from input port "{input_name}" of module "{spec.name}".'
+                        )    
+            # Effects (property ports)
+            module_property_specs = spec.module_cls._get_property_specs()
+            for property_name, port_spec_list in spec.effects.items():
+                # Get module port specs
+                expected_port_specs = module_property_specs[property_name]
+                for port_map in port_spec_list:
+                    # Validate all input ports are well connected.
+                    if not port_map.port in modules_origins_specs[port_map.origin]:
+                        raise ValueError(
+                            f'Output port "{port_map.port}" in module "{port_map.origin}" is being '
+                            f'requested by property port "{property_name}" of module "{spec.name}" but '
+                            f'module "{port_map.origin}" only defines the following output ports: '
+                            f'{list(modules_origins_specs[port_map.origin].keys())}'
+                        )    
+                    # Validate port types
+                    other_port_specs = modules_origins_specs[port_map.origin][port_map.port]
+                    if not other_port_specs.payload_type == expected_port_specs.payload_type:
+                        raise ValueError(
+                            f'Payload type "{other_port_specs.payload_type}" at output port "{port_map.port}" '
+                            f'in module "{port_map.origin}" does not match the expected payload type "{expected_port_specs.payload_type}" '
+                            f'from property port "{property_name}" of module "{spec.name}".'
+                        )    
+
+        return controller_input_specs, controller_output_specs
 
 
 
-    def execution_order(
-            self, 
+    # TODO: Compare forward (from __call__ to outputs) and backward (from outputs to __call__) induced orders
+    @classmethod
+    def _execution_order(
+            cls, 
+            modules_specs: list[ModuleSpecs],
             ignore_output_contracts: bool = False,
+            skip_validation: bool = False,
         ) -> list[list[str]]:
+        # Validate
+        if not skip_validation:
+            cls._validate_modules(modules_specs)
         # Gather initial inputs
         available_inputs = set(['__call__'])
         # Gather modules
-        remaining_modules = set(self._modules_list)
+        remaining_modules = set([spec.name for spec in modules_specs])
+        output_contracts = {spec.name: spec.module_cls.has_output_contract() for spec in modules_specs}
+        inputs_maps = {spec.name: spec.inputs for spec in modules_specs}
         # Compute execution order
         execution_order = []
         # Runtime error pass
         may_skip_error = True
         while len(remaining_modules) > 0:
             next_modules = []
-            for module_name in remaining_modules:
+            for name in remaining_modules:
                 # Get module inputs
-                module_required_inputs = set([pm for inputs_pm in self._modules_input_map[module_name].values() for pm in inputs_pm])
+                module_required_inputs = set([pm for inputs_pm in inputs_maps[name].values() for pm in inputs_pm])
                 non_instantiated_inputs = 0
                 # Check that all inputs are available
                 may_execute = True
                 for port_map in module_required_inputs:
                     if not port_map.origin in available_inputs:
                         # Does input module defines an output policy?
-                        if (not ignore_output_contracts) and getattr(self, port_map.origin).has_output_contract():
+                        if (not ignore_output_contracts) and output_contracts[port_map.origin]:
                             non_instantiated_inputs += 1
                             continue
                         # Input is not available nor can be obtained via contract, module cannot be executed yet.
@@ -385,7 +320,7 @@ class Controller(SparkModule, metaclass=ControllerMeta):
                 if may_execute:
                     # Skip module if all inputs are not initialized and we may skip the error.
                     if not (may_skip_error and non_instantiated_inputs == len(module_required_inputs)):
-                        next_modules.append(module_name)
+                        next_modules.append(name)
             # Progress check
             if len(next_modules) == 0:
                 if may_skip_error:
@@ -401,95 +336,141 @@ class Controller(SparkModule, metaclass=ControllerMeta):
                 may_skip_error = True    
             # Update execution order
             execution_order.append(next_modules)
-            for module_name in next_modules:
-                available_inputs.add(module_name)
-                remaining_modules.remove(module_name)
+            for name in next_modules:
+                available_inputs.add(name)
+                remaining_modules.remove(name)
         return execution_order
 
 
 
-    @abc.abstractmethod
+    def _build(self, **abc_args: SparkPayload) -> None:
+        """
+            Triggers the shape inference and parameter initialization cascade.
+        """
+        # Bind arguments to avoid parameter mixing.
+        call_signature = inspect.signature(self.__call__)
+        try:
+            bound_args = call_signature.bind(**abc_args)
+            bound_args.apply_defaults()
+        except TypeError as error:
+            raise TypeError(f'Error binding arguments for "{self}": {error}') from error
+
+        # Update shapes on controller specs
+        for key, value in abc_args.items():
+            self._controller_input_specs[key].shape = value.shape
+        # Build model.
+        self.build(self._controller_input_specs)
+        self.__built__ = True
+        # Construct mock input to compute the module output shapes.
+        from spark.core.payloads import ValueSparkPayload
+        mock_input = {}
+        for key, value in self._controller_input_specs.items():
+            mock_input[key] = value._create_mock_input()
+
+        # TODO: See _build in spark.Module. 
+        abc_output = self.__call__(**mock_input)
+        self.reset()
+
+        # Update shapes on controller specs
+        for key, value in abc_output.items():
+            self._controller_output_specs[key]['spec'].shape = value.shape
+
+
+
+    def _call_build(self, input_specs: dict[str, PortSpecs]) -> None:
+        # Get build order.
+        order = self._execution_order(self._modules_specs)
+        # Initialize modules
+        modules_output_specs = {'__call__': {name: spec for name, spec in input_specs.items()}}
+        modules_property_specs = {}
+        for group in order:
+            for module_name in group:
+                # Skip __call__
+                if module_name == '__call__':
+                    continue
+                # Collect module specs and construct a mock input
+                mock_input = {}
+                validate_async = True
+                for port_name, port_map_list in self._modules_inputs_map[module_name].items():
+                    portspecs_list = []
+                    for port_map in port_map_list:
+                        if port_map.origin in modules_output_specs:
+                            # Modules was already built grab, get the spec.
+                            if port_map.is_property:
+                                spec = modules_property_specs[port_map.origin][port_map.port]
+                            else:
+                                spec = modules_output_specs[port_map.origin][port_map.port]
+                            portspecs_list.append(spec)
+                        elif port_map.origin in group:
+                            # Module is not built yet, it must define a recurrent spec to be part of a cyclic dependency.
+                            origin_module: SparkModule = getattr(self, port_map.origin)
+                            if port_map.is_property:
+                                _, spec = origin_module.get_contract_specs()
+                                spec = spec[port_map.port]
+                            else:
+                                spec, _ = origin_module.get_contract_specs()
+                                spec = spec[port_map.port]
+                            portspecs_list.append(spec)
+                            # Turn off async validation.
+                            validate_async = False
+                        else:
+                            # Something weird happend. System is trying to get something from a module that should have been called later.
+                            raise RuntimeError(
+                                f'Trying to get port from module "{port_map.origin}" for "{module_name}"... '
+                                f'418 I\'m a teapot.'
+                            )
+                    mock_port_spec = PortSpecs.from_portspecs_list(portspecs_list, validate_async=validate_async)
+                    mock_input[port_name] = mock_port_spec._create_mock_input()
+                # Initialize module
+                module: SparkModule = getattr(self, module_name)
+                abc_output = module(**mock_input)
+                # Add output specs to list
+                modules_output_specs[module_name] = module.get_output_specs()
+                modules_property_specs[module_name] = module.get_property_specs()
+        # Set built flag
+        self.__built__ = True
+
+
+
+    #@abc.abstractmethod
     def build(self, input_specs: dict[str, PortSpecs]):
-        pass
+        self._call_build(input_specs)
 
 
 
-    # NOTE: We need to override _construct_input_specs since sig_parser.get_input_specs will lead to an incorrect 
-    # signature because Controller can have an arbitrary number of inputs all under the key "inputs".
-    def _construct_input_specs(self, abc_args: dict[str, dict[str, SparkPayload]]) -> dict[str, PortSpecs]:
-        # Extract the real inputs from abc_args, they are all under the key 'inputs'
-        abc_args = abc_args['inputs']
-        # Validate specs and abc_args match.
-        expected_input = self.config.input_map
-        if expected_input.keys() != abc_args.keys():
-            # Check if missing key is optional.
-            set_diff = set(self.config.input_map.keys()).difference(abc_args.keys())
-            for key in set_diff:
-                raise ValueError(
-                    f'Module \"{self.name}\" expects variable \"{key}\" but it was not provided.'
-                )
-            # Check if extra keys are provided.
-            set_diff = set(abc_args.keys()).difference(expected_input.keys())
-            for key in set_diff:
-                raise ValueError(
-                    f'Module \"{self.name}\" received an extra variable \"{key}\" but it is not part of the specification.'
-                )
-        # Finish specs, use abc_args to skip optional missing keys.
-        input_specs = {}
-        for key, payload in abc_args.items():
-            # Sanity check
-            if not isinstance(payload, SparkPayload):
-                raise TypeError(
-                    f'Expected non-optional input payload \"{key}\" of module \"{self.name}\" to be '
-                    f'of type \"{SparkPayload.__name__}\" but got type {type(payload)}'
-                )
-            # PortSpecs are immutable, we need to create a new one.
-            input_specs[key] = PortSpecs(
-                payload_type=payload.__class__,
-                shape=payload.shape,
-                dtype=payload.dtype,
-                description=f'Auto-generated input spec for input \"{key}\" of module \"{self.name}\".',
-                # Payload specific build metadata
-                async_spikes=payload.async_spikes if isinstance(payload, SpikeArray) else None,
-                inhibition_mask=payload.inhibition_mask if isinstance(payload, SpikeArray) else None
-            )
-        self._input_specs = data(input_specs)
-    
-
-
-    # NOTE: We need to override _construct_output_specs since sig_parser.get_output_specs will lead to an incorrect 
-    # signature because Controller can have an arbitrary number of outputs all under the key "outputs".
-    def _construct_output_specs(self, abc_args: dict[str, SparkPayload]) -> None:
-        # Output is constructed dynamically from the output map, there is no ground truth.
-        expected_output = self.config.output_map
-        output_specs = {}
-        for output_name in expected_output.keys():
-            port_map: PortMap = expected_output[output_name]['input']
-            port_spec: PortSpecs = expected_output[output_name]['spec']
-            output_specs[output_name] = PortSpecs(
-                payload_type=port_spec.payload_type,
-                shape=abc_args[output_name].shape,
-                dtype=abc_args[output_name].dtype,
-                description=f'Auto-generated output spec for output \"{output_name}\".',
-                # Payload specific build metadata
-                async_spikes=abc_args[output_name].async_spikes if isinstance(abc_args[output_name], SpikeArray) else None,
-                inhibition_mask=abc_args[output_name].inhibition_mask if isinstance(abc_args[output_name], SpikeArray) else None
-            )
-        self._output_specs = data(output_specs)
+    def get_controller_inputs(self,) -> tuple[str]:
+        """
+            Returns the names of the controller's input variables
+        """
+        return tuple(self._controller_input_specs.keys())
 
 
 
-    def _construct_property_specs(self,) -> None:
-        self._property_specs = data({})
+    def get_controller_outputs(self,) -> tuple[str]:
+        """
+            Returns the names of the controller's output variables
+        """
+        return tuple(self._controller_output_specs.keys())
 
 
 
-    def reset(self):
+    def refresh_seeds(self, seed: int | None = None) -> None:
+        """
+            Utility method to recompute all seed variables within the SparkConfig.
+            Useful when creating several populations from the same config.
+
+            NOTE: This method has no effect after the model has been built.
+        """
+        self.config.with_new_seeds()
+
+
+
+    def reset(self) -> None:
         """
             Resets all the modules to its initial state.
         """
-        for module_name in self._modules_list:
-            module: SparkModule = getattr(self, module_name)
+        for name in self._modules_names:
+            module: SparkModule = getattr(self, name)
             module.reset()
 
 
@@ -513,7 +494,7 @@ class Controller(SparkModule, metaclass=ControllerMeta):
         pass
 
 
-
+        
     def _parse_tree_structure(self, current_depth: int = 0, name: str | None = None) -> str:
         """
             Parses the tree with to produce a string with the appropiate format for the ascii_tree method.
@@ -522,7 +503,7 @@ class Controller(SparkModule, metaclass=ControllerMeta):
             rep = current_depth * ' ' + f'{name} ({self.__class__.__name__})\n'
         else:
             rep = current_depth * ' ' + f'{self.__class__.__name__}\n'
-        for module_name in self._modules_list:
+        for module_name in self._modules_names:
             module: SparkModule = getattr(self, module_name)
             rep += module._parse_tree_structure(current_depth+1, name=module_name)
         return rep
