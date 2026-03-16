@@ -26,6 +26,9 @@ from spark.core.decorators import spark_property
 from spark.core.typing import is_object_of_type
 from spark.core.config_validation import TypeValidator, PositiveValidator
 
+# TODO: Currently inputs and effects require the ports to be defined inside a list. 
+# This is not ideal from the point of view of user, it makes everything slightly more annoying that it needs.
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

@@ -52,7 +52,7 @@ class HebbianRuleConfig(LearningRuleConfig):
             'description': 'Time constant of the postsynaptic spike train',
         })
     eta: float = dc.field(
-        default = 0.1, 
+        default = 0.01, 
         metadata = {
             'validators': [
                 TypeValidator,
