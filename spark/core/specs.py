@@ -211,19 +211,19 @@ class ModuleSpecs:
 
     name: str
     module_cls: type[SparkModule]        
-    inputs: dict[str, list[PortMap]]       
+    inputs: dict[str, tp.Iterable[PortMap]] | dict[str, PortMap]
     outputs: dict[str, str]
-    effects: dict[str, list[PortMap]]          
+    effects: dict[str, tp.Iterable[PortMap]]| dict[str, PortMap]
     config: SparkConfig
 
     def __init__(
             self, 
             name: str, 
             module_cls: type[SparkModule], 
-            inputs: dict[str, list[PortMap]], 
+            inputs: dict[str, tp.Iterable[PortMap]] | dict[str, PortMap], 
             config: SparkConfig | None = None,
             outputs: dict[str, str] | None = None,
-            effects: dict[str, list[PortMap]] | None = None,
+            effects: dict[str, tp.Iterable[PortMap]] | dict[str, PortMap] | None = None,
         ) -> None:
         # Validate module_cls
         if REGISTRY.MODULES.get(module_cls.__name__) is None:  

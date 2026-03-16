@@ -308,7 +308,7 @@ MRO_PATH_ALIAS_MAP = {
     'Delays': 'Delays',
     #'Plasticity': 'Learning Rules',
     'Soma': 'Somas',
-    'Synanpses': 'Synanpses',
+    'Synapses': 'Synapses',
     'Neuron': 'Neurons',
     # Exclusions
     'ValueSparkPayload': None,

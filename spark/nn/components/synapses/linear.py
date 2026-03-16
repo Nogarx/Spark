@@ -18,7 +18,7 @@ from spark.core.variables import Variable
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator
 from spark.nn.initializers.common import SparseUniformInitializerConfig
-from spark.nn.components.synapses.base import Synanpses, SynanpsesConfig
+from spark.nn.components.synapses.base import Synapses, SynanpsesConfig
 from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
@@ -51,7 +51,7 @@ class LinearSynapsesConfig(SynanpsesConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class LinearSynapses(Synanpses):
+class LinearSynapses(Synapses):
     """
         Linea synaptic model. 
         Output currents are computed as the dot product of the kernel with the input spikes.

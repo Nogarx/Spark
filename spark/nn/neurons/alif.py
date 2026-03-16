@@ -19,7 +19,7 @@ from spark.core.config_validation import TypeValidator, PositiveValidator, ZeroO
 from spark.nn.components.somas.leaky import AdaptiveLeakySoma, AdaptiveLeakySomaConfig
 from spark.nn.components.delays.base import Delays, DelaysConfig
 from spark.nn.components.delays.n2n_delays import N2NDelaysConfig
-from spark.nn.components.synapses.base import Synanpses, SynanpsesConfig
+from spark.nn.components.synapses.base import Synapses, SynanpsesConfig
 from spark.nn.components.synapses.linear import LinearSynapsesConfig
 from spark.nn.components.learning_rules.base import LearningRule, LearningRuleConfig
 from spark.nn.components.learning_rules.zenke_rule import ZenkeRuleConfig
@@ -77,7 +77,7 @@ class ALIFNeuron(Neuron):
     # Auxiliary type hints
     soma: AdaptiveLeakySoma
     delays: Delays
-    synapses: Synanpses
+    synapses: Synapses
     learning_rule: LearningRule
 
     def __init__(self, config: ALIFNeuronConfig | None = None, **kwargs):

@@ -156,7 +156,11 @@ class Neuron(Controller, metaclass=NeuronMeta):
 					input_args[port_name] = self._concatenate_payloads(input_args_list)
 				outputs[name] = getattr(self, name)(**input_args)
 		# Compute effects
-
+		# TODO: Currently effects require the ports to be defined inside a list. This is probably not desirable.
+		for name, effects in self._modules_effects_map.items():
+			for property_name, ports_list in effects.items():
+				port_map = ports_list[0]
+				setattr(getattr(self, name), property_name, outputs[port_map.origin, port_map.port])
 		# Gather output
 		return {
 			name: outputs[origin][port] for name, origin, port in self._contoller_output_map 

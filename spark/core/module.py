@@ -485,7 +485,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             Returns all the attributes names wrapped by the spark_property wrapper.
         """
         return tuple(
-            [name  for name, attr in cls.__dict__.items() if isinstance(attr, spark_property)]
+            [name  for name, attr in inspect.getmembers(cls) if isinstance(attr, spark_property)]
         )
 
 

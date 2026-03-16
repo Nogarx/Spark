@@ -32,7 +32,7 @@ ConfigT = tp.TypeVar("ConfigT", bound=SynanpsesConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class Synanpses(Component, tp.Generic[ConfigT]):
+class Synapses(Component, tp.Generic[ConfigT]):
     """
         Abstract synapse model.
 

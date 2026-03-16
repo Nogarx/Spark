@@ -85,7 +85,11 @@ class Brain(Controller, metaclass=BrainMeta):
 			for port_name in self._modules_output_map[name]:
 				self._cache[name, port_name].set(outputs[name][port_name])
 		# Compute effects
-
+		# TODO: Currently effects require the ports to be defined inside a list. This is probably not desirable.
+		for name, effects in self._modules_effects_map.items():
+			for property_name, ports_list in effects.items():
+				port_map = ports_list[0]
+				setattr(getattr(self, name), property_name, outputs[port_map.origin, port_map.port])
 		# Gather output
 		return {
 			name: outputs[origin][port] for name, origin, port in self._contoller_output_map 

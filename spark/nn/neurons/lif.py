@@ -20,7 +20,7 @@ from spark.core.decorators import spark_property
 from spark.nn.components.somas.leaky import LeakySoma, LeakySomaConfig
 from spark.nn.components.delays.base import Delays, DelaysConfig
 from spark.nn.components.delays.n2n_delays import N2NDelaysConfig
-from spark.nn.components.synapses.base import Synanpses, SynanpsesConfig
+from spark.nn.components.synapses.base import Synapses, SynanpsesConfig
 from spark.nn.components.synapses.linear import LinearSynapsesConfig
 from spark.nn.components.learning_rules.base import LearningRule, LearningRuleConfig
 from spark.nn.components.learning_rules.hebbian_rule import HebbianRuleConfig
@@ -78,7 +78,7 @@ class LIFNeuron(Neuron):
     # Auxiliary type hints
     soma: LeakySoma
     delays: Delays
-    synapses: Synanpses
+    synapses: Synapses
     learning_rule: LearningRule
 
     def __init__(self, config: LIFNeuronConfig | None = None, **kwargs):

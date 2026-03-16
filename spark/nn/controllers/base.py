@@ -122,7 +122,7 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
             )
         # Get modules map
         self._modules_inputs_map = {spec.name: spec.inputs for spec in self.config.modules_specs}
-        self._modules_effects_map = {spec.name: spec.effects for spec in self.config.modules_specs}
+        self._modules_effects_map = {spec.name: spec.effects for spec in self.config.modules_specs if spec.effects != {}}
         self._modules_output_map = {spec.name: list(spec.module_cls._get_output_specs().keys()) for spec in self.config.modules_specs}
         # Save original specs
         self._modules_specs = copy.deepcopy(self.config.modules_specs)
@@ -181,14 +181,11 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
                     f'Module "{module_specs.name}" only defines the following input ports: {module_input_ports}'
                 )  
             # Get __call__ ports. 
+            # TODO: Validation for multiple modules refering to the same __call__ input is missing.
             for input_name, port_spec_list in module_specs.inputs.items():
                 for port_spec in port_spec_list:
                     if port_spec.origin == '__call__':
-                        controller_input_specs[port_spec.port] = PortSpecs(
-                            payload_type = module_input_specs[input_name].payload_type,
-                            shape = module_input_specs[input_name].shape,
-                            dtype = module_input_specs[input_name].dtype,
-                        )
+                        controller_input_specs[port_spec.port] = module_input_specs[input_name]
         return controller_input_specs
 
 
@@ -228,11 +225,7 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
                 module_out_spec = module_property_ports[port_name] if is_property else module_output_ports[port_name]
                 controller_output_specs[out_name] = {
                     'map': PortMap(origin=module_specs.name, port=port_name, is_property=is_property),
-                    'spec': PortSpecs(
-                        payload_type = module_out_spec.payload_type,
-                        shape = module_out_spec.shape,
-                        dtype = module_out_spec.dtype,
-                    )
+                    'spec': module_out_spec
                 }
         return controller_output_specs
 
@@ -419,12 +412,14 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         # Compute controller property specs. Shapes for properties should be known by this point.
         property_specs = self._get_controller_property_specs()
         for property_name in property_specs.keys():
-            property_specs[property_name] = PortSpecs(
-                payload_type=property_specs[property_name].payload_type,
-                shape=getattr(self, property_name).shape,
-                dtype=getattr(self, property_name).dtype,
-                description=property_specs[property_name].description,
-            )
+            property_specs[property_name].shape = getattr(self, property_name).shape
+            property_specs[property_name].dtype = getattr(self, property_name).dtype
+            #property_specs[property_name] = PortSpecs(
+            #    payload_type=property_specs[property_name].payload_type,
+            #    shape=getattr(self, property_name).shape,
+            #    dtype=getattr(self, property_name).dtype,
+            #    description=property_specs[property_name].description,
+            #)
         # Set initial specs
         modules_output_specs = utils.TwoKeyDict()
         modules_output_specs['__call__'] = input_specs
@@ -442,13 +437,13 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
                 for port_name, port_map_list in self._modules_inputs_map[module_name].items():
                     portspecs_list = []
                     for port_map in port_map_list:
-                        if port_map.origin in modules_output_specs:
-                            # Module was already built grab, get the spec.
-                            spec = modules_output_specs[port_map.origin, port_map.port]
-                            portspecs_list.append(spec)
-                        elif port_map.is_property and port_map.origin in modules_property_specs:
+                        if port_map.is_property and port_map.origin in modules_property_specs:
                             # Module was already built grab, get the spec.
                             spec = modules_property_specs[port_map.origin, port_map.port]
+                            portspecs_list.append(spec)
+                        elif port_map.origin in modules_output_specs:
+                            # Module was already built grab, get the spec.
+                            spec = modules_output_specs[port_map.origin, port_map.port]
                             portspecs_list.append(spec)
                         elif port_map.origin in group:
                             # Module is not built yet, it must define a recurrent spec to be part of a cyclic dependency.
@@ -602,7 +597,7 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         """
         if not hasattr(self, 'rng'):
             raise RuntimeError(
-                f"Module '{self.name}' does not have a random number generator initialized. "
+                f"Module '{self.__class__.__name__}' does not have a random number generator initialized. "
                 "Ensure its configuration defines a 'seed' attribute."
             )
         self.rng.value, *keys = jax.random.split(self.rng.value, num_keys+1)
