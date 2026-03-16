@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 import abc
 import typing as tp
 from spark.core.module import SparkModule
-from spark.core.config import SparkConfig
+from spark.core.config import DefaultSparkConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -24,7 +24,7 @@ class InterfaceOutput(tp.TypedDict):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class InterfaceConfig(SparkConfig):
+class InterfaceConfig(DefaultSparkConfig):
     """
        Abstract Interface model configuration class.
     """

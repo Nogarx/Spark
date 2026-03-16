@@ -3,26 +3,23 @@
 #################################################################################################################################################
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
+import typing as tp
+if tp.TYPE_CHECKING:
     from spark.core.payloads import SparkPayload
 
 import abc
 import jax
-import inspect
-import jax.numpy as jnp
-import flax.nnx as nnx
-import typing as tp
-import dataclasses as dc
-from jax.typing import DTypeLike
-from functools import wraps
 import copy
-import spark.core.signature_parser as sig_parser
-import spark.core.validation as validation
+import inspect
+import flax.nnx as nnx
+import jax.numpy as jnp
+import dataclasses as dc
+from functools import wraps
+
 import spark.core.utils as utils
+import spark.core.signature_parser as sig_parser
 from spark.core.specs import PortSpecs
-from spark.core.config import BaseSparkConfig
+from spark.core.config import SparkConfig
 from spark.core.variables import Variable
 from spark.core.decorators import spark_property
 
@@ -34,7 +31,7 @@ from spark.core.decorators import spark_property
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-ConfigT = tp.TypeVar("ConfigT", bound=BaseSparkConfig)
+ConfigT = tp.TypeVar("ConfigT", bound=SparkConfig)
 InputT = tp.TypeVar("InputT")
 
 class ModuleOutput(tp.TypedDict):
@@ -103,7 +100,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
     # NOTE: This is a workaround to require all childs of SparkModule to define a, 
     # default_config while at the same time allow for a lazy definition of the property. 
     def __init_subclass__(cls, **kwargs):
-        from spark.core.config import BaseSparkConfig
+        from spark.core.config import SparkConfig
         super().__init_subclass__(**kwargs)
         # Special cases and abstract classes dont need config yet they are SparkModules ¯\_(ツ)_/¯
         is_abc = inspect.isabstract(cls) and len(getattr(cls, '__abstractmethods__', set())) == 0
@@ -112,8 +109,8 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # Check if defines config
         resolved_hints = tp.get_type_hints(cls)
         config_type = resolved_hints.get('config', None)
-        if not config_type or config_type == ConfigT or not issubclass(config_type, BaseSparkConfig):
-            raise AttributeError('SparkModules must define a valid config: type[BaseSparkConfig] attribute.')
+        if not config_type or config_type == ConfigT or not issubclass(config_type, SparkConfig):
+            raise AttributeError('SparkModules must define a valid config: type[SparkConfig] attribute.')
         cls.default_config = tp.cast(type[ConfigT], config_type)
 
 
@@ -147,13 +144,11 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # Flags
         self.__built__: bool = False
         self.__allow_cycles__: bool = False
-        self._contract_specs: dict[str, PortSpecs] | None = None
-        self._multi_input: bool = True
 
 
 
     @classmethod 
-    def get_config_spec(cls) -> type[BaseSparkConfig]:
+    def get_config_spec(cls) -> type[ConfigT]:
         """
             Returns the default configuration class associated with this module.
         """
@@ -203,14 +198,31 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         self._construct_property_specs()
 
 
-    def output_contract(self,):
-        return None
+
+    def recurrent_contract(
+            self, 
+        ) -> None:
+        """
+            Returns the expected specs for the outputs and properties of the module.
+
+            This function is a binding contract that allows the modules to accept self connections.
+        """
+        raise RuntimeError(
+            f'Recurrent contract not implemented. '
+            f'If you are trying to use \"{self.__class__.__name__}\" within a recurrent context '
+            f'override the method "recurrent_contract" to define the expected output and property specs. '
+            f'Alternatively, override "recurrent_contract" to return "self._output_contract_specs, self._property_contract_specs" '
+            f'and call "set_recurrent_contract" inside the __init__ method.'
+        )
 
 
 
     @classmethod
-    def has_output_contract(cls) -> bool:
-        return cls.output_contract is not SparkModule.output_contract
+    def has_recurrent_contract(cls) -> bool:
+        """
+            Returns True if the modules defines a recurrent contract, False otherwise.
+        """
+        return cls.recurrent_contract is not SparkModule.recurrent_contract
 
 
 
@@ -230,21 +242,19 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
 
 
-    def set_contract_specs(
+    def set_recurrent_contract(
             self, 
             output_contract_specs: dict[str, PortSpecs],
             property_contract_specs: dict[str, PortSpecs]
         ) -> None:
         """
-            Recurrent shape policy pre-defines expected shapes for the output specs.
+            Recurrent shape policy pre-defines expected shapes for the output/property specs.
 
             This is function is a binding contract that allows the modules to accept self connections.
 
             Input:
                 output_contract_specs: dict[str, PortSpecs], A dictionary with a contract for the output specs.
                 property_contract_specs: dict[str, PortSpecs], A dictionary with a contract for the property specs.
-
-            NOTE: If both, shape and output_specs, are provided, output_specs takes preference over shape.
         """
 
         # Validate output contract.
@@ -284,13 +294,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         """
             Retrieve the recurrent spec policy of the module.
         """
-        if self.__allow_cycles__:
-            return self._output_contract_specs, self._property_contract_specs
-        raise RuntimeError(
-            f'Trying to access the contract output specs of module \"{self.name}\", but \"set_contract_specs\" '
-            f'has not been called. If you are trying to use \"{self.name}\" within a recurrent context '
-            f'set the recurrent shape contract inside the __init__ method of \"{self.__class__.__name__}\".'
-        )
+        return self.recurrent_contract()
 
 
 
@@ -546,7 +550,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             temp_dir.mkdir(exist_ok=True)
             # Save config
             config_path = pathlib.Path(os.path.join(temp_dir, 'model.scfg'))
-            config: BaseSparkConfig = self.config
+            config: ConfigT = self.config
             config.__metadata__['input_specs'] = self.get_input_specs()
             config.to_file(config_path.absolute())
             # Save state
@@ -577,7 +581,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         import pathlib
         import datetime
         import orbax.checkpoint as ocp
-        from spark.core.config import BaseSparkConfig
+        from spark.core.config import SparkConfig
         from spark.core.flax_imports import split, merge
 
         def is_child(member_name: str, parent: str) -> bool:
@@ -625,7 +629,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                 tar.extractall(members=state_files, path=temp_dir, **kwargs) 
             # Restore model
             config_path = pathlib.Path(os.path.join(temp_dir, 'model.scfg'))
-            config = BaseSparkConfig.from_file(config_path.absolute())
+            config = SparkConfig.from_file(config_path.absolute())
             # Get model class
             model_cls: type[SparkModule] = config.class_ref
             # Initialize the module.

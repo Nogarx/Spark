@@ -276,12 +276,12 @@ register_initializer = create_registry_decorator(
 register_config = create_registry_decorator(
     sub_registry=REGISTRY.CONFIG, 
     base_class_name='SparkConfig', 
-    base_class_path='spark.core.config.BaseSparkConfig',
+    base_class_path='spark.core.config.SparkConfig',
     base_class_abr='spark.nn.BaseConfig'
 )
 """
     Decorator used to register a new SparkConfig. 
-    Note that module must inherit from spark.nn.BaseConfig (spark.core.config.BaseSparkConfig)
+    Note that module must inherit from spark.nn.BaseConfig (spark.core.config.SparkConfig)
 """
 
 register_cfg_validator = create_registry_decorator(

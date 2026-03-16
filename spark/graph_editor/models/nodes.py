@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.module import SparkModule
-    from spark.core.config import BaseSparkConfig
+    from spark.core.config import SparkConfig
     from spark.graph_editor.models.graph import SparkNodeGraph
     from spark.core.payloads import SparkPayload
 
@@ -218,7 +218,7 @@ class SparkModuleNode(AbstractNode, abc.ABC):
 
     NODE_NAME = 'SparkModule'
     module_cls: type[SparkModule]
-    node_config: BaseSparkConfig
+    node_config: SparkConfig
 
     def __init__(self,) -> None:
         # Init super

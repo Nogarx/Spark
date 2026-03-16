@@ -3,28 +3,20 @@
 #################################################################################################################################################
 
 from __future__ import annotations
-	
-import jax.numpy as jnp
 import typing as tp
+
+import jax
+import jax.numpy as jnp
 import dataclasses as dc
 from math import prod
-import spark.core.utils as utils
-from spark.core.cache import Cache
-from spark.core.module import SparkModule, SparkMeta
-from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
-from spark.core.variables import Variable, Constant
-from spark.core.payloads import SparkPayload, FloatArray, SpikeArray, BooleanMask
-from spark.core.registry import register_config, REGISTRY
-from spark.core.config import BaseSparkConfig
-import jax
 
-from spark.nn.components.base import Component
-from spark.nn.components.somas import Soma
-from spark.nn.components.delays import Delays
-from spark.nn.components.synapses import Synanpses
-from spark.nn.components.learning_rules import LearningRule
-from spark.core.config_validation import TypeValidator, PositiveValidator, ZeroOneValidator
+import spark.core.utils as utils
+from spark.core.variables import Constant
+from spark.core.registry import register_config
 from spark.core.decorators import spark_property
+from spark.core.specs import PortSpecs, PortMap
+from spark.core.payloads import SparkPayload, SpikeArray, BooleanMask
+from spark.core.config_validation import TypeValidator, ZeroOneValidator
 from spark.nn.controllers.base import ControllerConfig, ControllerMeta, Controller
 
 #################################################################################################################################################
@@ -90,18 +82,43 @@ class Neuron(Controller, metaclass=NeuronMeta):
 		inhibition_mask = jnp.zeros((self._units,), dtype=jnp.bool)
 		inhibition_mask = inhibition_mask.at[indices].set(True).reshape(self.units)
 		self._inhibition_mask = Constant(inhibition_mask, dtype=jnp.bool)
-		# Set output shapes earlier to allow cycles.
-		if False:
-			self.set_contract_specs(
-				output_contract_specs={
-					'out_spikes': PortSpecs(
-						payload_type=SpikeArray,
-						shape=self.units,
-						dtype=jnp.float16
-					)
-				},
-				property_contract_specs={},
+
+	# TODO: Should we allow properties to be defined inside the build method? (Safe proof this method)
+	def recurrent_contract(
+			self, 
+		) -> None:
+		"""
+			Returns the expected specs for the outputs and properties of the module.
+
+			This function is a binding contract that allows the modules to accept self connections.
+		"""
+		# Output specs
+		output_contract_specs = self._controller_output_specs
+		for output_name, spec in output_contract_specs.items():
+			output_contract_specs[output_name] = PortSpecs(
+				payload_type=spec.payload_type,
+				shape=self.units,
+				dtype=spec.dtype,
+				description=spec.description,
 			)
+		# Property specs. Properties should be defined inside __init__, so it is safe to inspect them.
+		property_contract_specs = self._get_controller_property_specs()
+		for property_name, spec in property_contract_specs.items():
+			_property: SparkPayload = getattr(self, property_name, None)
+			property_contract_specs[property_name] = PortSpecs(
+				payload_type=spec.payload_type,
+				shape=_property.shape if _property is not None else self.units,
+				dtype=_property.dtype if _property is not None else spec.dtype,
+				description=spec.description,
+			)
+		return output_contract_specs, property_contract_specs
+
+	@classmethod
+	def has_recurrent_contract(cls) -> bool:
+		"""
+			Returns True if the modules defines a recurrent contract, False otherwise.
+		"""
+		return True
 
 	@spark_property
 	def inhibition_mask(self,) -> BooleanMask:
@@ -110,61 +127,8 @@ class Neuron(Controller, metaclass=NeuronMeta):
 	def build(self, input_specs: dict[str, PortSpecs]) -> None:
 		# Get build order.
 		self._order = self._execution_order(self._modules_specs)
-		# Build cache. Cache needs to be computed a step at a time. 
-		modules_output_specs = utils.PathDict()
-		for name, spec in input_specs.items():
-			modules_output_specs['__call__', name] = spec
-		modules_property_specs = utils.PathDict()
-		for group in self._order:
-			for module_name in group:
-				# Skip __call__
-				if module_name == '__call__':
-					continue
-				# Collect module specs and construct a mock input
-				mock_input = {}
-				validate_async = True
-				for port_name, port_map_list in self._modules_inputs_map[module_name].items():
-					portspecs_list = []
-					for port_map in port_map_list:
-						if modules_output_specs.has_path(port_map.origin):
-							# Modules was already built grab, get the spec.
-							if port_map.is_property:
-								spec = modules_property_specs[port_map.origin, port_map.port]
-							else:
-								spec = modules_output_specs[port_map.origin, port_map.port]
-							portspecs_list.append(spec)
-						elif port_map.origin in group:
-							# Module is not built yet, it must define a recurrent spec to be part of a cyclic dependency.
-							origin_module: SparkModule = getattr(self, port_map.origin)
-							if port_map.is_property:
-								_, spec = origin_module.get_contract_specs()
-								spec = spec[port_map.port]
-							else:
-								spec, _ = origin_module.get_contract_specs()
-								spec = spec[port_map.port]
-							portspecs_list.append(spec)
-							# Turn off async validation.
-							validate_async = False
-						else:
-							# Something weird happend. The constructor is trying to get something from a module that should have been called later.
-							raise RuntimeError(
-								f'Trying to get port from module "{port_map.origin}" for "{module_name}"... '
-								f'418 I\'m a teapot.'
-							)
-					mock_port_spec = PortSpecs.from_portspecs_list(portspecs_list, validate_async=validate_async)
-					mock_input[port_name] = mock_port_spec._create_mock_input()
-				# Initialize module
-				module: SparkModule = getattr(self, module_name)
-				abc_output = module(**mock_input)
-				# Add output specs to list
-				for name, spec in module.get_output_specs().items():
-					modules_output_specs[module_name, name] = spec
-				for name, spec in module.get_property_specs().items():
-					modules_property_specs[module_name, name] = spec
-		# Build cache.
-		self._cache = Cache.from_specs(modules_output_specs)
-		# Set built flag
-		self.__built__ = True
+		# Instantiate modules
+		_, _ = self._instantiate_modules(input_specs, self._order)
 
 	def __call__(self, **inputs: SparkPayload) -> dict[str, SparkPayload]:
 		"""
@@ -183,25 +147,20 @@ class Neuron(Controller, metaclass=NeuronMeta):
 						if port_map.origin == '__call__':
 							input_args_list.append(inputs[port_map.port])
 						elif port_map.is_property:
-							input_args_list.append(getattr(port_map.origin, port_map.port))
+							if port_map.origin == '__self__':
+								input_args_list.append(getattr(self, port_map.port))
+							else:
+								input_args_list.append(getattr(getattr(self, port_map.origin), port_map.port))
 						else:
 							input_args_list.append(self._cache[port_map.origin, port_map.port].get())
 					input_args[port_name] = self._concatenate_payloads(input_args_list)
 				outputs[name] = getattr(self, name)(**input_args)
+		# Compute effects
 
-
-				if self.config.output_map['out_spikes']['input'].origin == module_name:
-					outputs[module_name][self.config.output_map['out_spikes']['input'].port] = SpikeArray(
-						outputs[module_name][self.config.output_map['out_spikes']['input'].port].spikes, 
-						inhibition_mask=self._inhibition_mask
-					)
-		# Construct output
-		neuron_output = {
-			name: outputs[origin][port] for name, origin, port in self._flat_output_map 
+		# Gather output
+		return {
+			name: outputs[origin][port] for name, origin, port in self._contoller_output_map 
 		}
-		# NOTE: out_spikes should be the same shape as self._inhibition_mask
-		#neuron_output['out_spikes'] = SpikeArray(neuron_output['out_spikes'].spikes, inhibition_mask=self._inhibition_mask)
-		return neuron_output
 
 	def __call__(self, **inputs: SparkPayload) -> dict[str, SparkPayload]:
 		"""
@@ -219,21 +178,34 @@ class Neuron(Controller, metaclass=NeuronMeta):
 					if port_map.origin == '__call__':
 						input_args_list.append(inputs[port_map.port])
 					elif port_map.is_property:
-						input_args_list.append(getattr(port_map.origin, port_map.port))
+						if port_map.origin == '__self__':
+							input_args_list.append(getattr(self, port_map.port))
+						else:
+							input_args_list.append(getattr(getattr(self, port_map.origin), port_map.port))
 					else:
-						input_args_list.append(self._cache[port_map.origin, port_map.port].get())
+						input_args_list.append(outputs[port_map.origin][port_map.port])
 				input_args[port_name] = self._concatenate_payloads(input_args_list)
 			outputs[name] = getattr(self, name)(**input_args)
-		# Update cache
-		for name in self._modules_names:
-			for port_name in self._modules_output_map[name]:
-				self._cache[name, port_name].set(outputs[name][port_name])
 		# Compute effects
 
 		# Gather output
 		return {
 			name: outputs[origin][port] for name, origin, port in self._contoller_output_map 
 		}
+
+	def read_state(self, port_list: list[PortMap]) -> dict:
+		"""
+			Returns the current state of the modules/cache.
+		"""
+		readout = {port_map.origin: {} for port_map in port_list}
+		for port_map in port_list:
+			if port_map.is_property:
+				readout[port_map.origin][port_map.port] = getattr(getattr(self, port_map.origin), port_map.port)
+			else:
+				raise ValueError(
+					'Reading non-property variables is not supported by Neuron Controller objects.'
+				)
+		return readout
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

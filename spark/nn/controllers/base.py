@@ -3,26 +3,28 @@
 #################################################################################################################################################
 
 from __future__ import annotations
-    
+import typing as tp
+
 import os
 import abc
 import jax
-import jax.numpy as jnp
-import typing as tp
-import dataclasses as dc
-from math import prod
-import spark.core.utils as utils
-import flax.nnx as nnx
 import copy
 import inspect
+import flax.nnx as nnx
+import jax.numpy as jnp
+import dataclasses as dc
+
+import spark.core.utils as utils
+import spark.core.signature_parser as sig_parser
+from spark.core.variables import Variable
+from spark.core.registry import REGISTRY
+from spark.core.config import SparkConfig
 from spark.core.module import SparkModule, SparkMeta
 from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
 from spark.core.payloads import SparkPayload, SpikeArray
-from spark.core.registry import register_config, REGISTRY
-from spark.core.config import BaseSparkConfig
-from spark.core.flax_imports import data
-from spark.core.config_validation import TypeValidator
+from spark.core.decorators import spark_property
 from spark.core.typing import is_object_of_type
+from spark.core.config_validation import TypeValidator, PositiveValidator
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -36,14 +38,32 @@ class ControllerMeta(SparkMeta):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class ControllerConfig(BaseSparkConfig):
+class ControllerConfig(SparkConfig):
     modules_specs: list[ModuleSpecs] = dc.field(
         metadata = {
             'validators': [
             ],
             'description': 'Controller modules.',
         })
-
+    seed: int = dc.field(
+        default_factory=lambda: int.from_bytes(os.urandom(4), 'little'), 
+        metadata={
+            'validators': [
+                TypeValidator,
+            ], 
+            'description': 'Seed for internal random processes.',
+        })
+    dt: float = dc.field(
+        default=1.0, 
+        metadata={
+            'units': 'ms',
+            'validators': [
+                TypeValidator,
+                PositiveValidator,
+            ],
+            'description': 'Deltatime integration constant.',
+        })
+    
 ConfigT = tp.TypeVar("ConfigT", bound=ControllerConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -57,18 +77,10 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
     config: ConfigT
     default_config: type[ConfigT]
 
-    # TODO: These attributes are screaming that they need their own objects/dataclasses
-    # Typing annotations.
-    #_controller_input_specs: dict[str, dict[str, PortSpecs]]
-    #_controller_output_specs: dict[str, dict[str, dict]]
-    #_modules_inputs_map: dict[str, dict[str, list[PortMap]]]
-    #_modules_effects_map: dict[str, dict[str, list[PortMap]]]
-    #_contoller_output_map: list[tuple[str, str, str]]
-
     # NOTE: This is a workaround to require all childs of SparkModule to define a, 
     # default_config while at the same time allow for a lazy definition of the property. 
-    def __init_subclass__(cls, **kwargs):
-        from spark.core.config import BaseSparkConfig
+    def __init_subclass__(cls, **kwargs) -> None:
+        from spark.core.config import SparkConfig
         super().__init_subclass__(**kwargs)
         # Special cases and abstract classes dont need config yet they are SparkModules ¯\_(ツ)_/¯
         is_abc = inspect.isabstract(cls) and len(getattr(cls, '__abstractmethods__', set())) == 0
@@ -77,11 +89,11 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         # Check if defines config
         resolved_hints = tp.get_type_hints(cls)
         config_type = resolved_hints.get('config', None)
-        if not config_type or config_type == ConfigT or not issubclass(config_type, BaseSparkConfig):
-            raise AttributeError('SparkModules must define a valid config: type[BaseSparkConfig] attribute.')
+        if not config_type or config_type == ConfigT or not issubclass(config_type, SparkConfig):
+            raise AttributeError('SparkModules must define a valid config: type[SparkConfig] attribute.')
         cls.default_config = tp.cast(type[ConfigT], config_type)
 
-    def __init__(self, config: ControllerConfig | None = None, **kwargs) -> None:
+    def __init__(self, config: ConfigT | None = None, **kwargs) -> None:
         # Initialize super.
         super().__init__()
         # Override config if provided
@@ -90,6 +102,12 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         else:
             self.config = copy.deepcopy(config)
             self.config.merge(partial=kwargs)
+        # Rng
+        seed = getattr(self.config, 'seed', None)
+        if seed is not None:
+            self._seed = seed
+            # Random engine key.
+            self.rng = Variable(jax.random.PRNGKey(self._seed))
         # Input validation
         assert is_object_of_type(self.config.modules_specs, list[ModuleSpecs]), 'Invalid modules list'
         # Get specs and perform basic validation
@@ -112,6 +130,26 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         # Create modules.
         for spec in self.config.modules_specs:
             setattr(self, spec.name, REGISTRY.MODULES.get(spec.module_cls.__name__).class_ref(config=spec.config))
+
+
+
+    @classmethod
+    def get_properties(cls,) -> tuple[str, ...]:
+        """
+            Returns all the attributes names wrapped by the spark_property wrapper.
+        """
+        return tuple(
+            [name  for name, attr in cls.__dict__.items() if isinstance(attr, spark_property)]
+        )
+
+
+
+    @classmethod
+    def _get_controller_property_specs(cls,) -> dict[str, PortSpecs]:
+        """
+            Dynamically constructs the property specs of a controller.
+        """
+        return sig_parser.get_property_specs(cls)
 
 
 
@@ -199,6 +237,30 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         return controller_output_specs
 
 
+
+    def recurrent_contract(
+            self, 
+        ) -> None:
+        """
+            Returns the expected specs for the outputs and properties of the module.
+
+            This function is a binding contract that allows the modules to accept self connections.
+        """
+        raise RuntimeError(
+            f'Recurrent contract not implemented.'
+        )
+
+
+
+    @classmethod
+    def has_recurrent_contract(cls) -> bool:
+        """
+            Returns True if the modules defines a recurrent contract, False otherwise.
+        """
+        return cls.recurrent_contract is not Controller.recurrent_contract
+
+
+
     # TODO: Validate port shapes (broadcastable). I think this can only be done after all the modules are built.
     @classmethod
     def _validate_modules(cls, modules_specs: list[ModuleSpecs]) -> tuple[dict[str, PortSpecs], dict[str, dict]]:
@@ -207,10 +269,12 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         # NOTE: The following two methods perform port name validations and must be called in order to fully validate the model. 
         controller_input_specs = cls._get_controller_input_specs(modules_specs)
         controller_output_specs = cls._get_controller_output_specs(modules_specs)
+        controller_property_specs = cls._get_controller_property_specs()
 
         # Gather modules specs.
         modules_origins_specs = {
-            '__call__' : controller_input_specs
+            '__call__': controller_input_specs,
+            '__self__': controller_property_specs,
         }
         for spec in modules_specs:
             output_specs = spec.module_cls._get_output_specs()
@@ -279,6 +343,7 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
 
 
     # TODO: Compare forward (from __call__ to outputs) and backward (from outputs to __call__) induced orders
+    # I think the unfolding may be meaningful for the neuron controller since it does not rely on the cache system.
     @classmethod
     def _execution_order(
             cls, 
@@ -286,14 +351,17 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
             ignore_output_contracts: bool = False,
             skip_validation: bool = False,
         ) -> list[list[str]]:
+        """
+            Computes the order of module execution.
+        """
         # Validate
         if not skip_validation:
             cls._validate_modules(modules_specs)
         # Gather initial inputs
-        available_inputs = set(['__call__'])
+        available_inputs = set(['__call__', '__self__'])
         # Gather modules
         remaining_modules = set([spec.name for spec in modules_specs])
-        output_contracts = {spec.name: spec.module_cls.has_output_contract() for spec in modules_specs}
+        output_contracts = {spec.name: spec.module_cls.has_recurrent_contract() for spec in modules_specs}
         inputs_maps = {spec.name: spec.inputs for spec in modules_specs}
         # Compute execution order
         execution_order = []
@@ -343,6 +411,70 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
 
 
 
+    def _instantiate_modules(
+            self, 
+            input_specs: dict[str, PortSpecs], 
+            execution_order: list[list[str]]
+        ) -> tuple[utils.TwoKeyDict, utils.TwoKeyDict]:
+        # Compute controller property specs. Shapes for properties should be known by this point.
+        property_specs = self._get_controller_property_specs()
+        for property_name in property_specs.keys():
+            property_specs[property_name] = PortSpecs(
+                payload_type=property_specs[property_name].payload_type,
+                shape=getattr(self, property_name).shape,
+                dtype=getattr(self, property_name).dtype,
+                description=property_specs[property_name].description,
+            )
+        # Set initial specs
+        modules_output_specs = utils.TwoKeyDict()
+        modules_output_specs['__call__'] = input_specs
+        modules_property_specs = utils.TwoKeyDict()
+        modules_property_specs['__self__'] = property_specs
+        # Build modules. 
+        for group in execution_order:
+            for module_name in group:
+                # Skip __call__
+                if module_name == '__call__':
+                    continue
+                # Collect module specs and construct a mock input
+                mock_input = {}
+                validate_async = True
+                for port_name, port_map_list in self._modules_inputs_map[module_name].items():
+                    portspecs_list = []
+                    for port_map in port_map_list:
+                        if port_map.origin in modules_output_specs:
+                            # Module was already built grab, get the spec.
+                            spec = modules_output_specs[port_map.origin, port_map.port]
+                            portspecs_list.append(spec)
+                        elif port_map.is_property and port_map.origin in modules_property_specs:
+                            # Module was already built grab, get the spec.
+                            spec = modules_property_specs[port_map.origin, port_map.port]
+                            portspecs_list.append(spec)
+                        elif port_map.origin in group:
+                            # Module is not built yet, it must define a recurrent spec to be part of a cyclic dependency.
+                            origin_module: SparkModule = getattr(self, port_map.origin)
+                            output_spec, property_spec = origin_module.recurrent_contract()
+                            spec = property_spec[port_map.port] if port_map.is_property else output_spec[port_map.port]
+                            portspecs_list.append(spec)
+                            # Turn off async validation.
+                            validate_async = False
+                        else:
+                            # Something weird happend. The constructor is trying to get something from a module that should have been called later.
+                            raise RuntimeError(
+                                f'Trying to get port from module "{port_map.origin}" for "{module_name}"... '
+                                f'418 I\'m a teapot.'
+                            )
+                    mock_port_spec = PortSpecs.from_portspecs_list(portspecs_list, validate_async=validate_async)
+                    mock_input[port_name] = mock_port_spec._create_mock_input()
+                # Initialize module
+                module: SparkModule = getattr(self, module_name)
+                abc_output = module(**mock_input)
+                # Add output specs to list
+                modules_output_specs[module_name] = module.get_output_specs()
+                modules_property_specs[module_name] = module.get_property_specs()
+        return modules_output_specs, modules_property_specs
+
+
     def _build(self, **abc_args: SparkPayload) -> None:
         """
             Triggers the shape inference and parameter initialization cascade.
@@ -374,61 +506,6 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         # Update shapes on controller specs
         for key, value in abc_output.items():
             self._controller_output_specs[key]['spec'].shape = value.shape
-
-
-
-    def _call_build(self, input_specs: dict[str, PortSpecs]) -> None:
-        # Get build order.
-        order = self._execution_order(self._modules_specs)
-        # Initialize modules
-        modules_output_specs = {'__call__': {name: spec for name, spec in input_specs.items()}}
-        modules_property_specs = {}
-        for group in order:
-            for module_name in group:
-                # Skip __call__
-                if module_name == '__call__':
-                    continue
-                # Collect module specs and construct a mock input
-                mock_input = {}
-                validate_async = True
-                for port_name, port_map_list in self._modules_inputs_map[module_name].items():
-                    portspecs_list = []
-                    for port_map in port_map_list:
-                        if port_map.origin in modules_output_specs:
-                            # Modules was already built grab, get the spec.
-                            if port_map.is_property:
-                                spec = modules_property_specs[port_map.origin][port_map.port]
-                            else:
-                                spec = modules_output_specs[port_map.origin][port_map.port]
-                            portspecs_list.append(spec)
-                        elif port_map.origin in group:
-                            # Module is not built yet, it must define a recurrent spec to be part of a cyclic dependency.
-                            origin_module: SparkModule = getattr(self, port_map.origin)
-                            if port_map.is_property:
-                                _, spec = origin_module.get_contract_specs()
-                                spec = spec[port_map.port]
-                            else:
-                                spec, _ = origin_module.get_contract_specs()
-                                spec = spec[port_map.port]
-                            portspecs_list.append(spec)
-                            # Turn off async validation.
-                            validate_async = False
-                        else:
-                            # Something weird happend. System is trying to get something from a module that should have been called later.
-                            raise RuntimeError(
-                                f'Trying to get port from module "{port_map.origin}" for "{module_name}"... '
-                                f'418 I\'m a teapot.'
-                            )
-                    mock_port_spec = PortSpecs.from_portspecs_list(portspecs_list, validate_async=validate_async)
-                    mock_input[port_name] = mock_port_spec._create_mock_input()
-                # Initialize module
-                module: SparkModule = getattr(self, module_name)
-                abc_output = module(**mock_input)
-                # Add output specs to list
-                modules_output_specs[module_name] = module.get_output_specs()
-                modules_property_specs[module_name] = module.get_property_specs()
-        # Set built flag
-        self.__built__ = True
 
 
 
@@ -494,7 +571,16 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         pass
 
 
-        
+
+    @abc.abstractmethod
+    def read_state(self, port_list: list[PortMap]) -> dict:
+        """
+            Utility function to read internal controller's variables.
+        """
+        pass
+
+
+
     def _parse_tree_structure(self, current_depth: int = 0, name: str | None = None) -> str:
         """
             Parses the tree with to produce a string with the appropiate format for the ascii_tree method.
@@ -507,6 +593,22 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
             module: SparkModule = getattr(self, module_name)
             rep += module._parse_tree_structure(current_depth+1, name=module_name)
         return rep
+
+
+
+    def get_rng_keys(self, num_keys: int) -> jax.Array | list[jax.Array]:
+        """
+            Generates a new collection of random keys for the JAX's random engine.
+        """
+        if not hasattr(self, 'rng'):
+            raise RuntimeError(
+                f"Module '{self.name}' does not have a random number generator initialized. "
+                "Ensure its configuration defines a 'seed' attribute."
+            )
+        self.rng.value, *keys = jax.random.split(self.rng.value, num_keys+1)
+        if num_keys == 1:
+            return keys[0]
+        return keys
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

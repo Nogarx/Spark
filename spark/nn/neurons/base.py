@@ -11,7 +11,7 @@ import spark.core.utils as utils
 from math import prod
 from spark.core.module import SparkModule
 from spark.core.payloads import SpikeArray
-from spark.core.config import SparkConfig
+from spark.core.config import DefaultSparkConfig
 from spark.core.config_validation import TypeValidator
 
 # TODO: Neurons should be constructed dynamically similar to brains. 
@@ -32,7 +32,7 @@ class NeuronOutput(tp.TypedDict):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class NeuronConfig(SparkConfig):
+class NeuronConfig(DefaultSparkConfig):
     """
         Abstract Neuron model configuration class.
     """

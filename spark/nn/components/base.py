@@ -7,13 +7,13 @@ from __future__ import annotations
 import abc
 import typing as tp
 from spark.core.module import SparkModule
-from spark.core.config import SparkConfig
+from spark.core.config import DefaultSparkConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class ComponentConfig(SparkConfig):
+class ComponentConfig(DefaultSparkConfig):
     """
        Abstract neuronal component configuration class.
     """

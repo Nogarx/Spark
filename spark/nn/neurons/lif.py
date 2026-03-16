@@ -95,10 +95,15 @@ class LIFNeuron(Neuron):
         output_contract['out_spikes'].inhibition_mask = self._inhibition_mask
         property_contract = self._get_property_specs()
         property_contract['potential'].shape = self.units
-        self.set_contract_specs(
+        self.set_recurrent_contract(
             output_contract_specs=output_contract,
             property_contract_specs=property_contract,
         )
+
+    def recurrent_contract(
+            self, 
+        ) -> None:
+        return self._output_contract_specs, self._property_contract_specs
 
     def build(self, input_specs: dict[str, PortSpecs]):
         # Soma model.

@@ -16,7 +16,7 @@ import jax.numpy as jnp
 import spark.core.utils as utils
 from NodeGraphQt import Port
 from functools import partial
-from spark.core.config import BaseSparkConfig
+from spark.core.config import SparkConfig
 from spark.core.payloads import SparkPayload, FloatArray
 from spark.core.registry import REGISTRY
 from spark.nn.initializers.base import Initializer, InitializerConfig
@@ -204,7 +204,7 @@ class QNodeConfig(QtWidgets.QWidget):
 
     def _setup_layout(self,) -> None:
         # Get config
-        node_config: BaseSparkConfig = getattr(self._target_node, 'node_config', None)
+        node_config: SparkConfig = getattr(self._target_node, 'node_config', None)
         # Add name widget
         name_widget = NodeHeaderWidget(
             name=self._target_node.NODE_NAME,
@@ -229,7 +229,7 @@ class QNodeConfig(QtWidgets.QWidget):
         self._on_update()
 
 
-    def _add_config_recurrently(self, config_name: str, config: BaseSparkConfig, path: list[str] = []) -> None:
+    def _add_config_recurrently(self, config_name: str, config: SparkConfig, path: list[str] = []) -> None:
         # Create new QCollapsible
         collapsible = QCollapsible(utils.to_human_readable(config_name))
         # Instantiate config body
@@ -302,7 +302,7 @@ class QNodeConfig(QtWidgets.QWidget):
 
     def _get_config_paths_and_types(
             self, 
-            config: BaseSparkConfig, 
+            config: SparkConfig, 
             path: tuple[str] = tuple(), 
             break_inheritance: bool = False
         ) -> list[dict]:

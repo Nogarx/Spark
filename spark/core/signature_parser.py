@@ -269,9 +269,9 @@ def get_property_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
     """
 
     # Check isinstance of SparkModule.
-    if not validation._is_module_type(module):
+    if not (validation._is_module_type(module) or validation._is_controller_type(module)):
         raise TypeError(
-            f'Expected object class of type "SparkModule" but got "{type(module).__name__}".'
+            f'Expected object class of type "SparkModule" or "Controller" but got "{type(module).__name__}".'
         )
 
     # Gather all properties

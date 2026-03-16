@@ -15,7 +15,7 @@ from spark.core.typing import (
 )
 
 from spark.core.payloads import SparkPayload, SpikeArray
-from spark.core.config import BaseSparkConfig, SparkConfig
+from spark.core.config import SparkConfig, DefaultSparkConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -170,9 +170,9 @@ def test_invalid_spark_type() -> None:
 
 def test_spark_config() -> None:
     @enforce_annotations
-    def target_func(x: BaseSparkConfig) -> BaseSparkConfig:
+    def target_func(x: SparkConfig) -> SparkConfig:
         return x
-    config = SparkConfig()
+    config = DefaultSparkConfig()
     assert target_func(config) == config
     
 #################################################################################################################################################

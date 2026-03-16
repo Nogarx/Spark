@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.module import SparkModule
     from spark.core.payloads import SparkPayload
-    from spark.core.config import BaseSparkConfig
+    from spark.core.config import SparkConfig
 
 import jax
 import jax.numpy as jnp
@@ -214,14 +214,14 @@ class ModuleSpecs:
     inputs: dict[str, list[PortMap]]       
     outputs: dict[str, str]
     effects: dict[str, list[PortMap]]          
-    config: BaseSparkConfig
+    config: SparkConfig
 
     def __init__(
             self, 
             name: str, 
             module_cls: type[SparkModule], 
             inputs: dict[str, list[PortMap]], 
-            config: BaseSparkConfig | None = None,
+            config: SparkConfig | None = None,
             outputs: dict[str, str] | None = None,
             effects: dict[str, list[PortMap]] | None = None,
         ) -> None:

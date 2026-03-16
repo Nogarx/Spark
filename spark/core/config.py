@@ -274,7 +274,7 @@ class SparkMetaConfig(abc.ABCMeta):
 
 @jax.tree_util.register_dataclass
 @dc.dataclass(init=False, kw_only=True, eq=False)
-class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
+class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
     """
         Base class for module configuration.
     """
@@ -322,7 +322,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 val1 = val1.config
                 val2 = val2.config
 
-        if isinstance(val1, BaseSparkConfig):
+        if isinstance(val1, SparkConfig):
             return val1 == val2
         elif isinstance(val1, (jax.Array, np.ndarray)):
             return val1.shape == val2.shape and np.array_equal(val1, val2)
@@ -339,7 +339,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             return val1 == val2
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, BaseSparkConfig):
+        if not isinstance(other, SparkConfig):
             return False
         # Check both of them contain the same fields.
         fields = set([f.name for f in dc.fields(self)])
@@ -397,7 +397,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
     @staticmethod
-    def _fold_partial(obj: 'BaseSparkConfig', partial: dict[str, tp.Any]) -> tuple[dict[str, tp.Any], dict[str, tp.Any]]:
+    def _fold_partial(obj: 'SparkConfig', partial: dict[str, tp.Any]) -> tuple[dict[str, tp.Any], dict[str, tp.Any]]:
         """
             Restructures the partial dict, consuming the __config_delimiter__ and __shared_config_delimiter__ 
             tokens and propagating the information within.
@@ -557,10 +557,10 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                         f'Field \"{self.__class__.__name__}.{field_name}\" expected type "ModuleSpecs" but got "{type(kwargs_fold[field_name])}"'
                     )
                 # Check if ModuleSpecs defines a custom config
-                config: BaseSparkConfig | None = getattr(module_spec, 'config', None)
+                config: SparkConfig | None = getattr(module_spec, 'config', None)
                 if config is None:
                     # Config is not defined get default config
-                    config_cls: type[BaseSparkConfig] = module_spec.module_cls.get_config_spec()
+                    config_cls: type[SparkConfig] = module_spec.module_cls.get_config_spec()
                     config = config_cls()
                 # Merge configs and let the it reach the end  
                 config.merge(partial={**prefixed_shared_partial}, __skip_validation__=__skip_validation__)
@@ -584,10 +584,10 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 # Iterate over specs
                 for module_spec in module_spec_list:
                     # Check if ModuleSpecs defines a custom config
-                    config: BaseSparkConfig | None = getattr(module_spec, 'config', None)
+                    config: SparkConfig | None = getattr(module_spec, 'config', None)
                     if config is None:
                         # Config is not defined get default config
-                        config_cls: type[BaseSparkConfig] = module_spec.module_cls.get_config_spec()
+                        config_cls: type[SparkConfig] = module_spec.module_cls.get_config_spec()
                         config = config_cls()
                     # Merge configs and let the it reach the end  
                     config.merge(partial={**prefixed_shared_partial}, __skip_validation__=__skip_validation__)
@@ -596,24 +596,24 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 continue
 
             # Nested Config case
-            if any([isinstance(t, type) and issubclass(t, BaseSparkConfig) for t in field_type]):
+            if any([isinstance(t, type) and issubclass(t, SparkConfig) for t in field_type]):
                 # Check if user manually set this attribute and is a SparkConfig
                 subconfig = kwargs_fold.get(field_name, {})
-                if isinstance(subconfig, BaseSparkConfig):
+                if isinstance(subconfig, SparkConfig):
                     # User set a config. Copy subconfig to avoid weird overwrittings.
                     field_config = copy.deepcopy(subconfig)
                     field_config.merge(partial={**prefixed_shared_partial}, __skip_validation__=__skip_validation__)
                     setattr(self, field_name, field_config)
-                elif isinstance(subconfig, type) and issubclass(subconfig, BaseSparkConfig):
+                elif isinstance(subconfig, type) and issubclass(subconfig, SparkConfig):
                     # Use current config 
                     field_value = subconfig(**{**subconfig, **prefixed_shared_partial}, __skip_validation__=__skip_validation__)
                     setattr(self, field_name, field_value)
                 # Check if parent config set this attribute and is a SparkConfig
-                elif isinstance(field_value, BaseSparkConfig):
+                elif isinstance(field_value, SparkConfig):
                     # Use current config 
                     field_value.merge(partial={**subconfig, **prefixed_shared_partial}, __skip_validation__=__skip_validation__)
                     setattr(self, field_name, field_value)
-                elif isinstance(field_value, type) and issubclass(field_value, BaseSparkConfig):
+                elif isinstance(field_value, type) and issubclass(field_value, SparkConfig):
                     # Use current config 
                     field_value = field_value(**{**subconfig, **prefixed_shared_partial}, __skip_validation__=__skip_validation__)
                     setattr(self, field_name, field_value)
@@ -629,8 +629,8 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     setattr(self, field_name, field_value)
                 # Use type class otherwise
                 else:
-                    # TODO: It is not clear how to fully resolve multiple BaseSparkConfig types. We currently select the first one.
-                    valid_types = [isinstance(t, type) and issubclass(t, BaseSparkConfig) for t in field_type]
+                    # TODO: It is not clear how to fully resolve multiple SparkConfig types. We currently select the first one.
+                    valid_types = [isinstance(t, type) and issubclass(t, SparkConfig) for t in field_type]
                     if sum(valid_types) > 1:
                         raise TypeError(
                             f'Multiple SparkConfig types for field \"{field_name}\" in \"{self.__class__.__name__}\" were assigned. '\
@@ -717,7 +717,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def diff(self, other: 'BaseSparkConfig') -> dict[str, tp.Any]:
+    def diff(self, other: 'SparkConfig') -> dict[str, tp.Any]:
         """
             Return differences from another config.
         """
@@ -748,7 +748,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         for field in dc.fields(self):
             # Check if field is another SparkConfig
             for t in type_hints[field.name]:
-                if isinstance(t, type) and issubclass(t, BaseSparkConfig):
+                if isinstance(t, type) and issubclass(t, SparkConfig):
                     if exclude_initializers and issubclass(t, InitializerConfig):
                         continue
                     nested_configs.append(field.name)
@@ -805,7 +805,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 if isinstance(value_attr, InitializableField):
                     value_attr = value_attr.__obj__
                 # TODO: Add a wrapper to init to perform dynamic validation
-                if isinstance(value_attr, BaseSparkConfig):
+                if isinstance(value_attr, SparkConfig):
                     value_attr.validate(is_partial=is_partial, errors=errors, current_path=current_path+[field.name])
 
                 if is_partial:
@@ -872,7 +872,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
     # TODO: This method is not ideal. It solves the module association problem in a very brittle way. 
     # There should be another better pattern for this problem.
     @property
-    def class_ref(obj: 'BaseSparkConfig') -> type:
+    def class_ref(obj: 'SparkConfig') -> type:
         """
             Returns the type of the associated Module/Initializer.
 
@@ -941,7 +941,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     raise ValueError(
                         f'Undefined value for field "{field.name}" in configuration class "{self.__name__}".'
                     )
-            if isinstance(value, BaseSparkConfig):
+            if isinstance(value, SparkConfig):
                 dataclass_dict[field.name] = value
             elif isinstance(value, InitializableField) and isinstance(value.__obj__, Initializer):
                 dataclass_dict[field.name] = value.__obj__.config
@@ -962,7 +962,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         from spark.nn.initializers import Initializer, InitializerConfig
         kwargs_dict = {}
         for name, field, value in self:
-            if isinstance(value, BaseSparkConfig):
+            if isinstance(value, SparkConfig):
                 kwargs_dict[name] = value.get_kwargs()
             elif isinstance(value, InitializableField):
                 kwargs_dict[name] = value.__obj__
@@ -973,7 +973,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
     @classmethod
-    def from_dict(cls: type['BaseSparkConfig'], dct: dict) -> 'BaseSparkConfig':
+    def from_dict(cls: type['SparkConfig'], dct: dict) -> 'SparkConfig':
         """
             Create config instance from dictionary.
         """
@@ -1021,7 +1021,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
     @classmethod
-    def from_file(cls: type['BaseSparkConfig'], file_path: str, is_partial: bool = False) -> 'BaseSparkConfig':
+    def from_file(cls: type['SparkConfig'], file_path: str, is_partial: bool = False) -> 'SparkConfig':
         """
             Create config instance from a .scfg file.
         """
@@ -1045,7 +1045,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     )
                 if not _is_config_instance(obj):
                     raise TypeError(
-                        f'Expected final object to be of type \"BaseSparkConfig\" but after decoding the final object was of type \"{obj.__class__}\".'
+                        f'Expected final object to be of type \"SparkConfig\" but after decoding the final object was of type \"{obj.__class__}\".'
                     )
                 return obj
             #return cls.from_dict(data)
@@ -1118,7 +1118,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 if isinstance(value, InitializableField):
                     # Unpack Initializable fields
                     value = value.__obj__
-                if isinstance(value, BaseSparkConfig):
+                if isinstance(value, SparkConfig):
                     rep += value._parse_tree_structure(current_depth+1, simplified=simplified, header=name)
                 else:
                     if isinstance(value, (list, tuple)) and all([isinstance(v, ModuleSpecs) for v in value]):
@@ -1145,7 +1145,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     #field_types = ' | '.join([t.replace(' ', '').split('.')[-1] for t in str(field.type).split('|')])
                     rep += (current_depth+1) * ' ' + f'{name}: {field_types} <- {value_str}\n'
             else:
-                if isinstance(value, BaseSparkConfig):
+                if isinstance(value, SparkConfig):
                     rep += value._parse_tree_structure(current_depth+1, simplified=simplified)
                 elif isinstance(value, (list, tuple)) and all([isinstance(v, ModuleSpecs) for v in value]):
                     rep += (current_depth+1) * ' ' + f'ModuleSpecs\n'
@@ -1153,7 +1153,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                         rep += spec.config._parse_tree_structure(current_depth+2, simplified=simplified)
         return rep
 
-    def with_new_seeds(self, seed: int | None = None) -> 'BaseSparkConfig':
+    def with_new_seeds(self, seed: int | None = None) -> 'SparkConfig':
         """
             Utility method to recompute all seed variables within the SparkConfig.
             Useful when creating several populations from the same config.
@@ -1162,7 +1162,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         new_instance = copy.deepcopy(self)
         if seed is None:
             for name, field, value in new_instance:
-                if isinstance(value, BaseSparkConfig):
+                if isinstance(value, SparkConfig):
                     setattr(new_instance, name, value.with_new_seeds())
                 elif isinstance(value, ModuleSpecs):
                     setattr(new_instance, name, value.config.with_new_seeds())
@@ -1177,7 +1177,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             for name, field, value in new_instance:
                 key, subkey = jax.random.split(key, 2)
                 new_seed = int(subkey._base_array[0])
-                if isinstance(value, BaseSparkConfig):
+                if isinstance(value, SparkConfig):
                     setattr(new_instance, name, value.with_new_seeds(seed=new_seed))
                 elif isinstance(value, ModuleSpecs):
                     setattr(new_instance, name, value.config.with_new_seeds(seed=new_seed))
@@ -1194,7 +1194,7 @@ class BaseSparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 #################################################################################################################################################
 
 @register_config
-class SparkConfig(BaseSparkConfig):
+class DefaultSparkConfig(SparkConfig):
     """
         Default class for module configuration.
     """

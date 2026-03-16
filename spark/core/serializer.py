@@ -12,7 +12,7 @@ import warnings
 import typing as tp
 import spark.core.utils as utils
 from spark.core.registry import REGISTRY
-from spark.core.config import BaseSparkConfig
+from spark.core.config import SparkConfig
 from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
 
 #################################################################################################################################################
@@ -56,7 +56,7 @@ class SparkJSONEncoder(json.JSONEncoder):
 				'data': obj.tolist()
 			}
 		# Encode spark configs
-		if isinstance(obj, BaseSparkConfig):
+		if isinstance(obj, SparkConfig):
 			return {
 				'__type__': REGISTRY.CONFIG.get_by_cls(obj.__class__).name,
 				'__cfg__': obj.to_dict(is_partial=self._is_partial),
