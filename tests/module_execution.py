@@ -195,22 +195,22 @@ data_test = [
     ),
     # Neurons
     (
-        spark.nn.neurons.LIFNeuron, 
+        spark.nn.neurons_OLD.LIFNeuron, 
         {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
         {'_s_units':(2,3),}
     ),
     (
-        spark.nn.neurons.LIFNeuron, 
+        spark.nn.neurons_OLD.LIFNeuron, 
         {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
         {'_s_units':(2,3),}
     ),
     (
-        spark.nn.neurons.ALIFNeuron, 
+        spark.nn.neurons_OLD.ALIFNeuron, 
         {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
         {'_s_units':(2,3),}
     ),
     (
-        spark.nn.neurons.ALIFNeuron, 
+        spark.nn.neurons_OLD.ALIFNeuron, 
         {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
         {'_s_units':(2,3),}
     ),

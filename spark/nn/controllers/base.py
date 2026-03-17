@@ -67,6 +67,14 @@ class ControllerConfig(SparkConfig):
             'description': 'Deltatime integration constant.',
         })
     
+    # TODO: Manual override to synchronize all time integration constants across the controller.
+    # This solution is probably good enough but it is not clear that will not clash with other user intentions.
+    # A similar situation is present in Neuron.__post_init__
+    def __post_init__(self,) -> None:
+        super().__post_init__()
+        # Synchronize dt's. NOTE: Skip validation, otherwise will fall into an infinite loop.
+        self.merge(partial={'_s_dt':self.dt}, __skip_validation__=True)
+
 ConfigT = tp.TypeVar("ConfigT", bound=ControllerConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -126,7 +134,14 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         # Get modules map
         self._modules_inputs_map = {spec.name: spec.inputs for spec in self.config.modules_specs}
         self._modules_effects_map = {spec.name: spec.effects for spec in self.config.modules_specs if spec.effects != {}}
-        self._modules_output_map = {spec.name: list(spec.module_cls._get_output_specs().keys()) for spec in self.config.modules_specs}
+        #self._modules_output_map = {spec.name: list(spec.module_cls._get_output_specs().keys()) for spec in self.config.modules_specs}
+        self._modules_output_map = {}
+        for spec in self.config.modules_specs:
+            if issubclass(spec.module_cls, Controller):
+                key_list = list(spec.module_cls._get_controller_output_specs(spec.config.modules_specs).keys())
+            else:
+                key_list = list(spec.module_cls._get_output_specs().keys())
+            self._modules_output_map[spec.name] = key_list
         # Save original specs
         self._modules_specs = copy.deepcopy(self.config.modules_specs)
         self._modules_names = tuple([spec.name for spec in self.config.modules_specs])
@@ -165,7 +180,10 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         controller_input_specs = {}
         # Iterate over every module.
         for module_specs in modules_specs:
-            module_input_specs = module_specs.module_cls._get_input_specs()
+            if issubclass(module_specs.module_cls, Controller):
+                module_input_specs = module_specs.module_cls._get_controller_input_specs(module_specs.config.modules_specs)
+            else:
+                module_input_specs = module_specs.module_cls._get_input_specs()
             # Validate that input names are well defined.
             module_input_ports = set(module_input_specs.keys())
             module_defined_input_ports = set(module_specs.inputs.keys())
@@ -214,8 +232,13 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
                         f'Modules "{other}" and "{module_specs.name}"define the same output variable name: "{out_name}".'
                     )
                 # Check that the modules defines a named port port_name
-                module_output_ports = module_specs.module_cls._get_output_specs() if module_output_ports is None else module_output_ports
-                module_property_ports = module_specs.module_cls._get_property_specs() if module_property_ports is None else module_property_ports
+                if module_output_ports is None:
+                    if issubclass(module_specs.module_cls, Controller):
+                        module_output_ports = {k:v['spec'] for k, v in module_specs.module_cls._get_controller_output_specs(module_specs.config.modules_specs).items()}
+                        module_property_ports = module_specs.module_cls._get_controller_property_specs()
+                    else:
+                        module_output_ports = module_specs.module_cls._get_output_specs()
+                        module_property_ports = module_specs.module_cls._get_property_specs()
                 if not port_name in module_output_ports and not port_name in module_property_ports:
                     raise ValueError(
                         f'Invalid output port name "{port_name}" in module "{module_specs.name}". '
@@ -273,8 +296,12 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
             '__self__': controller_property_specs,
         }
         for spec in modules_specs:
-            output_specs = spec.module_cls._get_output_specs()
-            property_specs = spec.module_cls._get_property_specs()
+            if issubclass(spec.module_cls, Controller):
+                output_specs = {k:v['spec'] for k, v in spec.module_cls._get_controller_output_specs(spec.config.modules_specs).items()}
+                property_specs = spec.module_cls._get_controller_property_specs()
+            else:
+                output_specs = spec.module_cls._get_output_specs()
+                property_specs = spec.module_cls._get_property_specs()
             name_intersection = list(set(output_specs.keys()).intersection(set(property_specs.keys())))
             if len(name_intersection) > 0:
                 raise ValueError(
@@ -283,14 +310,17 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
                     f'variables and a properties, which is not supported.'
                 )
             modules_origins_specs[spec.name] = {
-                **spec.module_cls._get_output_specs(),
-                **spec.module_cls._get_property_specs(),
+                **output_specs,
+                **property_specs,
             }
                 
         # Validate module port expected specs.
         for spec in modules_specs:  
             # Call ports
-            module_input_specs = spec.module_cls._get_input_specs()
+            if issubclass(spec.module_cls, Controller):
+                module_input_specs = spec.module_cls._get_controller_input_specs(spec.config.modules_specs)
+            else:
+                module_input_specs = spec.module_cls._get_input_specs()
             for input_name, port_spec_list in spec.inputs.items():
                 # Get module port specs
                 expected_port_specs = module_input_specs[input_name]
@@ -312,7 +342,10 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
                             f'from input port "{input_name}" of module "{spec.name}".'
                         )    
             # Effects (property ports)
-            module_property_specs = spec.module_cls._get_property_specs()
+            if issubclass(spec.module_cls, Controller):
+                module_property_specs = spec.module_cls._get_controller_property_specs()
+            else:
+                module_property_specs = spec.module_cls._get_property_specs()
             for property_name, port_spec_list in spec.effects.items():
                 # Get module port specs
                 expected_port_specs = module_property_specs[property_name]
@@ -417,12 +450,6 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         for property_name in property_specs.keys():
             property_specs[property_name].shape = getattr(self, property_name).shape
             property_specs[property_name].dtype = getattr(self, property_name).dtype
-            #property_specs[property_name] = PortSpecs(
-            #    payload_type=property_specs[property_name].payload_type,
-            #    shape=getattr(self, property_name).shape,
-            #    dtype=getattr(self, property_name).dtype,
-            #    description=property_specs[property_name].description,
-            #)
         # Set initial specs
         modules_output_specs = utils.TwoKeyDict()
         modules_output_specs['__call__'] = input_specs
@@ -465,11 +492,27 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
                     mock_port_spec = PortSpecs.from_portspecs_list(portspecs_list, validate_async=validate_async)
                     mock_input[port_name] = mock_port_spec._create_mock_input()
                 # Initialize module
-                module: SparkModule = getattr(self, module_name)
+                module: SparkModule | Controller = getattr(self, module_name)
                 abc_output = module(**mock_input)
                 # Add output specs to list
-                modules_output_specs[module_name] = module.get_output_specs()
-                modules_property_specs[module_name] = module.get_property_specs()
+                if isinstance(module, Controller):
+                    # TODO: Several comparisons like this one are required throught the entire code to deal with Neuron controllers
+                    # A good equivalent of get_X_specs from the instance is missing.
+                    modules_output_specs[module_name] = {k:v['spec'] for k,v in module._get_controller_output_specs(module.config.modules_specs).items()}
+                    for output_name in modules_output_specs[module_name].keys():
+                        modules_output_specs[module_name][output_name].shape = abc_output[output_name].shape
+                        modules_output_specs[module_name][output_name].dtype = abc_output[output_name].dtype
+                        if issubclass(modules_output_specs[module_name][output_name].payload_type, SpikeArray):
+                            modules_output_specs[module_name][output_name].inhibition_mask = abc_output[output_name].inhibition_mask
+                            modules_output_specs[module_name][output_name].async_spikes = abc_output[output_name].async_spikes
+                    modules_property_specs[module_name] = module._get_controller_property_specs()
+                    for property_name in modules_property_specs[module_name].keys():
+                        modules_property_specs[module_name][property_name].shape = getattr(module, property_name).shape
+                        modules_property_specs[module_name][property_name].dtype = getattr(module, property_name).dtype
+                else:
+                    modules_output_specs[module_name] = module.get_output_specs()
+                    modules_property_specs[module_name] = module.get_property_specs()
+
         return modules_output_specs, modules_property_specs
 
 

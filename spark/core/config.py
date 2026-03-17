@@ -568,7 +568,9 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 setattr(self, field_name, module_spec)
                 continue
             if any([t == list[ModuleSpecs] for t in field_type]): 
-                module_spec_list: list[ModuleSpecs] = field_value if field_value is not None else kwargs_fold.get(field_name, None)
+                module_spec_list: list[ModuleSpecs] | None = field_value if field_value is not None else kwargs_fold.get(field_name, None)
+                if module_spec_list is None and field.default_factory != dc.MISSING:
+                    module_spec_list = field.default_factory()
                 # Sanity checks
                 if module_spec_list is None:
                     raise ValueError(
@@ -880,10 +882,14 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             when defining custom configuration classes. The automatic class_ref solver is extremely brittle and
             likely to fail in many different custom scenarios.
         """
-        # Check if is a BrainConfig
+        # TODO: This could probably be handle more gracefully (part of the todo above)
+        # Check if this Config is for a controller (Brain/Neuron) 
         from spark.nn.controllers.brain import Brain, BrainConfig
+        from spark.nn.controllers.neuron import Neuron, NeuronConfig
         if isinstance(obj, BrainConfig):
             return Brain
+        elif is_instance(obj, NeuronConfig):
+            return Neuron
 
         # Check for class_ref otherwise try to set it up.
         if getattr(obj, '__class_ref__', None) is None:
@@ -918,7 +924,7 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def __post_init__(self,):
+    def __post_init__(self,) -> None:
         self.validate()
 
 

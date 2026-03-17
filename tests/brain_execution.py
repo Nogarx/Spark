@@ -35,14 +35,14 @@ def test_brain_config() -> spark.nn.BrainConfig:
     )
     neurons_specs = spark.ModuleSpecs(
         name ='neurons', 
-        module_cls = spark.nn.neurons.ALIFNeuron, 
+        module_cls = spark.nn.neurons_OLD.ALIFNeuron, 
         inputs = {
             'in_spikes': [
                 spark.PortMap(origin='spiker', port='spikes'),
                 spark.PortMap(origin='neurons', port='out_spikes'),
             ]
         },
-        config = spark.nn.neurons.ALIFNeuronConfig(
+        config = spark.nn.neurons_OLD.ALIFNeuronConfig(
             _s_units = (16,),
             synapses_params__kernel__scale = 3.0,
             soma_params__threshold_tau = 25.0 * jax.random.uniform(jax.random.key(43), shape=(16,), dtype=jnp.float16)**2,

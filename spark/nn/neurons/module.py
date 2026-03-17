@@ -14,11 +14,8 @@ from spark.core.payloads import SpikeArray
 from spark.core.config import DefaultSparkConfig
 from spark.core.config_validation import TypeValidator
 
-# TODO: Neurons should be constructed dynamically similar to brains. 
-# This will allow us to use the editor to build viable neuronal models on the go.
-# Morever, this would also abstract all the neuron implementation details away into the configuration pattern.
-# At the moment it is not very clear how to achieve this, since here a cache system is not desireable;
-# execution must be flatten and unfolded, preventing cycles which are useful for passing "read-only" values.  
+# NOTE: Although the Neuron Controller is the ideal way to build new neuronal models, we suspect that
+# sometimes it may be necessary to fallback a proper SparkModule, this code serves this purpose.
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

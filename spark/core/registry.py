@@ -76,10 +76,20 @@ class SubRegistry(Mapping):
         """
             Validate and register new item.
         """
+        # Special case for initializers
         if self._registry_base_type == validation.DEFAULT_INITIALIZER_PATH:
             if not validation._is_initializer_type(cls):
                 raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
                                 f'"{cls.__name__}" is not a valid Initializer.')
+        # Special case for modules + controllers
+        elif self._registry_base_type == validation.DEFAULT_SPARKMODULE_PATH:
+            if not (
+                validation._is_spark_type(cls, self._registry_base_type) or 
+                validation._is_spark_type(cls, validation.DEFAULT_SPARKCONTROLLER_PATH)
+                ):
+                raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
+                                f'"{cls.__name__}" does not inherit from {self._registry_base_type}.')
+        # Everything else
         else:
             if not validation._is_spark_type(cls, self._registry_base_type):
                 raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '

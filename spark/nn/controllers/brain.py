@@ -5,7 +5,7 @@
 from __future__ import annotations
 import typing as tp
 
-from spark.core.registry import register_config
+from spark.core.registry import register_module, register_config
 from spark.core.cache import Cache
 from spark.core.specs import PortSpecs, PortMap
 from spark.core.payloads import SparkPayload
@@ -32,6 +32,7 @@ class BrainConfig(ControllerConfig):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@register_module
 class Brain(Controller, metaclass=BrainMeta):
 	"""
 		Brain model.
