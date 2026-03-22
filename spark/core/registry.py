@@ -82,10 +82,10 @@ class SubRegistry(Mapping):
                 raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
                                 f'"{cls.__name__}" is not a valid Initializer.')
         # Special case for modules + controllers
-        elif self._registry_base_type == validation.DEFAULT_SPARKMODULE_PATH:
+        elif self._registry_base_type == validation.DEFAULT_SPARK_MODULE_PATH:
             if not (
                 validation._is_spark_type(cls, self._registry_base_type) or 
-                validation._is_spark_type(cls, validation.DEFAULT_SPARKCONTROLLER_PATH)
+                validation._is_spark_type(cls, validation.DEFAULT_SPARK_CONTROLLER_PATH)
                 ):
                 raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
                                 f'"{cls.__name__}" does not inherit from {self._registry_base_type}.')
@@ -159,6 +159,10 @@ class SubRegistry(Mapping):
             name_map = INITIALIZERS_ALIAS_MAP.get(name, name)
             path = ['Initializers', name_map]
             return path
+        elif self._registry_base_type == validation.DEFAULT_SPARK_NEURON_PATH:
+            name = cls.__module__.split('.')[-1]
+            path = ['Neurons']
+            return path
         else:
             path = []
             for base in cls.__mro__:
@@ -189,7 +193,8 @@ class Registry():
     """
     
     def __init__(self):
-        self.MODULES = SubRegistry(registry_base_type=validation.DEFAULT_SPARKMODULE_PATH)
+        self.MODULES = SubRegistry(registry_base_type=validation.DEFAULT_SPARK_MODULE_PATH)
+        self.NEURONS = SubRegistry(registry_base_type=validation.DEFAULT_SPARK_NEURON_PATH)
         self.PAYLOADS = SubRegistry(registry_base_type=validation.DEFAULT_PAYLOAD_PATH)
         self.INITIALIZERS = SubRegistry(registry_base_type=validation.DEFAULT_INITIALIZER_PATH)
         self.CONFIG = SubRegistry(registry_base_type=validation.DEFAULT_CONFIG_PATH)
@@ -197,6 +202,7 @@ class Registry():
 
     def _build(self,):
         self.MODULES._build()
+        self.NEURONS._build()
         self.PAYLOADS._build()
         self.INITIALIZERS._build()
         self.CONFIG._build()
@@ -260,6 +266,17 @@ register_module = create_registry_decorator(
 """
     Decorator used to register a new SparkModule. 
     Note that module must inherit from spark.nn.Module (spark.core.module.SparkModule)
+"""
+
+register_neuron = create_registry_decorator(
+    sub_registry=REGISTRY.NEURONS, 
+    base_class_name='Neuron', 
+    base_class_path='spark.nn.controllers.neuron.Neuron',
+    base_class_abr='spark.nn.Neuron'
+)
+"""
+    Decorator used to register a new Neuron model. 
+    Note that module must inherit from spark.nn.Neuron (spark.nn.controllers.neuron.Neuron)
 """
 
 register_payload = create_registry_decorator(

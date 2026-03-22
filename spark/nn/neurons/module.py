@@ -40,6 +40,15 @@ class NeuronConfig(DefaultSparkConfig):
             ],
             'description': 'Shape of the pool of neurons.',
         })
+    
+    # TODO: Manual override to synchronize all time integration constants across the controller.
+    # This solution is probably good enough but it is not clear that will not clash with other user intentions.
+    # A similar situation is present in Neuron.__post_init__
+    def __post_init__(self,) -> None:
+        super().__post_init__()
+        # Synchronize dt's. NOTE: Skip validation, otherwise will fall into an infinite loop.
+        self.merge(partial={'_s_dt':self.dt, '_s_units':self.units}, __skip_validation__=True)
+
 ConfigT = tp.TypeVar("ConfigT", bound=NeuronConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

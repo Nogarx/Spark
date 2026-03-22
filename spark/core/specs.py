@@ -211,9 +211,9 @@ class ModuleSpecs:
 
     name: str
     module_cls: type[SparkModule]        
-    inputs: dict[str, tp.Iterable[PortMap]] | dict[str, PortMap]
+    inputs: dict[str, tp.Iterable[PortMap]]
     outputs: dict[str, str]
-    effects: dict[str, tp.Iterable[PortMap]]| dict[str, PortMap]
+    effects: dict[str, tp.Iterable[PortMap]]
     config: SparkConfig
 
     def __init__(
@@ -226,7 +226,10 @@ class ModuleSpecs:
             effects: dict[str, tp.Iterable[PortMap]] | dict[str, PortMap] | None = None,
         ) -> None:
         # Validate module_cls
-        if REGISTRY.MODULES.get(module_cls.__name__) is None:  
+        # TODO: In order to add controllers to the registry they need to build the ModuleSpecs,
+        # this currently access the REGISTRY to validate the spec, which crashes with the controllers
+        # since the registry is not necessarily built
+        if REGISTRY.MODULES.__built__ and REGISTRY.MODULES.get(module_cls.__name__) is None:  
             raise ValueError(
                 f'Class \"{module_cls.__name__}\" does not exists in the registry.'
             )
@@ -276,8 +279,8 @@ class ModuleSpecs:
             module_cls=module_cls,
             inputs=dct.get('inputs', None),
             config=config,
-            outputs=dct.get('inputs', None),
-            effects=dct.get('inputs', None),
+            outputs=dct.get('outputs', None),
+            effects=dct.get('effects', None),
         )
         
 #################################################################################################################################################

@@ -348,8 +348,8 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             return False
         # Compare fields contents.
         for name in fields:
-            value = getattr(self, name)
-            other_value = getattr(other, name)
+            value = getattr(self, name, None)
+            other_value = getattr(other, name, None)
             if not self._is_equal(value, other_value):
                 return False
         return True
@@ -730,22 +730,20 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         }
 
 
-
-    def _get_nested_configs_names(self, exclude_initializers=False) -> list[tuple[type,...]]:
+    def _get_nested_configs_names(self, exclude_initializers=False) -> list[str]:
         """
             Returns a list containing all nested SparkConfigs' names.
         """
         # Get type hints
         from spark.nn.initializers import InitializerConfig
-        type_hints = tp.get_type_hints(self.__class__)
-        for key in type_hints.keys():
-            if tp.get_origin(type_hints[key]): 
-                hints = list(tp.get_args(type_hints[key]))
-                type_hints[key] = tuple([h for h in hints if h is not type(None)])
-            else:
-                type_hints[key] = tuple([type_hints[key]])
+        type_hints = {k: normalize_typehint(h) for k, h in tp.get_type_hints(self.__class__).items()}
+        #for key in type_hints.keys():
+        #    if tp.get_origin(type_hints[key]): 
+        #        hints = list(tp.get_args(type_hints[key]))
+        #        type_hints[key] = tuple([h for h in hints if h is not type(None)])
+        #    else:
+        #        type_hints[key] = tuple([type_hints[key]])
 
-        # Collect all fields and map into a dict
         nested_configs = []
         for field in dc.fields(self):
             # Check if field is another SparkConfig
@@ -802,7 +800,7 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             # Validate field
             for validator in field.metadata.get('validators', []):
                 validator_instance = validator(field)
-                value_attr = getattr(self, field.name)
+                value_attr = getattr(self, field.name, None)
                 # Remove descriptor
                 if isinstance(value_attr, InitializableField):
                     value_attr = value_attr.__obj__
@@ -1127,7 +1125,7 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 if isinstance(value, SparkConfig):
                     rep += value._parse_tree_structure(current_depth+1, simplified=simplified, header=name)
                 else:
-                    if isinstance(value, (list, tuple)) and all([isinstance(v, ModuleSpecs) for v in value]):
+                    if isinstance(value, (list, tuple)) and len(value) > 0 and all([isinstance(v, ModuleSpecs) for v in value]):
                         rep += (current_depth+1) * ' ' + f'{name}: list[ModuleSpecs]\n'
                         for spec in value:
                             rep += spec.config._parse_tree_structure(current_depth+2, simplified=simplified, header=spec.name)

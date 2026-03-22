@@ -3,28 +3,28 @@
 #################################################################################################################################################
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
+import typing as tp
+if tp.TYPE_CHECKING:
     from spark.core.module import SparkModule
     from spark.core.config import SparkConfig
     from spark.graph_editor.models.graph import SparkNodeGraph
     from spark.core.payloads import SparkPayload
+    from spark.nn.controllers.neuron import Neuron, NeuronConfig
 
-from PySide6 import QtWidgets, QtCore, QtGui
-from NodeGraphQt import Port
 import abc
-import logging
 import numpy as np
 from jax.typing import DTypeLike
-import typing as tp
+from NodeGraphQt import BaseNode, Port
+
 import spark.core.utils as utils
-from NodeGraphQt import BaseNode
-from spark.core.registry import REGISTRY, RegistryEntry
-from spark.core.payloads import FloatArray
-from spark.core.specs import PortSpecs
 import spark.core.validation as validation 
-from spark.graph_editor.style.painter import DEFAULT_PALLETE
+import spark.core.signature_parser as sig_parser
+from spark.core.specs import ModuleSpecs, PortMap, PortSpecs
+from spark.core.registry import RegistryEntry
+from spark.core.payloads import FloatArray
+from spark.graph_editor.style.painter import DEFAULT_PALETTE, PortColorStyle
 from spark.graph_editor.ui.console_panel import MessageLevel
+from spark.graph_editor.models.utils import flattify_controller_config, unflattify_controller_config
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -143,6 +143,10 @@ class AbstractNode(BaseNode, abc.ABC):
         # Update metadata for model graph editor model reconstruction.
         self.metadata['pos'] = self.pos()
 
+    @abc.abstractmethod
+    def get_module_spec(self) -> tp.Any:
+        pass
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 # TODO: Make source node general
@@ -169,12 +173,26 @@ class SourceNode(AbstractNode):
                 name=key, 
                 multi_output=True, 
                 display_name=False, 
-                painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__)
+                painter_func=DEFAULT_PALETTE(port_spec.payload_type.__name__, color_style=PortColorStyle.DEFAULT)
             )
         
     @property
     def metadata(self,) -> dict:
         return None
+    
+    def get_module_spec(self) -> dict[str, tp.Any]:
+        # Update graph metadata
+        #self._update_graph_metadata()
+        return {
+            'type': 'source',
+            'pos': self.pos(),
+            'spec': PortSpecs(
+                payload_type=self.output_specs['value'].payload_type,
+                shape=self.output_specs['value'].shape,
+                dtype=self.output_specs['value'].dtype,
+                description=self.output_specs['value'].description,
+            )
+        }
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -202,12 +220,26 @@ class SinkNode(AbstractNode):
                 name=key, 
                 multi_input=False, 
                 display_name=False, 
-                painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__)
+                painter_func=DEFAULT_PALETTE(port_spec.payload_type.__name__, color_style=PortColorStyle.DEFAULT)
             )
 
     @property
     def metadata(self,) -> dict:
         return None
+
+    def get_module_spec(self) -> dict[str, tp.Any]:
+        # Update graph metadata
+        #self._update_graph_metadata()
+        return {
+            'type': 'sink',
+            'pos': self.pos(),
+            'spec': PortSpecs(
+                payload_type=self.input_specs['value'].payload_type,
+                shape=self.input_specs['value'].shape,
+                dtype=self.input_specs['value'].dtype,
+                description=self.input_specs['value'].description,
+            )
+        }
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -224,30 +256,194 @@ class SparkModuleNode(AbstractNode, abc.ABC):
         # Init super
         super().__init__()
         # Add input ports.
+        optional_inputs = sig_parser.get_optional_input_names(self.module_cls)
         self.input_specs = self.module_cls._get_input_specs()
-        if isinstance(self.input_specs, dict):
-            for key, port_spec in self.input_specs.items():
+        for key, port_spec in self.input_specs.items():
+            self.add_input(
+                name=key, 
+                multi_input=True, 
+                painter_func=DEFAULT_PALETTE(port_spec.payload_type.__name__, color_style=PortColorStyle.OPTIONAL if key in optional_inputs else PortColorStyle.DEFAULT)
+            )
+        # Add output ports.
+        self.output_specs = self.module_cls._get_output_specs()
+        for key, port_spec in self.output_specs.items():
+            self.add_output(
+                name=key, 
+                multi_output=True, 
+                painter_func=DEFAULT_PALETTE(port_spec.payload_type.__name__, color_style=PortColorStyle.DEFAULT)
+            )
+        # Add property ports.
+        self.property_specs = self.module_cls._get_property_specs()
+        for key, port_spec in self.property_specs.items():
+            self.add_output(
+                name=key, 
+                multi_output=True, 
+                painter_func=DEFAULT_PALETTE(port_spec.payload_type.__name__, color_style=PortColorStyle.PROPERTY)
+            )
+            port_property = getattr(self.module_cls, key, None)
+            if port_property.fset is not None:
                 self.add_input(
                     name=key, 
                     multi_input=True, 
-                    painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__)
-                )
-        # Add output ports.
-        self.output_specs = self.module_cls._get_output_specs()
-        if isinstance(self.output_specs, dict):
-            for key, port_spec in self.output_specs.items():
-                self.add_output(
-                    name=key, 
-                    multi_output=True, 
-                    painter_func=DEFAULT_PALLETE(port_spec.payload_type.__name__)
+                    painter_func=DEFAULT_PALETTE(port_spec.payload_type.__name__, color_style=PortColorStyle.PROPERTY)
                 )
         # Create partial configuration
-        node_config_type = self.module_cls.get_config_spec()
+        node_config_type: SparkConfig = self.module_cls.get_config_spec()
         self.node_config = node_config_type._create_partial(_s_units=(1,))
 
     @property
     def metadata(self,) -> dict:
         return self.node_config.__graph_editor_metadata__
+
+    def get_module_spec(self) -> ModuleSpecs:
+        # Build input map
+        _inputs = {}
+        for port in self.input_ports():
+            port_name = port.name()
+            # Skip properties
+            if not port_name in self.input_specs.keys():
+                continue
+            _inputs[port_name] = [
+                PortMap(
+                    origin=other.node().name(), 
+                    port=other.name(), is_property=False
+                ) for other in port.connected_ports()
+            ]
+        # Build output map
+        _outputs = {}
+        for port in self.output_ports():
+            port_name = port.name()
+            # Check if the port is connected to a sink node.
+            for other in port.connected_ports():
+                if isinstance(other.node(), SinkNode):
+                    _outputs[other.node().name()] = port_name
+        # Build effects map
+        _effects = {}
+        for port in self.input_ports():
+            port_name = port.name()
+            # Skip non-properties
+            if port_name in self.input_specs.keys():
+                continue
+            _effects[port_name] = [
+                PortMap(
+                    origin=other.node().name(), 
+                    port=other.name(), is_property=False
+                ) for other in port.connected_ports()
+            ]
+        # Update graph metadata
+        self._update_graph_metadata()
+        return ModuleSpecs(
+            name = self.NODE_NAME,
+            module_cls = self.module_cls,
+            inputs = _inputs,
+            outputs = _outputs,
+            effects = _effects,
+            config = self.node_config,
+        )
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class SparkNeuronNode(AbstractNode, abc.ABC):
+    """
+        Abstract node representing a Neuron model.
+    """
+
+    NODE_NAME = 'Neuron'
+    module_cls: type[Neuron]
+    node_config: NeuronConfig
+
+    def __init__(self,) -> None:
+        # Init super
+        super().__init__()
+        # Create partial configuration
+        node_config_type: NeuronConfig = self.module_cls._get_config_spec()
+        self.node_config = node_config_type._create_partial(_s_units=(1,))
+        self.node_config_flat = flattify_controller_config(self.node_config)
+        
+        # Add input ports.
+        optional_inputs = sig_parser.get_optional_input_names(self.module_cls)
+        self.input_specs = self.module_cls._get_controller_input_specs(self.node_config.modules_specs)
+        for key, port_spec in self.input_specs.items():
+            self.add_input(
+                name=key, 
+                multi_input=True, 
+                painter_func=DEFAULT_PALETTE(port_spec.payload_type.__name__, color_style=PortColorStyle.OPTIONAL if key in optional_inputs else PortColorStyle.DEFAULT)
+            )
+        # Add output ports.
+        self.output_specs = self.module_cls._get_controller_output_specs(self.node_config.modules_specs)
+        for key, port_spec in self.output_specs.items():
+            port_spec = port_spec['spec']
+            self.add_output(
+                name=key, 
+                multi_output=True, 
+                painter_func=DEFAULT_PALETTE(port_spec.payload_type.__name__, color_style=PortColorStyle.DEFAULT)
+            )
+        # Add property ports.
+        self.property_specs = self.module_cls._get_controller_property_specs()
+        for key, port_spec in self.property_specs.items():
+            self.add_output(
+                name=key, 
+                multi_output=True, 
+                painter_func=DEFAULT_PALETTE(port_spec.payload_type.__name__, color_style=PortColorStyle.PROPERTY)
+            )
+            port_property = getattr(self.module_cls, key, None)
+            if port_property.fset is not None:
+                self.add_input(
+                    name=key, 
+                    multi_input=True, 
+                    painter_func=DEFAULT_PALETTE(port_spec.payload_type.__name__, color_style=PortColorStyle.PROPERTY)
+                )
+
+    @property
+    def metadata(self,) -> dict:
+        return self.node_config.__graph_editor_metadata__
+
+    def get_module_spec(self) -> ModuleSpecs:
+        # Build input map
+        _inputs = {}
+        for port in self.input_ports():
+            port_name = port.name()
+            # Skip properties
+            if not port_name in self.input_specs.keys():
+                continue
+            _inputs[port_name] = [
+                PortMap(
+                    origin=other.node().name(), 
+                    port=other.name(), is_property=False
+                ) for other in port.connected_ports()
+            ]
+        # Build output map
+        _outputs = {}
+        for port in self.output_ports():
+            port_name = port.name()
+            # Check if the port is connected to a sink node.
+            for other in port.connected_ports():
+                if isinstance(other.node(), SinkNode):
+                    _outputs[other.node().name()] = port_name
+        # Build effects map
+        _effects = {}
+        for port in self.input_ports():
+            port_name = port.name()
+            # Skip non-properties
+            if port_name in self.input_specs.keys():
+                continue
+            _effects[port_name] = [
+                PortMap(
+                    origin=other.node().name(), 
+                    port=other.name(), is_property=False
+                ) for other in port.connected_ports()
+            ]
+        # Update graph metadata
+        self._update_graph_metadata()
+        self.node_config = unflattify_controller_config(type(self.node_config), self.node_config_flat)
+        return ModuleSpecs(
+            name = self.NODE_NAME,
+            module_cls = self.module_cls,
+            inputs = _inputs,
+            outputs = _outputs,
+            effects = _effects,
+            config = self.node_config,
+        )
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -262,6 +458,27 @@ def module_to_nodegraph(entry: RegistryEntry) -> type[SparkModuleNode]:
     nodegraph_class = type(
         f'{module_cls.__name__}',
         (SparkModuleNode,),
+        {
+            '__identifier__': f'spark',
+            'NODE_NAME': module_cls.__name__,
+            'module_cls': module_cls,
+        } 
+    )
+    return nodegraph_class
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def neuron_to_nodegraph(entry: RegistryEntry) -> type[SparkModuleNode]:
+    """
+        Factory function that creates a new NodeGraphQt node class from an Neuron Controller class.
+    """
+    # TODO: Manually passing base SparkModule __init__ signature to init_args could lead to errors in the futre.  
+
+    # Create the new class on the fly.
+    module_cls: type[Neuron] = entry.class_ref
+    nodegraph_class = type(
+        f'{module_cls.__name__}',
+        (SparkNeuronNode,),
         {
             '__identifier__': f'spark',
             'NODE_NAME': module_cls.__name__,

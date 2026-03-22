@@ -80,7 +80,12 @@ class HierarchicalMenuTree:
             raise TypeError(
                 f'Expected \"shortcut\" to be of type \"str | None\", but got \"{name}\".'
             )
-        self.graph_menu_ref.add_command(utils.to_human_readable(name), func, shortcut)
+        # TODO: Checking for Neuron is a dirty workaround
+        if name.endswith('Neuron'):
+            command_text = ''.join(name.split('Neuron')[:-1])
+        else:
+            command_text = utils.to_human_readable(name)
+        self.graph_menu_ref.add_command(command_text, func, shortcut)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

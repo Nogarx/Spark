@@ -102,12 +102,6 @@ class Neuron(Controller, metaclass=NeuronMeta):
 			output_contract_specs[output_name].shape = self.units
 			if issubclass(output_contract_specs[output_name].payload_type, SpikeArray):
 				output_contract_specs[output_name].inhibition_mask = self._inhibition_mask
-			#PortSpecs(
-			#	payload_type=spec.payload_type,
-			#	shape=self.units,
-			#	dtype=spec.dtype,
-			#	description=spec.description,
-			#)
 		# Property specs. Properties should be defined inside __init__, so it is safe to inspect them.
 		property_contract_specs = self._get_controller_property_specs()
 		for property_name, spec in property_contract_specs.items():
@@ -116,6 +110,7 @@ class Neuron(Controller, metaclass=NeuronMeta):
 				payload_type=spec.payload_type,
 				shape=_property.shape if _property is not None else self.units,
 				dtype=_property.dtype if _property is not None else spec.dtype,
+				is_optional=spec.is_optional,
 				description=spec.description,
 			)
 		return output_contract_specs, property_contract_specs

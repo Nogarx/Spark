@@ -7,9 +7,9 @@ import typing as tp
 
 import dataclasses as dc
 
-from spark.core.registry import register_config
+from spark.core.registry import register_config, register_neuron
 from spark.core.specs import PortMap, ModuleSpecs
-from spark.nn.controllers import NeuronConfig
+from spark.nn.controllers import Neuron, NeuronConfig
 from spark.nn.components.delays.n2n_delays import N2NDelays, N2NDelaysConfig
 from spark.nn.components.synapses.linear import LinearSynapses, LinearSynapsesConfig
 from spark.nn.components.somas.leaky import LeakySoma, LeakySomaConfig 
@@ -20,7 +20,7 @@ from spark.nn.components.learning_rules.hebbian_rule import HebbianRule, Hebbian
 #################################################################################################################################################
 
 @register_config
-class LIFNeuron(NeuronConfig):
+class LIFNeuronConfig(NeuronConfig):
 	"""
         Standard Leaky-and-Integrate (LIF) neuron model with linear synapses, neuron-to-neuron delays and Hebbian learning.
 		
@@ -78,6 +78,12 @@ class LIFNeuron(NeuronConfig):
 		metadata = {
 			'description': 'Neuron component modules.',
 		})
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_neuron
+class LIFNeuron(Neuron):
+	config: LIFNeuronConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

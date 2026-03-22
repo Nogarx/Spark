@@ -210,6 +210,37 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+def get_optional_input_names(module: type[SparkModule]) -> list[str]:
+    """
+        Returns a list of the SparkModule's optional input port names.
+    """
+
+    # Check isinstance of SparkModule.
+    #if not validation._is_module_type(module):
+    #    raise TypeError(
+    #        f'Expected object class of type "SparkModule" but got "{type(module).__name__}".'
+    #    )
+
+    # Get input signature.
+    signature = inspect.signature(module.__call__)
+    signature_type_hints = tp.get_type_hints(module.__call__)
+    
+    
+    # Create signatures.
+    optional_input = []
+    for parameter in signature.parameters.values():
+
+        # Skip unimportant parameters.
+        if parameter.name in ['self', 'cls']: 
+            continue
+        # Scrap parameter.
+        payload_types = normalize_typehint(signature_type_hints[parameter.name])
+        if type(None) in payload_types:
+            optional_input.append(parameter.name)
+    return optional_input
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def get_output_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
     """
         Returns a dictionary of the SparkModule's output port specifications.

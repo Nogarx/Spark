@@ -280,6 +280,16 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
 
 
 
+    @classmethod 
+    def _get_config_spec(cls) -> type[ConfigT]:
+        """
+            Returns the default configuration class associated with this module.
+        """
+        type_hints = tp.get_type_hints(cls)
+        return type_hints['config']
+
+
+
     # TODO: Validate port shapes (broadcastable). I think this can only be done after all the modules are built.
     @classmethod
     def _validate_modules(cls, modules_specs: list[ModuleSpecs]) -> tuple[dict[str, PortSpecs], dict[str, dict]]:
