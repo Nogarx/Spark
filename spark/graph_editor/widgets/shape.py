@@ -89,7 +89,7 @@ class QShapeEdit(QtWidgets.QWidget):
 
         self._update_buttons()
 
-    def _add_dimension(self, value: int = 1):
+    def _add_dimension(self, value: int = 1) -> None:
         """
             Adds a new line edit widget.
         """
@@ -114,7 +114,7 @@ class QShapeEdit(QtWidgets.QWidget):
         self._update_buttons()
         self._on_shape_changed()
 
-    def _remove_last_dimension(self):
+    def _remove_last_dimension(self) -> None:
         """
             Removes the last dimension widget.
         """
@@ -128,7 +128,7 @@ class QShapeEdit(QtWidgets.QWidget):
         self._update_buttons()
         self._on_shape_changed()
 
-    def _clear_dimensions(self):
+    def _clear_dimensions(self) -> None:
         """
             Clear all dimension widgets.
         """
@@ -136,7 +136,7 @@ class QShapeEdit(QtWidgets.QWidget):
             editor = self._dimension_edits.pop()
             editor.deleteLater()
 
-    def _update_buttons(self):
+    def _update_buttons(self) -> None:
         """
             Enable/disable the single add/remove buttons based on dimension count.
         """
@@ -145,15 +145,18 @@ class QShapeEdit(QtWidgets.QWidget):
             self.addButton.setEnabled(num_dims < self.max_dims)
             self.removeButton.setEnabled(num_dims > self.min_dims)
 
-    def _on_shape_changed(self):
+    def _on_shape_changed(self) -> None:
         self.editingFinished.emit()
 
     def get_shape(self) -> tuple[int, ...]:
         shape_text = tuple(int(edit.text()) for edit in self._dimension_edits if edit.text())
-        shape = utils.validate_shape(shape_text)
-        return shape
+        try:
+            shape = utils.validate_shape(shape_text)
+            return shape
+        except:
+            return tuple()
 
-    def set_shape(self, new_shape: tuple[int, ...]):
+    def set_shape(self, new_shape: tuple[int, ...]) -> None:
         """
             Clears existing dimensions and sets a new shape.
         """
@@ -161,7 +164,7 @@ class QShapeEdit(QtWidgets.QWidget):
         for value in new_shape:
             self._add_dimension(value)
 
-    def _adjust_editor_width(self, editor: QtWidgets.QLineEdit):
+    def _adjust_editor_width(self, editor: QtWidgets.QLineEdit) -> None:
         """
             Adjusts the width of a line edit to fit its content.
         """

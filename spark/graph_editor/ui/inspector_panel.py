@@ -192,9 +192,12 @@ class QModuleConfig(QtWidgets.QWidget):
         content_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
         # Setup layout
         self._setup_layout()
-        # Execute callbacks
-        for f in self._post_setup_callbacks:
-            f()
+        # TODO: Original post_callback method was bugged (it kept elements linked). Clean code around post_callbacks or fix original bug
+        # Link all components that define units and dt (I cannot think of a case in which this is not desireable c: )
+        for key in [('main', 'dt'), ('main', 'units')]:
+            if key in self._cfg_widget_map:
+                if self._cfg_widget_map[key].control_widgets.inheritance_checkbox is not None:
+                    self._cfg_widget_map[key].control_widgets.inheritance_checkbox.setChecked(True)
 
 
 
@@ -282,22 +285,22 @@ class QModuleConfig(QtWidgets.QWidget):
                 tree.add_leaf(d['path'], type_string=d['types'], break_inheritance=d['break_inheritance'])
             tree.validate()
             # Link all components that define units and dt (I cannot think of a case in which this is not desireable c: )
-            link_paths = [
-                ['main', 'units'], 
-                ['main', 'dt']
-            ]
-            for path in link_paths:
-                try:
-                    leaf = tree.get_leaf(path)
-                    if leaf.can_inherit():
-                        self._post_setup_callbacks.append(partial(
-                            lambda leaf_var:
-                            self.on_inheritance_toggle(True, leaf_var),
-                            leaf
-                        ))
-                except:
-                    # We expect get_leaf to fail
-                    pass
+            #link_paths = [
+            #    ['main', 'units'], 
+            #    ['main', 'dt']
+            #]
+            #for path in link_paths:
+            #    try:
+            #        leaf = tree.get_leaf(path)
+            #        if leaf.can_inherit():
+            #            self._post_setup_callbacks.append(partial(
+            #                lambda leaf_var:
+            #                self.on_inheritance_toggle(True, leaf_var),
+            #                leaf
+            #            ))
+            #    except:
+            #        # We expect get_leaf to fail
+            #        pass
         else:
             # I/O nodes have no node_config. However, they probably do not require an inheritance tree.
             pass
@@ -382,7 +385,6 @@ class QModuleConfig(QtWidgets.QWidget):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-
 class QControllerConfig(QtWidgets.QWidget):
     """
         Constructs the UI to modify the ControllerConfig associated with the a node.
@@ -429,9 +431,11 @@ class QControllerConfig(QtWidgets.QWidget):
         content_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
         # Setup layout
         self._setup_layout()
-        # Execute callbacks
-        for f in self._post_setup_callbacks:
-            f()
+        # Link all components that define units and dt (I cannot think of a case in which this is not desireable c: )
+        for key in [('main', 'dt'), ('main', 'units')]:
+            if key in self._cfg_widget_map:
+                if self._cfg_widget_map[key].control_widgets.inheritance_checkbox is not None:
+                    self._cfg_widget_map[key].control_widgets.inheritance_checkbox.setChecked(True)
 
 
 
@@ -485,7 +489,7 @@ class QControllerConfig(QtWidgets.QWidget):
             on_inheritance_toggle=self.on_inheritance_toggle,
         )
         config_body.on_update.connect(self._on_update)
-        
+        self._config_body = config_body
         # Add widget to collapsible
         collapsible.addWidget(config_body)
         config_body.on_size_change.connect(lambda _ : collapsible.expand(False))
@@ -518,23 +522,6 @@ class QControllerConfig(QtWidgets.QWidget):
             for d in leaves_paths_types:
                 tree.add_leaf(d['path'], type_string=d['types'], break_inheritance=d['break_inheritance'])
             tree.validate()
-            # Link all components that define units and dt (I cannot think of a case in which this is not desireable c: )
-            link_paths = [
-                ['main', 'units'], 
-                ['main', 'dt']
-            ]
-            for path in link_paths:
-                try:
-                    leaf = tree.get_leaf(path)
-                    if leaf.can_inherit():
-                        self._post_setup_callbacks.append(partial(
-                            lambda leaf_var:
-                            self.on_inheritance_toggle(True, leaf_var),
-                            leaf
-                        ))
-                except:
-                    # We expect get_leaf to fail
-                    pass
         else:
             # I/O nodes have no node_config. However, they probably do not require an inheritance tree.
             pass
