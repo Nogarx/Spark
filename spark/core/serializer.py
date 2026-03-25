@@ -140,9 +140,11 @@ class SparkJSONDecoder(json.JSONDecoder):
 			return reg.class_ref
 		if isinstance(obj, dict) and obj.get('__module_type__'):
 			module_type: str | None = obj.get('__module_type__')
+			subregistry: str | None = obj.get('__subregistry__')
 			if not module_type or not isinstance(module_type, str):
 				raise TypeError(f'Expected \"__module_type__\" to be of type \"str\", but got {module_type}')
-			reg = REGISTRY.MODULES.get(module_type)
+			print(subregistry, module_type)
+			reg = getattr(REGISTRY, subregistry).get(module_type)
 			if not reg:
 				raise KeyError(f'There is no module with name \"{module_type}\" in the registry.')
 			return reg.class_ref

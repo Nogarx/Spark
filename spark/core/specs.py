@@ -202,6 +202,7 @@ class PortMap:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+# TODO: Serialization of this class is weak.
 @jax.tree_util.register_dataclass
 @dc.dataclass(init=False)
 class ModuleSpecs:
@@ -229,9 +230,15 @@ class ModuleSpecs:
         # TODO: In order to add controllers to the registry they need to build the ModuleSpecs,
         # this currently access the REGISTRY to validate the spec, which crashes with the controllers
         # since the registry is not necessarily built
-        if REGISTRY.MODULES.__built__ and REGISTRY.MODULES.get(module_cls.__name__) is None:  
+        from spark.core.module import SparkModule
+        from spark.nn.controllers.neuron import Neuron
+        if REGISTRY.MODULES.__built__ and issubclass(module_cls, SparkModule) and REGISTRY.MODULES.get(module_cls.__name__) is None:  
             raise ValueError(
-                f'Class \"{module_cls.__name__}\" does not exists in the registry.'
+                f'Module class \"{module_cls.__name__}\" does not exists in the registry.'
+            )
+        elif REGISTRY.NEURONS.__built__ and issubclass(module_cls, Neuron) and REGISTRY.NEURONS.get(module_cls.__name__) is None:  
+            raise ValueError(
+                f'Neuron class \"{module_cls.__name__}\" does not exists in the registry.'
             )
         # Validate model_config
         type_hints = tp.get_type_hints(module_cls)
@@ -252,11 +259,23 @@ class ModuleSpecs:
         """
             Serialize ModuleSpecs to dictionary
         """
-        reg = REGISTRY.MODULES.get_by_cls(self.module_cls)
+        from spark.core.module import SparkModule
+        from spark.nn.controllers.neuron import Neuron
+        if issubclass(self.module_cls, SparkModule):
+            reg = REGISTRY.MODULES.get_by_cls(self.module_cls)
+            subregistry = 'MODULES'
+        elif issubclass(self.module_cls, Neuron):
+            reg = REGISTRY.NEURONS.get_by_cls(self.module_cls)
+            subregistry = 'NEURONS'
+        else:
+            raise RuntimeError(
+                f'Unable to find "{self.module_cls}" registry entry. Confirm that the class is a member of a registry.'
+            )
         return {
             'name': self.name,
             'module_cls': {
                 '__module_type__': reg.name if reg else None,
+                '__subregistry__': subregistry,
             },
             'inputs': self.inputs,
             'config': self.config.to_dict(is_partial=is_partial),

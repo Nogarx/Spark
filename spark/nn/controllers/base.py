@@ -281,7 +281,7 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
 
 
     @classmethod 
-    def _get_config_spec(cls) -> type[ConfigT]:
+    def get_config_spec(cls) -> type[ConfigT]:
         """
             Returns the default configuration class associated with this module.
         """

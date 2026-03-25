@@ -356,7 +356,7 @@ class SparkNeuronNode(AbstractNode, abc.ABC):
         # Init super
         super().__init__()
         # Create partial configuration
-        node_config_type: NeuronConfig = self.module_cls._get_config_spec()
+        node_config_type: NeuronConfig = self.module_cls.get_config_spec()
         self.node_config = node_config_type._create_partial(_s_units=(1,))
         self.node_config_flat = flattify_controller_config(self.node_config)
         
