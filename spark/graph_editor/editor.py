@@ -232,7 +232,7 @@ class SparkGraphEditor:
         if self._session_path is None:
             return self.save_session_as()
         else:
-            try:
+            #try:
                 brain_config = self.graph.build_controller_config(is_partial=True)
                 brain_config.to_file(self._model_path, is_partial=True)
                 self._clear_dirty_flags()
@@ -241,12 +241,12 @@ class SparkGraphEditor:
                 self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.SUCCESS, msg)
                 logger.info(msg)
                 return True
-            except Exception as e:
-                msg = f'Failed to save session to \"{self._session_path}\": {e}'
-                QtWidgets.QMessageBox.critical(None, "Error", f"Could not save file:\n{e}")
-                self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.ERROR, msg)
-                logger.error(msg)
-                return False
+            #except Exception as e:
+            #    msg = f'Failed to save session to \"{self._session_path}\": {e}'
+            #    QtWidgets.QMessageBox.critical(None, "Error", f"Could not save file:\n{e}")
+            #    self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.ERROR, msg)
+            #    logger.error(msg)
+            #    return False
             
 
 

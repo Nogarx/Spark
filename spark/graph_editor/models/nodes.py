@@ -196,6 +196,53 @@ class SourceNode(AbstractNode):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class PropertyNode(AbstractNode):
+    """
+        Node representing a property of the system.
+    """
+    NODE_NAME = 'Property Node'
+
+    def __init__(self, ) -> None:
+        super().__init__()
+        # Delay specs definition for better control.
+        self.output_specs = {
+            'value': PortSpecs(
+                payload_type=FloatArray,
+                shape=(1,),
+                dtype=np.float16,
+                description='Model property port.'
+                )
+            }
+        # Define output port.
+        for key, port_spec in self.output_specs.items():
+            self.add_output(
+                name=key, 
+                multi_output=True, 
+                display_name=False, 
+                painter_func=DEFAULT_PALETTE(port_spec.payload_type.__name__, color_style=PortColorStyle.PROPERTY)
+            )
+        
+    @property
+    def metadata(self,) -> dict:
+        return None
+    
+    def get_module_spec(self) -> dict[str, tp.Any]:
+        # Update graph metadata
+        #self._update_graph_metadata()
+        return {
+            'type': 'property',
+            'pos': self.pos(),
+            'spec': PortSpecs(
+                payload_type=self.output_specs['value'].payload_type,
+                shape=self.output_specs['value'].shape,
+                dtype=self.output_specs['value'].dtype,
+                description=self.output_specs['value'].description,
+            )
+        }
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 # TODO: Make sink node general
 class SinkNode(AbstractNode):
     """

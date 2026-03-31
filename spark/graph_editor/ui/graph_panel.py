@@ -41,6 +41,7 @@ class GraphPanel(CDockWidget):
         self.layout().addWidget(self.graph.widget)
         # Setup graph context menu.
         self._context_menu = self._setup_context_menu()
+        self._current_controller_type = None
         self.on_controller_type_change(controller_type)
 
     def _setup_context_menu(self,) -> HierarchicalMenuTree:
@@ -77,7 +78,7 @@ class GraphPanel(CDockWidget):
             cls_name = entry.class_ref.__name__
             context_menu[entry.path].add_command(
                 cls_name, 
-                lambda *args, cls=cls_name: self.maybe_create_node(*args, nodegraph_cls=cls)
+                lambda *args, cls=cls_name: self.maybe_create_neuron(*args, nodegraph_cls=cls)
             )
         # Base commands
         context_menu.graph_menu_ref.add_separator()
@@ -85,11 +86,21 @@ class GraphPanel(CDockWidget):
         context_menu.add_command('Delete Selected', self.delete_selected, shortcut='del')
         return context_menu
         
-    def on_controller_type_change(self, controller_type: ControllerType):
-        if controller_type == ControllerType.BRAIN:
-            self._context_menu['Neurons'].graph_menu_ref.qmenu.setEnabled(True)
+    def maybe_create_neuron(self, *args, nodegraph_cls: str) -> None:
+        if self._current_controller_type == ControllerType.BRAIN:
+            self.maybe_create_node(*args, nodegraph_cls=nodegraph_cls)
         else:
-            self._context_menu['Neurons'].graph_menu_ref.qmenu.setEnabled(False)
+            entry = REGISTRY.NEURONS.get(nodegraph_cls)
+            config = entry.class_ref.get_config_spec()()
+            self.graph.load_neuron_from_model(config)
+            #self._context_menu['Neurons'].graph_menu_ref.qmenu.setEnabled(False)
+
+    def on_controller_type_change(self, controller_type: ControllerType):
+        self._current_controller_type = controller_type
+        #if controller_type == ControllerType.BRAIN:
+        #    self._context_menu['Neurons'].graph_menu_ref.qmenu.setEnabled(True)
+        #else:
+        #    self._context_menu['Neurons'].graph_menu_ref.qmenu.setEnabled(False)
 
     def delete_selected(self,) -> None:
         try:

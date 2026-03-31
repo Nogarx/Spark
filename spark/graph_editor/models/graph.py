@@ -7,17 +7,16 @@ import typing as tp
 
 import enum
 import networkx as nx
-from typing import Dict, List, Tuple
 from PySide6 import QtCore, QtGui, QtWidgets
 from NodeGraphQt import NodeGraph, Port, BaseNode
 from NodeGraphQt.widgets.viewer import NodeViewer
 
 from spark.core.registry import REGISTRY
 from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
-from spark.nn.controllers.base import ControllerConfig
+from spark.nn.controllers.base import Controller, ControllerConfig
 from spark.nn.controllers.neuron import NeuronConfig
 from spark.nn.controllers.brain import BrainConfig
-from spark.graph_editor.models.nodes import SourceNode, SinkNode, AbstractNode, SparkModuleNode, module_to_nodegraph, neuron_to_nodegraph
+from spark.graph_editor.models.nodes import SourceNode, SinkNode, PropertyNode, AbstractNode, SparkModuleNode, module_to_nodegraph, neuron_to_nodegraph
 from spark.graph_editor.ui.console_panel import MessageLevel
 from spark.graph_editor.style.painter import DEFAULT_PALETTE, PortColorStyle
 
@@ -39,16 +38,16 @@ class SparkNodeViewer(NodeViewer):
     # BUG: Patch because NodeGraph keeps overriding the Save shortcut >:|
     BUGFIX_on_save = QtCore.Signal()
 
-    def __init__(self, parent=None, undo_stack=None):
+    def __init__(self, parent=None, undo_stack=None) -> None:
         super().__init__(parent, undo_stack)
 
-    def focusInEvent(self, event):
+    def focusInEvent(self, event) -> None:
         QtWidgets.QGraphicsView.focusInEvent(self, event)
 
-    def focusOutEvent(self, event):
+    def focusOutEvent(self, event) -> None:
         QtWidgets.QGraphicsView.focusOutEvent(self, event)
 
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event) -> None:
         """
             Explicitly ignore Ctrl+S so it propagates to the Main Window.
         """
@@ -80,7 +79,7 @@ class SparkNodeGraph(NodeGraph):
         # Enable recurrence
         self.set_acyclic(False)
         self._is_dirty = False
-        self._node_registry: Dict[str, str] = {}
+        self._node_registry: dict[str, str] = {}
         # Add a callback to validate logic.
         self.port_connected.connect(self._on_port_connected)
         self.port_disconnected.connect(self._on_port_disconnected)
@@ -99,11 +98,11 @@ class SparkNodeGraph(NodeGraph):
         self._prev_selection = []
         
     
-    def _register_nodes(self,):
-        # Register source node model.
+    def _register_nodes(self,) -> None:
+        # Register interface nodes.
         self.register_node(SourceNode)
-        # Register sink node model.
         self.register_node(SinkNode)
+        self.register_node(PropertyNode)
         # Register module node models.
         for key, entry in REGISTRY.MODULES.items():
             nodegraph_cls = module_to_nodegraph(entry)
@@ -113,7 +112,7 @@ class SparkNodeGraph(NodeGraph):
             nodegraph_cls = neuron_to_nodegraph(entry)
             self.register_node(nodegraph_cls)
 
-    def set_controller_type(self, controller_type: ControllerType):
+    def set_controller_type(self, controller_type: ControllerType) -> None:
         if controller_type != self._controller_type:
             self._controller_type = controller_type
             msg_controller_type = 'Brain' if controller_type == ControllerType.BRAIN else 'Neuron'
@@ -162,7 +161,7 @@ class SparkNodeGraph(NodeGraph):
         self._node_registry[id] = name
 
     def _on_output_shape_update(self, output_port: Port) -> None:
-        connected_ports: List[Port] = output_port.connected_ports()
+        connected_ports: list[Port] = output_port.connected_ports()
         for port in connected_ports:
             self._update_port_specs(port)
 
@@ -250,37 +249,35 @@ class SparkNodeGraph(NodeGraph):
         del self._node_registry[node.id]
         return super().delete_node(node, push_undo)
 
-    def build_raw_graph(self,) -> nx.DiGraph:
-        nx_graph = nx.DiGraph()
-        all_nodes: List[BaseNode] = self.all_nodes()
-        # Add nodes to the graph.
-        for node in all_nodes:
-            nx_graph.add_node(node.NODE_NAME, node_type=type(node).__name__)
-        # Add edges
-        for node in all_nodes:
-            for input_port in node.connected_input_nodes().values():
-                for input_node in input_port:
-                    nx_graph.add_edge(input_node.NODE_NAME, node.NODE_NAME)
-            for output_port in node.connected_output_nodes().values():
-                for output_node in output_port:
-                    nx_graph.add_edge(node.NODE_NAME, output_node.NODE_NAME)
-        return nx_graph
-    
-    def get_nodes_by_map(self,) -> Tuple[List[AbstractNode], List[AbstractNode], List[AbstractNode]]:
-        source_nodes = []
-        sink_nodes = []
-        internal_nodes = []
-        for node in self.all_nodes():
-            if isinstance(node, SourceNode):
-                source_nodes.append(node)
-            elif isinstance(node, SinkNode):
-                sink_nodes.append(node)
-            else:
-                internal_nodes.append(node)
-        return source_nodes, sink_nodes, internal_nodes
+    # TODO: This is quite unefficient
+    def load_neuron_from_model(self, config: ControllerConfig) -> None:
+        # Add source/sinks metadata to config.
+        input_specs = Controller._get_controller_input_specs(config.modules_specs)
+        output_specs = Controller._get_controller_output_specs(config.modules_specs)
+        property_specs = config.class_ref._get_controller_property_specs()
+        io_nodes_metadata = {}
+        for name, spec in input_specs.items():
+            io_nodes_metadata[name] = {
+                'type': 'source',
+                'spec': spec
+            }
+        for name, spec in output_specs.items():
+            io_nodes_metadata[name] = {
+                'type': 'sink',
+                'spec': spec['spec']
+            }
+        for name, spec in property_specs.items():
+            io_nodes_metadata[name] = {
+                'type': 'property',
+                'spec': spec
+            }
+        config.__graph_editor_metadata__ = io_nodes_metadata
+        # Forward config
+        self.load_from_model(config)
+        #self.spring_layout()
 
     # TODO: Improve node placent for configs without pos metadata
-    def load_from_model(self, config: ControllerConfig):
+    def load_from_model(self, config: ControllerConfig) -> None:
         if isinstance(config, BrainConfig):
             self.set_controller_type(ControllerType.BRAIN)
         elif isinstance(config, NeuronConfig):
@@ -291,12 +288,19 @@ class SparkNodeGraph(NodeGraph):
             )
         node_names_to_ids = {}
         # IO nodes.
+        node_type_dict = {
+            'source': 'spark.SourceNode',
+            'sink': 'spark.SinkNode',
+            'property': 'spark.PropertyNode',
+        }
+        nodes_at_center = 0
         for name, spec in config.__graph_editor_metadata__.items():
             #node_cls = SourceNode if spec['type'] == 'source' else SinkNode
-            node_cls = 'spark.SourceNode' if spec['type'] == 'source' else 'spark.SinkNode'
-            node_attr_label = 'output_specs' if spec['type'] == 'source' else 'input_specs'
+            node_cls = node_type_dict.get(spec['type'])
+            node_attr_label = 'input_specs' if spec['type'] == 'sink' else 'output_specs'
             pos = spec.get('pos', [0,0])
-            node: SourceNode = self.create_node(node_cls, name=name, pos=pos, select_node=False)
+            nodes_at_center += 1 if pos == [0,0] else 0
+            node: AbstractNode = self.create_node(node_cls, name=name, pos=pos, select_node=False)
             attr_spec = getattr(node, node_attr_label)
             attr_spec['value'].payload_type = spec['spec'].payload_type
             attr_spec['value'].dtype = spec['spec'].dtype
@@ -306,10 +310,12 @@ class SparkNodeGraph(NodeGraph):
         # Module nodes.
         for module_spec in config.modules_specs:
             pos = module_spec.config.__graph_editor_metadata__.get('pos', [0,0])
+            nodes_at_center += 1 if pos == [0,0] else 0
             node: SparkModuleNode = self.create_node(f'spark.{module_spec.module_cls.__name__}', name=module_spec.name, pos=pos, select_node=False)
             node.node_config = module_spec.config
             node_names_to_ids[module_spec.name] = node.id
         # Setup node connections
+        member_ports = ['__call__', '__self__']
         for module_spec in config.modules_specs:
             # Get node
             target_node: AbstractNode = self.get_node_by_id(node_names_to_ids[module_spec.name])
@@ -319,8 +325,8 @@ class SparkNodeGraph(NodeGraph):
                 target_port: Port = target_node.get_input(port_name)
                 # Connect port
                 for port_map in port_map_list:
-                    origin_node: AbstractNode = self.get_node_by_id(node_names_to_ids[port_map.origin])
-                    origin_port: Port = origin_node.get_output('value' if isinstance(origin_node, SourceNode) else port_map.port)
+                    origin_node: AbstractNode = self.get_node_by_id(node_names_to_ids[port_map.port if port_map.origin in member_ports else port_map.origin])
+                    origin_port: Port = origin_node.get_output('value' if isinstance(origin_node, (SourceNode, PropertyNode)) else port_map.port)
                     origin_port.connect_to(target_port, push_undo=False, emit_signal=False)
             # Iterate over outputs
             for output_name, port_name in module_spec.outputs.items():
@@ -330,35 +336,23 @@ class SparkNodeGraph(NodeGraph):
                 sink_node: SinkNode = self.get_node_by_id(node_names_to_ids[output_name])
                 sink_port: Port = sink_node.get_input('value')
                 origin_port.connect_to(sink_port, push_undo=False, emit_signal=False)
+            # Iterate over effects
+            for port_name, port_map_list in module_spec.effects.items():
+                # Get port
+                target_port: Port = target_node.get_input(port_name)
+                # Connect port
+                for port_map in port_map_list:
+                    origin_node: AbstractNode = self.get_node_by_id(node_names_to_ids[port_map.port if port_map.origin in member_ports else port_map.origin])
+                    origin_port: Port = origin_node.get_output('value' if isinstance(origin_node, (SourceNode, PropertyNode)) else port_map.port)
+                    origin_port.connect_to(target_port, push_undo=False, emit_signal=False)
+        # Use spring layout if all nodes were instantiated in the center.
+        if nodes_at_center == len(self._node_registry):
+            self.spring_layout()
         # Clean stack
         self.clear_selection()
         self.clear_undo_stack()
         self.center_on()
         self._is_dirty = False
-
-    def validate_graph(self,) -> list[str]:
-        """
-            Simple graph validation. 
-            
-            Ensures that graph has a single connected component and at least one source and one sink is present in the model.
-        """
-        errors = []
-        nx_graph = self.build_raw_graph()
-        connected_components = list(nx.weakly_connected_components(nx_graph))
-        # Check input/output exists.
-        node_types = nx.get_node_attributes(nx_graph, 'node_type').values()
-        has_input = 'SourceNode' in node_types
-        has_output = 'SinkNode' in node_types
-        if not has_input:
-            errors.append(f'No source node was found.')
-        if not has_output:
-            errors.append(f'No sink node was found.')
-        # Check number of connected components.
-        if len(connected_components) > 1:
-            errors.append(
-                f'Multiple connected components are not currently supported but found {len(connected_components)} connected components.'
-            )
-        return errors
 
     def _gather_modules_specs(self, errors: list | None = None) -> list[ModuleSpecs]:
         """
@@ -366,7 +360,7 @@ class SparkNodeGraph(NodeGraph):
         """
         modules_specs = []
         for node in self.all_nodes():
-            if isinstance(node, (SourceNode, SinkNode)):
+            if isinstance(node, (SourceNode, SinkNode, PropertyNode)):
                 continue
             else:
                 modules_specs.append(node.get_module_spec())
@@ -378,7 +372,7 @@ class SparkNodeGraph(NodeGraph):
         """
         io_nodes_metadata = {}
         for node in self.all_nodes():
-            if isinstance(node, (SourceNode, SinkNode)):
+            if isinstance(node, (SourceNode, SinkNode, PropertyNode)):
                 io_nodes_metadata[node.NODE_NAME] = node.get_module_spec()
             else:
                 continue
@@ -417,6 +411,60 @@ class SparkNodeGraph(NodeGraph):
                 )
         brain_config.__graph_editor_metadata__ = controller_metadata
         return brain_config
+
+    def build_nx_graph(self,) -> nx.DiGraph:
+        nx_graph = nx.DiGraph()
+        all_nodes: list[BaseNode] = self.all_nodes()
+        # Add nodes to the graph.
+        for node in all_nodes:
+            nx_graph.add_node(node.NODE_NAME, node_type=type(node).__name__)
+        # Add edges
+        for node in all_nodes:
+            for input_port in node.connected_input_nodes().values():
+                for input_node in input_port:
+                    nx_graph.add_edge(input_node.NODE_NAME, node.NODE_NAME)
+            for output_port in node.connected_output_nodes().values():
+                for output_node in output_port:
+                    nx_graph.add_edge(node.NODE_NAME, output_node.NODE_NAME)
+        return nx_graph
+
+    def validate_graph(self,) -> list[str]:
+        """
+            Simple graph validation. 
+            
+            Ensures that graph has a single connected component and at least one source and one sink is present in the model.
+        """
+        errors = []
+        nx_graph = self.build_nx_graph()
+        connected_components = list(nx.weakly_connected_components(nx_graph))
+        # Check input/output exists.
+        node_types = nx.get_node_attributes(nx_graph, 'node_type').values()
+        has_input = 'SourceNode' in node_types
+        has_output = 'SinkNode' in node_types
+        if not has_input:
+            errors.append(f'No source node was found.')
+        if not has_output:
+            errors.append(f'No sink node was found.')
+        # Check number of connected components.
+        if len(connected_components) > 1:
+            errors.append(
+                f'Multiple connected components are not currently supported but found {len(connected_components)} connected components.'
+            )
+        return errors
+
+    # TODO: Node registry needs to be bidirectional.
+    def spring_layout(self, scale: int = 500) -> None:
+        nx_graph = self.build_nx_graph()
+        #pos_init = {name:[0,0] for name in self._node_registry.values()}
+        layout = nx.spring_layout(nx_graph, method='energy', center=[0,0], scale=scale, seed=42)
+        for node_name, pos in layout.items():
+            for node_id, name in self._node_registry.items():
+                if node_name != name:
+                    continue
+                node: AbstractNode = self.get_node_by_id(node_id)
+                node.set_pos(int(pos[0]), int(pos[1]))
+                break
+
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
