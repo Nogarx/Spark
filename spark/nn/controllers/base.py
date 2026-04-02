@@ -147,7 +147,11 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         self._modules_names = tuple([spec.name for spec in self.config.modules_specs])
         # Create modules.
         for spec in self.config.modules_specs:
-            setattr(self, spec.name, REGISTRY.MODULES.get(spec.module_cls.__name__).class_ref(config=spec.config))
+            from spark.nn.controllers.neuron import Neuron
+            if issubclass(spec.module_cls, Neuron):
+                setattr(self, spec.name, REGISTRY.NEURONS.get(spec.module_cls.__name__).class_ref(config=spec.config))
+            else:
+                setattr(self, spec.name, REGISTRY.MODULES.get(spec.module_cls.__name__).class_ref(config=spec.config))
 
 
 
@@ -157,7 +161,7 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
             Returns all the attributes names wrapped by the spark_property wrapper.
         """
         return tuple(
-            [name  for name, attr in cls.__dict__.items() if isinstance(attr, spark_property)]
+            [name  for name, attr in inspect.getmembers(cls) if isinstance(attr, spark_property)]
         )
 
 
@@ -259,7 +263,7 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
 
     def recurrent_contract(
             self, 
-        ) -> None:
+        ) -> tuple[dict[str, tp.Any], dict[str, PortSpecs]]:
         """
             Returns the expected specs for the outputs and properties of the module.
 

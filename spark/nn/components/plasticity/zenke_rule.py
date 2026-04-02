@@ -16,7 +16,7 @@ from spark.core.variables import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.utils import get_einsum_dot_exp_string
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.nn.components.learning_rules.base import LearningRule, LearningRuleConfig, LearningRuleOutput
+from spark.nn.components.plasticity.base import Plasticity, PlasticityConfig, PlasticityOutput
 from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
@@ -24,7 +24,7 @@ from spark.nn.initializers.base import Initializer
 #################################################################################################################################################
 
 @register_config
-class ZenkeRuleConfig(LearningRuleConfig):
+class ZenkeRuleConfig(PlasticityConfig):
     """
        ZenkeRule configuration class.
     """
@@ -121,7 +121,7 @@ class ZenkeRuleConfig(LearningRuleConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class ZenkeRule(LearningRule):
+class ZenkeRule(Plasticity):
     """
         Zenke plasticy rule model. This model is an extension of the classic Hebbian Rule.
 
@@ -213,7 +213,7 @@ class ZenkeRule(LearningRule):
         dK = self.eta * (a + b + c + d)
         return jnp.clip(_kernel + self._dt * dK, min=0.0)
         
-    def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> LearningRuleOutput:
+    def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> PlasticityOutput:
         """
             Computes and returns the next kernel update.
         """

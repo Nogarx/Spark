@@ -333,7 +333,7 @@ MRO_PATH_ALIAS_MAP = {
     'ControlFlowInterface': 'Control',
     'Component': 'Components',
     'Delays': 'Delays',
-    #'Plasticity': 'Learning Rules',
+    'Plasticity': 'Plasticity Rules',
     'Soma': 'Somas',
     'Synapses': 'Synapses',
     'Neuron': 'Neurons',

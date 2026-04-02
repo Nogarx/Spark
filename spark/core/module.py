@@ -7,6 +7,7 @@ import typing as tp
 if tp.TYPE_CHECKING:
     from spark.core.payloads import SparkPayload
 
+import os
 import abc
 import jax
 import copy
@@ -132,11 +133,10 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         dt = getattr(self.config, 'dt', None)
         if dt is not None:
             self._dt = dt
-        seed = getattr(self.config, 'seed', None)
-        if seed is not None:
-            self._seed = seed
-            # Random engine key.
-            self.rng = Variable(jax.random.PRNGKey(self._seed))
+        # Random engine key.
+        seed = getattr(self.config, 'seed', int.from_bytes(os.urandom(4), 'little'))
+        self._seed = seed
+        self.rng = Variable(jax.random.PRNGKey(self._seed))
         # Specs
         self._input_specs: dict[str, PortSpecs] | None = None
         self._output_specs: dict[str, PortSpecs] | None = None
@@ -201,7 +201,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
     def recurrent_contract(
             self, 
-        ) -> None:
+        ) -> tuple[dict[str, tp.Any], dict[str, PortSpecs]]:
         """
             Returns the expected specs for the outputs and properties of the module.
 

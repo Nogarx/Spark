@@ -9,7 +9,7 @@ from spark.nn import initializers
 import spark.nn.components.somas as somas
 import spark.nn.components.delays as delays
 import spark.nn.components.synapses as synapses
-import spark.nn.components.learning_rules as learning_rules
+import spark.nn.components.plasticity as plasticity
 
 
 __all__ = [
@@ -22,5 +22,5 @@ __all__ = [
     'somas',
     'delays',
     'synapses',
-    'learning_rules',
+    'plasticity',
 ]

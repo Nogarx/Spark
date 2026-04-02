@@ -18,7 +18,7 @@ from spark.core.variables import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.utils import get_einsum_dot_exp_string
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.nn.components.learning_rules.base import LearningRule, LearningRuleConfig, LearningRuleOutput
+from spark.nn.components.plasticity.base import Plasticity, PlasticityConfig, PlasticityOutput
 from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
@@ -26,7 +26,7 @@ from spark.nn.initializers.base import Initializer
 #################################################################################################################################################
 
 @register_config
-class QuadrupletRuleConfig(LearningRuleConfig):
+class QuadrupletRuleConfig(PlasticityConfig):
     """
     QuadrupletRule configuration class.
     """
@@ -99,7 +99,7 @@ class QuadrupletRuleConfig(LearningRuleConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class QuadrupletRule(LearningRule):
+class QuadrupletRule(Plasticity):
     """
         Quadruplet plasticy rule model.
 
@@ -181,7 +181,7 @@ class QuadrupletRule(LearningRule):
             pre_spikes: SpikeArray, 
             post_spikes: SpikeArray, 
             kernel: FloatArray
-        ) -> LearningRuleOutput:
+        ) -> PlasticityOutput:
         """
             Computes and returns the next kernel update.
         """
@@ -194,7 +194,7 @@ class QuadrupletRule(LearningRule):
 #################################################################################################################################################
 
 @register_config
-class QuadrupletRuleTensorConfig(LearningRuleConfig):
+class QuadrupletRuleTensorConfig(PlasticityConfig):
     """
     QuadrupletRuleTensor configuration class.
     """
@@ -276,7 +276,7 @@ class QuadrupletRuleTensorConfig(LearningRuleConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class QuadrupletRuleTensor(LearningRule):
+class QuadrupletRuleTensor(Plasticity):
     """
         Quadruplet plasticy rule model (tensor).
 
@@ -382,7 +382,7 @@ class QuadrupletRuleTensor(LearningRule):
             pre_spikes: SpikeArray, 
             post_spikes: SpikeArray, 
             kernel: FloatArray
-        ) -> LearningRuleOutput:
+        ) -> PlasticityOutput:
         """
             Computes and returns the next kernel update.
         """

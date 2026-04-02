@@ -13,7 +13,7 @@ from spark.nn.controllers import Neuron, NeuronConfig
 from spark.nn.components.delays.n2n_delays import N2NDelays, N2NDelaysConfig
 from spark.nn.components.synapses.traced import TracedSynapses, TracedSynapsesConfig
 from spark.nn.components.somas.leaky import AdaptiveLeakySoma, AdaptiveLeakySomaConfig
-from spark.nn.components.learning_rules.hebbian_rule import HebbianRule, HebbianRuleConfig
+from spark.nn.components.plasticity.hebbian_rule import HebbianRule, HebbianRuleConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

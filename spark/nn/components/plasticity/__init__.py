@@ -1,19 +1,19 @@
-from spark.nn.components.learning_rules.base import LearningRule, LearningRuleConfig, LearningRuleOutput
-from spark.nn.components.learning_rules.zenke_rule import ZenkeRule, ZenkeRuleConfig
-from spark.nn.components.learning_rules.hebbian_rule import (
+from spark.nn.components.plasticity.base import Plasticity, PlasticityConfig, PlasticityOutput
+from spark.nn.components.plasticity.zenke_rule import ZenkeRule, ZenkeRuleConfig
+from spark.nn.components.plasticity.hebbian_rule import (
     HebbianRule, HebbianRuleConfig,
     OjaRule, OjaRuleConfig
 )
-from spark.nn.components.learning_rules.quadruplet_rule import (
+from spark.nn.components.plasticity.quadruplet_rule import (
     QuadrupletRule, QuadrupletRuleConfig,
     QuadrupletRuleTensor, QuadrupletRuleTensorConfig
 )
-from spark.nn.components.learning_rules.three_factor_rule import (
+from spark.nn.components.plasticity.three_factor_rule import (
     ThreeFactorHebbianRule, ThreeFactorHebbianRuleConfig,
 )
 
 __all__ = [
-    'LearningRule', 'LearningRuleConfig', 'LearningRuleOutput',
+    'Plasticity', 'PlasticityConfig', 'PlasticityOutput',
     'ZenkeRule', 'ZenkeRuleConfig',
     'HebbianRule', 'HebbianRuleConfig',
     'OjaRule', 'OjaRuleConfig',

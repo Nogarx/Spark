@@ -35,8 +35,8 @@ Powered by [JAX](https://jax.readthedocs.io/) and [Flax NNX](https://flax.readth
 🧩 <strong>Modular & Extensible:</strong> 
 Modular by construction.
 Everything (that is worth interacting) in Spark is a self-contained module. 
-Easily create, modify, and share custom neuron models, synapses, and learning rules.
-Ever wanted a neuron with 3 Somas, 2 sets of Synapses and 2.5 Learning rules? As long as it can spike, you came to the right place! 
+Easily create, modify, and share custom neuron models, synapses, and plasticity rules.
+Ever wanted a neuron with 3 Somas, 2 sets of Synapses and 2.5 Plasticity rules? As long as it can spike, you came to the right place! 
 
 🔄 <strong>Seamless Workflow:</strong> 
 Spiking neural networks are not special, why should they require special data?!. One of the core features of Spark is the concept of input and output interfaces which are simple modules that help you transform regular datasets into streams of spikes and transform streams of spikes back into boring data formats like floats.
@@ -159,10 +159,6 @@ Spark is built around the idea of modular neurons. Literature is full of really 
 🧮 <strong>Custom kernels:</strong>
 Spark is fast but it can be faster!. Several operations can be further optimized using custom kernels.
 
-<!--
-🧮 <strong>Surrogate gradients:</strong> 
-Spark was build with the goal of building recurrent "Heabbian"-like learning schemes and as such it does not support surrogate gradients by default. Spark is also built on top of JAX, which makes automatic differentiation quite straight forward. However, surrogate gradients are typically apply to batched data, which goes against the design philosophy of Spark. We are currently exploring how to integrate surrogate gradients in a way that does not violates our core design. 
---->
 ## Contributing
 
 Contributions are what make the open-source community such an amazing place. Any contributions you make are greatly appreciated.

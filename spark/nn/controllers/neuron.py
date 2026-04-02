@@ -89,7 +89,7 @@ class Neuron(Controller, metaclass=NeuronMeta):
 	# TODO: Should we allow properties to be defined inside the build method? (Safe proof this method)
 	def recurrent_contract(
 			self, 
-		) -> None:
+		) -> tuple[dict[str, tp.Any], dict[str, PortSpecs]]:
 		"""
 			Returns the expected specs for the outputs and properties of the module.
 
@@ -110,7 +110,7 @@ class Neuron(Controller, metaclass=NeuronMeta):
 				payload_type=spec.payload_type,
 				shape=_property.shape if _property is not None else self.units,
 				dtype=_property.dtype if _property is not None else spec.dtype,
-				is_optional=spec.is_optional,
+				#is_optional=spec.is_optional,
 				description=spec.description,
 			)
 		return output_contract_specs, property_contract_specs

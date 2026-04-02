@@ -29,7 +29,7 @@ class NeuronOutput(tp.TypedDict):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class NeuronConfig(DefaultSparkConfig):
+class NeuronModuleConfig(DefaultSparkConfig):
     """
         Abstract Neuron model configuration class.
     """
@@ -49,11 +49,11 @@ class NeuronConfig(DefaultSparkConfig):
         # Synchronize dt's. NOTE: Skip validation, otherwise will fall into an infinite loop.
         self.merge(partial={'_s_dt':self.dt, '_s_units':self.units}, __skip_validation__=True)
 
-ConfigT = tp.TypeVar("ConfigT", bound=NeuronConfig)
+ConfigT = tp.TypeVar("ConfigT", bound=NeuronModuleConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class Neuron(SparkModule, abc.ABC, tp.Generic[ConfigT]):
+class NeuronModule(SparkModule, abc.ABC, tp.Generic[ConfigT]):
     """
         Abstract Neuron model.
 

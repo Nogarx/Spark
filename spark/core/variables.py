@@ -48,15 +48,15 @@ class Constant:
         if len(self.value.shape) == 0:
             self.value = self.value.reshape(-1)
 
-    #def tree_flatten(self):
-    #    children = (self.value, self.value.dtype)
-    #    aux_data = ()
-    #    return children, aux_data
+    def tree_flatten(self):
+        children = (self.value, self.value.dtype)
+        aux_data = ()
+        return children, aux_data
 
-    #@classmethod
-    #def tree_unflatten(cls, aux_data, children):
-    #    (value, dtype) = children
-    #    return cls(value=value, dtype=dtype)
+    @classmethod
+    def tree_unflatten(cls, aux_data, children):
+        (value, dtype) = children
+        return cls(value=value, dtype=dtype)
 
     def __jax_array__(self) -> jax.Array: 
         return self.value

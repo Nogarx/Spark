@@ -161,7 +161,7 @@ class SparkMetaConfig(abc.ABCMeta):
                 valid_types = {'valid_types': attr_type}
                 allows_init = 'Initializer' in attr_type or 'InitializerConfig' in attr_type
             elif tp.get_origin(attr_type):
-                attr_types = list(tp.get_args(attr_type))
+                attr_types = list(normalize_typehint(attr_type))#list(tp.get_args(attr_type))
                 try:
                     attr_types.remove(type(None))
                 except:
@@ -592,7 +592,8 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                         config_cls: type[SparkConfig] = module_spec.module_cls.get_config_spec()
                         config = config_cls()
                     # Merge configs and let the it reach the end  
-                    config.merge(partial={**prefixed_shared_partial}, __skip_validation__=__skip_validation__)
+                    target_kwargs = kwargs_fold.get(module_spec.name, {})
+                    config.merge(partial={**prefixed_shared_partial, **target_kwargs}, __skip_validation__=__skip_validation__)
                     module_spec.config = config
                 setattr(self, field_name, module_spec_list)
                 continue
@@ -737,12 +738,6 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         # Get type hints
         from spark.nn.initializers import InitializerConfig
         type_hints = {k: normalize_typehint(h) for k, h in tp.get_type_hints(self.__class__).items()}
-        #for key in type_hints.keys():
-        #    if tp.get_origin(type_hints[key]): 
-        #        hints = list(tp.get_args(type_hints[key]))
-        #        type_hints[key] = tuple([h for h in hints if h is not type(None)])
-        #    else:
-        #        type_hints[key] = tuple([type_hints[key]])
 
         nested_configs = []
         for field in dc.fields(self):

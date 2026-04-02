@@ -7,8 +7,8 @@ from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
 from spark.core.decorators import spark_property as property
 from spark.core import tracers
 from spark.core import config_validation as validation
-from spark.core.flax_imports import split, merge
-from spark.core.registry import register_module, register_initializer, register_payload, register_config, register_cfg_validator
+from spark.core.flax_imports import jit, eval_shape, split, merge
+from spark.core.registry import register_module, register_neuron, register_initializer, register_payload, register_config, register_cfg_validator
 
 # NN submodule
 from spark import nn
@@ -28,8 +28,8 @@ __all__ = [
     'PortSpecs', 'PortMap', 'ModuleSpecs',
     'property',
     'validation',
-    'split', 'merge',
+    'jit', 'eval_shape', 'split', 'merge',
     'GraphEditor',
-    'register_module', 'register_initializer', 'register_payload', 'register_config', 'register_cfg_validator',
+    'register_module', 'register_neuron', 'register_initializer', 'register_payload', 'register_config', 'register_cfg_validator',
     'REGISTRY',
 ]

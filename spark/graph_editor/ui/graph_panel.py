@@ -12,7 +12,7 @@ from spark.core.registry import REGISTRY
 from spark.nn.controllers.base import Controller
 from spark.graph_editor.models.graph import SparkNodeGraph, ControllerType
 from spark.graph_editor.models.graph_menu_tree import HierarchicalMenuTree
-from spark.graph_editor.models.nodes import SourceNode, SinkNode, AbstractNode, module_to_nodegraph
+from spark.graph_editor.models.nodes import SourceNode, SinkNode
 from spark.graph_editor.ui.console_panel import MessageLevel
 
 # NOTE: Small workaround to at least have base autocompletion.
