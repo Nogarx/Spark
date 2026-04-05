@@ -215,7 +215,7 @@ class RefractoryLeakySoma(LeakySoma):
             Resets component state.
         """
         super().reset()
-        self.refractory.value = jnp.array(self.cooldown, dtype=jnp.uint16)
+        self.refractory.value = jnp.array(self.cooldown * jnp.ones(self.units), dtype=jnp.uint16)
 
     def _update_states(self, current: CurrentArray) -> None:
         """

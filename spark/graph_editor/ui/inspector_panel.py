@@ -819,6 +819,9 @@ class InspectorIdleWidget(QtWidgets.QWidget):
         _message_widget.setLayout(h_layout)
         return _message_widget
     
+    def set_dirty_flag(self, value: bool) -> None:
+        return
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class NodeHeaderWidget(QInput):

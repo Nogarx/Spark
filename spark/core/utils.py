@@ -542,7 +542,7 @@ def ascii_tree(text: str) -> str:
 _KT = tp.TypeVar('_KT')
 _VT = tp.TypeVar('_VT')
 
-@jax.tree_util.register_pytree_node_class
+@jax.tree_util.register_pytree_with_keys_class
 @dc.dataclass(init=False)
 class TwoKeyDict(MutableMapping[_KT, _KT, _VT]):
 
@@ -645,6 +645,19 @@ class TwoKeyDict(MutableMapping[_KT, _KT, _VT]):
     @classmethod
     def tree_unflatten(cls, aux_data, children) -> tp.Self:
         return cls(children[0])
+
+    def tree_flatten_with_keys(self):
+        # Sort keys to ensure deterministic flattening
+        keys = sorted(self._data.keys())
+        children_with_keys = [(jax.tree_util.DictKey(k), self._data[k]) for k in keys]
+        aux_data = keys 
+        return children_with_keys, aux_data
+
+    @classmethod
+    def tree_unflatten(cls, aux_data, children) -> tp.Self:
+        keys = aux_data
+        reconstructed_data = dict(zip(keys, children))
+        return cls(reconstructed_data)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

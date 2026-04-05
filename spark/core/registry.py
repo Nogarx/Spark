@@ -3,7 +3,11 @@
 #################################################################################################################################################
 
 from __future__ import annotations
+import typing as tp
+if tp.TYPE_CHECKING:
+    from spark.nn.controllers.neuron import Neuron, NeuronConfig
 
+import pathlib as pl
 import logging
 import dataclasses as dc
 import typing as tp
@@ -96,7 +100,7 @@ class SubRegistry(Mapping):
                                 f'"{cls.__name__}" does not inherit from {self._registry_base_type}.')
         if self._exists(name):
             raise ValueError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
-                             f'name "{name}" is already registered to another class.')
+                            f'name "{name}" is already registered to another class.')
         if not path is None:
             if not isinstance(path, list):
                 raise TypeError(f'Expect path to be a list of str but got {type(path).__name__}.')
@@ -148,8 +152,13 @@ class SubRegistry(Mapping):
         else: 
             raise RuntimeError(f'Registry is not yet built. Registry must be built first before trying to access it.')
 
-    def _exists(self, name):
+    def _exists(self, name) -> bool:
         if name in self._registry:
+            return True
+        return False
+
+    def exists(self, name) -> bool:
+        if utils.normalize_str(name) in self._registry:
             return True
         return False
 
@@ -347,6 +356,105 @@ INITIALIZERS_ALIAS_MAP = {
     'delay': 'Dealy',
 }
 
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+def _construct_neuron_config_cls(cls_name: str, config: NeuronConfig) -> type[NeuronConfig]:
+    """
+        Generate a NeuronConfig subclass programmatically from a NeuronConfig instance.
+    """
+    from spark.nn.controllers.neuron import NeuronConfig
+    # Shallow copy
+    config = copy.deepcopy(config)
+    # Cls namespace
+    cls_name = f'{cls_name}Config'
+    ns_annotations: dict[str, tp.Any] = {}
+    namespace: dict[str, tp.Any] = {}
+    # Grab config fields
+    for name, field, value in config:
+        namespace[name] = value
+        ns_annotations[name] = field.type
+    # Copy metadata
+    namespace['__metadata__'] = config.__metadata__
+    namespace['__graph_editor_metadata__'] = config.__graph_editor_metadata__
+    namespace['__annotations__'] = ns_annotations
+    # Create class and link it to spark
+    neuron_config_cls = type(cls_name, (NeuronConfig,), namespace)
+    neuron_config_cls.__module__ = 'spark'
+    return neuron_config_cls
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _construct_neuron_cls(cls_name: str, config_cls: type[NeuronConfig]) -> type[Neuron]:
+    """
+        Generate a Neuron subclass programmatically from a NeuronConfig type.
+    """
+    from spark.nn.controllers.neuron import Neuron
+    # Cls namespace
+    cls_name = f'{cls_name}'
+    ns_annotations: dict[str, tp.Any] = {'config': config_cls}
+    namespace: dict[str, tp.Any] = {}
+    namespace['__annotations__'] = ns_annotations
+    # Create class and link it to spark
+    neuron_cls = type(cls_name, (Neuron,), namespace)
+    neuron_cls.__module__ = 'spark'
+    return neuron_cls
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+# TODO: Clean up is necessary in case something fails in order to prevent orphaned pairs.
+def register_neuron_from_config(cls_name: str, config: NeuronConfig) -> None:
+    """
+        Generate a (Neuron, NeuronConfig) subclass pair programmatically from a NeuronConfig instance.
+    """
+    from spark.nn.controllers.neuron import NeuronConfig
+    if REGISTRY.NEURONS.exists(cls_name):
+        raise KeyError(
+            f'Unable to generate a (Neuron, NeuronConfig) subclass pair. The name {cls_name} is already in use by another class in the registry.'
+        )
+
+    if not isinstance(config, NeuronConfig):
+        raise TypeError(
+            f'Expected "config" to be of type "{NeuronConfig.__name__}" but got type "{type(config).__name__}".'
+        )
+    try:
+        config_cls = _construct_neuron_config_cls(cls_name, config)
+        register_config(config_cls)
+    except Exception as e:
+        raise RuntimeError(
+            f'Unable to generate a configuration class from "config". Error: {e}.'
+        )
+    
+    try:
+        neuron_cls = _construct_neuron_cls(cls_name, config_cls)
+        register_neuron(neuron_cls)
+    except Exception as e:
+        raise RuntimeError(
+            f'Unable to generate a configuration class from "config". Error: {e}.'
+        )
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def register_neuron_from_config_file(cls_name: str, path: pl.Path) -> None:
+    """
+        Generate a (Neuron, NeuronConfig) subclass pair programmatically from a NeuronConfig file.
+    """
+    from spark.nn.controllers.neuron import NeuronConfig
+    path = pl.Path(path).absolute()
+    if path.exists():
+        try:
+            config_instance = NeuronConfig.from_file(path)
+        except:
+            raise RuntimeError(
+                f'Unable to read "{path}" as a NeuronConfig object.'
+            )
+        register_neuron_from_config(cls_name, config_instance)
+    else:
+        raise RuntimeError(
+            f'Invalid path: "{path}".'
+        )
+    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

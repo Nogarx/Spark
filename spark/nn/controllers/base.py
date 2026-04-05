@@ -73,7 +73,7 @@ class ControllerConfig(SparkConfig):
     def __post_init__(self,) -> None:
         super().__post_init__()
         # Synchronize dt's. NOTE: Skip validation, otherwise will fall into an infinite loop.
-        self.merge(partial={'_s_dt':self.dt}, __skip_validation__=True)
+        self.merge(partial={'_s_dt':self.dt}, skip_validation=True)
 
 ConfigT = tp.TypeVar("ConfigT", bound=ControllerConfig)
 
@@ -332,9 +332,15 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         for spec in modules_specs:  
             # Call ports
             if issubclass(spec.module_cls, Controller):
-                module_input_specs = spec.module_cls._get_controller_input_specs(spec.config.modules_specs)
+                module_input_specs = {
+                    **spec.module_cls._get_controller_input_specs(spec.config.modules_specs),
+                    **spec.module_cls._get_controller_property_specs(),
+                }
             else:
-                module_input_specs = spec.module_cls._get_input_specs()
+                module_input_specs = {
+                    **spec.module_cls._get_input_specs(),
+                    **spec.module_cls._get_property_specs(),
+                }
             for input_name, port_spec_list in spec.inputs.items():
                 # Get module port specs
                 expected_port_specs = module_input_specs[input_name]

@@ -59,7 +59,7 @@ class NeuronConfig(ControllerConfig):
 	def __post_init__(self,) -> None:
 		super().__post_init__()
 		# Synchronize units. NOTE: Skip validation, otherwise will fall into an infinite loop.
-		self.merge(partial={'_s_units':self.units}, __skip_validation__=True)
+		self.merge(partial={'_s_units':self.units}, skip_validation=True)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -154,49 +154,13 @@ class Neuron(Controller, metaclass=NeuronMeta):
 							else:
 								input_args_list.append(getattr(getattr(self, port_map.origin), port_map.port))
 						else:
-							input_args_list.append(self._cache[port_map.origin, port_map.port].get())
+							input_args_list.append(outputs[port_map.origin][port_map.port])
 					input_args[port_name] = self._concatenate_payloads(input_args_list)
 				outputs[name] = getattr(self, name)(**input_args)
 		# Compute effects
 		# TODO: Currently effects require the ports to be defined inside a list. This is probably not desirable.
 		for name, effects in self._modules_effects_map.items():
 			for property_name, ports_list in effects.items():
-				port_map = ports_list[0]
-				setattr(getattr(self, name), property_name, outputs[port_map.origin, port_map.port])
-		# Gather output
-		return {
-			name: outputs[origin][port] for name, origin, port in self._contoller_output_map 
-		}
-
-	def __call__(self, **inputs: SparkPayload) -> dict[str, SparkPayload]:
-		"""
-			Update brain's states.
-		"""
-		# Update modules
-		outputs = {}
-		for name in self._modules_names:
-			# Reconstruct module input using the current inputs/properties/cache
-			input_args = {}
-			for port_name, ports_list in self._modules_inputs_map[name].items():
-				# TODO: This does not support unflatten inputs.
-				input_args_list = []
-				for port_map in ports_list:
-					if port_map.origin == '__call__':
-						input_args_list.append(inputs[port_map.port])
-					elif port_map.is_property:
-						if port_map.origin == '__self__':
-							input_args_list.append(getattr(self, port_map.port))
-						else:
-							input_args_list.append(getattr(getattr(self, port_map.origin), port_map.port))
-					else:
-						input_args_list.append(outputs[port_map.origin][port_map.port])
-				input_args[port_name] = self._concatenate_payloads(input_args_list)
-			outputs[name] = getattr(self, name)(**input_args)
-		# Compute effects
-		for name, effects in self._modules_effects_map.items():
-			for property_name, ports_list in effects.items():
-				# TODO: It is unclear whether it is necessary or ideal to support multi-port inputs for effects.
-				# Currently we only accept the first defined input for a property port. 
 				port_map = ports_list[0]
 				setattr(getattr(self, name), property_name, outputs[port_map.origin][port_map.port])
 		# Gather output

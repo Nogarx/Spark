@@ -47,7 +47,7 @@ class NeuronModuleConfig(DefaultSparkConfig):
     def __post_init__(self,) -> None:
         super().__post_init__()
         # Synchronize dt's. NOTE: Skip validation, otherwise will fall into an infinite loop.
-        self.merge(partial={'_s_dt':self.dt, '_s_units':self.units}, __skip_validation__=True)
+        self.merge(partial={'_s_dt':self.dt, '_s_units':self.units}, skip_validation=True)
 
 ConfigT = tp.TypeVar("ConfigT", bound=NeuronModuleConfig)
 

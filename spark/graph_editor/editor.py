@@ -24,6 +24,7 @@ from spark.graph_editor.ui.controller_selection import ControllerSelectorDialog
 # TODO: Allow to set optional configs to None in the inspector.
 # TODO: Allow basic shortcuts: ctrl+c, ctrl+v, etc.
 # TODO: Create undo/redo stack (ctrl+z, ctrl+y).
+# TODO: Overall, the editor needs a refactor, a lot for repeated code everywhere.
 
 # NOTE: We use numpy to  manage dtypes. Jax sometimes tries to move data (?) to the GPU,
 # which in turn slows down the editor unnecesarily.
@@ -81,7 +82,6 @@ class SparkGraphEditor:
             Creates and shows the editor window without blocking.
             This method is safe to call multiple times.
         """
-        #if __name__ == "__main__":
         # If a previous window exists, explicitly delete it (safe)
         if getattr(self, 'window', None):
             self.window.close()
@@ -109,6 +109,51 @@ class SparkGraphEditor:
             # Start loop
             self.app.exec_()
 
+    def open_model(self, path) -> None:
+        # Initialize the editor.
+        # If a previous window exists, explicitly delete it (safe)
+        if getattr(self, 'window', None):
+            self.window.close()
+            self.window.deleteLater()
+            del self.window
+        # No need to ask for controller_type
+        # Create base window.
+        self.window = EditorWindow()
+        self.window.windowClosed.connect(self.exit_editor)
+        # BUG: Part of the Ctrl+S workaround.
+        self.window.editor = self
+        # Default layout
+        self._setup_layout(ControllerType.BRAIN)
+        # General style
+        self.window.setStyleSheet(
+            f"""
+                color: {GRAPH_EDITOR_CONFIG.default_font_color};
+            """
+        )
+        self.window.showMaximized()
+        self._update_ui_state()
+        # Try to load model.
+        if path:
+            path = pathlib.Path(path)
+            try:
+                self._clear_session()
+                config = ControllerConfig.from_file(path, is_partial=True)
+                self.graph.load_from_model(config)
+                self._clear_dirty_flags()
+                self._panels[DockPanels.INSPECTOR].clear_selection()
+                msg = f'Session loaded sucessfully from \"{path}\".'
+                self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.SUCCESS, msg)
+                logger.info(msg)
+                self._session_path = path.with_suffix('.sge')
+                self._model_path = path.with_suffix('.scfg')
+                self._update_ui_state()
+            except Exception as e:
+                msg = f'Failed to load session from \"{path}\": {e}'
+                QtWidgets.QMessageBox.critical(None, 'Error', msg)
+                self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.ERROR, msg)
+                logger.critical(msg)
+        # Start loop
+        self.app.exec_()
 
 
     def exit_editor(self,) -> None:
@@ -233,8 +278,8 @@ class SparkGraphEditor:
             return self.save_session_as()
         else:
             #try:
-                brain_config = self.graph.build_controller_config(is_partial=True)
-                brain_config.to_file(self._model_path, is_partial=True)
+                brain_config = self.graph.serialize_controller_config(is_partial=True)
+                brain_config.to_file(self._session_path, is_partial=True)
                 self._clear_dirty_flags()
                 self._update_ui_state()
                 msg = f'Session sucessfully saved to \"{self._session_path}\".'
@@ -271,9 +316,7 @@ class SparkGraphEditor:
                 if ret == QtWidgets.QMessageBox.StandardButton.No:
                     continue 
             self._session_path = path.with_suffix('.sge')
-            # Try to also set the model_path
-            if self._model_path is None:
-                self._model_path = path.with_suffix('.scfg')
+            self._model_path = path.with_suffix('.scfg')
             return self.save_session()
         return False
 
@@ -370,7 +413,7 @@ class SparkGraphEditor:
                 
                 # Validate configuration.
                 errors = []
-                brain_config = self.graph.build_controller_config(is_partial=False, errors=errors)
+                controller_config = self.graph.export_controller_config(errors=errors)
                 if len(errors) > 0: 
                     QtWidgets.QMessageBox.warning(
                         self.graph.viewer(), 
@@ -385,13 +428,14 @@ class SparkGraphEditor:
 
                 # Write file.
                 try:
-                    brain_config.to_file(self._model_path, is_partial=False)
+                    controller_config.to_file(self._model_path, is_partial=True)
                     msg = f'Model exported sucessfully to \"{self._model_path}\".'
                     self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.SUCCESS, msg)
                     logger.info(msg)
                     return True
                 except Exception as e:
                     msg = f'Failed to export model to \"{self._model_path}\": {e}'
+                    QtWidgets.QMessageBox.critical(None, 'Error', msg)
                     self._panels[DockPanels.CONSOLE].publish_message(MessageLevel.ERROR, msg)
                     logger.error(msg)
                     return False
@@ -426,9 +470,7 @@ class SparkGraphEditor:
                 if ret == QtWidgets.QMessageBox.StandardButton.No:
                     continue 
             self._model_path = path.with_suffix('.scfg')
-            # Try to also set the session_path
-            if self._session_path is None:
-                self._session_path = path.with_suffix('.sge')
+            self._session_path = path.with_suffix('.sge')
             return self.export_model()
         
         return False

@@ -12,6 +12,7 @@ if tp.TYPE_CHECKING:
     from spark.nn.controllers.neuron import Neuron, NeuronConfig
 
 import abc
+import copy
 import numpy as np
 from jax.typing import DTypeLike
 from NodeGraphQt import BaseNode, Port
@@ -342,6 +343,9 @@ class SparkModuleNode(AbstractNode, abc.ABC):
     def metadata(self,) -> dict:
         return self.node_config.__graph_editor_metadata__
 
+    def set_config(self, config: SparkConfig) -> None:
+        self.node_config = copy.deepcopy(config)
+
     def get_module_spec(self) -> ModuleSpecs:
         # Build input map
         _inputs = {}
@@ -350,12 +354,16 @@ class SparkModuleNode(AbstractNode, abc.ABC):
             # Skip properties
             if not port_name in self.input_specs.keys():
                 continue
-            _inputs[port_name] = [
-                PortMap(
-                    origin=other.node().name(), 
-                    port=other.name(), is_property=False
-                ) for other in port.connected_ports()
-            ]
+            port_map_list = []
+            for origin_port in port.connected_ports():
+                origin_port_name = origin_port.name()
+                origin_node = origin_port.node()
+                if isinstance(origin_node, (SparkModuleNode, SparkNeuronNode)):
+                    is_property = True if origin_port_name in origin_node.property_specs.keys() else False
+                else:
+                    is_property = False
+                port_map_list.append(PortMap(origin=origin_node.name(), port=origin_port_name, is_property=is_property))
+            _inputs[port_name] = port_map_list
         # Build output map
         _outputs = {}
         for port in self.output_ports():
@@ -371,12 +379,17 @@ class SparkModuleNode(AbstractNode, abc.ABC):
             # Skip non-properties
             if port_name in self.input_specs.keys():
                 continue
-            _effects[port_name] = [
-                PortMap(
-                    origin=other.node().name(), 
-                    port=other.name(), is_property=False
-                ) for other in port.connected_ports()
-            ]
+            port_map_list = []
+            for origin_port in port.connected_ports():
+                origin_port_name = origin_port.name()
+                origin_node = origin_port.node()
+                if isinstance(origin_node, (SparkModuleNode, SparkNeuronNode)):
+                    is_property = True if origin_port_name in origin_node.property_specs.keys() else False
+                else:
+                    is_property = False
+                port_map_list.append(PortMap(origin=origin_node.name(), port=origin_port_name, is_property=is_property))
+            if len(port_map_list) > 0:
+                _effects[port_name] = port_map_list
         # Update graph metadata
         self._update_graph_metadata()
         return ModuleSpecs(
@@ -445,6 +458,10 @@ class SparkNeuronNode(AbstractNode, abc.ABC):
     def metadata(self,) -> dict:
         return self.node_config.__graph_editor_metadata__
 
+    def set_config(self, config: SparkConfig) -> None:
+        self.node_config = copy.deepcopy(config)
+        self.node_config_flat = flattify_controller_config(self.node_config)
+
     def get_module_spec(self) -> ModuleSpecs:
         # Build input map
         _inputs = {}
@@ -453,12 +470,16 @@ class SparkNeuronNode(AbstractNode, abc.ABC):
             # Skip properties
             if not port_name in self.input_specs.keys():
                 continue
-            _inputs[port_name] = [
-                PortMap(
-                    origin=other.node().name(), 
-                    port=other.name(), is_property=False
-                ) for other in port.connected_ports()
-            ]
+            port_map_list = []
+            for origin_port in port.connected_ports():
+                origin_port_name = origin_port.name()
+                origin_node = origin_port.node()
+                if isinstance(origin_node, (SparkModuleNode, SparkNeuronNode)):
+                    is_property = True if origin_port_name in origin_node.property_specs.keys() else False
+                else:
+                    is_property = False
+                port_map_list.append(PortMap(origin=origin_node.name(), port=origin_port_name, is_property=is_property))
+            _inputs[port_name] = port_map_list
         # Build output map
         _outputs = {}
         for port in self.output_ports():
@@ -474,15 +495,20 @@ class SparkNeuronNode(AbstractNode, abc.ABC):
             # Skip non-properties
             if port_name in self.input_specs.keys():
                 continue
-            _effects[port_name] = [
-                PortMap(
-                    origin=other.node().name(), 
-                    port=other.name(), is_property=False
-                ) for other in port.connected_ports()
-            ]
+            port_map_list = []
+            for origin_port in port.connected_ports():
+                origin_port_name = origin_port.name()
+                origin_node = origin_port.node()
+                if isinstance(origin_node, (SparkModuleNode, SparkNeuronNode)):
+                    is_property = True if origin_port_name in origin_node.property_specs.keys() else False
+                else:
+                    is_property = False
+                port_map_list.append(PortMap(origin=origin_node.name(), port=origin_port_name, is_property=is_property))
+            if len(port_map_list) > 0:
+                _effects[port_name] = port_map_list
         # Update graph metadata
-        self._update_graph_metadata()
         self.node_config = unflattify_controller_config(type(self.node_config), self.node_config_flat)
+        self._update_graph_metadata()
         return ModuleSpecs(
             name = self.NODE_NAME,
             module_cls = self.module_cls,

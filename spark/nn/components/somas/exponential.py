@@ -245,7 +245,7 @@ class RefractoryExponentialSoma(ExponentialSoma):
             Resets component state.
         """
         super().reset()
-        self.refractory.value = jnp.array(self.cooldown, dtype=self._dtype)
+        self.refractory.value = jnp.array(self.cooldown * jnp.ones(self.units), dtype=self._dtype)
 
     def _update_states(self, current: CurrentArray) -> None:
         """

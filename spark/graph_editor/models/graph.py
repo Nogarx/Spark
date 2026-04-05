@@ -271,12 +271,13 @@ class SparkNodeGraph(NodeGraph):
                 'type': 'property',
                 'spec': spec
             }
-        config.__graph_editor_metadata__ = io_nodes_metadata
+        for key in io_nodes_metadata.keys():
+            if not key in config.__graph_editor_metadata__:
+                config.__graph_editor_metadata__[key] = io_nodes_metadata[key]
         # Forward config
         self.load_from_model(config)
         #self.spring_layout()
 
-    # TODO: Improve node placent for configs without pos metadata
     def load_from_model(self, config: ControllerConfig) -> None:
         if isinstance(config, BrainConfig):
             self.set_controller_type(ControllerType.BRAIN)
@@ -294,8 +295,8 @@ class SparkNodeGraph(NodeGraph):
             'property': 'spark.PropertyNode',
         }
         nodes_at_center = 0
+        # IO nodes
         for name, spec in config.__graph_editor_metadata__.items():
-            #node_cls = SourceNode if spec['type'] == 'source' else SinkNode
             node_cls = node_type_dict.get(spec['type'])
             node_attr_label = 'input_specs' if spec['type'] == 'sink' else 'output_specs'
             pos = spec.get('pos', [0,0])
@@ -307,12 +308,12 @@ class SparkNodeGraph(NodeGraph):
             attr_spec['value'].shape = spec['spec'].shape
             attr_spec['value'].description = spec['spec'].description
             node_names_to_ids[name] = node.id
-        # Module nodes.
+        # Module nodes
         for module_spec in config.modules_specs:
             pos = module_spec.config.__graph_editor_metadata__.get('pos', [0,0])
             nodes_at_center += 1 if pos == [0,0] else 0
             node: SparkModuleNode = self.create_node(f'spark.{module_spec.module_cls.__name__}', name=module_spec.name, pos=pos, select_node=False)
-            node.node_config = module_spec.config
+            node.set_config(module_spec.config)
             node_names_to_ids[module_spec.name] = node.id
         # Setup node connections
         member_ports = ['__call__', '__self__']
@@ -388,7 +389,7 @@ class SparkNodeGraph(NodeGraph):
                 f'Unknown controller type "{self._controller_type}"'
             )
 
-    def build_controller_config(self, is_partial: bool = True, errors: list | None = None) -> ControllerConfig:
+    def serialize_controller_config(self, is_partial: bool = True, errors: list | None = None) -> ControllerConfig:
         # Get controller class
         controller_cls = self.get_config_cls()
         # Gather modules and metadata
@@ -409,6 +410,42 @@ class SparkNodeGraph(NodeGraph):
                 brain_config = controller_cls(
                     modules_specs=modules_specs
                 )
+        brain_config.__graph_editor_metadata__ = controller_metadata
+        return brain_config
+
+    def export_controller_config(self, errors: list | None = None) -> ControllerConfig:
+        # Get controller class
+        controller_cls = self.get_config_cls()
+        # Gather modules and metadata
+        modules_specs = self._gather_modules_specs()
+        controller_metadata = self._gather_controller_metadata()
+        # Replace input nodes references with the conventional references.
+        replacement_map = {}
+        outputs_map = {node.NODE_NAME: {} for node in self.all_nodes()}
+        for node in self.all_nodes():
+            if isinstance(node, SourceNode):
+                replacement_map[PortMap(node.NODE_NAME, 'value')] = PortMap('__call__', node.NODE_NAME)
+            elif isinstance(node, SinkNode):
+                port = node.get_input('value')
+                # NOTE: Sinks can only connect to a single port
+                origin_port = port.connected_ports()[0]
+                origin_name = origin_port.node().NODE_NAME
+                outputs_map[origin_name][node.NODE_NAME] = origin_port.name()
+            elif isinstance(node, PropertyNode):
+                replacement_map[PortMap(node.NODE_NAME, 'value')] = PortMap('__self__', node.NODE_NAME, is_property=True)
+        for spec in modules_specs:
+            spec.outputs = outputs_map[spec.name]
+            for key in spec.inputs.keys():
+                spec.inputs[key] = [
+                    replacement_map[port_map] if port_map in replacement_map else port_map
+                    for port_map in spec.inputs[key]
+                ]
+        # Construct brain config.
+        brain_config = controller_cls._create_partial(
+            modules_specs=modules_specs,
+            skip_validation = False,
+        )
+        brain_config.validate(errors=errors)
         brain_config.__graph_editor_metadata__ = controller_metadata
         return brain_config
 

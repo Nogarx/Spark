@@ -12,6 +12,7 @@ import numpy as np
 import dataclasses as dc
 import typing as tp
 import copy
+import lzma
 import json
 import pathlib as pl
 import spark.core.utils as utils
@@ -29,7 +30,7 @@ from math import prod
 import logging
 logger = logging.getLogger('Spark')
 
-# TODO: We used the word partial across the entire code. 
+# TODO: We used the word partial across the entire code. ¯\_(ツ)_/¯ 
 # This is not okay since we already use partial for the homonymous functool's method
 
 #################################################################################################################################################
@@ -281,8 +282,8 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
     __config_delimiter__: str = '__'
     __shared_config_delimiter__: str = '_s_'
-    __metadata__: dict = dc.field(default_factory = lambda: {})
-    __graph_editor_metadata__: dict = dc.field(default_factory = lambda: {})
+    __metadata__: dict
+    __graph_editor_metadata__: dict
 
 
 
@@ -291,16 +292,21 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         dc.dataclass(cls, init=False, kw_only=True, repr=False, eq=False)
 
 
-    def __init__(self, __skip_validation__: bool = False, **kwargs):
+    def __init__(self, skip_validation: bool = False, **kwargs):
         # Fold kwargs
         kwargs_fold, shared_partial = self._fold_partial(self, kwargs)
         # Set attributes programatically
-        self._set_partial_attributes(kwargs_fold, shared_partial,  __skip_validation__=__skip_validation__)
-        # TODO: __graph_editor_metadata__ is not being set automatically
-        self.__graph_editor_metadata__ = kwargs['__graph_editor_metadata__'] if '__graph_editor_metadata__' in kwargs else {}
-        self.__metadata__ = kwargs['__metadata__'] if '__metadata__' in kwargs else {}
+        self._set_partial_attributes(kwargs_fold, shared_partial,  skip_validation=skip_validation)
+        if '__graph_editor_metadata__' in kwargs:
+            self.__graph_editor_metadata__ = kwargs['__graph_editor_metadata__'] 
+        elif getattr(self, '__graph_editor_metadata__', None) is None:
+            self.__graph_editor_metadata__ = {}
+        if '__metadata__' in kwargs:
+            self.__metadata__ = kwargs['__metadata__']
+        elif getattr(self, '__metadata__', None) is None:
+            self.__metadata__ = {}
         # Validate
-        if not __skip_validation__:
+        if not skip_validation:
             self.__post_init__()
         # Wrap attributes that admit initializers
         for field in dc.fields(self):
@@ -355,7 +361,7 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         return True
 
     @classmethod
-    def _create_partial(cls, **kwargs) -> tp.Self:
+    def _create_partial(cls, skip_validation: bool = True, **kwargs) -> tp.Self:
         """
             Create an incomplete config for the SparkGraphEditor.
         """
@@ -364,10 +370,15 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         # Fold kwargs
         kwargs_fold, shared_partial = instance._fold_partial(instance, kwargs)
         # Set attributes programatically
-        instance._set_partial_attributes(kwargs_fold, shared_partial, True)
-        # TODO: __graph_editor_metadata__ is not being set automatically
-        instance.__graph_editor_metadata__ = kwargs['__graph_editor_metadata__'] if '__graph_editor_metadata__' in kwargs else {}
-        instance.__metadata__ = kwargs['__metadata__'] if '__metadata__' in kwargs else {}
+        instance._set_partial_attributes(kwargs_fold, shared_partial, skip_validation=skip_validation)
+        if '__graph_editor_metadata__' in kwargs:
+            instance.__graph_editor_metadata__ = kwargs['__graph_editor_metadata__'] 
+        elif getattr(instance, '__graph_editor_metadata__', None) is None:
+            instance.__graph_editor_metadata__ = {}
+        if '__metadata__' in kwargs:
+            instance.__metadata__ = kwargs['__metadata__']
+        elif getattr(instance, '__metadata__', None) is None:
+            instance.__metadata__ = {}
         # Wrap attributes that admit initializers
         for field in dc.fields(instance):
             if field.metadata['allows_init']:
@@ -376,7 +387,7 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def merge(self, partial: dict[str, tp.Any] | None = None, __skip_validation__: bool = False) -> None:
+    def merge(self, partial: dict[str, tp.Any] | None = None, skip_validation: bool = False) -> None:
         """
             Update config with partial overrides.
         """
@@ -385,9 +396,9 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
         # Fold partial to pass child config attributes.
         kwargs_fold, shared_partial = self._fold_partial(self, partial)
         # Get current fields and pass attributes.
-        self._set_partial_attributes(kwargs_fold, shared_partial, __skip_validation__=__skip_validation__)
+        self._set_partial_attributes(kwargs_fold, shared_partial, skip_validation=skip_validation)
         # Validate
-        if not __skip_validation__:
+        if not skip_validation:
             self.__post_init__()
         # Wrap attributes that admit initializers
         for field in dc.fields(self):
@@ -442,7 +453,7 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             self, 
             kwargs_fold: dict[str, tp.Any], 
             shared_partial: dict[str, tp.Any], 
-            __skip_validation__: bool = False,
+            skip_validation: bool = False,
         ) -> None:
         """
             Method to recursively set/override the attributes of the configuration instance from a dictionary of values.
@@ -563,7 +574,7 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     config_cls: type[SparkConfig] = module_spec.module_cls.get_config_spec()
                     config = config_cls()
                 # Merge configs and let the it reach the end  
-                config.merge(partial={**prefixed_shared_partial}, __skip_validation__=__skip_validation__)
+                config.merge(partial={**prefixed_shared_partial}, skip_validation=skip_validation)
                 module_spec.config = config
                 setattr(self, field_name, module_spec)
                 continue
@@ -593,7 +604,7 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                         config = config_cls()
                     # Merge configs and let the it reach the end  
                     target_kwargs = kwargs_fold.get(module_spec.name, {})
-                    config.merge(partial={**prefixed_shared_partial, **target_kwargs}, __skip_validation__=__skip_validation__)
+                    config.merge(partial={**prefixed_shared_partial, **target_kwargs}, skip_validation=skip_validation)
                     module_spec.config = config
                 setattr(self, field_name, module_spec_list)
                 continue
@@ -605,31 +616,34 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 if isinstance(subconfig, SparkConfig):
                     # User set a config. Copy subconfig to avoid weird overwrittings.
                     field_config = copy.deepcopy(subconfig)
-                    field_config.merge(partial={**prefixed_shared_partial}, __skip_validation__=__skip_validation__)
+                    field_config.merge(partial={**prefixed_shared_partial}, skip_validation=skip_validation)
                     setattr(self, field_name, field_config)
                 elif isinstance(subconfig, type) and issubclass(subconfig, SparkConfig):
                     # Use current config 
-                    field_value = subconfig(**{**subconfig, **prefixed_shared_partial}, __skip_validation__=__skip_validation__)
+                    field_value = subconfig(**{**subconfig, **prefixed_shared_partial}, skip_validation=skip_validation)
                     setattr(self, field_name, field_value)
                 # Check if parent config set this attribute and is a SparkConfig
                 elif isinstance(field_value, SparkConfig):
                     # Use current config 
-                    field_value.merge(partial={**subconfig, **prefixed_shared_partial}, __skip_validation__=__skip_validation__)
+                    field_value.merge(partial={**subconfig, **prefixed_shared_partial}, skip_validation=skip_validation)
                     setattr(self, field_name, field_value)
                 elif isinstance(field_value, type) and issubclass(field_value, SparkConfig):
                     # Use current config 
-                    field_value = field_value(**{**subconfig, **prefixed_shared_partial}, __skip_validation__=__skip_validation__)
+                    field_value = field_value(**{**subconfig, **prefixed_shared_partial}, skip_validation=skip_validation)
                     setattr(self, field_name, field_value)
                 # Use default factory if provided
                 elif field.default_factory is not dc.MISSING:
                     # NOTE: This case is not only covering generic factories, but also the case when a SparkConfig() 
                     # is used as a default value. The simple solution is call the factory, then merge with default parameters.
                     field_value = field.default_factory()
-                    field_value.merge(
-                        partial={**subconfig, **prefixed_shared_partial},
-                        __skip_validation__=__skip_validation__
-                    )
-                    setattr(self, field_name, field_value)
+                    # TODO: This is just a temporary patch to defer fields of type jax.Array | Initializers that define a default array
+                    # to the next section of this method.
+                    if not isinstance(field_value, jax.Array):
+                        field_value.merge(
+                            partial={**subconfig, **prefixed_shared_partial},
+                            skip_validation=skip_validation
+                        )
+                        setattr(self, field_name, field_value)
                 # Use type class otherwise
                 else:
                     # TODO: It is not clear how to fully resolve multiple SparkConfig types. We currently select the first one.
@@ -646,18 +660,20 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     setattr(self, field_name, valid_field_type(**{
                         **subconfig, 
                         **prefixed_shared_partial,
-                        **{'__skip_validation__': __skip_validation__}
+                        **{'skip_validation': skip_validation}
                     }))
-                continue
+                 # TODO: More of the same patch
+                if not isinstance(field_value, jax.Array):
+                    continue
 
             # Generic case
             if field_name in kwargs_fold:
                 # Use kwargs attribute if provided
-                self._validate_and_set(field_name, kwargs_fold[field_name], field_type, __skip_validation__=__skip_validation__)
+                self._validate_and_set(field_name, kwargs_fold[field_name], field_type, skip_validation=skip_validation)
                 continue
             elif not isinstance(field_value, type(None)):
                 # Use field_value attribute if provided
-                self._validate_and_set(field_name, field_value, field_type,  __skip_validation__=__skip_validation__)
+                self._validate_and_set(field_name, field_value, field_type,  skip_validation=skip_validation)
                 continue
             elif isinstance(field_value, type(None)) and field.default_factory is not dc.MISSING:
                 # Fallback to default factory.
@@ -668,7 +684,7 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                 setattr(self, field_name, field.default)
                 continue
             else:
-                if __skip_validation__:
+                if skip_validation:
                     continue
                 # Try a default initialization of the parameter
                 if len(field_type) > 1:
@@ -691,9 +707,9 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                         )
 
 
-    # NOTE: If __skip_validation__ is set to True we still use default logic to try to match the value to the best 
+    # NOTE: If skip_validation is set to True we still use default logic to try to match the value to the best 
     # possible candidate and we force the value in case it was not possible to find a good match.
-    def _validate_and_set(self, field_name, value, field_type, __skip_validation__: bool = False) -> None:
+    def _validate_and_set(self, field_name, value, field_type, skip_validation: bool = False) -> None:
         # Use kwargs attribute if provided
         if is_instance(value, field_type):
             # kwargs_fold provides a valid type:
@@ -710,7 +726,7 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                         return
                     except:
                         pass
-            if __skip_validation__:
+            if skip_validation:
                 setattr(self, field_name, value)
             else:
                 raise TypeError(
@@ -938,7 +954,7 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     value = getattr(self, field.name)
                 except:
                     raise ValueError(
-                        f'Undefined value for field "{field.name}" in configuration class "{self.__name__}".'
+                        f'Undefined value for field "{field.name}" in configuration class "{type(self).__name__}".'
                     )
             if isinstance(value, SparkConfig):
                 dataclass_dict[field.name] = value
@@ -980,42 +996,42 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
 
 
 
-    def to_file(self, file_path: str, is_partial: bool = False) -> None:
+    def to_file(self, file_path: str, is_partial: bool = False, compress: bool = True) -> None:
         """
             Export a config instance from a .scfg file.
         """
-        #try:
-        # Validate the config
-        # If partial is True, values with errors are replaced with a None.
-        self.validate(is_partial=is_partial)
-        # Validate path
-        path = pl.Path(file_path)
-        # Add suffix to file to clarify is a spark config or a partial (SparkGraphEditor vs SparkConfiguration).
-        path = path.with_suffix('.sge' if is_partial else '.scfg')
-        # Ensure the parent directory exists.
-        path.parent.mkdir(parents=True, exist_ok=True)
-        # Write to file.
-        from spark.core.serializer import SparkJSONEncoder
-        with open(path, 'w', encoding='utf-8') as json_file:
-            reg = REGISTRY.CONFIG.get_by_cls(self.__class__)
-            if not reg:
-                raise RuntimeError(
-                    f'Config class \"{self.__class__}\" is not in the registry.'
-                    f'Reconstruction from unregistered classes is not currently possible.'
-                    f'Use the \"register_config\" decorator to add the class to the registry.'
-                )
-            # Add top config metadata
-            json_dict = {
-                '__type__': reg.name,
-                '__cfg__': self.to_dict(is_partial=is_partial),
-            }
-            encoder_cls = partial(SparkJSONEncoder, is_partial=is_partial)
-            json.dump(json_dict, json_file, cls=encoder_cls, indent=4)
-        print(f'Successfully exported data to {path}')
-        #except Exception as e:
-        #    raise Exception(
-        #        f'ERROR: Could not write file \"{file_path}\". Reason: {e}'
-        #    )
+        try:
+            # Validate the config
+            # If partial is True, values with errors are replaced with a None.
+            self.validate(is_partial=is_partial)
+            # Validate path
+            path = pl.Path(file_path)
+            # Ensure the parent directory exists.
+            path.parent.mkdir(parents=True, exist_ok=True)
+            # Write to file.
+            from spark.core.serializer import SparkJSONEncoder
+            opener = lzma.open if compress else open
+            mode = 'wt' if compress else 'w'
+            with opener(path, mode, encoding='utf-8') as json_file:
+                reg = REGISTRY.CONFIG.get_by_cls(self.__class__)
+                if not reg:
+                    raise RuntimeError(
+                        f'Config class "{self.__class__}" is not in the registry.'
+                        f'Reconstruction from unregistered classes is not currently possible.'
+                        f'Use the "register_config" decorator to add the class to the registry.'
+                    )
+                # Add top config metadata
+                json_dict = {
+                    '__type__': reg.name,
+                    '__cfg__': self.to_dict(is_partial=is_partial),
+                }
+                encoder_cls = partial(SparkJSONEncoder, is_partial=is_partial)
+                json.dump(json_dict, json_file, cls=encoder_cls, indent=4)
+            print(f'Successfully exported data to "{path}".')
+        except Exception as e:
+            raise Exception(
+                f'ERROR: Could not write file "{file_path}". Reason: {e}'
+            )
 
 
 
@@ -1028,9 +1044,15 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
             path = pl.Path(file_path)
             # Validate path
             if not path.is_file():
-                raise FileNotFoundError(f'No file found at the specified path: \"{path}\".')
+                raise FileNotFoundError(f'No file found at the specified path: "{path}".')
+            # Read the header to determine if the file start with the magic bytes: \xfd7zXZ\x00 (is LZMA compressed)
+            with open(path, 'rb') as f:
+                magic_bytes = f.read(6)
+            is_compressed = (magic_bytes == b'\xfd7zXZ\x00')
             # Parse the file
-            with open(path, 'r', encoding='utf-8') as json_file:
+            opener = lzma.open if is_compressed else open
+            mode = 'rt' if is_compressed else 'r'
+            with opener(path, mode, encoding='utf-8') as json_file:
                 # Try to decode
                 from spark.core.serializer import SparkJSONDecoder
                 try:
@@ -1044,13 +1066,12 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     )
                 if not _is_config_instance(obj):
                     raise TypeError(
-                        f'Expected final object to be of type \"SparkConfig\" but after decoding the final object was of type \"{obj.__class__}\".'
+                        f'Expected final object to be of type "SparkConfig" but after decoding the final object was of type "{obj.__class__}".'
                     )
                 return obj
-            #return cls.from_dict(data)
         except Exception as e:
             raise Exception(
-                f'ERROR: Could not read file \"{file_path}\". Reason: {e}'
+                f'ERROR: Could not read file "{file_path}". Reason: {e}'
             )
 
 
@@ -1167,24 +1188,36 @@ class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
                     setattr(new_instance, name, value.config.with_new_seeds())
                 elif isinstance(value, list):
                     for item in value:
-                        if isinstance(item, ModuleSpecs):
-                            setattr(new_instance, name, item.config.with_new_seeds())
+                        if isinstance(item, SparkConfig):
+                            item = item.with_new_seeds()
+                        elif isinstance(item, ModuleSpecs):
+                            item.config = item.config.with_new_seeds()
                 elif name == 'seed':
                     setattr(new_instance, name, int.from_bytes(os.urandom(4), 'little'))
         else:
             key = jax.random.key(seed)
             for name, field, value in new_instance:
-                key, subkey = jax.random.split(key, 2)
-                new_seed = int(subkey._base_array[0])
                 if isinstance(value, SparkConfig):
+                    key, subkey = jax.random.split(key, 2)
+                    new_seed = int(subkey._base_array[0])
                     setattr(new_instance, name, value.with_new_seeds(seed=new_seed))
                 elif isinstance(value, ModuleSpecs):
+                    key, subkey = jax.random.split(key, 2)
+                    new_seed = int(subkey._base_array[0])
                     setattr(new_instance, name, value.config.with_new_seeds(seed=new_seed))
                 elif isinstance(value, list):
                     for item in value:
-                        if isinstance(item, ModuleSpecs):
-                            setattr(new_instance, name, item.config.with_new_seeds(seed=new_seed))
+                        if isinstance(item, SparkConfig):
+                            key, subkey = jax.random.split(key, 2)
+                            new_seed = int(subkey._base_array[0])
+                            item = item.with_new_seeds(seed=new_seed)
+                        elif isinstance(item, ModuleSpecs):
+                            key, subkey = jax.random.split(key, 2)
+                            new_seed = int(subkey._base_array[0])
+                            item.config = item.config.with_new_seeds(seed=new_seed)
                 elif name == 'seed':
+                    key, subkey = jax.random.split(key, 2)
+                    new_seed = int(subkey._base_array[0])
                     setattr(new_instance, name, new_seed)
         return new_instance
 

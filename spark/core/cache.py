@@ -78,7 +78,7 @@ class CacheEntry:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@jax.tree_util.register_pytree_node_class
+@jax.tree_util.register_pytree_with_keys_class
 @dc.dataclass(init=False)
 class Cache(TwoKeyDict):
 

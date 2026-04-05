@@ -8,7 +8,10 @@ from spark.core.decorators import spark_property as property
 from spark.core import tracers
 from spark.core import config_validation as validation
 from spark.core.flax_imports import jit, eval_shape, split, merge
-from spark.core.registry import register_module, register_neuron, register_initializer, register_payload, register_config, register_cfg_validator
+from spark.core.registry import (
+    register_module, register_neuron, register_initializer, register_payload, register_config, register_cfg_validator,
+    register_neuron_from_config, register_neuron_from_config_file
+)
 
 # NN submodule
 from spark import nn
