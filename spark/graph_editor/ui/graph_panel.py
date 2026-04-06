@@ -9,9 +9,10 @@ from PySide6 import QtCore, QtWidgets, QtGui
 import PySide6QtAds as ads
 
 from spark.core.registry import REGISTRY
-from spark.graph_editor.models.graph import SparkNodeGraph
+from spark.nn.controllers.base import Controller
+from spark.graph_editor.models.graph import SparkNodeGraph, ControllerType
 from spark.graph_editor.models.graph_menu_tree import HierarchicalMenuTree
-from spark.graph_editor.models.nodes import SourceNode, SinkNode, AbstractNode, module_to_nodegraph
+from spark.graph_editor.models.nodes import SourceNode, SinkNode
 from spark.graph_editor.ui.console_panel import MessageLevel
 
 # NOTE: Small workaround to at least have base autocompletion.
@@ -32,48 +33,74 @@ class GraphPanel(CDockWidget):
     broadcast_message = QtCore.Signal(MessageLevel, str)
     onWidgetUpdate = QtCore.Signal(str, tp.Any)
 
-    def __init__(self, **kwargs):
+    def __init__(self, controller_type: ControllerType, **kwargs):
         super().__init__('Graph', **kwargs)
         # Initialize the graph controller.
-        self.graph = SparkNodeGraph()
+        self.graph = SparkNodeGraph(controller_type=controller_type)
         # Add graph widget to layout.
         self.layout().addWidget(self.graph.widget)
         # Setup graph context menu.
-        self._setup_context_menu()
+        self._context_menu = self._setup_context_menu()
+        self._current_controller_type = None
+        self.on_controller_type_change(controller_type)
 
-    def _setup_context_menu(self,) -> None:
+    def _setup_context_menu(self,) -> HierarchicalMenuTree:
         """
             Setup NodeGraphQt node classes using a Spark.Module to Node factory (module_to_nodegraph).
         """
 
         # Menus
         context_menu = HierarchicalMenuTree(self.graph.get_context_menu('graph'))
-
-        # Register source node model.
-        self.graph.register_node(SourceNode)
-        context_menu['Interfaces'].add_command(
-            SourceNode.NODE_NAME, 
-            lambda *args, cls=SourceNode: self.maybe_create_node(*args, nodegraph_cls=cls)
+        
+        # Add source/sink node models.
+        cls_name = SourceNode.__name__
+        context_menu.add_command(
+            cls_name, 
+            lambda *args, cls=cls_name: self.maybe_create_node(*args, nodegraph_cls=cls)
         )
-        # Register sink node model.
-        self.graph.register_node(SinkNode)
-        context_menu['Interfaces'].add_command(
-            SinkNode.NODE_NAME, 
-            lambda *args, cls=SinkNode: self.maybe_create_node(*args, nodegraph_cls=cls)
+        cls_name = SinkNode.__name__
+        context_menu.add_command(
+            cls_name, 
+            lambda *args, cls=cls_name: self.maybe_create_node(*args, nodegraph_cls=cls)
         )
-        # Register module node models.
+        context_menu.graph_menu_ref.add_separator()
+        # Add module node models.
         for key, entry in REGISTRY.MODULES.items():
-            nodegraph_cls = module_to_nodegraph(entry)
-            self.graph.register_node(nodegraph_cls)
+            cls_name = entry.class_ref.__name__
+            if issubclass(entry.class_ref, (Controller)):
+                continue
             context_menu[entry.path].add_command(
-                nodegraph_cls.NODE_NAME, 
-                lambda *args, cls=nodegraph_cls: self.maybe_create_node(*args, nodegraph_cls=cls)
+                cls_name, 
+                lambda *args, cls=cls_name: self.maybe_create_node(*args, nodegraph_cls=cls)
             )
-
+        # Add neuron node models.
+        for key, entry in REGISTRY.NEURONS.items():
+            cls_name = entry.class_ref.__name__
+            context_menu[entry.path].add_command(
+                cls_name, 
+                lambda *args, cls=cls_name: self.maybe_create_neuron(*args, nodegraph_cls=cls)
+            )
         # Base commands
         context_menu.graph_menu_ref.add_separator()
         #context_menu.add_command('Validate Topology', self.validate_graph)
         context_menu.add_command('Delete Selected', self.delete_selected, shortcut='del')
+        return context_menu
+        
+    def maybe_create_neuron(self, *args, nodegraph_cls: str) -> None:
+        if self._current_controller_type == ControllerType.BRAIN:
+            self.maybe_create_node(*args, nodegraph_cls=nodegraph_cls)
+        else:
+            entry = REGISTRY.NEURONS.get(nodegraph_cls)
+            config = entry.class_ref.get_config_spec()()
+            self.graph.load_neuron_from_model(config)
+            #self._context_menu['Neurons'].graph_menu_ref.qmenu.setEnabled(False)
+
+    def on_controller_type_change(self, controller_type: ControllerType):
+        self._current_controller_type = controller_type
+        #if controller_type == ControllerType.BRAIN:
+        #    self._context_menu['Neurons'].graph_menu_ref.qmenu.setEnabled(True)
+        #else:
+        #    self._context_menu['Neurons'].graph_menu_ref.qmenu.setEnabled(False)
 
     def delete_selected(self,) -> None:
         try:
@@ -85,7 +112,7 @@ class GraphPanel(CDockWidget):
         except Exception as e:
             self.broadcast_message.emit(MessageLevel.ERROR, f'Encounter an error while trying to delete nodes: {e}')
 
-    def maybe_create_node(self, *args, nodegraph_cls: AbstractNode)  -> None:
+    def maybe_create_node(self, *args, nodegraph_cls: str)  -> None:
         """
             Prompts the user for a node name using a dialog and then creates the node.
 
@@ -94,7 +121,7 @@ class GraphPanel(CDockWidget):
         """
 
         # Generate a generic name for the new node.
-        base_name = f'{nodegraph_cls.__name__}'
+        base_name = f'{nodegraph_cls}'
         it = 0
         current_name_attempt = f'{base_name}_{it}'
         while self.graph.name_exist(current_name_attempt):
@@ -124,7 +151,7 @@ class GraphPanel(CDockWidget):
             # Create the node if the user clicked OK and the name is not empty.
             elif ok and name:
                 mouse_pos = self.graph.cursor_pos()
-                node_type = f'spark.{nodegraph_cls.__name__}'
+                node_type = f'spark.{nodegraph_cls}'
                 self.graph.create_node(node_type, name=f'{name}', pos=mouse_pos, selected=True) 
                 break
 

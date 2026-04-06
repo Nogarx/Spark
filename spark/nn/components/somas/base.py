@@ -13,7 +13,8 @@ import typing as tp
 import spark.core.utils as utils
 from spark.core.variables import Variable
 from spark.nn.components.base import Component, ComponentConfig
-from spark.core.payloads import SpikeArray, CurrentArray, PotentialArray
+from spark.core.payloads import SpikeArray, CurrentArray, PotentialArray, BooleanMask
+from spark.core.decorators import spark_property
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -24,7 +25,6 @@ class SomaOutput(tp.TypedDict):
        Generic soma model output spec.
     """
     spikes: SpikeArray
-    potential: PotentialArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -51,13 +51,17 @@ class Soma(Component, tp.Generic[ConfigT]):
         # Initialize shapes
         self.units = utils.validate_shape(input_specs['current'].shape)
         # Initialize variables
-        self.potential = Variable(jnp.zeros(self.units, dtype=self._dtype), dtype=self._dtype)
+        self._potential = Variable(jnp.zeros(self.units, dtype=self._dtype), dtype=self._dtype)
+
+    @spark_property
+    def potential(self,) -> PotentialArray:
+        return PotentialArray(self._potential.value)
 
     def reset(self):
         """
             Resets neuron states to their initial values.
         """
-        self.potential.value = jnp.zeros(self.units, dtype=self._dtype)
+        self._potential.value = jnp.zeros(self.units, dtype=self._dtype)
 
     @abc.abstractmethod
     def _update_states(self, current: CurrentArray) -> None:
@@ -73,14 +77,16 @@ class Soma(Component, tp.Generic[ConfigT]):
         """
         pass
 
-    def __call__(self, current: CurrentArray) -> SomaOutput:
+    def __call__(self, current: CurrentArray, inhibition_mask: BooleanMask | None = None) -> SomaOutput:
         """
             Update neuron's states and compute spikes.
         """
         self._update_states(current)
         return {
-            'spikes': self._compute_spikes(), 
-            'potential': self.potential,
+            'spikes': SpikeArray(
+                spikes=self._compute_spikes(), 
+                inhibition_mask=inhibition_mask if inhibition_mask is not None else False
+            )
         }
     
 #################################################################################################################################################

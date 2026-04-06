@@ -18,6 +18,7 @@ if tp.TYPE_CHECKING:
 
 class MenuActions(enum.Enum):
     FILE_NEW = enum.auto()
+    FILE_CHANGE_CONTROLLER = enum.auto()
     FILE_LOAD_SESSION = enum.auto()
     FILE_LOAD_MODEL = enum.auto()
     FILE_SAVE_SESSION = enum.auto()
@@ -54,6 +55,15 @@ class MenuBar(QtWidgets.QMenuBar):
         self._actions[MenuActions.FILE_NEW] = new_action
         new_action.triggered.connect(editor.new_session)
         self.file_menu.addAction(new_action)
+        self.file_menu.addSeparator()
+
+        # Controller
+        change_controller_action =  QtGui.QAction(
+            'Change Controller Type',
+        )
+        self._actions[MenuActions.FILE_CHANGE_CONTROLLER] = change_controller_action
+        change_controller_action.triggered.connect(editor.controller_type_selector)
+        self.file_menu.addAction(change_controller_action)
         self.file_menu.addSeparator()
 
         # Load actions.

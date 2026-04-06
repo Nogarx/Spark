@@ -12,7 +12,7 @@ import warnings
 import typing as tp
 import spark.core.utils as utils
 from spark.core.registry import REGISTRY
-from spark.core.config import BaseSparkConfig
+from spark.core.config import SparkConfig
 from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
 
 #################################################################################################################################################
@@ -56,7 +56,7 @@ class SparkJSONEncoder(json.JSONEncoder):
 				'data': obj.tolist()
 			}
 		# Encode spark configs
-		if isinstance(obj, BaseSparkConfig):
+		if isinstance(obj, SparkConfig):
 			return {
 				'__type__': REGISTRY.CONFIG.get_by_cls(obj.__class__).name,
 				'__cfg__': obj.to_dict(is_partial=self._is_partial),
@@ -140,9 +140,10 @@ class SparkJSONDecoder(json.JSONDecoder):
 			return reg.class_ref
 		if isinstance(obj, dict) and obj.get('__module_type__'):
 			module_type: str | None = obj.get('__module_type__')
+			subregistry: str | None = obj.get('__subregistry__')
 			if not module_type or not isinstance(module_type, str):
 				raise TypeError(f'Expected \"__module_type__\" to be of type \"str\", but got {module_type}')
-			reg = REGISTRY.MODULES.get(module_type)
+			reg = getattr(REGISTRY, subregistry).get(module_type)
 			if not reg:
 				raise KeyError(f'There is no module with name \"{module_type}\" in the registry.')
 			return reg.class_ref

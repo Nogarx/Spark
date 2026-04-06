@@ -11,14 +11,14 @@ import typing as tp
 import abc
 import dataclasses as dc
 from jax.typing import DTypeLike
-from spark.core.config import BaseSparkConfig
+from spark.core.config import SparkConfig
 from spark.core.config_validation import TypeValidator
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class InitializerConfig(BaseSparkConfig, abc.ABC):
+class InitializerConfig(SparkConfig, abc.ABC):
     """
         Base initializers configuration class.
     """

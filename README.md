@@ -1,6 +1,6 @@
 # ⚡ Spark: Modular Spiking Neural Networks
 
-<div align="center"><img src="./images/spark_logo.png" width="400" alt="Spark Logo"></div>
+<div align="center"><img src="./images/spark_logo.png" width="500" alt="Spark Logo"></div>
 
 <p align="center">
     <strong>
@@ -18,11 +18,9 @@
     <a href="#">
         <img src="https://img.shields.io/github/stars/Nogarx/Spark?style=for-the-badge" alt="GitHub Stars">
     </a>
-	<!--
     <a href="#">
-        <img src="https://img.shields.io/pypi/v/spark?style=for-the-badge" alt="PyPI version">
+        <img src="https://img.shields.io/pypi/v/spark-snn?style=for-the-badge" alt="PyPI version">
     </a>
-	-->
 </p>
 
 Spark is a next-generation framework designed to simplify and accelerate the research, development, and deployment of non-gradient-base Spiking Neural Networks (SNNs). Our goal is to make SNNs more accessible to researchers, engineers, and enthusiasts by abstracting away boilerplate code and providing intuitive tools for model creation and experimentation, while maintaing state-of-the-art performance.
@@ -35,8 +33,8 @@ Powered by [JAX](https://jax.readthedocs.io/) and [Flax NNX](https://flax.readth
 🧩 <strong>Modular & Extensible:</strong> 
 Modular by construction.
 Everything (that is worth interacting) in Spark is a self-contained module. 
-Easily create, modify, and share custom neuron models, synapses, and learning rules.
-Ever wanted a neuron with 3 Somas, 2 sets of Synapses and 2.5 Learning rules? As long as it can spike, you came to the right place! 
+Easily create, modify, and share custom neuron models, synapses, and plasticity rules.
+Ever wanted a neuron with 3 Somas, 2 sets of Synapses and 2.5 Plasticity rules? As long as it can spike, you came to the right place! 
 
 🔄 <strong>Seamless Workflow:</strong> 
 Spiking neural networks are not special, why should they require special data?!. One of the core features of Spark is the concept of input and output interfaces which are simple modules that help you transform regular datasets into streams of spikes and transform streams of spikes back into boring data formats like floats.
@@ -45,6 +43,11 @@ Spiking neural networks are not special, why should they require special data?!.
 Design complex SNN architectures by dragging, dropping, and connecting pre-built neural components. 
 No coding required for model design.
 
+<!--
+<div align="center"  alt="Spark Summary">
+    <img src="./images/spark_summary.png" width="1000" alt="Spark Graph Editor"></div>
+</div>
+-->
 ## Getting Started
 
 
@@ -63,12 +66,14 @@ cd spark
 pip install -e .
 ```
 
+Do not know what to do next? The [tutorials](https://github.com/Nogarx/Spark/tree/main/tutorials) are here to help you! 
+
 ## The Spark Graph Editor
 
 Design your network's structure, set parameters for each component, and connect them to create a model.
 
 <div align="center">
-    <img src="./images/spark_graph_editor.png" alt="Spark Logo"></div>
+    <img src="./images/spark_graph_editor.png" width="1200" alt="Spark Graph Editor"></div>
     <p>
         <em>The Spark visual interface for building SNNs.</em>
     </p>
@@ -89,7 +94,6 @@ editor = spark.GraphEditor()
 if __name__ == "__main__":
     editor.launch()
 ```
-(Note: Currently the editor is in an early stage of development an it is not recommended for building neurons from scratch due to a small latency factor that is introduced when the model is "compiled".)
 
 Afterwards you can simply export your model and build it.
 
@@ -159,13 +163,12 @@ Spark is built around the idea of modular neurons. Literature is full of really 
 🧮 <strong>Custom kernels:</strong>
 Spark is fast but it can be faster!. Several operations can be further optimized using custom kernels.
 
-<!--
-🧮 <strong>Surrogate gradients:</strong> 
-Spark was build with the goal of building recurrent "Heabbian"-like learning schemes and as such it does not support surrogate gradients by default. Spark is also built on top of JAX, which makes automatic differentiation quite straight forward. However, surrogate gradients are typically apply to batched data, which goes against the design philosophy of Spark. We are currently exploring how to integrate surrogate gradients in a way that does not violates our core design. 
---->
 ## Contributing
 
 Contributions are what make the open-source community such an amazing place. Any contributions you make are greatly appreciated.
+Want to contribute but you do not know where to start? The [discussion forum](https://github.com/Nogarx/Spark/discussions)!  may be the place you are looking for!. 
+
+
 
 ## Citing Spark
 

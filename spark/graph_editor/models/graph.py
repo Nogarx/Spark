@@ -3,21 +3,32 @@
 #################################################################################################################################################
 
 from __future__ import annotations
+import typing as tp
 
+import enum
 import networkx as nx
-from typing import Dict, List, Tuple
 from PySide6 import QtCore, QtGui, QtWidgets
 from NodeGraphQt import NodeGraph, Port, BaseNode
 from NodeGraphQt.widgets.viewer import NodeViewer
 
+from spark.core.registry import REGISTRY
 from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
-from spark.nn.brain import BrainConfig
-from spark.graph_editor.models.nodes import SourceNode, SinkNode, AbstractNode, SparkModuleNode
+from spark.nn.controllers.base import Controller, ControllerConfig
+from spark.nn.controllers.neuron import NeuronConfig
+from spark.nn.controllers.brain import BrainConfig
+from spark.graph_editor.models.nodes import SourceNode, SinkNode, PropertyNode, AbstractNode, SparkModuleNode, module_to_nodegraph, neuron_to_nodegraph
 from spark.graph_editor.ui.console_panel import MessageLevel
+from spark.graph_editor.style.painter import DEFAULT_PALETTE, PortColorStyle
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
+
+class ControllerType(enum.IntFlag):
+    BRAIN = 0b0
+    NEURON = 0b1
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class SparkNodeViewer(NodeViewer):
     """
@@ -27,16 +38,16 @@ class SparkNodeViewer(NodeViewer):
     # BUG: Patch because NodeGraph keeps overriding the Save shortcut >:|
     BUGFIX_on_save = QtCore.Signal()
 
-    def __init__(self, parent=None, undo_stack=None):
+    def __init__(self, parent=None, undo_stack=None) -> None:
         super().__init__(parent, undo_stack)
 
-    def focusInEvent(self, event):
+    def focusInEvent(self, event) -> None:
         QtWidgets.QGraphicsView.focusInEvent(self, event)
 
-    def focusOutEvent(self, event):
+    def focusOutEvent(self, event) -> None:
         QtWidgets.QGraphicsView.focusOutEvent(self, event)
 
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event) -> None:
         """
             Explicitly ignore Ctrl+S so it propagates to the Main Window.
         """
@@ -59,12 +70,16 @@ class SparkNodeGraph(NodeGraph):
     broadcast_message = QtCore.Signal(MessageLevel, str)
     on_update = QtCore.Signal(bool) 
 
-    def __init__(self, parent=None, **kwargs):
+    def __init__(self, controller_type: ControllerType, parent=None, **kwargs) -> None:
         super().__init__(parent, **kwargs, viewer=SparkNodeViewer())
+        # Controller type
+        self._controller_type = controller_type
+        # Register nodes
+        self._register_nodes()
         # Enable recurrence
         self.set_acyclic(False)
         self._is_dirty = False
-        self._node_registry: Dict[str, str] = {}
+        self._node_registry: dict[str, str] = {}
         # Add a callback to validate logic.
         self.port_connected.connect(self._on_port_connected)
         self.port_disconnected.connect(self._on_port_disconnected)
@@ -83,7 +98,29 @@ class SparkNodeGraph(NodeGraph):
         self._prev_selection = []
         
     
+    def _register_nodes(self,) -> None:
+        # Register interface nodes.
+        self.register_node(SourceNode)
+        self.register_node(SinkNode)
+        self.register_node(PropertyNode)
+        # Register module node models.
+        for key, entry in REGISTRY.MODULES.items():
+            nodegraph_cls = module_to_nodegraph(entry)
+            self.register_node(nodegraph_cls)
+        # Register module node models.
+        for key, entry in REGISTRY.NEURONS.items():
+            nodegraph_cls = neuron_to_nodegraph(entry)
+            self.register_node(nodegraph_cls)
 
+    def set_controller_type(self, controller_type: ControllerType) -> None:
+        if controller_type != self._controller_type:
+            self._controller_type = controller_type
+            msg_controller_type = 'Brain' if controller_type == ControllerType.BRAIN else 'Neuron'
+            self.broadcast_message.emit(
+                MessageLevel.INFO,
+                f'Controller type updated to: "{msg_controller_type}".'
+            )
+    
     # NOTE: This is a simple workaround to fix a bug that happens when cliking an already selected node in the graph.
     def _bugfix_on_node_selection_changed(self, new_selection: list[AbstractNode], prev_selection: list[AbstractNode]) -> None:
         # Check if bug happend.
@@ -124,40 +161,63 @@ class SparkNodeGraph(NodeGraph):
         self._node_registry[id] = name
 
     def _on_output_shape_update(self, output_port: Port) -> None:
-        connected_ports: List[Port] = output_port.connected_ports()
+        connected_ports: list[Port] = output_port.connected_ports()
         for port in connected_ports:
             self._update_port_specs(port)
 
-    def _on_port_connected(self, input_port: Port, output_port: Port) -> None:
+    def _on_port_connected(self, target_port: Port, origin_port: Port) -> None:
         # Get node info
-        input_node: AbstractNode = input_port.node()
-        input_payload_type = input_node.input_specs[input_port.name()].payload_type
-        output_node: AbstractNode = output_port.node()
-        output_payload_type = output_node.output_specs[output_port.name()].payload_type
+        target_node: AbstractNode = target_port.node()
+        origin_node: AbstractNode = origin_port.node()
+        # Get port specs
+        target_port_name = target_port.name()
+        if target_port_name in target_node.input_specs:
+            target_port_specs = target_node.input_specs[target_port_name]
+        else:
+            # NOTE: Source/sink nodes should not be able to reach here
+            target_port_specs = target_node.property_specs[target_port_name]
 
-        # Update sink node specs
-        if isinstance(input_node, SinkNode):
-            output_specs = output_node.output_specs[output_port.name()]
-            input_node.update_io_spec(
+        origin_port_name = origin_port.name()
+        if origin_port_name in origin_node.output_specs:
+            origin_port_specs = origin_node.output_specs[origin_port_name]
+        else:
+            # NOTE: Source/sink nodes should not be able to reach here
+            origin_port_specs = origin_node.property_specs[origin_port_name]
+
+        # Update source/sink node specs dinamically.
+        if isinstance(target_node, SinkNode):
+            target_node.update_io_spec(
                 'input', 
                 'value', 
-                payload_type=output_specs.payload_type,
-                shape=output_specs.shape,
-                dtype=output_specs.dtype,
+                payload_type=origin_port_specs.payload_type,
+                shape=origin_port_specs.shape,
+                dtype=origin_port_specs.dtype,
             )
+            # Update port painter fn
+            target_port.view.set_painter(DEFAULT_PALETTE(origin_port_specs.payload_type.__name__, color_style=PortColorStyle.DEFAULT)) 
+            return
+        elif isinstance(origin_node, SourceNode) and len(origin_node.connected_output_nodes()[origin_port]) == 1:
+            origin_node.update_io_spec(
+                'output', 
+                'value', 
+                payload_type=target_port_specs.payload_type,
+                shape=target_port_specs.shape,
+                dtype=target_port_specs.dtype,
+            )
+            # Update port painter fn
+            origin_port.view.set_painter(DEFAULT_PALETTE(target_port_specs.payload_type.__name__, color_style=PortColorStyle.DEFAULT)) 
             return
 
         # Delete invalid connections
-        if input_payload_type != output_payload_type: 
-            input_port.disconnect_from(output_port, push_undo=False, emit_signal=False)
+        if origin_port_specs.payload_type != target_port_specs.payload_type: 
+            target_port.disconnect_from(origin_port, push_undo=False, emit_signal=False)
             self.broadcast_message.emit(
                 MessageLevel.WARNING,
-                f'Tried to connect {output_node.NODE_NAME}.{output_port.name()} to {input_node.NODE_NAME}.{input_port.name()} '
-                f'but they have different payload types: {output_payload_type} vs {input_payload_type}.'
+                f'Tried to connect {origin_node.NODE_NAME}.{origin_port_name} to {target_node.NODE_NAME}.{target_port_name} '
+                f'but they have different payload types: {origin_port_specs.payload_type} vs {target_port_specs.payload_type}.'
             )
             return
         
-
     def _on_port_disconnected(self, input_port: Port, output_port: Port) -> None:
         return
     
@@ -189,9 +249,209 @@ class SparkNodeGraph(NodeGraph):
         del self._node_registry[node.id]
         return super().delete_node(node, push_undo)
 
-    def build_raw_graph(self,) -> nx.DiGraph:
+    # TODO: This is quite unefficient
+    def load_neuron_from_model(self, config: ControllerConfig) -> None:
+        # Add source/sinks metadata to config.
+        input_specs = Controller._get_controller_input_specs(config.modules_specs)
+        output_specs = Controller._get_controller_output_specs(config.modules_specs)
+        property_specs = config.class_ref._get_controller_property_specs()
+        io_nodes_metadata = {}
+        for name, spec in input_specs.items():
+            io_nodes_metadata[name] = {
+                'type': 'source',
+                'spec': spec
+            }
+        for name, spec in output_specs.items():
+            io_nodes_metadata[name] = {
+                'type': 'sink',
+                'spec': spec['spec']
+            }
+        for name, spec in property_specs.items():
+            io_nodes_metadata[name] = {
+                'type': 'property',
+                'spec': spec
+            }
+        for key in io_nodes_metadata.keys():
+            if not key in config.__graph_editor_metadata__:
+                config.__graph_editor_metadata__[key] = io_nodes_metadata[key]
+        # Forward config
+        self.load_from_model(config)
+        #self.spring_layout()
+
+    def load_from_model(self, config: ControllerConfig) -> None:
+        if isinstance(config, BrainConfig):
+            self.set_controller_type(ControllerType.BRAIN)
+        elif isinstance(config, NeuronConfig):
+            self.set_controller_type(ControllerType.NEURON)
+        else:
+            raise TypeError(
+                f'Unknown controller type: "{type(config).__name__}"'
+            )
+        node_names_to_ids = {}
+        # IO nodes.
+        node_type_dict = {
+            'source': 'spark.SourceNode',
+            'sink': 'spark.SinkNode',
+            'property': 'spark.PropertyNode',
+        }
+        nodes_at_center = 0
+        # IO nodes
+        for name, spec in config.__graph_editor_metadata__.items():
+            node_cls = node_type_dict.get(spec['type'])
+            node_attr_label = 'input_specs' if spec['type'] == 'sink' else 'output_specs'
+            pos = spec.get('pos', [0,0])
+            nodes_at_center += 1 if pos == [0,0] else 0
+            node: AbstractNode = self.create_node(node_cls, name=name, pos=pos, select_node=False)
+            attr_spec = getattr(node, node_attr_label)
+            attr_spec['value'].payload_type = spec['spec'].payload_type
+            attr_spec['value'].dtype = spec['spec'].dtype
+            attr_spec['value'].shape = spec['spec'].shape
+            attr_spec['value'].description = spec['spec'].description
+            node_names_to_ids[name] = node.id
+        # Module nodes
+        for module_spec in config.modules_specs:
+            pos = module_spec.config.__graph_editor_metadata__.get('pos', [0,0])
+            nodes_at_center += 1 if pos == [0,0] else 0
+            node: SparkModuleNode = self.create_node(f'spark.{module_spec.module_cls.__name__}', name=module_spec.name, pos=pos, select_node=False)
+            node.set_config(module_spec.config)
+            node_names_to_ids[module_spec.name] = node.id
+        # Setup node connections
+        member_ports = ['__call__', '__self__']
+        for module_spec in config.modules_specs:
+            # Get node
+            target_node: AbstractNode = self.get_node_by_id(node_names_to_ids[module_spec.name])
+            # Iterate over inputs
+            for port_name, port_map_list in module_spec.inputs.items():
+                # Get port
+                target_port: Port = target_node.get_input(port_name)
+                # Connect port
+                for port_map in port_map_list:
+                    origin_node: AbstractNode = self.get_node_by_id(node_names_to_ids[port_map.port if port_map.origin in member_ports else port_map.origin])
+                    origin_port: Port = origin_node.get_output('value' if isinstance(origin_node, (SourceNode, PropertyNode)) else port_map.port)
+                    origin_port.connect_to(target_port, push_undo=False, emit_signal=False)
+            # Iterate over outputs
+            for output_name, port_name in module_spec.outputs.items():
+                # Get port
+                origin_port: Port = target_node.get_output(port_name)
+                # Get sink port
+                sink_node: SinkNode = self.get_node_by_id(node_names_to_ids[output_name])
+                sink_port: Port = sink_node.get_input('value')
+                origin_port.connect_to(sink_port, push_undo=False, emit_signal=False)
+            # Iterate over effects
+            for port_name, port_map_list in module_spec.effects.items():
+                # Get port
+                target_port: Port = target_node.get_input(port_name)
+                # Connect port
+                for port_map in port_map_list:
+                    origin_node: AbstractNode = self.get_node_by_id(node_names_to_ids[port_map.port if port_map.origin in member_ports else port_map.origin])
+                    origin_port: Port = origin_node.get_output('value' if isinstance(origin_node, (SourceNode, PropertyNode)) else port_map.port)
+                    origin_port.connect_to(target_port, push_undo=False, emit_signal=False)
+        # Use spring layout if all nodes were instantiated in the center.
+        if nodes_at_center == len(self._node_registry):
+            self.spring_layout()
+        # Clean stack
+        self.clear_selection()
+        self.clear_undo_stack()
+        self.center_on()
+        self._is_dirty = False
+
+    def _gather_modules_specs(self, errors: list | None = None) -> list[ModuleSpecs]:
+        """
+            Build the controller modules spec list from the graph state.
+        """
+        modules_specs = []
+        for node in self.all_nodes():
+            if isinstance(node, (SourceNode, SinkNode, PropertyNode)):
+                continue
+            else:
+                modules_specs.append(node.get_module_spec())
+        return modules_specs
+
+    def _gather_controller_metadata(self, errors: list | None = None) -> dict:
+        """
+            Build the controller metadata from the graph state.
+        """
+        io_nodes_metadata = {}
+        for node in self.all_nodes():
+            if isinstance(node, (SourceNode, SinkNode, PropertyNode)):
+                io_nodes_metadata[node.NODE_NAME] = node.get_module_spec()
+            else:
+                continue
+        return io_nodes_metadata
+
+    def get_config_cls(self,) -> ControllerConfig:
+        if self._controller_type == ControllerType.BRAIN:
+            return BrainConfig
+        elif self._controller_type == ControllerType.NEURON:
+            return NeuronConfig
+        else:
+            raise ValueError(
+                f'Unknown controller type "{self._controller_type}"'
+            )
+
+    def serialize_controller_config(self, is_partial: bool = True, errors: list | None = None) -> ControllerConfig:
+        # Get controller class
+        controller_cls = self.get_config_cls()
+        # Gather modules and metadata
+        modules_specs = self._gather_modules_specs()
+        controller_metadata = self._gather_controller_metadata()
+        # Construct brain config.
+        if is_partial:
+            brain_config = controller_cls._create_partial(
+                modules_specs=modules_specs
+            )
+        else:
+            if errors is not None:
+                brain_config = controller_cls._create_partial(
+                    modules_specs=modules_specs
+                )
+                brain_config.validate(errors=errors)
+            else:
+                brain_config = controller_cls(
+                    modules_specs=modules_specs
+                )
+        brain_config.__graph_editor_metadata__ = controller_metadata
+        return brain_config
+
+    def export_controller_config(self, errors: list | None = None) -> ControllerConfig:
+        # Get controller class
+        controller_cls = self.get_config_cls()
+        # Gather modules and metadata
+        modules_specs = self._gather_modules_specs()
+        controller_metadata = self._gather_controller_metadata()
+        # Replace input nodes references with the conventional references.
+        replacement_map = {}
+        outputs_map = {node.NODE_NAME: {} for node in self.all_nodes()}
+        for node in self.all_nodes():
+            if isinstance(node, SourceNode):
+                replacement_map[PortMap(node.NODE_NAME, 'value')] = PortMap('__call__', node.NODE_NAME)
+            elif isinstance(node, SinkNode):
+                port = node.get_input('value')
+                # NOTE: Sinks can only connect to a single port
+                origin_port = port.connected_ports()[0]
+                origin_name = origin_port.node().NODE_NAME
+                outputs_map[origin_name][node.NODE_NAME] = origin_port.name()
+            elif isinstance(node, PropertyNode):
+                replacement_map[PortMap(node.NODE_NAME, 'value')] = PortMap('__self__', node.NODE_NAME, is_property=True)
+        for spec in modules_specs:
+            spec.outputs = outputs_map[spec.name]
+            for key in spec.inputs.keys():
+                spec.inputs[key] = [
+                    replacement_map[port_map] if port_map in replacement_map else port_map
+                    for port_map in spec.inputs[key]
+                ]
+        # Construct brain config.
+        brain_config = controller_cls._create_partial(
+            modules_specs=modules_specs,
+            skip_validation = False,
+        )
+        brain_config.validate(errors=errors)
+        brain_config.__graph_editor_metadata__ = controller_metadata
+        return brain_config
+
+    def build_nx_graph(self,) -> nx.DiGraph:
         nx_graph = nx.DiGraph()
-        all_nodes: List[BaseNode] = self.all_nodes()
+        all_nodes: list[BaseNode] = self.all_nodes()
         # Add nodes to the graph.
         for node in all_nodes:
             nx_graph.add_node(node.NODE_NAME, node_type=type(node).__name__)
@@ -204,72 +464,6 @@ class SparkNodeGraph(NodeGraph):
                 for output_node in output_port:
                     nx_graph.add_edge(node.NODE_NAME, output_node.NODE_NAME)
         return nx_graph
-    
-    def get_nodes_by_map(self,) -> Tuple[List[AbstractNode], List[AbstractNode], List[AbstractNode]]:
-        source_nodes = []
-        sink_nodes = []
-        internal_nodes = []
-        for node in self.all_nodes():
-            if isinstance(node, SourceNode):
-                source_nodes.append(node)
-            elif isinstance(node, SinkNode):
-                sink_nodes.append(node)
-            else:
-                internal_nodes.append(node)
-        return source_nodes, sink_nodes, internal_nodes
-
-    # TODO: Improve node placent for configs without pos metadata
-    def load_from_model(self, config: BrainConfig):
-        node_names_to_ids = {}
-        # Input nodes.
-        for name, spec in config.input_map.items():
-            pos = config.__graph_editor_metadata__.get(name, {}).get('pos', [0,0])
-            node: SourceNode = self.create_node('spark.SourceNode', name=name, pos=pos, select_node=False)
-            node.output_specs['value'].payload_type = spec.payload_type
-            node.output_specs['value'].dtype = spec.dtype
-            node.output_specs['value'].shape = spec.shape
-            node.output_specs['value'].description = spec.description
-            node_names_to_ids[name] = node.id
-        # Output nodes.
-        for name, dict_spec in config.output_map.items():
-            pos = config.__graph_editor_metadata__.get(name, {}).get('pos', [0,0])
-            node: SinkNode = self.create_node('spark.SinkNode', name=name, pos=pos, select_node=False)
-            node.input_specs['value'].payload_type = dict_spec['spec'].payload_type
-            node.input_specs['value'].dtype = dict_spec['spec'].dtype
-            node.input_specs['value'].shape = dict_spec['spec'].shape
-            node.input_specs['value'].description = dict_spec['spec'].description
-            node_names_to_ids[name] = node.id
-        # Module nodes.
-        for name, spec in config.modules_map.items():
-            pos = spec.config.__graph_editor_metadata__.get('pos', [0,0])
-            node: SparkModuleNode = self.create_node(f'spark.{spec.module_cls.__name__}', name=name, pos=pos, select_node=False)
-            node.node_config = spec.config
-            node_names_to_ids[name] = node.id
-        # Setup sink node connections
-        for name, dict_spec in config.output_map.items():
-            target_node: SinkNode = self.get_node_by_id(node_names_to_ids[name])
-            target_port: Port = target_node.get_input('value')
-            origin_node: AbstractNode = self.get_node_by_id(node_names_to_ids[dict_spec['input'].origin])
-            origin_port: Port = origin_node.get_output(dict_spec['input'].port)
-            target_port.connect_to(origin_port)
-        # Setup module node connections
-        for name, spec in config.modules_map.items():
-            target_node: AbstractNode = self.get_node_by_id(node_names_to_ids[name])
-            for port_name, port_maps in spec.inputs.items():
-                target_port: Port = target_node.get_input(port_name)
-                for p_map in port_maps:
-                    if p_map.origin == '__call__':
-                        origin_node: AbstractNode = self.get_node_by_id(node_names_to_ids[p_map.port])
-                        origin_port: Port = origin_node.get_output('value')
-                    else:
-                        origin_node: AbstractNode = self.get_node_by_id(node_names_to_ids[p_map.origin])
-                        origin_port: Port = origin_node.get_output(p_map.port)
-                    target_port.connect_to(origin_port)
-        # Clean stack
-        self.clear_selection()
-        self.clear_undo_stack()
-        self.center_on()
-        self._is_dirty = False
 
     def validate_graph(self,) -> list[str]:
         """
@@ -278,7 +472,7 @@ class SparkNodeGraph(NodeGraph):
             Ensures that graph has a single connected component and at least one source and one sink is present in the model.
         """
         errors = []
-        nx_graph = self.build_raw_graph()
+        nx_graph = self.build_nx_graph()
         connected_components = list(nx.weakly_connected_components(nx_graph))
         # Check input/output exists.
         node_types = nx.get_node_attributes(nx_graph, 'node_type').values()
@@ -295,94 +489,19 @@ class SparkNodeGraph(NodeGraph):
             )
         return errors
 
-    def build_brain_config(self, is_partial: bool = True, errors: list | None = None) -> BrainConfig:
-        """
-            Build the model from the graph state.
-        """
-        input_map: dict[str, PortSpecs] = {}
-        output_map: dict[str, dict] = {}
-        modules_map: dict[str, ModuleSpecs] = {}
-        io_nodes_metadata = {}
-        for node in self.all_nodes():
-            if isinstance(node, SourceNode):
-                # Source nodes had a single output of the appropiate type
-                input_map[node.NODE_NAME] = PortSpecs(
-                    payload_type=node.output_specs['value'].payload_type,
-                    shape=node.output_specs['value'].shape,
-                    dtype=node.output_specs['value'].dtype,
-                    description=node.output_specs['value'].description,
-                )
-                io_nodes_metadata[node.NODE_NAME] = {'pos': node.pos()}
-            elif isinstance(node, SinkNode):
-                # Sink nodes are virtual nodes, we need to get the origin of its input to resolve the output_map entry. 
-                input_port: Port = node.get_input('value')
-                # NOTE: Sink nodes are only allowed a single input.
-                origin_port: Port = input_port.connected_ports()[0]
-                origin_node: AbstractNode = origin_port.node()
-                if isinstance(origin_node, SourceNode):
-                    origin_name = '__call__'
-                    port_name = origin_node.NODE_NAME
-                else:
-                    origin_name = origin_node.NODE_NAME
-                    port_name = origin_port.name()
-                # Create PortSpecs
-                output_map[node.NODE_NAME] = {
-                    'input': PortMap(origin=origin_name, port=port_name),
-                    'spec': PortSpecs(
-                        payload_type=node.input_specs['value'].payload_type,
-                        shape=node.input_specs['value'].shape,
-                        dtype=node.input_specs['value'].dtype,
-                        description=node.input_specs['value'].description,
-                    )
-                }
-                io_nodes_metadata[node.NODE_NAME] = {'pos': node.pos()}
-            elif isinstance(node, SparkModuleNode):
-                # Gather input maps
-                inputs = {}
-                for input_port in node.input_ports():
-                    # Gather all incomming connections to the input port.
-                    port_maps = []
-                    for output_port in input_port.connected_ports():
-                        origin_node: AbstractNode = output_port.node()
-                        if isinstance(origin_node, SourceNode):
-                            origin_name = '__call__'
-                            port_name = origin_node.NODE_NAME
-                        else:
-                            origin_name = origin_node.NODE_NAME
-                            port_name = output_port.name()
-                        port_maps.append(PortMap(origin=origin_name, port=port_name))
-                    inputs[input_port.name()] = port_maps
-                # Build module spec
-                node._update_graph_metadata()
-                modules_map[node.NODE_NAME] = ModuleSpecs(
-                    name = node.NODE_NAME,
-                    module_cls = node.module_cls,
-                    inputs = inputs,
-                    config = node.node_config,
-                )
-        # Construct brain config.
-        if is_partial:
-            brain_config = BrainConfig._create_partial(
-                input_map=input_map, 
-                output_map=output_map, 
-                modules_map=modules_map
-            )
-        else:
-            if errors is not None:
-                brain_config = BrainConfig._create_partial(
-                    input_map=input_map, 
-                    output_map=output_map, 
-                    modules_map=modules_map
-                )
-                brain_config.validate(errors=errors)
-            else:
-                brain_config = BrainConfig(
-                    input_map=input_map, 
-                    output_map=output_map, 
-                    modules_map=modules_map
-                )
-        brain_config.__graph_editor_metadata__ = io_nodes_metadata
-        return brain_config
+    # TODO: Node registry needs to be bidirectional.
+    def spring_layout(self, scale: int = 500) -> None:
+        nx_graph = self.build_nx_graph()
+        #pos_init = {name:[0,0] for name in self._node_registry.values()}
+        layout = nx.spring_layout(nx_graph, method='energy', center=[0,0], scale=scale, seed=42)
+        for node_name, pos in layout.items():
+            for node_id, name in self._node_registry.items():
+                if node_name != name:
+                    continue
+                node: AbstractNode = self.get_node_by_id(node_id)
+                node.set_pos(int(pos[0]), int(pos[1]))
+                break
+
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

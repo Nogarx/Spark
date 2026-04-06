@@ -3,7 +3,11 @@
 #################################################################################################################################################
 
 from __future__ import annotations
+import typing as tp
+if tp.TYPE_CHECKING:
+    from spark.nn.controllers.neuron import Neuron, NeuronConfig
 
+import pathlib as pl
 import logging
 import dataclasses as dc
 import typing as tp
@@ -76,17 +80,27 @@ class SubRegistry(Mapping):
         """
             Validate and register new item.
         """
+        # Special case for initializers
         if self._registry_base_type == validation.DEFAULT_INITIALIZER_PATH:
             if not validation._is_initializer_type(cls):
                 raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
                                 f'"{cls.__name__}" is not a valid Initializer.')
+        # Special case for modules + controllers
+        elif self._registry_base_type == validation.DEFAULT_SPARK_MODULE_PATH:
+            if not (
+                validation._is_spark_type(cls, self._registry_base_type) or 
+                validation._is_spark_type(cls, validation.DEFAULT_SPARK_CONTROLLER_PATH)
+                ):
+                raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
+                                f'"{cls.__name__}" does not inherit from {self._registry_base_type}.')
+        # Everything else
         else:
             if not validation._is_spark_type(cls, self._registry_base_type):
                 raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
                                 f'"{cls.__name__}" does not inherit from {self._registry_base_type}.')
         if self._exists(name):
             raise ValueError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
-                             f'name "{name}" is already registered to another class.')
+                            f'name "{name}" is already registered to another class.')
         if not path is None:
             if not isinstance(path, list):
                 raise TypeError(f'Expect path to be a list of str but got {type(path).__name__}.')
@@ -138,8 +152,13 @@ class SubRegistry(Mapping):
         else: 
             raise RuntimeError(f'Registry is not yet built. Registry must be built first before trying to access it.')
 
-    def _exists(self, name):
+    def _exists(self, name) -> bool:
         if name in self._registry:
+            return True
+        return False
+
+    def exists(self, name) -> bool:
+        if utils.normalize_str(name) in self._registry:
             return True
         return False
 
@@ -148,6 +167,10 @@ class SubRegistry(Mapping):
             name = cls.__module__.split('.')[-1]
             name_map = INITIALIZERS_ALIAS_MAP.get(name, name)
             path = ['Initializers', name_map]
+            return path
+        elif self._registry_base_type == validation.DEFAULT_SPARK_NEURON_PATH:
+            name = cls.__module__.split('.')[-1]
+            path = ['Neurons']
             return path
         else:
             path = []
@@ -179,7 +202,8 @@ class Registry():
     """
     
     def __init__(self):
-        self.MODULES = SubRegistry(registry_base_type=validation.DEFAULT_SPARKMODULE_PATH)
+        self.MODULES = SubRegistry(registry_base_type=validation.DEFAULT_SPARK_MODULE_PATH)
+        self.NEURONS = SubRegistry(registry_base_type=validation.DEFAULT_SPARK_NEURON_PATH)
         self.PAYLOADS = SubRegistry(registry_base_type=validation.DEFAULT_PAYLOAD_PATH)
         self.INITIALIZERS = SubRegistry(registry_base_type=validation.DEFAULT_INITIALIZER_PATH)
         self.CONFIG = SubRegistry(registry_base_type=validation.DEFAULT_CONFIG_PATH)
@@ -187,6 +211,7 @@ class Registry():
 
     def _build(self,):
         self.MODULES._build()
+        self.NEURONS._build()
         self.PAYLOADS._build()
         self.INITIALIZERS._build()
         self.CONFIG._build()
@@ -252,6 +277,17 @@ register_module = create_registry_decorator(
     Note that module must inherit from spark.nn.Module (spark.core.module.SparkModule)
 """
 
+register_neuron = create_registry_decorator(
+    sub_registry=REGISTRY.NEURONS, 
+    base_class_name='Neuron', 
+    base_class_path='spark.nn.controllers.neuron.Neuron',
+    base_class_abr='spark.nn.Neuron'
+)
+"""
+    Decorator used to register a new Neuron model. 
+    Note that module must inherit from spark.nn.Neuron (spark.nn.controllers.neuron.Neuron)
+"""
+
 register_payload = create_registry_decorator(
     sub_registry=REGISTRY.PAYLOADS, 
     base_class_name='SparkPayload', 
@@ -276,12 +312,12 @@ register_initializer = create_registry_decorator(
 register_config = create_registry_decorator(
     sub_registry=REGISTRY.CONFIG, 
     base_class_name='SparkConfig', 
-    base_class_path='spark.core.config.BaseSparkConfig',
+    base_class_path='spark.core.config.SparkConfig',
     base_class_abr='spark.nn.BaseConfig'
 )
 """
     Decorator used to register a new SparkConfig. 
-    Note that module must inherit from spark.nn.BaseConfig (spark.core.config.BaseSparkConfig)
+    Note that module must inherit from spark.nn.BaseConfig (spark.core.config.SparkConfig)
 """
 
 register_cfg_validator = create_registry_decorator(
@@ -306,9 +342,9 @@ MRO_PATH_ALIAS_MAP = {
     'ControlFlowInterface': 'Control',
     'Component': 'Components',
     'Delays': 'Delays',
-    #'Plasticity': 'Learning Rules',
+    'Plasticity': 'Plasticity Rules',
     'Soma': 'Somas',
-    'Synanpses': 'Synanpses',
+    'Synapses': 'Synapses',
     'Neuron': 'Neurons',
     # Exclusions
     'ValueSparkPayload': None,
@@ -320,6 +356,105 @@ INITIALIZERS_ALIAS_MAP = {
     'delay': 'Dealy',
 }
 
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+def _construct_neuron_config_cls(cls_name: str, config: NeuronConfig) -> type[NeuronConfig]:
+    """
+        Generate a NeuronConfig subclass programmatically from a NeuronConfig instance.
+    """
+    from spark.nn.controllers.neuron import NeuronConfig
+    # Shallow copy
+    config = copy.deepcopy(config)
+    # Cls namespace
+    cls_name = f'{cls_name}Config'
+    ns_annotations: dict[str, tp.Any] = {}
+    namespace: dict[str, tp.Any] = {}
+    # Grab config fields
+    for name, field, value in config:
+        namespace[name] = value
+        ns_annotations[name] = field.type
+    # Copy metadata
+    namespace['__metadata__'] = config.__metadata__
+    namespace['__graph_editor_metadata__'] = config.__graph_editor_metadata__
+    namespace['__annotations__'] = ns_annotations
+    # Create class and link it to spark
+    neuron_config_cls = type(cls_name, (NeuronConfig,), namespace)
+    neuron_config_cls.__module__ = 'spark'
+    return neuron_config_cls
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _construct_neuron_cls(cls_name: str, config_cls: type[NeuronConfig]) -> type[Neuron]:
+    """
+        Generate a Neuron subclass programmatically from a NeuronConfig type.
+    """
+    from spark.nn.controllers.neuron import Neuron
+    # Cls namespace
+    cls_name = f'{cls_name}'
+    ns_annotations: dict[str, tp.Any] = {'config': config_cls}
+    namespace: dict[str, tp.Any] = {}
+    namespace['__annotations__'] = ns_annotations
+    # Create class and link it to spark
+    neuron_cls = type(cls_name, (Neuron,), namespace)
+    neuron_cls.__module__ = 'spark'
+    return neuron_cls
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+# TODO: Clean up is necessary in case something fails in order to prevent orphaned pairs.
+def register_neuron_from_config(cls_name: str, config: NeuronConfig) -> None:
+    """
+        Generate a (Neuron, NeuronConfig) subclass pair programmatically from a NeuronConfig instance.
+    """
+    from spark.nn.controllers.neuron import NeuronConfig
+    if REGISTRY.NEURONS.exists(cls_name):
+        raise KeyError(
+            f'Unable to generate a (Neuron, NeuronConfig) subclass pair. The name {cls_name} is already in use by another class in the registry.'
+        )
+
+    if not isinstance(config, NeuronConfig):
+        raise TypeError(
+            f'Expected "config" to be of type "{NeuronConfig.__name__}" but got type "{type(config).__name__}".'
+        )
+    try:
+        config_cls = _construct_neuron_config_cls(cls_name, config)
+        register_config(config_cls)
+    except Exception as e:
+        raise RuntimeError(
+            f'Unable to generate a configuration class from "config". Error: {e}.'
+        )
+    
+    try:
+        neuron_cls = _construct_neuron_cls(cls_name, config_cls)
+        register_neuron(neuron_cls)
+    except Exception as e:
+        raise RuntimeError(
+            f'Unable to generate a configuration class from "config". Error: {e}.'
+        )
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def register_neuron_from_config_file(cls_name: str, path: pl.Path) -> None:
+    """
+        Generate a (Neuron, NeuronConfig) subclass pair programmatically from a NeuronConfig file.
+    """
+    from spark.nn.controllers.neuron import NeuronConfig
+    path = pl.Path(path).absolute()
+    if path.exists():
+        try:
+            config_instance = NeuronConfig.from_file(path)
+        except:
+            raise RuntimeError(
+                f'Unable to read "{path}" as a NeuronConfig object.'
+            )
+        register_neuron_from_config(cls_name, config_instance)
+    else:
+        raise RuntimeError(
+            f'Invalid path: "{path}".'
+        )
+    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

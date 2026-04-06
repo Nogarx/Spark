@@ -22,16 +22,8 @@ class ConcatConfig(ControlInterfaceConfig):
     """
         Concat configuration class.
     """
+    pass
 
-    num_inputs: int = dc.field(
-        metadata = {
-            'validators': [
-                TypeValidator,
-                PositiveValidator,
-            ],
-            'description': 'Dtype used for JAX dtype promotions.',
-        })
-    
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
@@ -40,7 +32,6 @@ class Concat(ControlInterface):
         Combines several streams of inputs of the same type into a single stream.
 
         Init:
-            num_inputs: int
             payload_type: type[SparkPayload]
             
         Input:
@@ -54,8 +45,6 @@ class Concat(ControlInterface):
     def __init__(self, config: ConcatConfig | None = None, **kwargs):
 		# Initialize super.
         super().__init__(config=config, **kwargs)
-        # Intialize variables.
-        self.num_inputs = self.config.num_inputs
 
     def build(self, input_specs: dict[str, PortSpecs]) -> None:
         # Validate payloads types.
@@ -104,7 +93,6 @@ class ConcatReshape(ControlInterface):
         Combines several streams of inputs of the same type into a single stream.
 
         Init:
-            num_inputs: int
             reshape: tuple[int, ...]
             payload_type: type[SparkPayload]
             
@@ -121,7 +109,6 @@ class ConcatReshape(ControlInterface):
         super().__init__(config=config, **kwargs)
         # Intialize variables.
         self.reshape = utils.validate_shape(self.config.reshape)
-        self.num_inputs = self.config.num_inputs
 
     def build(self, input_specs: dict[str, PortSpecs]) -> None:
         # Validate payloads types.

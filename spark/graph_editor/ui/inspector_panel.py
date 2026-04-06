@@ -16,12 +16,13 @@ import jax.numpy as jnp
 import spark.core.utils as utils
 from NodeGraphQt import Port
 from functools import partial
-from spark.core.config import BaseSparkConfig
+from spark.core.config import SparkConfig
 from spark.core.payloads import SparkPayload, FloatArray
 from spark.core.registry import REGISTRY
+from spark.nn.controllers.base import ControllerConfig
 from spark.nn.initializers.base import Initializer, InitializerConfig
 from spark.graph_editor.editor import GRAPH_EDITOR_CONFIG
-from spark.graph_editor.models.nodes import AbstractNode, SparkModuleNode, SourceNode, SinkNode
+from spark.graph_editor.models.nodes import AbstractNode, SparkModuleNode, SparkNeuronNode, SourceNode, SinkNode
 from spark.graph_editor.widgets.dock_panel import QDockPanel
 from spark.graph_editor.widgets.line_edits import QStrLineEdit
 from spark.graph_editor.widgets.separators import QHLine
@@ -104,7 +105,11 @@ class InspectorPanel(QDockPanel):
                     pass
                 self._node_config_widget = None
             if isinstance(self._target_node, SparkModuleNode):
-                self._node_config_widget = QNodeConfig(self._target_node)
+                self._node_config_widget = QModuleConfig(self._target_node)
+                self._node_config_widget.error_detected.connect(self.on_error_message)
+                self._node_config_widget.on_update.connect(self._on_update)
+            elif isinstance(self._target_node, SparkNeuronNode):
+                self._node_config_widget = QControllerConfig(self._target_node)
                 self._node_config_widget.error_detected.connect(self.on_error_message)
                 self._node_config_widget.on_update.connect(self._on_update)
             elif isinstance(self._target_node, (SinkNode, SourceNode)):
@@ -141,7 +146,7 @@ class InspectorPanel(QDockPanel):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class QNodeConfig(QtWidgets.QWidget):
+class QModuleConfig(QtWidgets.QWidget):
     """
         Constructs the UI to modify the SparkConfig associated with the a node.
     """
@@ -187,9 +192,12 @@ class QNodeConfig(QtWidgets.QWidget):
         content_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
         # Setup layout
         self._setup_layout()
-        # Execute callbacks
-        for f in self._post_setup_callbacks:
-            f()
+        # TODO: Original post_callback method was bugged (it kept elements linked). Clean code around post_callbacks or fix original bug
+        # Link all components that define units and dt (I cannot think of a case in which this is not desireable c: )
+        for key in [('main', 'dt'), ('main', 'units')]:
+            if key in self._cfg_widget_map:
+                if self._cfg_widget_map[key].control_widgets.inheritance_checkbox is not None:
+                    self._cfg_widget_map[key].control_widgets.inheritance_checkbox.setChecked(True)
 
 
 
@@ -204,7 +212,7 @@ class QNodeConfig(QtWidgets.QWidget):
 
     def _setup_layout(self,) -> None:
         # Get config
-        node_config: BaseSparkConfig = getattr(self._target_node, 'node_config', None)
+        node_config: SparkConfig = getattr(self._target_node, 'node_config', None)
         # Add name widget
         name_widget = NodeHeaderWidget(
             name=self._target_node.NODE_NAME,
@@ -229,7 +237,7 @@ class QNodeConfig(QtWidgets.QWidget):
         self._on_update()
 
 
-    def _add_config_recurrently(self, config_name: str, config: BaseSparkConfig, path: list[str] = []) -> None:
+    def _add_config_recurrently(self, config_name: str, config: SparkConfig, path: list[str] = []) -> None:
         # Create new QCollapsible
         collapsible = QCollapsible(utils.to_human_readable(config_name))
         # Instantiate config body
@@ -277,22 +285,22 @@ class QNodeConfig(QtWidgets.QWidget):
                 tree.add_leaf(d['path'], type_string=d['types'], break_inheritance=d['break_inheritance'])
             tree.validate()
             # Link all components that define units and dt (I cannot think of a case in which this is not desireable c: )
-            link_paths = [
-                ['main', 'units'], 
-                ['main', 'dt']
-            ]
-            for path in link_paths:
-                try:
-                    leaf = tree.get_leaf(path)
-                    if leaf.can_inherit():
-                        self._post_setup_callbacks.append(partial(
-                            lambda leaf_var:
-                            self.on_inheritance_toggle(True, leaf_var),
-                            leaf
-                        ))
-                except:
-                    # We expect get_leaf to fail
-                    pass
+            #link_paths = [
+            #    ['main', 'units'], 
+            #    ['main', 'dt']
+            #]
+            #for path in link_paths:
+            #    try:
+            #        leaf = tree.get_leaf(path)
+            #        if leaf.can_inherit():
+            #            self._post_setup_callbacks.append(partial(
+            #                lambda leaf_var:
+            #                self.on_inheritance_toggle(True, leaf_var),
+            #                leaf
+            #            ))
+            #    except:
+            #        # We expect get_leaf to fail
+            #        pass
         else:
             # I/O nodes have no node_config. However, they probably do not require an inheritance tree.
             pass
@@ -302,7 +310,228 @@ class QNodeConfig(QtWidgets.QWidget):
 
     def _get_config_paths_and_types(
             self, 
-            config: BaseSparkConfig, 
+            config: SparkConfig, 
+            path: tuple[str] = tuple(), 
+            break_inheritance: bool = False
+        ) -> list[dict]:
+        paths = []
+        # Get nested config's names
+        nested_configs = config._get_nested_configs_names()
+        # Iterate over fields, add simple attributes
+        for name, field, _ in config:
+            # Skip non-configs
+            if name in nested_configs:
+                continue
+            # Field is an attribute -> leaf
+            paths.append({'path': path + (name,), 'types':TYPE_PARSER.typify(field.type), 'break_inheritance': break_inheritance})
+        # Iterate over fields, add other configs recurrently
+        for name, _, value in config:
+            # Skip non-configs
+            if name not in nested_configs:
+                continue
+            # Field is a config -> branch. Break inheritance chain if config is an initializer,
+            # initializer often have their own rules.
+            break_branch_inheritance = isinstance(value, InitializerConfig)
+            paths += self._get_config_paths_and_types(value, path + (name,), break_inheritance=break_branch_inheritance)
+        return paths
+
+
+
+    def on_inheritance_toggle(self, value: bool, leaf: utils.InheritanceLeaf) -> None:
+        # Set leaf flags.
+        if value:
+            leaf.flags = leaf.flags | utils.InheritanceFlags.IS_INHERITING
+        else:
+            leaf.flags = leaf.flags & ~utils.InheritanceFlags.IS_INHERITING
+        # Update leaf widget
+        leaf_widget: QAttribute = self._cfg_widget_map[tuple(leaf.path)]
+        leaf_widget.set_inheritance_status(InheritStatus.LINK if value else InheritStatus.FREE)
+        # Link relevant childs updates.
+        for child_path in leaf.inheritance_childs:
+            # Set child flags.
+            child_leaf = leaf.parent.get_leaf(child_path)
+            if value:
+                child_leaf.flags = (child_leaf.flags | utils.InheritanceFlags.IS_RECEIVING) & ~utils.InheritanceFlags.IS_INHERITING
+            else:
+                child_leaf.flags = child_leaf.flags & ~utils.InheritanceFlags.IS_RECEIVING
+            # Get child widget.
+            child_widget: QAttribute = self._cfg_widget_map[tuple(child_leaf.path)]
+            # Disable child widget interaction.
+            child_widget.set_inheritance_status(InheritStatus.LOCK if value else InheritStatus.FREE)
+            if child_widget.control_widgets.initializer_checkbox is not None:
+                child_widget.control_widgets.initializer_checkbox.setEnabled(not value)
+            child_widget.default_field.setEnabled(not value)
+            # Connect events
+            if value:
+                leaf_widget.on_field_update.connect(child_widget.set_value)
+                leaf_widget.on_field_update.connect(child_widget.on_field_update.emit)
+                # Update childs value
+                child_widget.set_value(leaf_widget.get_value())
+            else:
+                leaf_widget.on_field_update.disconnect(child_widget.set_value)
+                leaf_widget.on_field_update.disconnect(child_widget.on_field_update.emit)
+        # TODO: This feels extremely inneficient
+        # Update node's metadata
+        #self._target_node.metadata['inheritance_tree'] = self._inheritance_tree.to_dict()
+
+    def _on_update(self,) -> None:
+        self._is_dirty = True
+        self.on_update.emit()
+
+    def set_dirty_flag(self, value: bool) -> None:
+        self._is_dirty = value
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+class QControllerConfig(QtWidgets.QWidget):
+    """
+        Constructs the UI to modify the ControllerConfig associated with the a node.
+    """
+
+    error_detected = QtCore.Signal(str)
+    on_update = QtCore.Signal()
+
+    def __init__(self, node: AbstractNode, **kwargs):
+        super().__init__(**kwargs)
+        # Node reference
+        self._target_node = node
+        self._cfg_widget_map: dict[tuple[str, ...], QAttribute] = {}
+        self._post_setup_callbacks = []
+        self._is_dirty = False
+        self._inheritance_tree = self._get_inheritance_tree(node) 
+        # Widget layout
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
+        self.setLayout(layout)
+        # Scroll area
+        scroll_area = QtWidgets.QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        self.layout().addWidget(scroll_area)
+        scroll_area.setStyleSheet(
+            """
+                QScrollArea { 
+                    background: transparent; 
+                }
+            """
+        )
+        # Content widget
+        self.content = QtWidgets.QWidget()
+        self.content.setStyleSheet(
+            """
+                QWidget { 
+                    background: transparent; 
+                }
+            """
+        )
+        scroll_area.setWidget(self.content)
+        content_layout = QtWidgets.QVBoxLayout(self.content)
+        content_layout.setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
+        content_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
+        # Setup layout
+        self._setup_layout()
+        # Link all components that define units and dt (I cannot think of a case in which this is not desireable c: )
+        for key in [('main', 'dt'), ('main', 'units')]:
+            if key in self._cfg_widget_map:
+                if self._cfg_widget_map[key].control_widgets.inheritance_checkbox is not None:
+                    self._cfg_widget_map[key].control_widgets.inheritance_checkbox.setChecked(True)
+
+
+
+    def addWidget(self, widget: QtWidgets.QWidget) -> None:
+        """
+            Add a widget to the central content widget's layout.
+        """
+        widget.installEventFilter(self)
+        self.content.layout().addWidget(widget)
+
+
+
+    def _setup_layout(self,) -> None:
+        # Get config
+        node_config: ControllerConfig = getattr(self._target_node, 'node_config_flat', None)
+        # Add name widget
+        name_widget = NodeHeaderWidget(
+            name=self._target_node.NODE_NAME,
+            node_cls=getattr(self._target_node, 'module_cls', None).__name__,
+            config_tree=node_config._inspect(),
+        )
+        name_widget.on_update.connect(
+            partial(lambda node_var, name_var: self.name_update(node_var, name_var), self._target_node)
+        )
+        self.addWidget(name_widget)
+        self.addWidget(QHLine())
+        # Add configs recurrently
+        if node_config:
+            self._add_config_recurrently('Main', node_config, ['main'])
+
+
+
+    def name_update(self, node: AbstractNode, name: str) -> None:
+        node.graph.viewer().node_name_changed.emit(node.id, name)
+        # NOTE: The above line should be enough but it does not propagate to the node widget properly.
+        node.set_name(name)
+        self._on_update()
+
+
+    def _add_config_recurrently(self, config_name: str, config: ControllerConfig, path: list[str] = []) -> None:
+        # Create new QCollapsible
+        collapsible = QCollapsible(utils.to_human_readable(config_name))
+        # Instantiate config body
+        config_body = QConfigBody(
+            config=config, 
+            is_initializer=False, 
+            config_path=path,
+            ref_widgets_map=self._cfg_widget_map, 
+            ref_post_callback_stack=self._post_setup_callbacks,
+            inheritance_tree=self._inheritance_tree,
+            on_inheritance_toggle=self.on_inheritance_toggle,
+        )
+        config_body.on_update.connect(self._on_update)
+        self._config_body = config_body
+        # Add widget to collapsible
+        collapsible.addWidget(config_body)
+        config_body.on_size_change.connect(lambda _ : collapsible.expand(False))
+        # Add collapsible to layout
+        self.addWidget(collapsible)
+        collapsible.expand()
+        # Iterate over fields, add other configs recurrently
+        nested_configs = config._get_nested_configs_names(exclude_initializers=True)
+        for name, field, value in config:
+            # Skip non-configs
+            if name not in nested_configs:
+                continue
+            # Add widget to collapsible
+            self._add_config_recurrently(name, value, path + [name])
+
+
+
+    def _get_inheritance_tree(self, node: AbstractNode) -> utils.InheritanceTree:
+        # Check if inheritance tree was already computed
+        inheritance_metadata = node.metadata.get('inheritance_tree', None)
+        if inheritance_metadata is not None:
+            try:
+                return utils.InheritanceTree.from_dict(inheritance_metadata)
+            except:
+                pass
+        # Tree doesn't exists or is not valid.
+        if isinstance(node, SparkNeuronNode):
+            tree = utils.InheritanceTree(path=[])
+            leaves_paths_types = self._get_config_paths_and_types(node.node_config_flat, path=('main',))
+            for d in leaves_paths_types:
+                tree.add_leaf(d['path'], type_string=d['types'], break_inheritance=d['break_inheritance'])
+            tree.validate()
+        else:
+            # I/O nodes have no node_config. However, they probably do not require an inheritance tree.
+            pass
+        return tree
+
+
+
+    def _get_config_paths_and_types(
+            self, 
+            config: ControllerConfig, 
             path: tuple[str] = tuple(), 
             break_inheritance: bool = False
         ) -> list[dict]:
@@ -504,22 +733,19 @@ class QNodeIO(QtWidgets.QWidget):
         collapsible.addWidget(collapsible_content)
         collapsible.expand()
         # Add live updates for sink nodes.
-        if not self._is_source:
-            self._target_node.graph.port_connected.connect(self._live_sink_update)
+        self._target_node.graph.port_connected.connect(self._refresh)
 
-    def _live_sink_update(self, input_port: Port, output_port: Port) -> None:
-        # Get node info
-        input_node: AbstractNode = input_port.node()
+    def _refresh(self, target_port: Port, origin_port: Port) -> None:
         # Update sink node specs
-        if isinstance(input_node, SinkNode):
-            output_specs = output_port.node().output_specs[output_port.name()]
-            if output_specs.payload_type:
-                self.payload_field.set_value(output_specs.payload_type)
-            if output_specs.shape:
-                self.shape_field.set_value(output_specs.shape)
-            if output_specs.dtype:
-                self.dtype_field.set_value(output_specs.dtype)
-        
+        if isinstance(target_port.node(), SinkNode) and self._target_node == target_port.node():
+            self.payload_field.set_value(self._target_node.input_specs['value'].payload_type)
+            self.shape_field.set_value(self._target_node.input_specs['value'].shape)
+            self.dtype_field.set_value(self._target_node.input_specs['value'].dtype)
+        elif isinstance(origin_port.node(), SourceNode) and self._target_node == origin_port.node():
+            self.payload_field.set_value(self._target_node.output_specs['value'].payload_type)
+            self.shape_field.set_value(self._target_node.output_specs['value'].shape)
+            self.dtype_field.set_value(self._target_node.output_specs['value'].dtype)
+
     def name_update(self, node: AbstractNode, name: str) -> None:
         node.graph.viewer().node_name_changed.emit(node.id, name)
         # NOTE: The above line should be enough but it does not propagate to the node widget properly.
@@ -593,6 +819,9 @@ class InspectorIdleWidget(QtWidgets.QWidget):
         _message_widget.setLayout(h_layout)
         return _message_widget
     
+    def set_dirty_flag(self, value: bool) -> None:
+        return
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class NodeHeaderWidget(QInput):

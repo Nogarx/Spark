@@ -1,4 +1,4 @@
-from spark.nn.components.synapses.base import Synanpses, SynanpsesOutput
+from spark.nn.components.synapses.base import Synapses, SynanpsesOutput
 from spark.nn.components.synapses.linear import LinearSynapses, LinearSynapsesConfig
 from spark.nn.components.synapses.traced import (
     TracedSynapses, TracedSynapsesConfig, 
@@ -7,7 +7,7 @@ from spark.nn.components.synapses.traced import (
 )
 
 __all__ = [
-    'Synanpses', 'SynanpsesOutput',
+    'Synapses', 'SynanpsesOutput',
     'LinearSynapses', 'LinearSynapsesConfig',
     'TracedSynapses', 'TracedSynapsesConfig', 
     'RDTracedSynapses', 'RDTracedSynapsesConfig',

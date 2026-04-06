@@ -140,7 +140,7 @@ data_test = [
     ),
     # Learning rules
     (
-        spark.nn.learning_rules.HebbianRule, 
+        spark.nn.plasticity.HebbianRule, 
         {
             'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),
             'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
@@ -149,7 +149,7 @@ data_test = [
         {'units':(2,3),}
     ),
     (
-        spark.nn.learning_rules.HebbianRule, 
+        spark.nn.plasticity.HebbianRule, 
         {
             'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5), async_spikes=True),
             'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
@@ -158,7 +158,7 @@ data_test = [
         {'units':(2,3),}
     ),
     (
-    spark.nn.learning_rules.OjaRule, 
+    spark.nn.plasticity.OjaRule, 
         {
             'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),
             'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
@@ -167,7 +167,7 @@ data_test = [
         {'units':(2,3),}
     ),
     (
-    spark.nn.learning_rules.OjaRule, 
+    spark.nn.plasticity.OjaRule, 
         {
             'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5), async_spikes=True),
             'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
@@ -176,7 +176,7 @@ data_test = [
         {'units':(2,3),}
     ),
     (
-    spark.nn.learning_rules.ZenkeRule, 
+    spark.nn.plasticity.ZenkeRule, 
         {
             'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),
             'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
@@ -185,7 +185,7 @@ data_test = [
         {'units':(2,3),}
     ),
     (
-    spark.nn.learning_rules.ZenkeRule, 
+    spark.nn.plasticity.ZenkeRule, 
         {
             'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5), async_spikes=True),
             'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
@@ -195,22 +195,22 @@ data_test = [
     ),
     # Neurons
     (
-        spark.nn.neurons.LIFNeuron, 
+        spark.nn.neurons_OLD.LIFNeuron, 
         {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
         {'_s_units':(2,3),}
     ),
     (
-        spark.nn.neurons.LIFNeuron, 
+        spark.nn.neurons_OLD.LIFNeuron, 
         {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
         {'_s_units':(2,3),}
     ),
     (
-        spark.nn.neurons.ALIFNeuron, 
+        spark.nn.neurons_OLD.ALIFNeuron, 
         {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
         {'_s_units':(2,3),}
     ),
     (
-        spark.nn.neurons.ALIFNeuron, 
+        spark.nn.neurons_OLD.ALIFNeuron, 
         {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
         {'_s_units':(2,3),}
     ),

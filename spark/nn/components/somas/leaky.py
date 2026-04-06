@@ -132,8 +132,8 @@ class LeakySoma(Soma):
         """
             Update neuron's soma states variables.
         """
-        self.potential.value = \
-            + self.potential_decay * self.potential.value \
+        self._potential.value = \
+            + self.potential_decay * self._potential.value \
             + self.potential_gain * self.resistance * current.value
 
     def _compute_spikes(self,) -> SpikeArray:
@@ -141,9 +141,9 @@ class LeakySoma(Soma):
             Compute neuron's spikes.
         """
         # Compute spikes.
-        spikes = jnp.greater(self.potential.value, self.threshold.value).astype(self._dtype)
+        spikes = jnp.greater(self._potential.value, self.threshold.value).astype(self._dtype)
         # Reset neurons.
-        self.potential.value = spikes * self.potential_reset + (1 - spikes) * self.potential.value
+        self._potential.value = spikes * self.potential_reset + (1 - spikes) * self._potential.value
         return SpikeArray(spikes)
     
 #################################################################################################################################################
@@ -215,7 +215,7 @@ class RefractoryLeakySoma(LeakySoma):
             Resets component state.
         """
         super().reset()
-        self.refractory.value = jnp.array(self.cooldown, dtype=jnp.uint16)
+        self.refractory.value = jnp.array(self.cooldown * jnp.ones(self.units), dtype=jnp.uint16)
 
     def _update_states(self, current: CurrentArray) -> None:
         """
@@ -223,8 +223,8 @@ class RefractoryLeakySoma(LeakySoma):
         """
         self.is_ready.value = jnp.greater(self.refractory.value, self.cooldown)
         is_ready = self.is_ready.value.astype(self._dtype)
-        self.potential.value = \
-            + self.potential_decay * self.potential.value \
+        self._potential.value = \
+            + self.potential_decay * self._potential.value \
             + is_ready * self.potential_gain * self.resistance * current.value
 
     def _compute_spikes(self,) -> SpikeArray:
@@ -233,11 +233,11 @@ class RefractoryLeakySoma(LeakySoma):
         """
         # Compute spikes.
         spikes = jnp.logical_and(
-            jnp.greater(self.potential.value, self.threshold.value), 
+            jnp.greater(self._potential.value, self.threshold.value), 
             self.is_ready.value
         ).astype(self._dtype)
         # Reset neurons.
-        self.potential.value = spikes * self.potential_reset + (1 - spikes) * self.potential.value
+        self._potential.value = spikes * self.potential_reset + (1 - spikes) * self._potential.value
         # Set neuron refractory period.
         self.refractory.value = (1 - spikes).astype(jnp.uint16) * (self.refractory.value + 1)
         return SpikeArray(spikes)
@@ -290,8 +290,8 @@ class StrictRefractoryLeakySoma(RefractoryLeakySoma):
         """
         self.is_ready.value = jnp.greater_equal(self.refractory.value, self.cooldown)
         is_ready = self.is_ready.value.astype(self._dtype)
-        self.potential.value = \
-            + is_ready * self.potential_decay * self.potential.value \
+        self._potential.value = \
+            + is_ready * self.potential_decay * self._potential.value \
             + is_ready * self.potential_gain * self.resistance * current.value \
             + (1 - is_ready) * self.potential_reset
     

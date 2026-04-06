@@ -11,14 +11,11 @@ import spark.core.utils as utils
 from math import prod
 from spark.core.module import SparkModule
 from spark.core.payloads import SpikeArray
-from spark.core.config import SparkConfig
+from spark.core.config import DefaultSparkConfig
 from spark.core.config_validation import TypeValidator
 
-# TODO: Neurons should be constructed dynamically similar to brains. 
-# This will allow us to use the editor to build viable neuronal models on the go.
-# Morever, this would also abstract all the neuron implementation details away into the configuration pattern.
-# At the moment it is not very clear how to achieve this, since here a cache system is not desireable;
-# execution must be flatten and unfolded, preventing cycles which are useful for passing "read-only" values.  
+# NOTE: Although the Neuron Controller is the ideal way to build new neuronal models, we suspect that
+# sometimes it may be necessary to fallback a proper SparkModule, this code serves this purpose.
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -32,7 +29,7 @@ class NeuronOutput(tp.TypedDict):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class NeuronConfig(SparkConfig):
+class NeuronModuleConfig(DefaultSparkConfig):
     """
         Abstract Neuron model configuration class.
     """
@@ -43,11 +40,20 @@ class NeuronConfig(SparkConfig):
             ],
             'description': 'Shape of the pool of neurons.',
         })
-ConfigT = tp.TypeVar("ConfigT", bound=NeuronConfig)
+    
+    # TODO: Manual override to synchronize all time integration constants across the controller.
+    # This solution is probably good enough but it is not clear that will not clash with other user intentions.
+    # A similar situation is present in Neuron.__post_init__
+    def __post_init__(self,) -> None:
+        super().__post_init__()
+        # Synchronize dt's. NOTE: Skip validation, otherwise will fall into an infinite loop.
+        self.merge(partial={'_s_dt':self.dt, '_s_units':self.units}, skip_validation=True)
+
+ConfigT = tp.TypeVar("ConfigT", bound=NeuronModuleConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class Neuron(SparkModule, abc.ABC, tp.Generic[ConfigT]):
+class NeuronModule(SparkModule, abc.ABC, tp.Generic[ConfigT]):
     """
         Abstract Neuron model.
 

@@ -84,7 +84,7 @@ class N2NDelays(Delays):
             init_kwargs = {'scale':self._buffer_size+1, 'min_value':1,},
             key=self.get_rng_keys(1), shape=self._kernel_shape, dtype=jnp.uint8,
         )
-        self.delays_kernel = Constant(delays_kernel, dtype=jnp.uint8)
+        self._kernel = Constant(delays_kernel, dtype=jnp.uint8)
 
     def reset(self) -> None:
         """
@@ -113,7 +113,7 @@ class N2NDelays(Delays):
         j_indices = jnp.arange(self._units)
         byte_indices = j_indices // 8
         bit_indices = 7 - (j_indices % 8)  # MSB-first adjustment
-        delay_idx = (self._current_idx.value - self.delays_kernel.value - 1) % self._buffer_size
+        delay_idx = (self._current_idx.value - self._kernel.value - 1) % self._buffer_size
         selected_bytes = self._bitmask.value[delay_idx, byte_indices]
         selected_bits = (selected_bytes >> bit_indices) & 1
         return SpikeArray(

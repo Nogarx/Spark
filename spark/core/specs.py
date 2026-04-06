@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.module import SparkModule
     from spark.core.payloads import SparkPayload
-    from spark.core.config import BaseSparkConfig
+    from spark.core.config import SparkConfig
 
 import jax
 import jax.numpy as jnp
@@ -17,6 +17,7 @@ import dataclasses as dc
 import spark.core.utils as utils
 import spark.core.validation as validation
 from spark.core.variables import Constant
+from spark.core.typing import enforce_annotations
 from jax.typing import DTypeLike
 from spark.core.registry import REGISTRY
 from math import prod
@@ -25,6 +26,8 @@ from math import prod
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+
+# TODO: We need to reliably distinguish between single and multi input ports.
 @jax.tree_util.register_dataclass
 @dc.dataclass(init=False)
 class PortSpecs:
@@ -34,12 +37,12 @@ class PortSpecs:
     payload_type: type[SparkPayload] | None
     shape: tuple[int, ...] | list[tuple[int, ...]] | None
     dtype: DTypeLike | None
-    description: str | None = None
+    description: str | None
 
     # Auxiliary metadata only used at model build time.
     # These are dynamic metadata variables that are only needed at build time.
-    async_spikes: bool | None = None,
-    inhibition_mask: bool | None = None,
+    async_spikes: bool | None
+    inhibition_mask: bool | None
 
     def __init__(
             self, 
@@ -50,26 +53,12 @@ class PortSpecs:
             async_spikes: bool | None = None,
             inhibition_mask: jax.Array | bool | None = None,
         ) -> None:
-        if payload_type and not validation._is_payload_type(payload_type):
-            raise TypeError(
-                f'Expected "payload_type" to be of type "SparkPayload" but got "{type(payload_type).__name__}".'
-            )
+
         if shape and utils.is_shape(shape):
             shape = utils.validate_shape(shape)
         elif shape and utils.is_list_shape(shape):
             shape = utils.validate_list_shape(shape)
-        elif shape:
-            raise TypeError(
-                f'Expected "shape" to be broadcastable to \"tuple[int, ...] | list[tuple[int, ...]]\".'
-            )
-        if dtype and not isinstance(jnp.dtype(dtype), jnp.dtype):
-            raise TypeError(
-                f'Expected \"dtype\" to be of type \"{DTypeLike}\" but got "{type(dtype).__name__}".'
-            )
-        if description and not isinstance(description, str):
-            raise TypeError(
-                f'Expected \"description\" to be of type \"str\" but got "{type(description).__name__}".'
-            )
+
         self.payload_type = payload_type
         self.shape = shape
         self.dtype = dtype
@@ -103,6 +92,10 @@ class PortSpecs:
         """
             Merges a list of PortSpecs into a single PortSpecs
         """
+        # Return original portspec if list contains a single element
+        if len(portspec_list) == 1:
+            return portspec_list[0]
+
         # Payload validation.
         payload_type = set([spec.payload_type for spec in portspec_list])
         if len(payload_type) != 1:
@@ -177,18 +170,12 @@ class PortMap:
     """
     origin: str        
     port: str       
+    is_property: bool
 
-    def __init__(self, origin: str, port: str) -> None:
-        if not isinstance(origin, str):
-            raise TypeError(
-                f'Expected "origin" to be of type "str" but got "{type(origin).__name__}".'
-            )
-        if not isinstance(port, str):
-            raise TypeError(
-                f'Expected "port" to be of type "str" but got "{type(port).__name__}".'
-            )
+    def __init__(self, origin: str, port: str, is_property: bool = False) -> None:
         self.origin = origin
         self.port = port
+        self.is_property = is_property
 
     def to_dict(self, is_partial: bool = False) -> dict[str, tp.Any]:
         """
@@ -197,6 +184,7 @@ class PortMap:
         return {
             'origin': self.origin,
             'port': self.port,
+            'is_property': self.is_property
         }
     
     @classmethod
@@ -206,9 +194,15 @@ class PortMap:
         """
         return cls(**dct)
 
+    def __hash__(self) -> int:
+        return hash(self.origin+self.port+str(self.is_property))
+
+    def __eq__(self, other: PortMap) -> bool:
+        return self.origin == other.origin and self.port == other.port and self.is_property == other.is_property
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+# TODO: Serialization of this class is weak.
 @jax.tree_util.register_dataclass
 @dc.dataclass(init=False)
 class ModuleSpecs:
@@ -218,61 +212,75 @@ class ModuleSpecs:
 
     name: str
     module_cls: type[SparkModule]        
-    inputs: dict[str, list[PortMap]]               
-    config: BaseSparkConfig
+    inputs: dict[str, tp.Iterable[PortMap]]
+    outputs: dict[str, str]
+    effects: dict[str, tp.Iterable[PortMap]]
+    config: SparkConfig
 
-    def __init__(self, name: str, module_cls: type, inputs: dict[str, list[PortMap]], config: BaseSparkConfig) -> None:
+    def __init__(
+            self, 
+            name: str, 
+            module_cls: type[SparkModule], 
+            inputs: dict[str, tp.Iterable[PortMap]] | dict[str, PortMap], 
+            config: SparkConfig | None = None,
+            outputs: dict[str, str] | None = None,
+            effects: dict[str, tp.Iterable[PortMap]] | dict[str, PortMap] | None = None,
+        ) -> None:
         # Validate module_cls
-        if not validation._is_module_type(module_cls):
-            raise TypeError(
-                f'\"module_cls\" must be a valid subclass of \"SparkModule\" but got \"{type(module_cls).__name__}\".'
-            )
-        if REGISTRY.MODULES.get(module_cls.__name__) is None:  
+        # TODO: In order to add controllers to the registry they need to build the ModuleSpecs,
+        # this currently access the REGISTRY to validate the spec, which crashes with the controllers
+        # since the registry is not necessarily built
+        from spark.core.module import SparkModule
+        from spark.nn.controllers.neuron import Neuron
+        if REGISTRY.MODULES.__built__ and issubclass(module_cls, SparkModule) and REGISTRY.MODULES.get(module_cls.__name__) is None:  
             raise ValueError(
-                f'Class \"{module_cls.__name__}\" does not exists in the registry.'
+                f'Module class \"{module_cls.__name__}\" does not exists in the registry.'
             )
-        # Validate inputs
-        if not isinstance(inputs, dict):
-            raise TypeError(
-                f'\"inputs\" must be of type \"dict\" but got \"{type(inputs).__name__}\".'
+        elif REGISTRY.NEURONS.__built__ and issubclass(module_cls, Neuron) and REGISTRY.NEURONS.get(module_cls.__name__) is None:  
+            raise ValueError(
+                f'Neuron class \"{module_cls.__name__}\" does not exists in the registry.'
             )
-        for key in inputs.keys():
-            if not isinstance(key, str):
-                raise TypeError(
-                    f'All keys in \"inputs\" must be strings, but found key \"{key}\" of type \"{type(key).__name__}\".'
-                )
-            if not isinstance(inputs[key], list):
-                raise TypeError(
-                    f'All values in \"inputs\" must be a List of PortMap, but found value \"{inputs[key]}\" of type \"{type(inputs[key]).__name__}\".'
-                )
-            for element in inputs[key]:
-                if not isinstance(element, PortMap):
-                    raise TypeError(
-                        f'Expected PortMap at value {key} of \"inputs\", but found value \"{inputs[key]}\" of type \"{type(inputs[key]).__name__}\".'
-                    )
         # Validate model_config
         type_hints = tp.get_type_hints(module_cls)
-        if not isinstance(config, type_hints['config']):
+        if config is not None and not isinstance(config, type_hints['config']):
             raise TypeError(
                 f'\"config\" must be of type \"{type_hints['config'].__name__}\" but got \"{type(config).__name__}\".'
             )
+        # Set values
         self.name = name
         self.module_cls = module_cls
         self.inputs = inputs
-        self.config = config
+        # NOTE: We allow partial configs to simplify controller definitions
+        self.config = config if config is not None else module_cls.get_config_spec()._create_partial()
+        self.outputs = {} if outputs is None else outputs
+        self.effects = {} if effects is None else effects
 
     def to_dict(self, is_partial: bool = False) -> dict[str, tp.Any]:
         """
             Serialize ModuleSpecs to dictionary
         """
-        reg = REGISTRY.MODULES.get_by_cls(self.module_cls)
+        from spark.core.module import SparkModule
+        from spark.nn.controllers.neuron import Neuron
+        if issubclass(self.module_cls, SparkModule):
+            reg = REGISTRY.MODULES.get_by_cls(self.module_cls)
+            subregistry = 'MODULES'
+        elif issubclass(self.module_cls, Neuron):
+            reg = REGISTRY.NEURONS.get_by_cls(self.module_cls)
+            subregistry = 'NEURONS'
+        else:
+            raise RuntimeError(
+                f'Unable to find "{self.module_cls}" registry entry. Confirm that the class is a member of a registry.'
+            )
         return {
             'name': self.name,
             'module_cls': {
                 '__module_type__': reg.name if reg else None,
+                '__subregistry__': subregistry,
             },
             'inputs': self.inputs,
-            'config': self.config.to_dict(is_partial=is_partial)
+            'config': self.config.to_dict(is_partial=is_partial),
+            'outputs': self.outputs,
+            'effects': self.effects,
         }
     
     @classmethod
@@ -280,37 +288,18 @@ class ModuleSpecs:
         """
             Deserialize dictionary to ModuleSpecs
         """
-        # Validate dictionary
-        name: str | None = dct.get('name', None)
-        if not name or not isinstance(name, str):
-            raise TypeError(
-                f'Expected \"name\" to be of type \"str\", but got \"{name}\".'
-            )
-        module_cls: type[SparkModule] | None = dct.get('module_cls', None)
-        if not module_cls or not validation._is_module_type(module_cls):
-            raise TypeError(
-                f'Expected \"module_cls\" to be of type \"type[SparkModule]\", but got \"{module_cls}\".'
-            )
-        config: BaseSparkConfig | dict | None = dct.get('config', None)
-        if not config or not (isinstance(config, dict) or validation._is_config_instance(config)):
-            raise TypeError(
-                f'Expected \"config\" to be of type \"type[BaseSparkConfig]\" | dict, but got \"{config}\".'
-            )
-        if is_partial:
-            config = module_cls.get_config_spec()._create_partial(**config) if isinstance(config, dict) else config
-        else:
-            config = module_cls.get_config_spec()(**config) if isinstance(config, dict) else config
-        inputs: dict | None = dct.get('inputs', None)
-        if not inputs or not isinstance(inputs, dict):
-            raise TypeError(
-                f'Expected \"inputs\" to be of type \"dict\", but got \"{inputs}\".'
-            )
+        module_cls = dct.get('module_cls', None)
+        config = dct.get('config', None)
+        config_fn = lambda x: module_cls.get_config_spec()._create_partial(**x) if is_partial else module_cls.get_config_spec()(**x)
+        config = config_fn(config) if isinstance(config, dict) else config
         # Reconstruct spec
         return cls(
-            name=name, 
+            name=dct.get('name', None), 
             module_cls=module_cls,
+            inputs=dct.get('inputs', None),
             config=config,
-            inputs=inputs,
+            outputs=dct.get('outputs', None),
+            effects=dct.get('effects', None),
         )
         
 #################################################################################################################################################

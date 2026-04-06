@@ -18,7 +18,7 @@ from spark.core.variables import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.utils import get_einsum_dot_exp_string
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.nn.components.learning_rules.base import LearningRule, LearningRuleConfig, LearningRuleOutput
+from spark.nn.components.plasticity.base import Plasticity, PlasticityConfig, PlasticityOutput
 from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
@@ -26,7 +26,7 @@ from spark.nn.initializers.base import Initializer
 #################################################################################################################################################
 
 @register_config
-class HebbianRuleConfig(LearningRuleConfig):
+class HebbianRuleConfig(PlasticityConfig):
     """
        HebbianRule configuration class.
     """
@@ -52,7 +52,7 @@ class HebbianRuleConfig(LearningRuleConfig):
             'description': 'Time constant of the postsynaptic spike train',
         })
     eta: float = dc.field(
-        default = 0.1, 
+        default = 0.01, 
         metadata = {
             'validators': [
                 TypeValidator,
@@ -63,7 +63,7 @@ class HebbianRuleConfig(LearningRuleConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class HebbianRule(LearningRule):
+class HebbianRule(Plasticity):
     """
         Hebbian plasticy rule model.
 
@@ -127,7 +127,7 @@ class HebbianRule(LearningRule):
         )
         return jnp.clip(_kernel + self._dt * dK, min=0.0)
         
-    def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> LearningRuleOutput:
+    def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> PlasticityOutput:
         """
             Computes and returns the next kernel update.
         """
@@ -140,7 +140,7 @@ class HebbianRule(LearningRule):
 #################################################################################################################################################
 
 @register_config
-class OjaRuleConfig(LearningRuleConfig):
+class OjaRuleConfig(PlasticityConfig):
     post_tau: float | jax.Array | Initializer = dc.field(
         default = 20.0, 
         metadata = {
@@ -163,7 +163,7 @@ class OjaRuleConfig(LearningRuleConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class OjaRule(LearningRule):
+class OjaRule(Plasticity):
     """
         Oja's plasticy rule model.
 
@@ -224,7 +224,7 @@ class OjaRule(LearningRule):
         )
         return jnp.clip(_kernel + self._dt * dK, min=0.0)
 
-    def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> LearningRuleOutput:
+    def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> PlasticityOutput:
         """
             Computes and returns the next kernel update.
         """

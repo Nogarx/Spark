@@ -3,27 +3,26 @@
 #################################################################################################################################################
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
+import typing as tp
+if tp.TYPE_CHECKING:
     from spark.core.payloads import SparkPayload
 
+import os
 import abc
 import jax
-import inspect
-import jax.numpy as jnp
-import flax.nnx as nnx
-import typing as tp
-import dataclasses as dc
-from jax.typing import DTypeLike
-from functools import wraps
 import copy
-import spark.core.signature_parser as sig_parser
-import spark.core.validation as validation
+import inspect
+import flax.nnx as nnx
+import jax.numpy as jnp
+import dataclasses as dc
+from functools import wraps
+
 import spark.core.utils as utils
+import spark.core.signature_parser as sig_parser
 from spark.core.specs import PortSpecs
-from spark.core.config import BaseSparkConfig
+from spark.core.config import SparkConfig
 from spark.core.variables import Variable
+from spark.core.decorators import spark_property
 
 # TODO: Support for list[SparkPayloads] was implemented in a wacky manner and 
 # may have damage several parts of the module. This needs to be further validated. 
@@ -33,7 +32,7 @@ from spark.core.variables import Variable
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-ConfigT = tp.TypeVar("ConfigT", bound=BaseSparkConfig)
+ConfigT = tp.TypeVar("ConfigT", bound=SparkConfig)
 InputT = tp.TypeVar("InputT")
 
 class ModuleOutput(tp.TypedDict):
@@ -102,7 +101,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
     # NOTE: This is a workaround to require all childs of SparkModule to define a, 
     # default_config while at the same time allow for a lazy definition of the property. 
     def __init_subclass__(cls, **kwargs):
-        from spark.core.config import BaseSparkConfig
+        from spark.core.config import SparkConfig
         super().__init_subclass__(**kwargs)
         # Special cases and abstract classes dont need config yet they are SparkModules ¯\_(ツ)_/¯
         is_abc = inspect.isabstract(cls) and len(getattr(cls, '__abstractmethods__', set())) == 0
@@ -111,8 +110,8 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # Check if defines config
         resolved_hints = tp.get_type_hints(cls)
         config_type = resolved_hints.get('config', None)
-        if not config_type or config_type == ConfigT or not issubclass(config_type, BaseSparkConfig):
-            raise AttributeError('SparkModules must define a valid config: type[BaseSparkConfig] attribute.')
+        if not config_type or config_type == ConfigT or not issubclass(config_type, SparkConfig):
+            raise AttributeError('SparkModules must define a valid config: type[SparkConfig] attribute.')
         cls.default_config = tp.cast(type[ConfigT], config_type)
 
 
@@ -129,28 +128,27 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # Define default parameters.
         self.name = name if name else self.__class__.__name__
         dtype = getattr(self.config, 'dtype', None)
-        if dtype:
+        if dtype is not None:
             self._dtype = dtype
         dt = getattr(self.config, 'dt', None)
-        if dt:
+        if dt is not None:
             self._dt = dt
-        seed = getattr(self.config, 'seed', None)
-        if seed:
-            self._seed = seed
-            # Random engine key.
-            self.rng = Variable(jax.random.PRNGKey(self._seed))
+        # Random engine key.
+        seed = getattr(self.config, 'seed', int.from_bytes(os.urandom(4), 'little'))
+        self._seed = seed
+        self.rng = Variable(jax.random.PRNGKey(self._seed))
         # Specs
         self._input_specs: dict[str, PortSpecs] | None = None
         self._output_specs: dict[str, PortSpecs] | None = None
+        self._property_specs: dict[str, PortSpecs] | None = None
         # Flags
         self.__built__: bool = False
         self.__allow_cycles__: bool = False
-        self._contract_specs: dict[str, PortSpecs] | None = None
 
 
 
     @classmethod 
-    def get_config_spec(cls) -> type[BaseSparkConfig]:
+    def get_config_spec(cls) -> type[ConfigT]:
         """
             Returns the default configuration class associated with this module.
         """
@@ -172,34 +170,59 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             raise TypeError(f'Error binding arguments for "{self.name}": {error}') from error
 
         # Construct input specs.
-        self._input_specs = nnx.data(self._construct_input_specs(bound_args.arguments))
+        self._construct_input_specs(bound_args.arguments)
         # Build model.
         self.build(self._input_specs)
         self.__built__ = True
-
-        # TODO: The correct approach to build the model is through eval_shape. 
-        # However, Constant and Variable are clashing with JAX tracer
-        # For some reason, the tracer thinks that Constant produces a side effect 
-        # when interacting with other arrays and Variable leaks.
-        # This probably requires extending both classes to tell them what to do with ShapeDtypeStruct 
-        if False:
-            # Replace arrays with spec-backed shape proxies.
-            abc_inputs = {}
-            for key, value in bound_args.arguments.items():
-                if value and validation._is_payload_instance(value):
-                    abc_inputs[key] = self._input_specs[key].payload_type(
-                        jax.ShapeDtypeStruct(shape=self._input_specs[key].shape, dtype=self._input_specs[key].dtype))
-            # Evaluate.
-            abc_output = nnx.eval_shape(self.__call__, **abc_inputs)
-
-        # Evaluate workaround, just use the __call__ directly with some mock input. 
+        # Construct mock input to compute the module output shapes.
         from spark.core.payloads import ValueSparkPayload
         mock_input = {}
         for key, value in self._input_specs.items():
             mock_input[key] = value._create_mock_input()
+
+        # TODO: The correct approach to build the model is through eval_shape. 
+        # However, the SpikeArray doesn't know how to deal with ShapeDtypeStruct's
+        #   -> _construct_output_specs() requestes the inhibitory mask from SpikeArray's.
+        # Note that payload.inhibition_mask is used to share connections types across modules in controller settings.
+        # Additionally, the current random generator mutates the object which is not allowed in eval_shape:
+        #   -> Cannot mutate {type(self).__name__} from a different trace level
+        # This probably requires handling both cases manually to tell them what to do with ShapeDtypeStruct / eval_shape
+        #abc_output = nnx.eval_shape(self.__call__, **mock_input)
+        # NOTE: workaround, just use the __call__ directly with some mock input and reset the module. 
         abc_output = self.__call__(**mock_input)
-        # Contruct output sepcs.
-        self._output_specs = nnx.data(self._construct_output_specs(abc_output))
+        self.reset()
+
+        # Contruct output specs.
+        self._construct_output_specs(abc_output)
+        # Contruct property specs.
+        self._construct_property_specs()
+
+
+
+    def recurrent_contract(
+            self, 
+        ) -> tuple[dict[str, tp.Any], dict[str, PortSpecs]]:
+        """
+            Returns the expected specs for the outputs and properties of the module.
+
+            This function is a binding contract that allows the modules to accept self connections.
+        """
+        raise RuntimeError(
+            f'Recurrent contract not implemented. '
+            f'If you are trying to use \"{self.__class__.__name__}\" within a recurrent context '
+            f'override the method "recurrent_contract" to define the expected output and property specs. '
+            f'Alternatively, override "recurrent_contract" to return "self._output_contract_specs, self._property_contract_specs" '
+            f'and call "set_recurrent_contract" inside the __init__ method.'
+        )
+
+
+
+    @classmethod
+    def has_recurrent_contract(cls) -> bool:
+        """
+            Returns True if the modules defines a recurrent contract, False otherwise.
+        """
+        return cls.recurrent_contract is not SparkModule.recurrent_contract
 
 
 
@@ -219,51 +242,63 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
 
 
-    def set_contract_output_specs(self, contract_specs: dict[str, PortSpecs]) -> None:
+    def set_recurrent_contract(
+            self, 
+            output_contract_specs: dict[str, PortSpecs],
+            property_contract_specs: dict[str, PortSpecs]
+        ) -> None:
         """
-            Recurrent shape policy pre-defines expected shapes for the output specs.
+            Recurrent shape policy pre-defines expected shapes for the output/property specs.
 
             This is function is a binding contract that allows the modules to accept self connections.
 
             Input:
-                contract_specs: dict[str, PortSpecs], A dictionary with a contract for the output specs.
-
-            NOTE: If both, shape and output_specs, are provided, output_specs takes preference over shape.
+                output_contract_specs: dict[str, PortSpecs], A dictionary with a contract for the output specs.
+                property_contract_specs: dict[str, PortSpecs], A dictionary with a contract for the property specs.
         """
 
-        # Validate contract.
+        # Validate output contract.
         output_specs = sig_parser.get_output_specs(type(self))
         for port in output_specs.keys():
-            if port not in contract_specs:
+            if port not in output_contract_specs:
                 raise ValueError(
                     f'PortSpecs for port {port} is not defined.'
                 )
-            if not isinstance(contract_specs[port], PortSpecs):
+            if not isinstance(output_contract_specs[port], PortSpecs):
                 raise ValueError(
-                    f'PortSpecs for port got {contract_specs[port].__class__.__name__}, which is not a valid PortSpecs..'
+                    f'PortSpecs for port got {output_contract_specs[port].__class__.__name__}, which is not a valid PortSpecs..'
                 )   
-        # Set contract
-        self._contract_specs = contract_specs
+        # Set output contract
+        self._output_contract_specs = output_contract_specs
+
+        # Validate property contract.
+        property_specs = sig_parser.get_property_specs(type(self))
+        for port in property_specs.keys():
+            if port not in property_contract_specs:
+                raise ValueError(
+                    f'PortSpecs for port {port} is not defined.'
+                )
+            if not isinstance(property_contract_specs[port], PortSpecs):
+                raise ValueError(
+                    f'PortSpecs for port got {property_contract_specs[port].__class__.__name__}, which is not a valid PortSpecs..'
+                )   
+        # Set property contract
+        self._property_contract_specs = property_contract_specs
+
         # Enable recurrence flag.
         self.__allow_cycles__ = True
         
 
 
-    def get_contract_output_specs(self,) -> dict[str, PortSpecs] | None:
+    def get_contract_specs(self,) -> tuple[dict[str, PortSpecs], dict[str, PortSpecs]]:
         """
             Retrieve the recurrent spec policy of the module.
         """
-        if self.__allow_cycles__:
-            return self._contract_specs
-        raise RuntimeError(
-            f'Trying to access the contract output specs of module \"{self.name}\", but \"set_contract_output_specs\" '
-            f'has not been called. If you are trying to use \"{self.name}\" within a recurrent context '
-            f'set the recurrent shape contract inside the __init__ method of \"{self.__class__.__name__}\".'
-        )
+        return self.recurrent_contract()
 
 
 
-    def _construct_input_specs(self, abc_args: dict[str, SparkPayload | list[SparkPayload]]) -> dict[str, PortSpecs]:
+    def _construct_input_specs(self, abc_args: dict[str, SparkPayload | list[SparkPayload]]) -> None:
         """
             Input spec constructor.
         """
@@ -286,6 +321,11 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # Finish specs, use abc_args to skip optional missing keys.
         from spark.core.payloads import SpikeArray
         for key, payload in abc_args.items():
+            if isinstance(payload, list) and len(payload) == 0:
+                raise ValueError(
+                    f'Module "{self.name}" received an empty list for input "{key}". '
+                    f'Shape and dtype inference cannot proceed without at least one element.'
+                )
             # NOTE: This is a particular case for modules that expect abstract variadic positional arguments. 
             # I am looking at you Concat (╯°□°）╯︵ ┻━┻.
             payload_type = input_specs[key].payload_type
@@ -293,8 +333,12 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                 payload_type = payload.__class__ if not isinstance(payload, list) else payload[0].__class__
             else:
                 payload_type = input_specs[key].payload_type
-            shape = payload.shape if not isinstance(payload, list) else [p.shape for p in payload]
-            dtype = payload.dtype if not isinstance(payload, list) else payload[0].dtype
+            if payload is not None:
+                shape = payload.shape if not isinstance(payload, list) else [p.shape for p in payload]
+                dtype = payload.dtype if not isinstance(payload, list) else payload[0].dtype
+            else:
+                shape = None
+                dtype = None
             # PortSpecs are immutable, we need to create a new one.
             input_specs[key] = PortSpecs(
                 payload_type=payload_type,
@@ -305,11 +349,11 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                 async_spikes=payload.async_spikes if isinstance(payload, SpikeArray) else None,
                 inhibition_mask=payload.inhibition_mask if isinstance(payload, SpikeArray) else None
             )
-        return input_specs
+        self._input_specs = nnx.data(input_specs)
 
 
 
-    def _construct_output_specs(self, abc_args: ModuleOutput) -> dict[str, PortSpecs]:
+    def _construct_output_specs(self, abc_args: ModuleOutput) -> None:
         """
             Output spec constructor.
         """
@@ -325,24 +369,50 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # Finish specs.
         from spark.core.payloads import SpikeArray
         for key in output_specs.keys():
+            output_payload: SparkPayload = abc_args[key]
             output_specs[key] = PortSpecs(
                 payload_type=output_specs[key].payload_type,
-                shape=abc_args[key].shape,
-                dtype=abc_args[key].dtype,
+                shape=output_payload.shape,
+                dtype=output_payload.dtype,
                 description=f'Auto-generated output spec for input \"{key}\" of module \"{self.name}\".',
                 # Payload specific build metadata
-                async_spikes=abc_args[key].async_spikes if isinstance(abc_args[key], SpikeArray) else None,
-                inhibition_mask=abc_args[key].inhibition_mask if isinstance(abc_args[key], SpikeArray) else None
+                async_spikes=output_payload.async_spikes if isinstance(output_payload, SpikeArray) else None,
+                inhibition_mask=output_payload.inhibition_mask if isinstance(output_payload, SpikeArray) else None
             )
-        return output_specs
+        self._output_specs = nnx.data(output_specs)
 
+
+
+    def _construct_property_specs(self,) -> None:
+        # Get default spec from signatures.
+        property_specs = sig_parser.get_property_specs(type(self))
+        # Finalize specs.
+        from spark.core.payloads import SpikeArray
+        for key in property_specs.keys():
+            property_payload: SparkPayload | None = getattr(self, key, None)
+            if property_payload is None:
+                raise RuntimeError(
+                    f'Module "{self.name}" declared a property "{key}", but it was not '
+                    f'initialized during the build phase.'
+                )
+            property_specs[key] = PortSpecs(
+                payload_type=property_specs[key].payload_type,
+                shape=property_payload.shape,
+                dtype=property_payload.dtype,
+                description=f'Auto-generated output spec for input \"{key}\" of module \"{self.name}\".',
+                # Payload specific build metadata
+                async_spikes=property_payload.async_spikes if isinstance(property_payload, SpikeArray) else None,
+                inhibition_mask=property_payload.inhibition_mask if isinstance(property_payload, SpikeArray) else None
+            )
+        self._property_specs = nnx.data(property_specs)
+        
 
 
     def get_input_specs(self) -> dict[str, PortSpecs]:
         """
             Returns a dictionary of the SparkModule's input port specifications.
         """
-        if not self._input_specs:
+        if self._input_specs is None:
             raise RuntimeError('Module not yet built.')
         return self._input_specs
 
@@ -352,9 +422,19 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         """
             Returns a dictionary of the SparkModule's input port specifications.
         """
-        if not self._output_specs:
+        if self._output_specs is None:
             raise RuntimeError('Module not yet built.')
         return self._output_specs
+
+
+
+    def get_property_specs(self) -> dict[str, PortSpecs]:
+        """
+            Returns a dictionary of the SparkModule's property port specifications.
+        """
+        if self._property_specs is None:
+            raise RuntimeError('Module not yet built.')
+        return self._property_specs
 
 
 
@@ -376,14 +456,37 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
 
 
+    @classmethod
+    def _get_property_specs(cls) -> dict[str, PortSpecs]:
+        """
+            Returns a dictionary of the SparkModule's property port specifications.
+        """
+        return sig_parser.get_property_specs(cls)
+        
+
     def get_rng_keys(self, num_keys: int) -> jax.Array | list[jax.Array]:
         """
             Generates a new collection of random keys for the JAX's random engine.
         """
+        if not hasattr(self, 'rng'):
+            raise RuntimeError(
+                f"Module '{self.name}' does not have a random number generator initialized. "
+                "Ensure its configuration defines a 'seed' attribute."
+            )
         self.rng.value, *keys = jax.random.split(self.rng.value, num_keys+1)
         if num_keys == 1:
             return keys[0]
         return keys
+
+
+    @classmethod
+    def get_properties(cls,) -> tuple[str, ...]:
+        """
+            Returns all the attributes names wrapped by the spark_property wrapper.
+        """
+        return tuple(
+            [name  for name, attr in inspect.getmembers(cls) if isinstance(attr, spark_property)]
+        )
 
 
 
@@ -443,13 +546,11 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                 )
             # Create temporary directory
             timestamp = datetime.datetime.now().timestamp()
-            temp_dir = pathlib.Path(
-                os.path.join('/'.join(path.split('/')[:-1]), f'tmp_{timestamp}')
-            )
+            temp_dir = pathlib.Path(path).parent / f'tmp_{timestamp}'
             temp_dir.mkdir(exist_ok=True)
             # Save config
             config_path = pathlib.Path(os.path.join(temp_dir, 'model.scfg'))
-            config: BaseSparkConfig = self.config
+            config: ConfigT = self.config
             config.__metadata__['input_specs'] = self.get_input_specs()
             config.to_file(config_path.absolute())
             # Save state
@@ -480,7 +581,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         import pathlib
         import datetime
         import orbax.checkpoint as ocp
-        from spark.core.config import BaseSparkConfig
+        from spark.core.config import SparkConfig
         from spark.core.flax_imports import split, merge
 
         def is_child(member_name: str, parent: str) -> bool:
@@ -501,9 +602,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         
         # Open tar file
         timestamp = datetime.datetime.now().timestamp()
-        temp_dir = pathlib.Path(
-            os.path.join('/'.join(path.split('/')[:-1]), f'tmp_{timestamp}')
-        )
+        temp_dir = pathlib.Path(path).parent / f'tmp_{timestamp}'
         try:
             with tarfile.open(path, "r:gz") as tar:
                 config_file = tar.getmember('./model.scfg')
@@ -516,7 +615,8 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                     raise RuntimeError(
                         f'Unable to validate state. If you still want to try to extract the file set \"safe=False\"'
                     )
-                tar.extract(config_file, path=temp_dir, filter='data') 
+                kwargs = {'filter': 'data'} if hasattr(tarfile, 'data_filter') else {}
+                tar.extract(config_file, path=temp_dir, **kwargs) 
                 state_files = []
                 for member in tar.getmembers():
                     if is_child(member.name, state_dir.name):
@@ -524,12 +624,12 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                             state_files.append(member)
                         else:
                             raise RuntimeError(
-                                f'A strange possibly malicious file was detected: \"{member.name}\". If you still want to try to extract the file set \"safe=False\"'
+                                f'A strange possibly malicious file was detected: "{member.name}". If you still want to try to extract the file set "safe=False"'
                             )
-                tar.extractall(members=state_files, path=temp_dir, filter='data') 
+                tar.extractall(members=state_files, path=temp_dir, **kwargs) 
             # Restore model
             config_path = pathlib.Path(os.path.join(temp_dir, 'model.scfg'))
-            config = BaseSparkConfig.from_file(config_path.absolute())
+            config = SparkConfig.from_file(config_path.absolute())
             # Get model class
             model_cls: type[SparkModule] = config.class_ref
             # Initialize the module.

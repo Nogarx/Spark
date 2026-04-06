@@ -18,6 +18,7 @@ from spark.core.config_validation import TypeValidator, PositiveValidator, Binar
 from spark.nn.interfaces.input.base import InputInterface, InputInterfaceConfig, InputInterfaceOutput
 from spark.nn.interfaces.input.poisson import PoissonSpikerConfig
 from spark.nn.interfaces.input.linear import LinearSpikerConfig
+from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -29,7 +30,7 @@ class TopologicalSpikerConfig(InputInterfaceConfig):
         Base TopologicalSpiker configuration class.
     """
     
-    glue: jax.Array = dc.field(
+    glue: jax.Array | Initializer = dc.field(
         default_factory = lambda: jnp.array(0), 
         metadata = {
             'validators': [
@@ -41,7 +42,7 @@ class TopologicalSpikerConfig(InputInterfaceConfig):
                             It may be either an array with a single element or \
                             an array with the same dimensionality as the input vector.',
         })
-    mins: jax.Array = dc.field(
+    mins: jax.Array | Initializer = dc.field(
         default_factory = lambda: jnp.array(0), 
         metadata = {
             'validators': [
@@ -50,7 +51,7 @@ class TopologicalSpikerConfig(InputInterfaceConfig):
             'description': 'Minimum value for the rescaling factor. It may be either an array with a single element or \
                             an array with the same dimensionality as the input vector.',
         })
-    maxs: jax.Array = dc.field(
+    maxs: jax.Array | Initializer = dc.field(
         default_factory = lambda: jnp.array(1), 
         metadata = {
             'validators': [

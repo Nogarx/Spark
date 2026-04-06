@@ -133,7 +133,7 @@ class PositiveValidator(ConfigurationValidator):
         elif isinstance(value, np.ndarray):
             is_positive = np.all(value > 0)
         elif isinstance(value, (tuple, list, set)):
-            is_positive = np.all(np.array(value) > 0)
+            is_positive = np.all(np.array(list(value)) > 0)
         else:
             raise TypeError(f'{value} is not a supported numeric object.')
         if not is_positive:
@@ -157,7 +157,8 @@ class BinaryValidator(ConfigurationValidator):
         elif isinstance(value, bool):
             is_zero_one = True
         elif isinstance(value, (tuple, list, set)):
-            is_zero_one = np.all(np.logical_or(np.array(value) == 0, np.array(value) == 1))
+            arr_val = np.array(list(value))
+            is_zero_one = np.all(np.logical_or(arr_val == 0, arr_val == 1))
         else:
             raise TypeError(f'value is not a supported binary numeric object.')
         if not is_zero_one:
@@ -179,7 +180,8 @@ class ZeroOneValidator(ConfigurationValidator):
         elif isinstance(value, np.ndarray):
             is_zero_one = np.all(np.logical_and(value >= 0, value <= 1))
         elif isinstance(value, (tuple, list, set)):
-            is_zero_one = np.all(np.logical_or(np.array(value) >= 0, np.array(value) <= 1))
+            arr_val = np.array(list(value))
+            is_zero_one = np.all(np.logical_and(arr_val >= 0, arr_val <= 1))
         else:
             raise TypeError(f'value is not a supported numeric object.')
         if not is_zero_one:

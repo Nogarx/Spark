@@ -12,26 +12,26 @@ from spark.nn.components.base import Component, ComponentConfig
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class LearningRuleOutput(tp.TypedDict):
+class PlasticityOutput(tp.TypedDict):
     """
-       Generic learning rule model output spec.
+       Generic plasticity rule model output spec.
     """
     kernel: FloatArray
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class LearningRuleConfig(ComponentConfig):
+class PlasticityConfig(ComponentConfig):
     """
-        Abstract learning rule configuration class.
+        Abstract plasticity rule configuration class.
     """
     pass
-ConfigT = tp.TypeVar("ConfigT", bound=LearningRuleConfig)
+ConfigT = tp.TypeVar("ConfigT", bound=PlasticityConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class LearningRule(Component, tp.Generic[ConfigT]):
+class Plasticity(Component, tp.Generic[ConfigT]):
     """
-        Abstract learning rule model.
+        Abstract plasticity rule model.
     """
 
     def __init__(self, config: ConfigT | None = None, **kwargs) -> None:

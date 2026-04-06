@@ -16,9 +16,11 @@ import jax.numpy as jnp
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-DEFAULT_SPARKMODULE_PATH = 'spark.core.module.SparkModule'
+DEFAULT_SPARK_MODULE_PATH = 'spark.core.module.SparkModule'
+DEFAULT_SPARK_CONTROLLER_PATH = 'spark.nn.controllers.base.Controller'
+DEFAULT_SPARK_NEURON_PATH = 'spark.nn.controllers.neuron.Neuron'
 DEFAULT_PAYLOAD_PATH = 'spark.core.payloads.SparkPayload'
-DEFAULT_CONFIG_PATH = 'spark.core.config.BaseSparkConfig'
+DEFAULT_CONFIG_PATH = 'spark.core.config.SparkConfig'
 DEFAULT_INITIALIZER_PATH = 'spark.nn.initializers.base.Initializer'
 DEFAULT_INITIALIZER_CONFIG_PATH = 'spark.nn.initializers.base.InitializerConfig'
 DEFAULT_CFG_VALIDATOR_PATH = 'spark.core.config_validation.ConfigurationValidator'
@@ -145,7 +147,7 @@ def _is_module_instance(obj: tp.Any) -> bool:
         Returns:
             bool, True if 'obj' is an instance of 'SparkModule', False otherwise.
     """
-    return _is_spark_instance(obj, DEFAULT_SPARKMODULE_PATH)
+    return _is_spark_instance(obj, DEFAULT_SPARK_MODULE_PATH)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -158,7 +160,33 @@ def _is_module_type(obj: tp.Any) -> bool:
         Returns:
             bool, True if 'obj' is a subclass of 'SparkModule', False otherwise.
     """
-    return _is_spark_type(obj, DEFAULT_SPARKMODULE_PATH)
+    return _is_spark_type(obj, DEFAULT_SPARK_MODULE_PATH)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _is_controller_instance(obj: tp.Any) -> bool:
+    """
+        Check if an object is an instance of 'spark.nn.controllers.base.Controller'.
+
+        Args:
+            obj (tp.Any): The class to check.
+        Returns:
+            bool, True if 'obj' is an instance of 'SparkModule', False otherwise.
+    """
+    return _is_spark_instance(obj, DEFAULT_SPARK_CONTROLLER_PATH)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _is_controller_type(obj: tp.Any) -> bool:
+    """
+        Check if an object is a subclass of 'spark.nn.controllers.base.Controller'.
+
+        Args:
+            obj (tp.Any): The class to check.
+        Returns:
+            bool, True if 'obj' is a subclass of 'SparkModule', False otherwise.
+    """
+    return _is_spark_type(obj, DEFAULT_SPARK_CONTROLLER_PATH)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -169,7 +197,7 @@ def _is_config_instance(obj: tp.Any) -> bool:
         Args:
             obj (tp.Any): The instance to check.
         Returns:
-            bool, True if the object is an instance of 'BaseSparkConfig', False otherwise.
+            bool, True if the object is an instance of 'SparkConfig', False otherwise.
     """
     return _is_spark_instance(obj, DEFAULT_CONFIG_PATH)
 
@@ -182,7 +210,7 @@ def _is_config_type(obj: tp.Any) -> bool:
         Args:
             obj (tp.Any): The instance to check.
         Returns:
-            bool, True if the object is a subclass of 'BaseSparkConfig', False otherwise.
+            bool, True if the object is a subclass of 'SparkConfig', False otherwise.
     """
     return _is_spark_type(obj, DEFAULT_CONFIG_PATH)
 

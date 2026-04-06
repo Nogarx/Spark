@@ -15,64 +15,46 @@ import typing as tp
 import dataclasses as dc
 import spark.core.validation as validation
 from spark.core.variables import Variable
+from spark.core.utils import TwoKeyDict
+from collections import defaultdict
+from collections.abc import MutableMapping
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-@jax.tree_util.register_pytree_node_class
+@jax.tree_util.register_pytree_with_keys_class
 @dc.dataclass(init=False)
-class Cache:
-    """
-        Cache dataclass.
-    """
-    _variable: SparkPayload  
+class Cache(TwoKeyDict):
 
-    def __init__(self, _variable: SparkPayload) -> None:
-        self._variable = _variable
+    @tp.overload
+    def __setitem__(self, keys: str, value: dict[str, SparkPayload]) -> None: ...
+    @tp.overload
+    def __setitem__(self, keys: tuple[str, str], value: SparkPayload) -> None: ...
+    def __setitem__(self, keys, value) -> None:
+        if isinstance(keys, tuple):
+            self._data[keys[0]][keys[1]] = value
+        elif isinstance(value, dict):
+            self._data[keys] = {k: v for k,v in value.items()}
+        else:
+            raise ValueError(f'Invalid keys: {keys} or value: {value}.')
 
-    @property
-    def value(self,) -> SparkPayload:
-        """
-            Current value store in the cache object.
-        """
-        return self._variable.value
-
-    def tree_flatten(self) -> tuple[tuple, tuple]:
-        return self._variable.tree_flatten()
-
-    @classmethod
-    def tree_unflatten(cls, aux_data, children) -> tp.Self:
-        obj = cls.__new__(cls)
-        obj._variable = aux_data[0].tree_unflatten(aux_data, children)
-        return obj
-
-    @property
-    def shape(self,) -> tuple[int, ...]:
-        """
-            Shape of the value store in the cache object.
-        """
-        return self._variable.shape
-
-    @property
-    def dtype(self,) -> jnp.dtype:
-        """
-            Dtype of the value store in the cache object.
-        """
-        return self._variable.dtype
+    @tp.overload
+    def __getitem__(self, keys: tuple[str, str]) -> SparkPayload: ...
+    @tp.overload
+    def __getitem__(self, keys: str)-> dict[str, SparkPayload]: ...
+    def __getitem__(self, keys):
+        return super().__getitem__(keys)
 
     @classmethod
-    def _from_spec(cls, spec: PortSpecs) -> tp.Self:
-        obj = cls.__new__(cls)
-        obj._variable = spec.payload_type._from_spec(spec)
+    def from_specs(cls, data: TwoKeyDict[str, str, PortSpecs]) -> tp.Self:
+        obj = cls()
+        for (key1, key2), spec in data.items():
+            # Skip optional
+            if spec.shape is not None:
+                obj[key1][key2] = spec.payload_type._from_spec(spec)
         return obj
-
-    def get(self,) -> SparkPayload:
-        return self._variable
-
-    def set(self, payload: SparkPayload) -> None:
-        self._variable = payload
-
+    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

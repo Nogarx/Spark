@@ -14,7 +14,7 @@ import enum
 
 from PySide6 import QtWidgets, QtCore
 import spark.core.utils as utils
-from spark.core.config import BaseSparkConfig
+from spark.core.config import SparkConfig
 from spark.core.registry import REGISTRY
 from spark.nn.initializers import Initializer, InitializerConfig
 from spark.graph_editor.editor_config import GRAPH_EDITOR_CONFIG
@@ -344,7 +344,7 @@ class QConfigBody(QtWidgets.QWidget):
 
     def __init__(
             self, 
-            config: BaseSparkConfig, 
+            config: SparkConfig, 
             is_initializer: bool, 
             config_path: str | None = None,
             ref_widgets_map: dict[tuple[str, ...], QtWidgets.QWidget] | None = None, 
@@ -472,7 +472,7 @@ class QConfigBody(QtWidgets.QWidget):
         for e in errors:
             self.on_error_detected.emit(e)
 
-    def get_value(self,) -> BaseSparkConfig:
+    def get_value(self,) -> SparkConfig:
         return self.config
 
 #################################################################################################################################################
