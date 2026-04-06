@@ -50,6 +50,7 @@ No coding required for model design.
 -->
 ## Getting Started
 
+Spark builds on top of JAX, which needs to be installed first. Click [here](https://docs.jax.dev/en/latest/installation.html) to go to JAX's installation guide.
 
 Spark is available on PyPI, so it can be installed with:
 
