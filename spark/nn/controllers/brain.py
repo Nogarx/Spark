@@ -78,13 +78,13 @@ class Brain(Controller, metaclass=BrainMeta):
 						else:
 							input_args_list.append(getattr(getattr(self, port_map.origin), port_map.port))
 					else:
-						input_args_list.append(self._cache[port_map.origin, port_map.port].get())
+						input_args_list.append(self._cache[port_map.origin, port_map.port])
 				input_args[port_name] = self._concatenate_payloads(input_args_list)
 			outputs[name] = getattr(self, name)(**input_args)
 		# Update cache
 		for name in self._modules_names:
 			for port_name in self._modules_output_map[name]:
-				self._cache[name, port_name].set(outputs[name][port_name])
+				self._cache[name, port_name] = outputs[name][port_name]
 		# Compute effects
 		for name, effects in self._modules_effects_map.items():
 			for property_name, ports_list in effects.items():
