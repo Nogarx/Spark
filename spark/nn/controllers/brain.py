@@ -107,7 +107,7 @@ class Brain(Controller, metaclass=BrainMeta):
 			if port_map.is_property:
 				value = getattr(getattr(self, port_map.origin), port_map.port)
 			else:
-				value = self._cache[port_map.origin, port_map.port].get()
+				value = self._cache[port_map.origin, port_map.port]
 			readout[port_map.origin][port_map.port] = value
 		return readout
 
