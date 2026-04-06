@@ -67,7 +67,7 @@ cd spark
 pip install -e .
 ```
 
-Do not know what to do next? The [tutorials](https://github.com/Nogarx/Spark/tree/main/tutorials) are here to help you! 
+Do not know what to do next? The [tutorials](https://nogarx.github.io/Spark/tutorials.html) are here to help you! 
 
 ## The Spark Graph Editor
 
@@ -148,7 +148,7 @@ out, state = run_model(graph, state, **my_awesome_inputs)
 # State now contains the updated state of the model!.
 ```
 
-There is much more to Spark that what we can show here, if you are ready to learn more you can go to the [tutorial section](https://github.com/Nogarx/Spark/tree/main/tutorials)! 
+There is much more to Spark that what we can show here, if you are ready to learn more you can go to the [tutorial section](https://nogarx.github.io/Spark/tutorials.html)! 
 
 
 ## Roadmap
