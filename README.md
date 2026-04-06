@@ -1,6 +1,6 @@
 # ⚡ Spark: Modular Spiking Neural Networks
 
-<div align="center"><img src="./images/spark_logo.png" width="400" alt="Spark Logo"></div>
+<div align="center"><img src="./images/spark_logo.png" width="500" alt="Spark Logo"></div>
 
 <p align="center">
     <strong>
@@ -18,11 +18,9 @@
     <a href="#">
         <img src="https://img.shields.io/github/stars/Nogarx/Spark?style=for-the-badge" alt="GitHub Stars">
     </a>
-	<!--
     <a href="#">
-        <img src="https://img.shields.io/pypi/v/spark?style=for-the-badge" alt="PyPI version">
+        <img src="https://img.shields.io/pypi/v/spark-snn?style=for-the-badge" alt="PyPI version">
     </a>
-	-->
 </p>
 
 Spark is a next-generation framework designed to simplify and accelerate the research, development, and deployment of non-gradient-base Spiking Neural Networks (SNNs). Our goal is to make SNNs more accessible to researchers, engineers, and enthusiasts by abstracting away boilerplate code and providing intuitive tools for model creation and experimentation, while maintaing state-of-the-art performance.
@@ -45,6 +43,11 @@ Spiking neural networks are not special, why should they require special data?!.
 Design complex SNN architectures by dragging, dropping, and connecting pre-built neural components. 
 No coding required for model design.
 
+<!--
+<div align="center"  alt="Spark Summary">
+    <img src="./images/spark_summary.png" width="1000" alt="Spark Graph Editor"></div>
+</div>
+-->
 ## Getting Started
 
 
@@ -63,12 +66,14 @@ cd spark
 pip install -e .
 ```
 
+Do not know what to do next? The [tutorials](https://github.com/Nogarx/Spark/tree/main/tutorials) are here to help you! 
+
 ## The Spark Graph Editor
 
 Design your network's structure, set parameters for each component, and connect them to create a model.
 
 <div align="center">
-    <img src="./images/spark_graph_editor.png" alt="Spark Logo"></div>
+    <img src="./images/spark_graph_editor.png" width="1200" alt="Spark Graph Editor"></div>
     <p>
         <em>The Spark visual interface for building SNNs.</em>
     </p>
@@ -89,7 +94,6 @@ editor = spark.GraphEditor()
 if __name__ == "__main__":
     editor.launch()
 ```
-(Note: Currently the editor is in an early stage of development an it is not recommended for building neurons from scratch due to a small latency factor that is introduced when the model is "compiled".)
 
 Afterwards you can simply export your model and build it.
 
@@ -162,6 +166,9 @@ Spark is fast but it can be faster!. Several operations can be further optimized
 ## Contributing
 
 Contributions are what make the open-source community such an amazing place. Any contributions you make are greatly appreciated.
+Want to contribute but you do not know where to start? The [discussion forum](https://github.com/Nogarx/Spark/discussions)!  may be the place you are looking for!. 
+
+
 
 ## Citing Spark
 
