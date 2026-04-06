@@ -172,23 +172,26 @@ Want to contribute but you do not know where to start? The [discussion forum](ht
 
 ## Citing Spark
 
-You can use the following reference to cite this repository, 
+You can use the following references to cite this repository, 
 
-<!--
-@article{spark_snn_github,
-  author = {Mario Franco, Carlos Gershenson},
-  title = {Spark: Modular Spiking Neural Networks},
-  url = {},
-  year = {2025},
+```
+@misc{spark_snn,
+      title={Spark: Modular Spiking Neural Networks}, 
+      author={Mario Franco and Carlos Gershenson},
+      year={2026},
+      eprint={2602.02306},
+      archivePrefix={arXiv},
+      primaryClass={cs.NE},
+      url={https://arxiv.org/abs/2602.02306}, 
 }
---->
+```
 
 ```
 @software{spark_snn_github,
   author = {Mario Franco, Carlos Gershenson},
   title = {Spark: Modular Spiking Neural Networks},
   url = {https://github.com/nogarx/spark/},
-  version = {0.1.0},
-  year = {2025},
+  version = {1.0.0},
+  year = {2026},
 }
 ```
