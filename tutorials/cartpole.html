@@ -1,0 +1,917 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial #6: Solving the CartPole™ &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=30646c52"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/cartpole';</script>
+    <link rel="icon" href="../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tutorial #7: Sharding" href="sharding.html" />
+    <link rel="prev" title="Tutorial #5: Graph Editor" href="graph_editor.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <img src="../_static/spark_250px.png" class="logo__image only-dark pst-js-only" alt="Spark  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="neurons.html">Tutorial #3: Neurons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brains.html">Tutorial #4: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph_editor.html">Tutorial #5: Graph Editor</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Tutorial #6: Solving the CartPole™</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sharding.html">Tutorial #7: Sharding</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../autoapi/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../autoapi/spark/index.html">spark</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/decorators/index.html">spark.core.decorators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/flax_imports/index.html">spark.core.flax_imports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/typing/index.html">spark.core.typing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/validation/index.html">spark.core.validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/variables/index.html">spark.core.variables</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/editor_config/index.html">spark.graph_editor.editor_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/style/index.html">spark.graph_editor.style</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/ui/index.html">spark.graph_editor.ui</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/window/index.html">spark.graph_editor.window</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/nn/index.html">spark.nn</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/components/index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/controllers/index.html">spark.nn.controllers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../tutorials.html" class="nav-link">Tutorials</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Tutorial #6: Solving the CartPole™</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/tutorials/cartpole.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Tutorial #6: Solving the CartPole™</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-header">
+<section id="tutorial-6-solving-the-cartpole">
+<h1>Tutorial #6: Solving the CartPole™<a class="headerlink" href="#tutorial-6-solving-the-cartpole" title="Link to this heading">#</a></h1>
+</div><link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Now it is the time to wrap all that we have learned so far and use <b><i>Spark</i></b> to solve one of the most iconic problems in reinforcement learning: the CartPole™.</p>
+<p>The <a class="reference external" href="https://gymnasium.farama.org/environments/classic_control/cart_pole/">CartPole</a> is a simple control problem in which a pole is attached by an un-actuated joint to a cart, which moves along a frictionless track. The pendulum is placed upright on the cart and the goal is to balance the pole by applying forces in the left and right direction on the cart.</p>
+<p>In order to solve the network, we require a neuron model capable of not only processing spikes, but also capable of receiving a signal like a reward in order to modulate its synaptic plasticity dynamics. For this case we will use a simple ALIF neruon (Adaptive-Leaky-Integrate-and-Fire). We will also add a modulated versions of a classical plasticity protocol known as the “quadruplet rule”, which we are going to populate with parameters from: <a class="reference external" href="https://plasticity.vogelslab.org/">Plasticity Cards®</a>, a collection of parameters for the quadruplet rule that tends to produce stable dynamics. We took the liberty to prepare this neuronal model in advance (which will later appear as <b>spark.ALIFModNeuron</b>) and pack it into a file!.</p>
+<p>Considering the action space for the CartPole problem, the brain needs to be capable on picking two actions: “move left” or “move right” depending on the current state of the cart. The input to the problem are four bounded float values: position, velocity, pole angle and pole angular velocity. Given the very nature of these values (they are continuous values that may be represented by segments of a line), we can use a <b>spark.nn.interfaces.TopologicalLinearSpiker</b> to map these values to an spiking pattern along a line (akin to grid cells!). For the core of the network, an “A vs B” design pattern will naturally induce a choice of left or right. This pattern may be summarized as: each population tries to main a high level of activity and supress the activity of the other population if it “believes” that it needs to act. Finally, for the output of the network, we can simply take the activity of A and B and pick which ever is more active at the present moment. In order to accomplish this, we will once again use the <b>spark.nn.interfaces.ExponentialIntegrator</b> and pick the action associated with most active population.</p>
+<p>Overall, the plan is:</p>
+<ol class="arabic simple">
+<li><p>Design a neuron model that may be modulated via rewards.</p></li>
+<li><p>Assamble everything into a brain.</p></li>
+<li><p>Train the model</p></li>
+<li><p>Profit!</p></li>
+</ol>
+<p>For this tutorial we prepared two files: <b>alif_mod_neuron.scfg</b> and <b>ab_brain.scfg</b> for the neuron and the brain respectively. You can find these two files in the main repository under the directory <b>/tutorials</b>.</p>
+<p>Let’s start by looking at the neuron model.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">spark</span>
+<span class="c1"># Imports</span>
+<span class="o">%</span><span class="k">gui</span> qt
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">spark</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+
+<span class="n">NEURON_PATH</span> <span class="o">=</span> <span class="s1">&#39;./alif_mod_neuron.scfg&#39;</span>
+<span class="n">BRAIN_PATH</span> <span class="o">=</span> <span class="s1">&#39;./ab_brain.scfg&#39;</span>
+
+<span class="n">editor</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">GraphEditor</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Feel free to explore the neuron model!</span>
+<span class="c1">#if __name__ == &quot;__main__&quot;:</span>
+<span class="c1">#    editor.open_model(NEURON_PATH)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>And the brain…</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+	<span class="n">config_instance</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BrainConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">BRAIN_PATH</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Oh no: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">!&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Oh no: ERROR: Could not read file &quot;./ab_brain.scfg&quot;. Reason: An unexpected error ocurred when trying to decode... 418 I&#39;m a teapot.Error: &#39;There is no module with name &quot;alif_mod_neuron&quot; in the registry.&#39;!
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>The previous behavior is expected since the Brain is using the neuronal model from the file, which is a custom neuron that is not part of the standard models available in <b><i>Spark</i></b>. We will not be able to use directly this model inside a Brain because <b><i>Spark</i></b> does not know it exists!</p>
+<p>Fortunately, it is trivial to fix this issue. However, this needs to be done every time you want to use a custom Neuron model either in a Brain or in the Graph Editor (before you launch it!).</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># We can either register the neuron directly from the file</span>
+<span class="k">try</span><span class="p">:</span>
+	<span class="n">spark</span><span class="o">.</span><span class="n">register_neuron_from_config_file</span><span class="p">(</span><span class="s1">&#39;ALIFModNeuron&#39;</span><span class="p">,</span> <span class="n">NEURON_PATH</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;(File) Oh no: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">!&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Or from a live instance</span>
+<span class="k">try</span><span class="p">:</span>
+	<span class="n">brain_config</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">NeuronConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">NEURON_PATH</span><span class="p">)</span>
+	<span class="n">spark</span><span class="o">.</span><span class="n">register_neuron_from_config</span><span class="p">(</span><span class="s1">&#39;ALIFModNeuron&#39;</span><span class="p">,</span> <span class="n">config_instance</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;(Instance) Oh no: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">!&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(Instance) Oh no: name &#39;config_instance&#39; is not defined!
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Note that after this simple instruction, the ALIFModNeuron model is now available in the editor both, as a compact reference when building a brain or as a full editable model when building a Neuron!. Furthermore, we can also inspect the brain model directly and tune it’s parameters.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+	<span class="n">brain_config</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BrainConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">BRAIN_PATH</span><span class="p">)</span>
+	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Infinite success!&#39;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Oh no: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">!&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Infinite success!
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># You may also tinker with the brain model!</span>
+<span class="c1">#if __name__ == &quot;__main__&quot;:</span>
+<span class="c1">#    editor.open_model(BRAIN_PATH)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>With this, we are now ready to build the brain and attack the CartPole problem!</p>
+<p>As usual, we need to define the functions to run the model efficiently. Up to this point we have been making single calls to the model. However, this approach will quickly become highly innefficient, since SNN are expected to integrate the output, diggest it for some time and then output an answer (ideally whenever they managed to get the answer, but this is easier said than done).</p>
+<p>In <b><i>Spark</i></b>, we refer to this concept as “interaction times”, which is simply the number of time steps we let the model process the input before trying to retrieve an answer. There is two ways to implement this, with loops as we saw in the one of the first tutorials or by unrolling (the Jax™ way).</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+
+<span class="nd">@partial</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">jit</span><span class="p">,</span> <span class="n">static_argnames</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;steps&#39;</span><span class="p">,</span> <span class="s1">&#39;modulation_decay&#39;</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_model_loop</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">modulation_decay</span><span class="p">,</span> <span class="o">**</span><span class="n">inputs</span><span class="p">):</span>
+    <span class="c1"># Merge model</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+    <span class="c1"># Run model</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="c1"># Modulation decay.</span>
+        <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;mod_a_ex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">modulation_decay</span> <span class="o">*</span> <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;mod_a_ex&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">))</span>
+        <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;mod_a_in&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">modulation_decay</span> <span class="o">*</span> <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;mod_a_in&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">))</span>
+        <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;mod_b_ex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">modulation_decay</span> <span class="o">*</span> <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;mod_b_ex&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">))</span>
+        <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;mod_b_in&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">modulation_decay</span> <span class="o">*</span> <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;mod_b_in&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">))</span>
+    <span class="c1"># Get new state</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">model</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">state</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nd">@partial</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">jit</span><span class="p">,</span> <span class="n">static_argnames</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;steps&#39;</span><span class="p">,</span> <span class="s1">&#39;unroll&#39;</span><span class="p">,</span> <span class="s1">&#39;modulation_decay&#39;</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_model_unroll</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">modulation_decay</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">unroll</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="o">**</span><span class="n">inputs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">step_fn</span><span class="p">(</span><span class="n">carry_state</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
+        <span class="c1"># Unpack carry_state</span>
+        <span class="p">(</span><span class="n">model_state</span><span class="p">,</span> <span class="n">current_inputs</span><span class="p">)</span> <span class="o">=</span> <span class="n">carry_state</span>
+        <span class="c1"># Merge model</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">model_state</span><span class="p">)</span>
+        <span class="c1"># Run model</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">current_inputs</span><span class="p">)</span>
+        <span class="c1"># Modulation decay.</span>
+        <span class="n">current_inputs</span><span class="p">[</span><span class="s1">&#39;mod_a_ex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">modulation_decay</span> <span class="o">*</span> <span class="n">current_inputs</span><span class="p">[</span><span class="s1">&#39;mod_a_ex&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">))</span>
+        <span class="n">current_inputs</span><span class="p">[</span><span class="s1">&#39;mod_a_in&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">modulation_decay</span> <span class="o">*</span> <span class="n">current_inputs</span><span class="p">[</span><span class="s1">&#39;mod_a_in&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">))</span>
+        <span class="n">current_inputs</span><span class="p">[</span><span class="s1">&#39;mod_b_ex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">modulation_decay</span> <span class="o">*</span> <span class="n">current_inputs</span><span class="p">[</span><span class="s1">&#39;mod_b_ex&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">))</span>
+        <span class="n">current_inputs</span><span class="p">[</span><span class="s1">&#39;mod_b_in&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">modulation_decay</span> <span class="o">*</span> <span class="n">current_inputs</span><span class="p">[</span><span class="s1">&#39;mod_b_in&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">))</span>
+        <span class="c1"># Get new state</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">new_state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">model</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">new_state</span><span class="p">,</span> <span class="n">current_inputs</span><span class="p">),</span> <span class="n">out</span>
+    <span class="c1"># Run the scan loop</span>
+    <span class="p">(</span><span class="n">final_state</span><span class="p">,</span> <span class="n">_</span><span class="p">),</span> <span class="n">stacked_outs</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">lax</span><span class="o">.</span><span class="n">scan</span><span class="p">(</span>
+        <span class="n">step_fn</span><span class="p">,</span> 
+        <span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">inputs</span><span class="p">),</span> 
+        <span class="n">xs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+        <span class="n">length</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span>
+        <span class="n">unroll</span><span class="o">=</span><span class="n">unroll</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">final_out</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">stacked_outs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">final_out</span><span class="p">,</span> <span class="n">final_state</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Although both, the loop and the unroll approaches, will produce the same final model computation the actual computation performed is slightly different. The difference is just how the final computational graph is seen by the JIT compiler and how it is optimized. The for loop exposes “everything” to JIT, while the unroll just a fraction of that “everything”, which is them repeated over and over again. The end result is that the for loop compilation may take a really long time, while unrolling the computation is considerably faster. However, unrolling the computation produces a slightly less performant call to the function. Note that, how much is unrooled may be tweaked by the number of unrolling steps, and setting the number of unrolling equal to the toal steps will produce a program equivalent to the for loop. So, whatever floats your SNN.</p>
+<p>Now, as usual in any reinforcement learning setup, we need to create a training loop.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Reward metaparameters</span>
+<span class="n">PASSIVE_MODULATION_SCALE</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.0001</span>
+<span class="n">REWARD_FALL_SCALE</span> <span class="o">=</span> <span class="o">-</span><span class="mi">25</span>
+<span class="n">REWARD_OOB_SCALE</span> <span class="o">=</span> <span class="o">-</span><span class="mi">25</span>
+<span class="n">REWARD_OOB_THRESHOLD</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="n">NEG_REWARD_SCALE</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.1</span>
+<span class="n">MOD_INHIBITION_SCALE</span><span class="o">=</span> <span class="mf">0.25</span>
+
+<span class="c1"># Model metaparameters</span>
+<span class="n">DT</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">MODULATION_DECAY</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">DT</span> <span class="o">/</span> <span class="mf">0.5</span><span class="p">))</span>
+<span class="n">TRAIN_EPOCHES</span> <span class="o">=</span> <span class="mi">150</span>
+<span class="n">UNROLL</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="n">STEPS</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">50</span><span class="o">/</span><span class="n">DT</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Utility function to preprocess information from the environment.</span>
+<span class="c1"># This function just scale the observation environment to the (0,1) range.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_obs</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="c1"># CartPos, CartSpeed, PoleAngle, PoleAngSpeed </span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2.4</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">0.2095</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">])</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a_min</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">a_max</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">modulation_scale</span><span class="p">,</span> <span class="n">modulation_decay</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">unroll</span><span class="p">):</span>
+	<span class="c1"># Reset environment</span>
+	<span class="n">next_obs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+	<span class="n">next_obs</span> <span class="o">=</span> <span class="n">process_obs</span><span class="p">(</span><span class="n">next_obs</span><span class="p">)</span>
+	<span class="c1"># Loop until the episode ends, either from failing or truncation</span>
+	<span class="n">terminated</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">truncated</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">episode_steps</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="c1"># Allow the network to prepare for the episode.</span>
+	<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+		<span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span>
+			<span class="s1">&#39;signal&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">next_obs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+			<span class="s1">&#39;mod_a_ex&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+			<span class="s1">&#39;mod_a_in&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+			<span class="s1">&#39;mod_b_ex&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+			<span class="s1">&#39;mod_b_in&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+		<span class="p">}</span>
+		<span class="n">_</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">run_model_unroll</span><span class="p">(</span>
+			<span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">modulation_decay</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span> <span class="n">unroll</span><span class="o">=</span><span class="n">unroll</span><span class="p">,</span> <span class="o">**</span><span class="n">inputs</span>
+		<span class="p">)</span>
+	<span class="c1"># Start episode</span>
+	<span class="k">while</span> <span class="ow">not</span> <span class="p">(</span><span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span><span class="p">):</span>
+		<span class="c1"># Model logic, let the network do what it wants to do.</span>
+		<span class="n">passive_modulation</span> <span class="o">=</span> <span class="n">PASSIVE_MODULATION_SCALE</span> <span class="o">*</span> <span class="n">modulation_scale</span>
+		<span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span>
+			<span class="s1">&#39;signal&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">next_obs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+			<span class="s1">&#39;mod_a_ex&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">passive_modulation</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+			<span class="s1">&#39;mod_a_in&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">passive_modulation</span> <span class="o">*</span> <span class="n">MOD_INHIBITION_SCALE</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+			<span class="s1">&#39;mod_b_ex&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">passive_modulation</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+			<span class="s1">&#39;mod_b_in&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">passive_modulation</span> <span class="o">*</span> <span class="n">MOD_INHIBITION_SCALE</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+		<span class="p">}</span>
+		<span class="n">out</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">run_model_unroll</span><span class="p">(</span>
+			<span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">modulation_decay</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span> <span class="n">unroll</span><span class="o">=</span><span class="n">unroll</span><span class="p">,</span> <span class="o">**</span><span class="n">inputs</span>
+		<span class="p">)</span>
+		<span class="c1"># Environment logic.</span>
+		<span class="n">next_action</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+		<span class="n">prev_episode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">next_obs</span><span class="p">)</span>
+		<span class="n">next_obs</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">next_action</span><span class="p">)</span>
+		<span class="n">next_obs</span> <span class="o">=</span> <span class="n">process_obs</span><span class="p">(</span><span class="n">next_obs</span><span class="p">)</span>
+		<span class="n">episode_steps</span> <span class="o">+=</span> <span class="mi">1</span>
+	<span class="c1"># Steer the network to what we want with one extra step with the last episode and the reward</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">truncated</span><span class="p">:</span>
+		<span class="c1"># Check if the agent went out of bounds.</span>
+		<span class="n">out_of_bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">next_obs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+		<span class="c1"># Critic-like action update</span>
+		<span class="c1"># Going out of bounds conflicts with learning to balance the pole, adding a second condition</span>
+		<span class="c1"># to check for the the pole to be mostly vertical improves learning speed </span>
+		<span class="k">if</span> <span class="n">out_of_bounds</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">next_obs</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">REWARD_OOB_THRESHOLD</span><span class="p">:</span>
+			<span class="c1"># If the cart went out of bounds, we need to move the cart towards the center</span>
+			<span class="c1"># Going out of bounds is not as bad as the pole falling, so we should not put to much </span>
+			<span class="c1"># punishment towards that action</span>
+			<span class="n">steer_to_b</span> <span class="o">=</span> <span class="n">next_obs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span>
+			<span class="n">reward</span> <span class="o">=</span> <span class="n">REWARD_OOB_SCALE</span> <span class="o">*</span> <span class="n">modulation_scale</span>
+			<span class="n">mod_a</span> <span class="o">=</span> <span class="n">reward</span> <span class="k">if</span> <span class="n">steer_to_b</span> <span class="k">else</span> <span class="n">NEG_REWARD_SCALE</span> <span class="o">*</span> <span class="n">reward</span>
+			<span class="n">mod_b</span> <span class="o">=</span> <span class="n">reward</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">steer_to_b</span> <span class="k">else</span> <span class="n">NEG_REWARD_SCALE</span> <span class="o">*</span> <span class="n">reward</span>
+		<span class="k">else</span><span class="p">:</span> 
+			<span class="c1"># If the pole fell, we need to move the cart towards the side it fell</span>
+			<span class="n">steer_to_b</span> <span class="o">=</span> <span class="n">next_obs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span>
+			<span class="n">reward</span> <span class="o">=</span> <span class="n">REWARD_FALL_SCALE</span> <span class="o">*</span> <span class="n">modulation_scale</span>
+			<span class="n">mod_a</span> <span class="o">=</span> <span class="n">reward</span> <span class="k">if</span> <span class="n">steer_to_b</span> <span class="k">else</span> <span class="n">NEG_REWARD_SCALE</span> <span class="o">*</span> <span class="n">reward</span>
+			<span class="n">mod_b</span> <span class="o">=</span> <span class="n">reward</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">steer_to_b</span> <span class="k">else</span> <span class="n">NEG_REWARD_SCALE</span> <span class="o">*</span> <span class="n">reward</span>
+		<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+			<span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span>
+				<span class="s1">&#39;signal&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">prev_episode</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+				<span class="s1">&#39;mod_a_ex&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mod_a</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+				<span class="s1">&#39;mod_a_in&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mod_a</span> <span class="o">*</span> <span class="n">MOD_INHIBITION_SCALE</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+				<span class="s1">&#39;mod_b_ex&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mod_b</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+				<span class="s1">&#39;mod_b_in&#39;</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mod_b</span> <span class="o">*</span> <span class="n">MOD_INHIBITION_SCALE</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+			<span class="p">}</span>
+			<span class="n">_</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">run_model_unroll</span><span class="p">(</span>
+				<span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">modulation_decay</span><span class="o">=</span><span class="n">modulation_decay</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span> <span class="n">unroll</span><span class="o">=</span><span class="n">unroll</span><span class="p">,</span> <span class="o">**</span><span class="n">inputs</span>
+			<span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">out_of_bounds</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="k">return</span> <span class="n">state</span><span class="p">,</span> <span class="n">episode_steps</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">out_of_bounds</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Now, let’s put all together and train the brain.</p>
+<p>First, we create and configure the environment. Usually, the cartpole uses a continuous reward of one to provide continuous feedback to ANN models. We instead we are going to use a single -1 (which we will post-process) when the episode ends.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ale_py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gym</span>
+<span class="n">gym</span><span class="o">.</span><span class="n">register_envs</span><span class="p">(</span><span class="n">ale_py</span><span class="p">)</span>
+
+<span class="c1"># Initialize the environment</span>
+<span class="n">env_name</span> <span class="o">=</span>  <span class="s1">&#39;CartPole-v1&#39;</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">,</span> <span class="n">sutton_barto_reward</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">next_obs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">next_obs</span> <span class="o">=</span> <span class="n">process_obs</span><span class="p">(</span><span class="n">next_obs</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>As usual, we create a Brain, using the pre-defined configuration file and initialize it.</p>
+<p>It is possible to generate a new seed for the model by simply calling <b>config.with_new_seeds</b>, rather than manually changing all seeds. However, this particular model is somewhat sensitive to kernel initialization, as such, final behavior may differ from seed to seed. For the sake of illustration, the default model contains one of the “good seeds”.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the brain configuration</span>
+<span class="n">brain_config</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BrainConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">BRAIN_PATH</span><span class="p">)</span>
+
+<span class="c1"># Reseed</span>
+<span class="c1">#brain_config = brain_config.with_new_seeds(seed=42)</span>
+
+<span class="c1"># Initialize the brain</span>
+<span class="n">brain</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Brain</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">brain_config</span><span class="p">)</span>
+<span class="n">brain</span><span class="p">(</span>
+    <span class="n">signal</span><span class="o">=</span><span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">next_obs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+    <span class="n">mod_a_ex</span><span class="o">=</span><span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+    <span class="n">mod_a_in</span><span class="o">=</span><span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+    <span class="n">mod_b_ex</span><span class="o">=</span><span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+    <span class="n">mod_b_in</span><span class="o">=</span><span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+<span class="p">)</span>
+<span class="c1"># Split brain into the graph and the state</span>
+<span class="n">graph</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">brain</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tqdm</span>
+
+<span class="c1"># Some classic metrics</span>
+<span class="n">train_steps</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">ema_alpha</span><span class="p">,</span> <span class="n">train_steps_ema</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span> <span class="p">[]</span>
+<span class="n">current_train_ema_steps</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">train_oob</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1"># A classic training loop.</span>
+<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="n">pbar</span> <span class="o">:=</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">TRAIN_EPOCHES</span><span class="p">))):</span>
+	<span class="c1"># We scale the passive modulation in order to prevent a bad episode from drastically updating the network</span>
+	<span class="n">modulation_scale</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">current_train_ema_steps</span> <span class="o">/</span> <span class="mi">500</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+	<span class="c1"># Run the episode</span>
+	<span class="n">state</span><span class="p">,</span> <span class="n">episode_steps</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">out_of_bounds</span> <span class="o">=</span> <span class="n">run_episode</span><span class="p">(</span>
+		<span class="n">env</span><span class="p">,</span> 
+		<span class="n">graph</span><span class="p">,</span> 
+		<span class="n">state</span><span class="p">,</span> 
+		<span class="n">modulation_decay</span><span class="o">=</span><span class="n">MODULATION_DECAY</span><span class="p">,</span> 
+		<span class="n">modulation_scale</span><span class="o">=</span><span class="n">modulation_scale</span><span class="p">,</span>
+		<span class="n">steps</span><span class="o">=</span><span class="n">STEPS</span><span class="p">,</span> 
+		<span class="n">unroll</span><span class="o">=</span><span class="n">UNROLL</span><span class="p">,</span> 
+	<span class="p">)</span>
+	<span class="c1"># Update the classic metrics</span>
+	<span class="n">current_train_ema_steps</span> <span class="o">=</span> <span class="n">train_steps_ema</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_steps_ema</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+	<span class="n">train_steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">episode_steps</span><span class="p">)</span>
+	<span class="n">train_steps_ema</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ema_alpha</span> <span class="o">*</span> <span class="n">current_train_ema_steps</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">ema_alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">episode_steps</span><span class="p">)</span>
+	<span class="n">pbar</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Train Steps EMA: </span><span class="si">{</span><span class="n">train_steps_ema</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">out_of_bounds</span><span class="p">:</span>
+		<span class="n">train_oob</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Train Steps EMA: 500.00: 100%|██████████| 150/150 [03:43&lt;00:00,  1.49s/it]
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Finally, let’s visualize how does the agent performed!</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpl</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">Line2D</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;axes.spines.right&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;axes.spines.top&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="c1"># Process data</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">TRAIN_EPOCHES</span><span class="p">)</span>
+<span class="n">ts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">train_steps</span><span class="p">)</span>
+<span class="n">x_oob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">train_oob</span><span class="p">)</span>
+<span class="n">y_oob</span> <span class="o">=</span> <span class="n">ts</span><span class="p">[</span><span class="n">x_oob</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_oob</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">[]</span>
+<span class="n">x_trnc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">ts</span> <span class="o">==</span> <span class="mi">500</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">y_trnc</span> <span class="o">=</span> <span class="mi">500</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">x_trnc</span><span class="p">)</span>
+<span class="n">x_pole</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">TRAIN_EPOCHES</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">x_oob</span> <span class="ow">and</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">x_trnc</span><span class="p">)]</span>
+<span class="n">y_pole</span> <span class="o">=</span> <span class="n">ts</span><span class="p">[</span><span class="n">x_pole</span><span class="p">]</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+<span class="c1"># General curve</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">train_steps</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">train_steps_ema</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;tab:purple&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="c1"># Pole-fell</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_pole</span><span class="p">,</span> <span class="n">y_pole</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;tab:red&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<span class="c1"># Agent out-of-bounds</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_oob</span><span class="p">,</span> <span class="n">y_oob</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;tab:orange&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">)</span>
+<span class="c1"># Episode truncated</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_trnc</span><span class="p">,</span> <span class="n">y_trnc</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;tab:green&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
+
+<span class="c1"># Format plot</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="n">TRAIN_EPOCHES</span><span class="o">+</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">505</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Episode&#39;</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;# Steps&#39;</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+<span class="n">legend_elements</span> <span class="o">=</span> <span class="p">[</span>
+	<span class="n">Line2D</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;tab:red&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Pole Fell&#39;</span><span class="p">),</span> 
+	<span class="n">Line2D</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;tab:orange&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Out of Bounds&#39;</span><span class="p">),</span> 
+	<span class="n">Line2D</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;tab:green&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Truncation&#39;</span><span class="p">),</span> 
+<span class="p">]</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="o">=</span><span class="n">legend_elements</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.165</span><span class="p">,</span> <span class="mf">0.825</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/03007c78aa88e5f5526bd3d5d8064f9de4846358cff69f476b9dc2f7e11c67e8.png" src="../_images/03007c78aa88e5f5526bd3d5d8064f9de4846358cff69f476b9dc2f7e11c67e8.png" />
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>🎉 Congratulations! (again) 🎉</p>
+<p>Now you have trained your first SNN that actually does something midly interesting!</p>
+</div></section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="graph_editor.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorial #5: Graph Editor</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="sharding.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tutorial #7: Sharding</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

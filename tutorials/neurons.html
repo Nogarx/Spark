@@ -1,0 +1,756 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial #3: Neurons &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=30646c52"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/neurons';</script>
+    <link rel="icon" href="../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tutorial #4: Brains" href="brains.html" />
+    <link rel="prev" title="Tutorial #2: Execution" href="execution.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <img src="../_static/spark_250px.png" class="logo__image only-dark pst-js-only" alt="Spark  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Tutorial #3: Neurons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brains.html">Tutorial #4: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph_editor.html">Tutorial #5: Graph Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cartpole.html">Tutorial #6: Solving the CartPole™</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sharding.html">Tutorial #7: Sharding</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../autoapi/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../autoapi/spark/index.html">spark</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/decorators/index.html">spark.core.decorators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/flax_imports/index.html">spark.core.flax_imports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/typing/index.html">spark.core.typing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/validation/index.html">spark.core.validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/variables/index.html">spark.core.variables</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/editor_config/index.html">spark.graph_editor.editor_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/style/index.html">spark.graph_editor.style</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/ui/index.html">spark.graph_editor.ui</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/window/index.html">spark.graph_editor.window</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/nn/index.html">spark.nn</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/components/index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/controllers/index.html">spark.nn.controllers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../tutorials.html" class="nav-link">Tutorials</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Tutorial #3: Neurons</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/tutorials/neurons.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Tutorial #3: Neurons</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-header">
+<section id="tutorial-3-neurons">
+<h1>Tutorial #3: Neurons<a class="headerlink" href="#tutorial-3-neurons" title="Link to this heading">#</a></h1>
+</div><link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Neurons are the core of every neural network and who are we to change that. In <b><i>Spark</i></b> neurons are defined through the class <b>spark.nn.Neuron</b>, this module has the sole purpose of gather and organize the computation of the smaller and modular components into a cohesive unit.</p>
+<p>In order to build a successful neuron, it may be necessary to shift the mindset from bricklayer to architect. Unlike other frameworks, in order to fully embrace the modular design mindset it is necessary to define neurons as blueprints, rather than fixed objects. This is achieved by filling a series of templates, the <b>spark.ModuleSpecs</b>. This object expects a few inputs: a name for the module, the module we want to create, its associated configuration class and an its relationships with other modules.</p>
+<p>Let’s start by constructing the most simple neuron possible: a Leaky-and-Integrate neuron.</p>
+<p>⚠️ WARNING: The following may look scary at first, but it becomes incredibly intuitive later on, not to mention useful.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Imports</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">spark</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+
+<span class="c1"># Linear synapses</span>
+<span class="n">synapses_spec</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">ModuleSpecs</span><span class="p">(</span>
+	<span class="n">name</span> <span class="o">=</span><span class="s1">&#39;synapses&#39;</span><span class="p">,</span> 															<span class="c1"># &lt;--- Defining a module named &#39;synapses&#39;</span>
+	<span class="n">module_cls</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">synapses</span><span class="o">.</span><span class="n">LinearSynapses</span><span class="p">,</span> 								<span class="c1"># &lt;--- The module is of type LinearSynapses</span>
+	<span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span>																	<span class="c1"># &lt;--- We need to indicate how all inputs to the module are served</span>
+		<span class="s1">&#39;spikes&#39;</span><span class="p">:</span> <span class="p">[</span>																<span class="c1"># &lt;--- This module has only one expected input: &quot;spikes&quot;</span>
+            <span class="n">spark</span><span class="o">.</span><span class="n">PortMap</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="s1">&#39;__call__&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="s1">&#39;incoming_spikes&#39;</span><span class="p">)</span>			<span class="c1"># &lt;--- Mappings are defined through PortMap&#39;s, which are simply a pair</span>
+		<span class="p">]</span>																		<span class="c1">#      of labels, origin or name of the module producing the input and </span>
+	<span class="p">},</span>																			<span class="c1">#      port which is the name of the output variable produced by the input</span>
+<span class="p">)</span>																				<span class="c1">#      module</span>
+
+<span class="c1"># Leaky soma</span>
+<span class="n">soma_spec</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">ModuleSpecs</span><span class="p">(</span>
+	<span class="n">name</span> <span class="o">=</span><span class="s1">&#39;soma&#39;</span><span class="p">,</span> 																<span class="c1"># &lt;--- Defining a module named &#39;soma&#39;</span>
+	<span class="n">module_cls</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">somas</span><span class="o">.</span><span class="n">LeakySoma</span><span class="p">,</span> 										<span class="c1"># &lt;--- The module is of type LeakySoma</span>
+	<span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span>																	<span class="c1"># &lt;--- We need to indicate how all inputs to the module are served</span>
+		<span class="s1">&#39;current&#39;</span><span class="p">:</span> <span class="p">[</span>															<span class="c1"># &lt;--- This module has one expected input: &quot;current&quot;</span>
+            <span class="n">spark</span><span class="o">.</span><span class="n">PortMap</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="s1">&#39;synapses&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="s1">&#39;currents&#39;</span><span class="p">)</span>					<span class="c1"># &lt;--- The module defined above has one expected output: &quot;currents&quot;</span>
+		<span class="p">],</span>
+		<span class="s1">&#39;inhibition_mask&#39;</span><span class="p">:</span> <span class="p">[</span>													<span class="c1"># &lt;--- This module has one optional input: &quot;inhibition_mask&quot;</span>
+            <span class="n">spark</span><span class="o">.</span><span class="n">PortMap</span><span class="p">(</span>
+                <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;__self__&#39;</span><span class="p">,</span> 												<span class="c1"># &lt;--- Neurons by default define a property called: &quot;inhibition_mask&quot;</span>
+                <span class="n">port</span><span class="o">=</span><span class="s1">&#39;inhibition_mask&#39;</span><span class="p">,</span> 
+                <span class="n">is_property</span><span class="o">=</span><span class="kc">True</span>
+			<span class="p">)</span>
+		<span class="p">],</span>
+	<span class="p">},</span>
+	<span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>																	<span class="c1"># &lt;--- &quot;outputs&quot; is used to define an output for the entire model.</span>
+		<span class="s1">&#39;my_awesome_spikes&#39;</span><span class="p">:</span> <span class="s1">&#39;spikes&#39;</span><span class="p">,</span> 											<span class="c1">#      in this case, we define a variable &quot;my_awesome_spikes&quot; from the expected</span>
+	<span class="p">},</span>																			<span class="c1">#      output of the model &quot;spikes&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Finally, we just need to wrap everything into the usual Config / Object pattern.
+That’s it, a new neuron model out from a simple blueprint.</p>
+<p>❗ Spoiler: We will be able to edit this model later on with more powerful tools!.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nd">@spark</span><span class="o">.</span><span class="n">register_config</span>								<span class="c1"># &lt;--- Register the configuration object</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyAwesomeLIFNeuronConfig</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">NeuronConfig</span><span class="p">):</span>
+	
+	<span class="n">modules_specs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">spark</span><span class="o">.</span><span class="n">ModuleSpecs</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[</span>		<span class="c1"># &lt;--- Now, we simply add every spec in a list under the config name &quot;modules_specs&quot;</span>
+			<span class="n">synapses_spec</span><span class="p">,</span>
+			<span class="n">soma_spec</span>
+		<span class="p">]</span>
+
+<span class="nd">@spark</span><span class="o">.</span><span class="n">register_neuron</span>								<span class="c1"># &lt;--- Register the neuron object</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyAwesomeLIFNeuron</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Neuron</span><span class="p">):</span>
+	<span class="n">config</span><span class="p">:</span> <span class="n">MyAwesomeLIFNeuronConfig</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Now, let’s try it!</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Model initialization</span>
+<span class="n">units</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,)</span>
+<span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">16</span><span class="p">,)</span>
+<span class="n">alif_neurons</span> <span class="o">=</span> <span class="n">MyAwesomeLIFNeuron</span><span class="p">(</span>
+    <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
+	<span class="n">inhibitory_rate</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Test the model.</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">key</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">rng</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">in_spikes</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">SpikeArray</span><span class="p">(</span> 
+    <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.5</span> 
+<span class="p">)</span>
+<span class="n">out_spikes</span> <span class="o">=</span> <span class="n">alif_neurons</span><span class="p">(</span><span class="n">incoming_spikes</span><span class="o">=</span><span class="n">in_spikes</span><span class="p">)</span>		<span class="c1"># &lt;--- Remember, we told the model to expect a variable &quot;incoming_spikes&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">out_spikes</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>										<span class="c1">#      and to output &quot;my_awesome_spikes&quot;</span>
+
+
+<span class="c1"># Let&#39;s test this puppy</span>
+<span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_model_split</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="o">**</span><span class="n">inputs</span><span class="p">):</span>
+	<span class="n">model</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+	<span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">inputs</span><span class="p">)</span>
+	<span class="n">_</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">model</span><span class="p">))</span>
+	<span class="k">return</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">state</span>
+
+<span class="n">graph</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">alif_neurons</span><span class="p">))</span>
+<span class="n">outputs</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">run_model_split</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">incoming_spikes</span><span class="o">=</span><span class="n">in_spikes</span><span class="p">)</span>
+
+<span class="o">%</span><span class="k">timeit</span> run_model_split(graph, state, incoming_spikes=in_spikes)
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;my_awesome_spikes&#39;: SpikeArray(_encoding=Array([0, 2, 0, 0, 0, 0, 0, 0], dtype=uint8), async_spikes=False)} 
+
+38.9 μs ± 1.16 μs per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>However, if this approach does not serve your needs and perhaps you really really REALLY want to implement something that is quite hard to decompose on simple modular operations you still can implement a neuron in a more classical way by means of <b>spark.nn.Module</b>. However, doing so prevents the model from being fully reusable across the rest of the framework.</p>
+<p>Implementing a neuron this way is quite straight forward, and very similar to the first tutorial. The only difference is that you will need to manually define how the computation is forwarded between components. To illustrate this, let’s recreate the previous neuron using modules.</p>
+<p>As usual we start with a blueprint of what we need and what we are going to get.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;./..&#39;</span><span class="p">)</span>
+
+
+<span class="c1"># Imports</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">spark</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tp</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">NeuronOutput</span><span class="p">(</span><span class="n">tp</span><span class="o">.</span><span class="n">TypedDict</span><span class="p">):</span>
+    <span class="n">out_spikes</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">SpikeArray</span>
+    
+<span class="nd">@spark</span><span class="o">.</span><span class="n">register_config</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyCustomLIFNeuronConfig</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Config</span><span class="p">):</span>
+
+	<span class="n">units</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+	<span class="n">inhibitory_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span>
+	<span class="n">soma</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">somas</span><span class="o">.</span><span class="n">LeakySomaConfig</span> 					<span class="c1"># &lt;--- Using components inside another Module requires </span>
+	<span class="n">synapses</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">synapses</span><span class="o">.</span><span class="n">LinearSynapsesConfig</span> 		<span class="c1">#      you to also inform the configuration object</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now, this is where things get a little bit rough. Usually <b><i>Spark</i></b> manages several aspect of the initialization automatically; standard specifications allow us to greatly reduce what needs to be said. However, when creating a custom module and, in particular, a custom neuron, a lot of things that we would like to hear need to be said, <b>explicitly</b>. It is impossible for <b><i>Spark</i></b> to predict user intention!.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">prod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">spark.core.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_shape</span>
+
+<span class="nd">@spark</span><span class="o">.</span><span class="n">register_module</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyCustomLIFNeuron</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+	<span class="n">config</span><span class="p">:</span> <span class="n">MyCustomLIFNeuronConfig</span>
+
+	<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">MyCustomLIFNeuronConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+		<span class="c1"># Extract the units from the configuration</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="n">validate_shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>		<span class="c1"># &lt;--- NOTE: Always use the self.config never the config!</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_units</span> <span class="o">=</span> <span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+		<span class="c1"># Initialize inhibitory mask.</span>
+		<span class="n">inhibitory_units</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_units</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">inhibitory_rate</span><span class="p">)</span>
+		<span class="n">indices</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_rng_keys</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">jnp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_units</span><span class="p">),</span> <span class="n">independent</span><span class="o">=</span><span class="kc">True</span><span class="p">)[:</span><span class="n">inhibitory_units</span><span class="p">]</span>
+		<span class="n">inhibition_mask</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_units</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+		<span class="n">inhibition_mask</span> <span class="o">=</span> <span class="n">inhibition_mask</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_inhibition_mask</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="n">inhibition_mask</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+		
+
+	<span class="c1"># NOTE: The following is not necessary, but by design spark.nn.Neuron expose the inhibitory_mask </span>
+	<span class="c1"># used to split  the neuron pool into excitatory and inhibitory units.</span>
+	<span class="nd">@spark</span><span class="o">.</span><span class="n">property</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">inhibition_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,)</span> <span class="o">-&gt;</span> <span class="n">spark</span><span class="o">.</span><span class="n">BooleanMask</span><span class="p">:</span>
+		<span class="k">return</span> <span class="n">spark</span><span class="o">.</span><span class="n">BooleanMask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inhibition_mask</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+	<span class="c1"># NOTE: Similarly, this is not necessary unless you want to allow self connections inside this pool.</span>
+	<span class="c1"># In general, any module that may connect to itself needs to indicate what it outputs in greater detail.</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">recurrent_contract</span><span class="p">(</span>
+			<span class="bp">self</span><span class="p">,</span> 
+		<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+		<span class="c1"># Output specs</span>
+		<span class="n">output_contract_specs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;spec&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_output_specs</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+		<span class="n">output_contract_specs</span><span class="p">[</span><span class="s1">&#39;out_spikes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span>
+		<span class="n">output_contract_specs</span><span class="p">[</span><span class="s1">&#39;out_spikes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">inhibition_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inhibition_mask</span>
+		<span class="c1"># Property specs. Properties should be defined inside __init__, so it is safe to inspect them.</span>
+		<span class="n">property_contract_specs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_property_specs</span><span class="p">()</span>
+		<span class="n">property_contract_specs</span><span class="p">[</span><span class="s1">&#39;inhibition_mask&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span>
+		<span class="k">return</span> <span class="n">output_contract_specs</span><span class="p">,</span> <span class="n">property_contract_specs</span>
+
+	<span class="c1"># NOTE: You may use &quot;input_specs&quot; to perform a more complex initialization, in this case it is not really necessary.</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_specs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">spark</span><span class="o">.</span><span class="n">PortSpecs</span><span class="p">]):</span>
+		<span class="c1"># Soma model.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">soma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">soma</span><span class="o">.</span><span class="n">class_ref</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">soma</span><span class="p">)</span>
+		<span class="c1"># Synaptic model.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">synapses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">synapses</span><span class="o">.</span><span class="n">class_ref</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">synapses</span><span class="p">)</span>
+
+
+	<span class="c1"># The __call__ method is the soul of every module. As we saw in the first tutorial, it has three important elements.</span>
+	<span class="c1"># 1) What we expect to get at the begining, which need to be fully anotated, (e.g. in_spikes: spark.SpikeArray)</span>
+	<span class="c1"># 2) What we expect to get at the end (e.g. NeuronOutput)</span>
+	<span class="c1"># 3) The actual computation</span>
+	<span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_spikes</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">SpikeArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NeuronOutput</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">			Update neuron&#39;s states and compute spikes.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="c1"># Pass in_spikes to the synapses</span>
+		<span class="n">synapses_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">synapses</span><span class="p">(</span><span class="n">spikes</span><span class="o">=</span><span class="n">in_spikes</span><span class="p">)</span>
+
+		<span class="c1"># Synapses returns a dictionary with all its outputs, which in this case its only &quot;currents&quot;.</span>
+		<span class="n">synaptic_currents</span> <span class="o">=</span> <span class="n">synapses_output</span><span class="p">[</span><span class="s1">&#39;currents&#39;</span><span class="p">]</span>
+
+		<span class="c1"># Soma components accept an optional parameter, &quot;inhibition_mask&quot; that is used to produce a signed spikes. </span>
+		<span class="c1"># If this parameter is passed or manually computer later on, Spark will see all these neurons as excitatory neurons.</span>
+		<span class="n">soma_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">soma</span><span class="p">(</span><span class="n">current</span><span class="o">=</span><span class="n">synaptic_currents</span><span class="p">,</span> <span class="n">inhibition_mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inhibition_mask</span><span class="p">)</span>
+
+		<span class="c1"># Construct output. Note that the output of __call__ must always match with the definition of NeuronOutput.</span>
+		<span class="c1"># This information is used to verify the model at several stages.</span>
+		<span class="n">output_spikes</span> <span class="o">=</span> <span class="n">soma_output</span><span class="p">[</span><span class="s1">&#39;spikes&#39;</span><span class="p">]</span>
+		<span class="k">return</span> <span class="p">{</span>
+			<span class="s1">&#39;out_spikes&#39;</span><span class="p">:</span> <span class="n">output_spikes</span>
+		<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>This would be enough to create a copy of the first model we created. Without further ado, let’s try all this hard work!</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Model initialization</span>
+<span class="n">units</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,)</span>
+<span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">16</span><span class="p">,)</span>
+<span class="n">alif_neurons</span> <span class="o">=</span> <span class="n">MyCustomLIFNeuron</span><span class="p">(</span>
+	<span class="n">_s_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
+	<span class="n">inhibitory_rate</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Test the model.</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">key</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">rng</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">in_spikes</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">SpikeArray</span><span class="p">(</span> 
+    <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.5</span> 
+<span class="p">)</span>
+<span class="n">out_spikes</span> <span class="o">=</span> <span class="n">alif_neurons</span><span class="p">(</span><span class="n">incoming_spikes</span><span class="o">=</span><span class="n">in_spikes</span><span class="p">)</span>		<span class="c1"># &lt;--- Remember, we told the model to expect a variable &quot;incoming_spikes&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">out_spikes</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>										<span class="c1">#      and to output &quot;my_awesome_spikes&quot;</span>
+
+
+<span class="c1"># Let&#39;s test this puppy</span>
+<span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_model_split</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="o">**</span><span class="n">inputs</span><span class="p">):</span>
+	<span class="n">model</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+	<span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">inputs</span><span class="p">)</span>
+	<span class="n">_</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">model</span><span class="p">))</span>
+	<span class="k">return</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">state</span>
+
+<span class="n">graph</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">alif_neurons</span><span class="p">))</span>
+<span class="n">outputs</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">run_model_split</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">incoming_spikes</span><span class="o">=</span><span class="n">in_spikes</span><span class="p">)</span>
+
+<span class="o">%</span><span class="k">timeit</span> run_model_split(graph, state, incoming_spikes=in_spikes)
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;out_spikes&#39;: SpikeArray(_encoding=Array([0, 0, 0, 0, 0, 0, 2, 0], dtype=uint8), async_spikes=False)} 
+
+45.7 μs ± 2.08 μs per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>As we can see, both models ended up with an almost identical behavior (up to the randomness of the inhibition_mask), and more importantly, with a very similar performance. In our particular case, it turns out that using the controller approach (<b>spark.nn.Neuron</b>), almost always produces a slightly better performing model; the controller approach tends to expose the computation more nicely to the JIT compiler, but that does not mean that it is always going to perform better. Remember: the controller is just a heuristic and is not always the best one!.</p>
+</div></section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="execution.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorial #2: Execution</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="brains.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tutorial #4: Brains</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
