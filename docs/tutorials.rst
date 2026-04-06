@@ -11,5 +11,8 @@ Welcome to the tutorials section! Here you can find guides on the basics of Spar
 
    tutorials/modules_components
    tutorials/execution
+   tutorials/neurons
    tutorials/brains
    tutorials/graph_editor
+   tutorials/cartpole
+   tutorials/sharding
