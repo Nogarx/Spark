@@ -1,6 +1,6 @@
 [project]
 name = "spark_snn"
-version = "0.1.0"
+version = "1.0.0"
 authors = [
     {name="Mario Franco"},
 ]
@@ -13,7 +13,7 @@ dependencies = [
     "numpy>=1.23.2; python_version>='3.11'",
     "numpy>=1.26.0; python_version>='3.12'",
     # keep in sync with jax-version in .github/workflows/build.yml
-    "jax>=0.7.1",
+    "jax==0.8.0",
     "msgpack",
     "optax",
     "orbax-checkpoint",
@@ -23,7 +23,7 @@ dependencies = [
     "PyYAML>=5.4.1",
     "treescope>=0.1.7",
     # flax
-    "flax>=0.12.0",
+    "flax==0.12.0",
     # other requirements
     "networkx>=3.5",
     "PySide6>=6.9.1",
@@ -46,10 +46,7 @@ Issues = "https://github.com/Nogarx/Spark/issues"
 [build-system]
 requires = ["setuptools >= 77.0.3"]
 build-backend = "setuptools.build_meta"
-[tool.setuptools]
-packages = [
-    "spark",
-    "spark.core",
-    "spark.nn",
-    "spark.graph_editor",
-]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["spark*"]
+namespaces = false
