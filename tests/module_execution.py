@@ -48,12 +48,12 @@ data_test = [
     (
         spark.nn.interfaces.Concat, 
         {'inputs': [spark.FloatArray(jnp.array(np.random.rand(*s), dtype=jnp.float16)) for s in [(5,5,5),(50,),(10,10)]],}, 
-        {'num_inputs':3, 'payload_type':spark.SpikeArray,}
+        {'num_inputs':3, 'payload_type':spark.FloatArray,}
     ),
     (
         spark.nn.interfaces.ConcatReshape, 
         {'inputs': [spark.FloatArray(jnp.array(np.random.rand(*s), dtype=jnp.float16)) for s in [(5,5,4),(10,10),(100,)]],}, 
-        {'num_inputs':3, 'reshape':(30,10), 'payload_type':spark.SpikeArray,}
+        {'num_inputs':3, 'reshape':(30,10), 'payload_type':spark.FloatArray,}
     ),
     (
         spark.nn.interfaces.Sampler, 
@@ -195,22 +195,22 @@ data_test = [
     ),
     # Neurons
     (
-        spark.nn.neurons_OLD.LIFNeuron, 
+        spark.nn.neurons.LIFNeuron, 
         {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
         {'_s_units':(2,3),}
     ),
     (
-        spark.nn.neurons_OLD.LIFNeuron, 
+        spark.nn.neurons.LIFNeuron, 
         {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
         {'_s_units':(2,3),}
     ),
     (
-        spark.nn.neurons_OLD.ALIFNeuron, 
+        spark.nn.neurons.ALIFNeuron, 
         {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
         {'_s_units':(2,3),}
     ),
     (
-        spark.nn.neurons_OLD.ALIFNeuron, 
+        spark.nn.neurons.ALIFNeuron, 
         {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
         {'_s_units':(2,3),}
     ),

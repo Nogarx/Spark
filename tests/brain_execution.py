@@ -21,7 +21,7 @@ def test_brain_config() -> spark.nn.BrainConfig:
         module_cls = spark.nn.interfaces.TopologicalLinearSpiker, 
         inputs = {
             'signal': [
-                spark.PortMap(origin='__call__', port='drive'),
+                spark.PortMap(origin='__call__', port='signal'),
             ]
         },
         config = spark.nn.interfaces.TopologicalLinearSpikerConfig(
@@ -31,24 +31,24 @@ def test_brain_config() -> spark.nn.BrainConfig:
             resolution = 128, 
             max_freq = 200.0, 
             tau = 30.0
-        )
+        ),
     )
     neurons_specs = spark.ModuleSpecs(
         name ='neurons', 
-        module_cls = spark.nn.neurons_OLD.ALIFNeuron, 
+        module_cls = spark.nn.neurons.ALIFNeuron, 
         inputs = {
             'in_spikes': [
                 spark.PortMap(origin='spiker', port='spikes'),
                 spark.PortMap(origin='neurons', port='out_spikes'),
             ]
         },
-        config = spark.nn.neurons_OLD.ALIFNeuronConfig(
+        config = spark.nn.neurons.ALIFNeuronConfig(
             _s_units = (16,),
             synapses_params__kernel__scale = 3.0,
             soma_params__threshold_tau = 25.0 * jax.random.uniform(jax.random.key(43), shape=(16,), dtype=jnp.float16)**2,
             soma_params__threshold_delta = 250.0 * jax.random.uniform(jax.random.key(43), shape=(16,), dtype=jnp.float16)**2,
             soma_params__cooldown = 2.0,  
-        )
+        ),
     )
     integrator = spark.ModuleSpecs(
         name ='integrator', 
@@ -60,34 +60,17 @@ def test_brain_config() -> spark.nn.BrainConfig:
         },
         config = spark.nn.interfaces.ExponentialIntegratorConfig(
             num_outputs = 2,
-        )
+        ),
+        outputs= {
+            'action': 'signal'
+        },
     )
-    input_map = {
-        'drive': spark.PortSpecs(
-            payload_type=spark.FloatArray, 
-            shape=(4,), 
-            dtype=jnp.float16,
-        )
-    }
-    output_map = {
-        'action': {
-            'input': spark.PortMap(
-                origin='integrator',
-                port='signal'
-            ),
-            'spec': spark.PortSpecs(
-                payload_type=spark.FloatArray,
-                shape=(2,),
-                dtype=jnp.float16
-            )
-        }
-    }
-    modules_map = {
-        'spiker': spiker_specs,
-        'neurons': neurons_specs,
-        'integrator': integrator,
-    }
-    return spark.nn.BrainConfig(input_map=input_map, output_map=output_map, modules_map=modules_map)
+    modules_specs = [
+        spiker_specs,
+        neurons_specs,
+        integrator,
+    ]
+    return spark.nn.BrainConfig(modules_specs=modules_specs)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -108,7 +91,7 @@ def test_jax_jit_split(
     """
     brain_model = spark.nn.Brain(config=test_brain_config)
     brain_inputs = {
-        'drive': spark.FloatArray(jnp.zeros((4,), dtype=jnp.float16))
+        'signal': spark.FloatArray(jnp.zeros((4,), dtype=jnp.float16))
     }
     brain_model(**brain_inputs)
     spikes, brain_model = run_module_simplified(brain_model, brain_inputs)
@@ -140,7 +123,7 @@ def test_jax_jit_split(
     """
     brain_model = spark.nn.Brain(config=test_brain_config)
     brain_inputs = {
-        'drive': spark.FloatArray(jnp.zeros((4,), dtype=jnp.float16))
+        'signal': spark.FloatArray(jnp.zeros((4,), dtype=jnp.float16))
     }
     brain_model(**brain_inputs)
     graph, state = spark.split((brain_model))

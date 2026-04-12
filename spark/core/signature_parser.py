@@ -184,10 +184,15 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
         # Skip unimportant parameters.
         if parameter.name in ['self', 'cls']: 
             continue
+
         # Scrap parameter.
         payload_types = normalize_typehint(signature_type_hints[parameter.name])
-        if len(payload_types) > 1:
-            payload_types = (payload_types[0],) if payload_types[0] != type(None) else (payload_types[1],)
+        # Remove optional 
+        payload_types = tuple([t for t in payload_types if not (isinstance(t, type) and issubclass(t, type(None)))])
+        # Extract Payloads from lists
+        payload_types = [
+            tp.get_args(t)[0] if isinstance(t, tp.GenericAlias) and issubclass(tp.get_origin(t), list) else t for t in payload_types
+        ] 
         # Check if the payload_type is a valid class and a subclass of SparkPayload
         if any([not validation._is_payload_type(pt) for pt in payload_types]):
             # Raise error, payload is not fully compatible with the framework.

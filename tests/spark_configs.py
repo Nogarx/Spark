@@ -59,7 +59,7 @@ def make_config(cls_name: str, annotations: dict[str, tp.Any], defaults: dict[st
             
     # Create class dynamically
     namespace['__annotations__'] = ns_annotations
-    return type(cls_name, (spark.nn.BaseConfig,), namespace)
+    return type(cls_name, (spark.nn.Config,), namespace)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
