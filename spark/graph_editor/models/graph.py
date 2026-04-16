@@ -397,12 +397,12 @@ class SparkNodeGraph(NodeGraph):
         controller_metadata = self._gather_controller_metadata()
         # Construct brain config.
         if is_partial:
-            brain_config = controller_cls._create_partial(
+            brain_config = controller_cls.partial(
                 modules_specs=modules_specs
             )
         else:
             if errors is not None:
-                brain_config = controller_cls._create_partial(
+                brain_config = controller_cls.partial(
                     modules_specs=modules_specs
                 )
                 brain_config.validate(errors=errors)
@@ -441,7 +441,7 @@ class SparkNodeGraph(NodeGraph):
                     for port_map in spec.inputs[key]
                 ]
         # Construct brain config.
-        brain_config = controller_cls._create_partial(
+        brain_config = controller_cls.partial(
             modules_specs=modules_specs,
             skip_validation = False,
         )

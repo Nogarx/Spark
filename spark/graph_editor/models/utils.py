@@ -53,7 +53,7 @@ def unflattify_controller_config(cls: type[ControllerConfig], flat_config: Spark
     """
 
     # Initialize a partial config
-    unflatten_config = cls._create_partial()
+    unflatten_config = cls.partial()
     expected_modules_names = [spec.name for spec in getattr(unflatten_config, 'modules_specs')]
     # Set simple attributes of the controller
     simple_attribute_names = []

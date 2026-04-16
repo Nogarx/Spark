@@ -36,7 +36,7 @@ class AdExNeuronConfig(NeuronConfig):
 				inputs = {
 					'in_spikes': [PortMap(origin='__call__', port='in_spikes')],
 				},
-				config = N2NDelaysConfig._create_partial(),
+				config = N2NDelaysConfig.partial(),
 			),
 			# Linear synapses
 			ModuleSpecs(
@@ -48,7 +48,7 @@ class AdExNeuronConfig(NeuronConfig):
 				effects = {
 					'kernel': [PortMap(origin='hebbian_rule', port='kernel')],
 				},
-				config = TracedSynapsesConfig._create_partial(),
+				config = TracedSynapsesConfig.partial(),
 			),
 			# Leaky soma
 			ModuleSpecs(
@@ -61,7 +61,7 @@ class AdExNeuronConfig(NeuronConfig):
 				outputs = {
 					'out_spikes': 'spikes', 
 				},
-				config = AdaptiveExponentialSomaConfig._create_partial(),
+				config = AdaptiveExponentialSomaConfig.partial(),
 			),
 			# Hebbian plasticity
 			ModuleSpecs(
@@ -72,7 +72,7 @@ class AdExNeuronConfig(NeuronConfig):
 					'post_spikes': [PortMap(origin='soma', port='spikes')],
 					'kernel': [PortMap(origin='synapses', port='kernel', is_property=True)],
 				},
-				config = HebbianRuleConfig._create_partial(),
+				config = HebbianRuleConfig.partial(),
 			),
 		],
 		metadata = {

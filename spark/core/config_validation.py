@@ -160,7 +160,7 @@ class BinaryValidator(ConfigurationValidator):
             arr_val = np.array(list(value))
             is_zero_one = np.all(np.logical_or(arr_val == 0, arr_val == 1))
         else:
-            raise TypeError(f'value is not a supported binary numeric object.')
+            raise TypeError(f'{value} is not a supported binary numeric object.')
         if not is_zero_one:
             raise ValueError(f'Attribute "{self.field.name}" values must be binary (0/1 values), but got {value}.')
 

@@ -2,1225 +2,472 @@
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-#from __future__ import annotations
-
 import os
 import abc
 import jax
-import jax.numpy as jnp
-import numpy as np
-import dataclasses as dc
-import typing as tp
 import copy
 import lzma
 import json
-import pathlib as pl
-import spark.core.utils as utils
-from jax.typing import DTypeLike
-from spark.core.validation import(
-    _is_config_instance, _is_config_type, _is_module_instance,
-    _is_initializer_config_type, _is_initializer_type, _is_initializer_instance
-)
-from spark.core.registry import REGISTRY, register_config
-from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.core.signature_parser import normalize_typehint, is_instance
-from functools import partial, wraps
-from math import prod
-
 import logging
+import warnings
+import numpy as np
+import typing as tp
+import pathlib as pl
+import jax.numpy as jnp
+import dataclasses as dc
+import spark.core.utils as utils
+
+from math import prod
+from functools import partial, wraps
+from jax.typing import DTypeLike, ArrayLike
+from spark.core.validation import _is_config_instance
+from spark.core.registry import REGISTRY, register_config
+from spark.core.signature_parser import normalize_typehint, is_instance
+from spark.core.config_validation import TypeValidator, PositiveValidator
+
 logger = logging.getLogger('Spark')
 
-# TODO: We used the word partial across the entire code. ¯\_(ツ)_/¯ 
-# This is not okay since we already use partial for the homonymous functool's method
-
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-METADATA_TEMPLATE = {
-    'units': None, 
-    'valid_types': tp.Any, 
-    'validators': [
-        TypeValidator,
-    ], 
-    'description': '',
-    'allows_init': False,
-}
-IMMUTABLE_TYPES = (str, int, bool, float, tuple, type(None))
+class AnnotationWarning(Warning):
+	pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class InitializableFieldMetaclass(type):
-    """
-        Metaclass that automatically injects common methods into the class.
-    """
+def unflatten_kwargs(kwargs: dict[str, tp.Any], __nested_delimiter__: str = '__', __shared_delimiter__: str = '_s_') -> dict[str, tp.Any]:
+	
+	def _unflatten_kwargs_recursive(kwargs: dict[str, tp.Any], shared_args: dict[str, tp.Any]) -> dict[str, tp.Any]:
+		unflatten_dict = {k:v for k,v in shared_args.items()}
+		# Set simple arguments and discover nested kwargs
+		nested_dicts = set()
+		for key, value in kwargs.items():
+			if __nested_delimiter__ in key:
+				nested_dicts.add(key.split(__nested_delimiter__)[0]) 
+			else:
+				unflatten_dict[key] = kwargs[key]
+		# Unflatten nested kwargs
+		for nested_key in nested_dicts:
+			nested_dict = {}
+			# Gather associated values
+			for key, value in kwargs.items():
+				if key.startswith(nested_key):
+					nested_dict[key[len(nested_key+__nested_delimiter__):]] = value
+			# Unflatten dict
+			unflatten_dict[nested_key] = _unflatten_kwargs_recursive(nested_dict, shared_args)
+		return unflatten_dict
 
-    def __new__(mcs, name, bases, attrs) -> tp.Self:
+	# Extract shared arguments
+	shared_kwargs = {}
+	nested_kwargs = {}
+	for key, value in kwargs.items():
+		# Check if parameter is shared
+		if key.startswith(__shared_delimiter__):
+			shared_kwargs[key[len(__shared_delimiter__):]] = value
+		else:
+			nested_kwargs[key] = value
 
-        DELEGATED_METHODS = [
-            # Container Methods
-            '__len__', '__getitem__', '__setitem__', '__delitem__', '__contains__',
-            '__iter__', '__reversed__',
-            # Arithmetic/Comparison
-            '__add__', '__radd__', '__sub__', '__rsub__', '__mul__', '__rmul__', 
-            '__truediv__', '__rtruediv__', '__floordiv__', '__rfloordiv__', '__mod__', 
-            '__rmod__', '__pow__', '__rpow__',
-            '__lt__', '__le__', '__eq__', '__ne__', '__gt__', '__ge__',
-            # Unary operators
-            '__neg__', '__pos__', '__abs__',
-            # Callable and Context Manager
-            '__call__', '__enter__', '__exit__',
-        ]
-
-        def _delegate_method_factory(method_name):
-            """Creates a function that delegates a dunder method call to the wrapped object."""
-            def delegator(self, *args, **kwargs):
-                # Forward method to __obj__.
-                return getattr(self.__obj__, method_name)(*args, **kwargs)
-            # Forward metadata from a potential base method.
-            return wraps(getattr(object, method_name, lambda *a, **k: None))(delegator)
-
-        # Inject methods into the class dictionary
-        for method_name in DELEGATED_METHODS:
-            if method_name not in attrs:
-                attrs[method_name] = _delegate_method_factory(method_name)
-        return super().__new__(mcs, name, bases, attrs)
+	return _unflatten_kwargs_recursive(nested_kwargs, shared_kwargs)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class InitializableField(metaclass=InitializableFieldMetaclass):
-    """
-        Wrapper for fields that allow for Initializers | InitializersConfig to define the init() method.
-        The method init() is extensively used through Spark modules to initialize variables either from default
-        values or from full fledge initializers.
-    """
-    __obj__: tp.Any
+class SparkConfigMeta(abc.ABCMeta):
+	"""
+		Spark Configuration Metaclass
+	"""
 
-    def __init__(self, obj) -> None:
-        # Avoid wrapping an already wrapped object.
-        if isinstance(obj, InitializableField):
-            obj = obj.__obj__
-        super().__setattr__('__obj__', obj)
+	METADATA_TEMPLATE = {
+		'units': None, 
+		'valid_types': None, 
+		'validators': None, 
+		'description': None,
+	}
 
-    def __getattr__(self, name) -> tp.Any:
-        if name == '__obj__':
-            return super().__getattr__('__obj__')
-        else:
-            return getattr(self.__obj__, name)
+	def __new__(cls, name: str, bases: tuple[type, ...], dct: dict[str, tp.Any]) -> 'SparkConfigMeta':
 
-    def __setattr__(self, name, value) -> None:
-        setattr(self.__obj__, name, value)
+		# NOTE: Every non field is promoted to field to simplify the logic of configuration objects and add metadata.
+		# Iterate over annotations.
+		annotations: dict[str, tp.Any] = dct.get('__annotations__', {})
+		for attr_name, attr_type in annotations.items():
+			# Parse valid types.
+			attr_typehints = cls._valid_types(attr_type)
+			valid_types = {'valid_types': attr_typehints}
+			# Get value
+			attr_value = dct.get(attr_name, dc.MISSING)
+			default, default_factory = cls._get_default_and_factory(attr_value, attr_typehints)
+			# Construct field
+			field = dc.field(
+				default=default,
+				default_factory=default_factory,
+				metadata={
+					**SparkConfigMeta.METADATA_TEMPLATE, 
+					**valid_types,
+				}
+			)
+			# Set field
+			setattr(cls, attr_name, field)
+			dct[attr_name] = field
 
-    def __repr__(self) -> str:
-        return repr(self.__obj__)
+		# Return a warning for unannotated attributes
+		for attr_name, attr_type in dct.items():
+			# Ignore dunder methods
+			if attr_name.startswith('__'):
+				continue
+			if not attr_name in annotations.keys() and not isinstance(dct[attr_name], (tp.Callable, property, classmethod)):
+				warnings.warn(
+					f'Attributed "{attr_name}" in configuration class "{name}" is missing an annotation, this is likely to produce errors since '
+					f'Spark relies on this annotations for further processing. Please consider adding an annotation to this attribute.',
+					category=AnnotationWarning,
+				)
 
-    def __str__(self) -> str:
-        return str(self.__obj__)
+		# Update the class definition
+		cls = super().__new__(cls, name, bases, dct)
+		# Transform class into a dataclass
+		cls = dc.dataclass(cls, kw_only=True, eq=False)
 
-    def init(
-            self, 
-            init_kwargs=None, 
-            key: jax.Array | None = None, 
-            shape: tuple | None = None, 
-            dtype: np.dtype | None = None,
-            **kwargs
-        ) -> jax.Array | int | float | complex | bool:
-        if init_kwargs is None:
-            init_kwargs = {}
-        from spark.nn.initializers import Initializer, InitializerConfig
-        if isinstance(self.__obj__, Initializer):
-            return self.__obj__(key=key, shape=shape, **kwargs)
-        elif isinstance(self.__obj__, InitializerConfig):
-            init_args = {
-                **self.__obj__.get_kwargs(),
-                **init_kwargs,
-                **({'dtype': dtype} if dtype is not None else {})
-            }
-            return self.__obj__.class_ref(**init_args)(key=key, shape=shape, **kwargs)
-        elif isinstance(self.__obj__, (int, float, complex, bool, np.ndarray, jax.Array)):
-            return self.__obj__
-        else:
-            raise TypeError(
-                f'Expected __obj__ to be of type numeric | Initializer | InitializerConfig but got {self.__obj__}'
-            )
+		# Wrap __init__ call to dynamically filter out invalid elements
+		init_method = getattr(cls, '__init__', None)
+		@wraps(init_method)
+		def wrapped_init(self, **kwargs) -> None:
+			# Filter fields
+			valid_fields = {f.name: f for f in dc.fields(cls)}
+			_kwargs = unflatten_kwargs(kwargs)
+			clean_kwargs = {}
+			for key, value in _kwargs.items():
+				# Remove invalid fields
+				if not key in valid_fields.keys():
+					continue
+				field = valid_fields[key]
+				# Attribute is a config, forward kwargs and rebuild it
+				if dc.is_dataclass(field.default) and (isinstance(value, dict) or dc.is_dataclass(value)) :
+					value_dict = dc.asdict(value) if dc.is_dataclass(value) else value
+					clean_kwargs[key] = type(field.default)(**{**dc.asdict(field.default), **value_dict})
+				# Attribute defines factory, forward kwargs and rebuild it
+				elif (not field.default_factory is dc.MISSING) and (isinstance(value, dict) or dc.is_dataclass(value)):
+					value_dict = dc.asdict(value) if dc.is_dataclass(value) else value
+					clean_kwargs[key] = field.default_factory(**value_dict)
+				else:
+					# Parameter is a simple attribute
+					clean_kwargs[key] = value
+			return init_method(self, **clean_kwargs)
+		setattr(cls, '__init__', wrapped_init)
 
+		# Register class as pytree
+		cls = jax.tree_util.register_dataclass(cls)
+		return cls
+
+	@staticmethod
+	def _valid_types(attr_type: tp.Any) -> tuple[type]:
+		"""
+			Method to parse annotations for the attributes
+		"""
+		return normalize_typehint(attr_type)
+		if isinstance(attr_type, str):
+			raise RuntimeError(f'_valid_types got an str "{attr_type}".')
+		else:
+			return normalize_typehint(attr_type)
+		
+	def _get_default_and_factory(attr_value, attr_type) -> tuple[tp.Any, tp.Any]:
+		"""
+			Method to map common default mutable patterns into factories 
+		"""
+		# Extract default and factory
+		if isinstance(attr_value, dc.Field):
+			default, factory = attr_value.default, attr_value.default_factory
+		elif attr_value is dc.MISSING:
+			# Check if defines a config, otherwise let if fail
+			try:
+				idx = [dc.is_dataclass(t) for t in attr_type].index(True)
+				default, factory = attr_type[idx], dc.MISSING
+			except:
+				default, factory = dc.MISSING, dc.MISSING
+		else:
+			default, factory = attr_value, dc.MISSING
+		# Dtypes
+		if utils.is_dtype(default):
+			pass
+		# Classes
+		elif isinstance(default, type):
+			factory = lambda v=default, **kwargs: v(**kwargs)
+			default = dc.MISSING
+		# Mutable data structures
+		elif isinstance(default, (list, dict, set, ArrayLike)):
+			factory = lambda v=default: copy.deepcopy(v)
+			default = dc.MISSING
+		return default, factory
+		
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class SparkMetaConfig(abc.ABCMeta):
-    """
-        Metaclass that promotes class attributes to dataclass fields
-    """
-
-    def __new__(cls, name: str, bases: tuple[type, ...], dct: dict[str, tp.Any]) -> 'SparkMetaConfig':
-
-        # NOTE: Every non field is promoted to field to simplify the logic of configuration objects and add metadata.
-        # Iterate over annotations.
-        annotations: dict[str, tp.Any] = dct.get('__annotations__', {})
-        for attr_name, attr_type in annotations.items():
-            # Parse valid types.
-            if isinstance(attr_type, str):
-                valid_types = {'valid_types': attr_type}
-                allows_init = 'Initializer' in attr_type or 'InitializerConfig' in attr_type
-            elif tp.get_origin(attr_type):
-                attr_types = list(normalize_typehint(attr_type))#list(tp.get_args(attr_type))
-                try:
-                    attr_types.remove(type(None))
-                except:
-                    pass
-                allows_init = any([_is_initializer_type(ft) or _is_initializer_config_type(ft) for ft in attr_types])
-                attr_types = '|'.join([ft.__name__ for ft in attr_types])
-                valid_types = {'valid_types': attr_types}
-            else:
-                allows_init = _is_initializer_type(attr_type) or _is_initializer_config_type(attr_type)
-                valid_types = {'valid_types': attr_type.__name__}
-
-            # Get default value
-            attr_value = dct.get(attr_name, dc.MISSING)
-
-            # If is field, add template info
-            if isinstance(attr_value, dc.Field):
-                # Merge metadata with template.
-                validators = {
-                    'validators': attr_value.metadata['validators'] 
-                    if 'validators' in attr_value.metadata 
-                    else METADATA_TEMPLATE['validators']
-                }
-                # Save as much as we can of the intention of default_factory
-                factory = attr_value.default_factory
-                if factory != dc.MISSING and (_is_config_instance(factory) or _is_initializer_instance(factory) or not callable(factory)):
-                    raise TypeError(
-                        f'Expected \"{name}.{attr_name}.default_factory\" to be an instance of a function ' \
-                        f'or a subclass of SparkConfig | Initializer but got type {type(factory)}.' \
-                        f'If you intended to use an instance of a SparkConfig or an initializer use \"default\" instead'
-                    )
-
-                default, factory = cls.map_common_init_patterns(attr_value.default, attr_value.default_factory)
-                field = dc.field(
-                    default=default,
-                    default_factory=factory,
-                    init=attr_value.init,
-                    repr=attr_value.repr,
-                    hash=attr_value.hash,
-                    compare=attr_value.compare,
-                    metadata={
-                        **METADATA_TEMPLATE, 
-                        **(attr_value.metadata or {}), 
-                        **valid_types, 
-                        **validators,
-                        **{'allows_init': allows_init}
-                    },
-                )
-
-            # If is not field, promote to field
-            else:
-                default, factory = cls.map_common_init_patterns(attr_value)
-                # Create a new Field object.
-                field = dc.field(
-                    default=default,
-                    default_factory=factory,
-                    metadata={
-                        **METADATA_TEMPLATE, 
-                        **valid_types,
-                        **{'allows_init': allows_init}
-                    }
-                )
-
-            # Update dct
-            dct[attr_name] = field
-
-        # Create the dataclass
-        new_class = super().__new__(cls, name, bases, dct)
-
-        return new_class
-
-    @staticmethod
-    def map_common_init_patterns(default: tp.Any, factory: tp.Callable = dc.MISSING) -> tuple[tp.Any, tp.Any]:
-        if isinstance(default, (list, dict, set)):
-            # Map list, dicts and sets to lambdas in order to be able to use them directly as defaults.
-            return dc.MISSING, lambda value=default : copy.deepcopy(value)
-        elif isinstance(default, np.ndarray):
-            # Isolate numpy arrays to avoid side effects
-            return dc.MISSING, lambda value=default : value.copy()
-        elif isinstance(default, jax.Array):
-            # JAX arrays are immutable, so returning directly is safe
-            return dc.MISSING, lambda value=default : value
-        elif _is_config_instance(default):
-            # Map already initialized configs to lambda 
-            return dc.MISSING, lambda value=default : value
-        elif _is_config_type(default):
-            # Map configs types to lambdas 
-            return dc.MISSING, default
-        elif _is_initializer_instance(default):
-            # Map already initialized initializers to lambda of its configs
-            return dc.MISSING, lambda value=default.config : value
-        elif _is_initializer_type(default):
-            # Get config from initializer and map it to lambda of its config
-            return dc.MISSING, lambda value=default.get_config_spec() : value()
-        elif _is_module_instance(default):
-            # Map already initialized modules to lambda of its config
-            return dc.MISSING, lambda value=default.config : value
-        elif default != dc.MISSING and callable(default) and not utils.is_dtype(default):
-            # Default is a function
-            return dc.MISSING, default
-        elif factory != dc.MISSING and _is_config_type(factory):
-            # Map configs types to lambdas 
-            return dc.MISSING, lambda value=factory : value()
-        elif factory != dc.MISSING and _is_initializer_type(factory):
-            # Get config from initializer and map it to lambda of its config
-            return dc.MISSING, lambda value=factory.get_config_spec() : value()
-        else:
-            return default, factory
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-@jax.tree_util.register_dataclass
-@dc.dataclass(init=False, kw_only=True, eq=False)
-class SparkConfig(abc.ABC, metaclass=SparkMetaConfig):
-    """
-        Base class for module configuration.
-    """
-
-    __config_delimiter__: str = '__'
-    __shared_config_delimiter__: str = '_s_'
-    __metadata__: dict
-    __graph_editor_metadata__: dict
-
-
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        dc.dataclass(cls, init=False, kw_only=True, repr=False, eq=False)
-
-
-    def __init__(self, skip_validation: bool = False, **kwargs):
-        # Fold kwargs
-        kwargs_fold, shared_partial = self._fold_partial(self, kwargs)
-        # Set attributes programatically
-        self._set_partial_attributes(kwargs_fold, shared_partial,  skip_validation=skip_validation)
-        if '__graph_editor_metadata__' in kwargs:
-            self.__graph_editor_metadata__ = kwargs['__graph_editor_metadata__'] 
-        elif getattr(self, '__graph_editor_metadata__', None) is None:
-            self.__graph_editor_metadata__ = {}
-        if '__metadata__' in kwargs:
-            self.__metadata__ = kwargs['__metadata__']
-        elif getattr(self, '__metadata__', None) is None:
-            self.__metadata__ = {}
-        # Validate
-        if not skip_validation:
-            self.__post_init__()
-        # Wrap attributes that admit initializers
-        for field in dc.fields(self):
-            if field.metadata['allows_init']:
-                setattr(self, field.name, InitializableField(getattr(self, field.name)))
-
-    @classmethod
-    def _is_equal(cls, val1: tp.Any, val2: tp.Any) -> bool:
-        if type(val1) != type(val2):
-            return False
-        
-        from spark.nn.initializers import Initializer, InitializerConfig
-        
-        # Unpack InitializableField
-        if isinstance(val1, InitializableField):
-            val1 = val1.__obj__
-            val2 = val2.__obj__
-            if isinstance(val1, Initializer):
-                val1 = val1.config
-                val2 = val2.config
-
-        if isinstance(val1, SparkConfig):
-            return val1 == val2
-        elif isinstance(val1, (jax.Array, np.ndarray)):
-            return val1.shape == val2.shape and np.array_equal(val1, val2)
-        elif isinstance(val1, (list, tuple, dict, set)):
-            if len(val1) != len(val2):
-                return False
-            if isinstance(val1, dict):
-                if val1.keys() != val2.keys():
-                    return False
-                return all(cls._is_equal(val1[k], val2[k]) for k in val1)
-            else:
-                return all(cls._is_equal(v1, v2) for v1, v2 in zip(val1, val2))
-        else:
-            return val1 == val2
-
-    def __eq__(self, other) -> bool:
-        if not isinstance(other, SparkConfig):
-            return False
-        # Check both of them contain the same fields.
-        fields = set([f.name for f in dc.fields(self)])
-        other_fields = set([f.name for f in dc.fields(other)])
-        if fields != other_fields:
-            return False
-        # Compare fields contents.
-        for name in fields:
-            value = getattr(self, name, None)
-            other_value = getattr(other, name, None)
-            if not self._is_equal(value, other_value):
-                return False
-        return True
-
-    @classmethod
-    def _create_partial(cls, skip_validation: bool = True, **kwargs) -> tp.Self:
-        """
-            Create an incomplete config for the SparkGraphEditor.
-        """
-        # Manually create an instance
-        instance = cls.__new__(cls)
-        # Fold kwargs
-        kwargs_fold, shared_partial = instance._fold_partial(instance, kwargs)
-        # Set attributes programatically
-        instance._set_partial_attributes(kwargs_fold, shared_partial, skip_validation=skip_validation)
-        if '__graph_editor_metadata__' in kwargs:
-            instance.__graph_editor_metadata__ = kwargs['__graph_editor_metadata__'] 
-        elif getattr(instance, '__graph_editor_metadata__', None) is None:
-            instance.__graph_editor_metadata__ = {}
-        if '__metadata__' in kwargs:
-            instance.__metadata__ = kwargs['__metadata__']
-        elif getattr(instance, '__metadata__', None) is None:
-            instance.__metadata__ = {}
-        # Wrap attributes that admit initializers
-        for field in dc.fields(instance):
-            if field.metadata['allows_init']:
-                setattr(instance, field.name, InitializableField(getattr(instance, field.name)))
-        return instance
-
-
-
-    def merge(self, partial: dict[str, tp.Any] | None = None, skip_validation: bool = False) -> None:
-        """
-            Update config with partial overrides.
-        """
-        if partial is None:
-            partial = {}
-        # Fold partial to pass child config attributes.
-        kwargs_fold, shared_partial = self._fold_partial(self, partial)
-        # Get current fields and pass attributes.
-        self._set_partial_attributes(kwargs_fold, shared_partial, skip_validation=skip_validation)
-        # Validate
-        if not skip_validation:
-            self.__post_init__()
-        # Wrap attributes that admit initializers
-        for field in dc.fields(self):
-            if field.metadata['allows_init']:
-                setattr(self, field.name, InitializableField(getattr(self, field.name)))
-
-
-
-    @staticmethod
-    def _fold_partial(obj: 'SparkConfig', partial: dict[str, tp.Any]) -> tuple[dict[str, tp.Any], dict[str, tp.Any]]:
-        """
-            Restructures the partial dict, consuming the __config_delimiter__ and __shared_config_delimiter__ 
-            tokens and propagating the information within.
-        """
-        fold_partial = {}
-        shared_partial = {}
-        for key, value in partial.items():
-
-            # Check for shared attributes
-            if obj.__shared_config_delimiter__ == key[:len(obj.__shared_config_delimiter__)]:
-                shared_key = key[len(obj.__shared_config_delimiter__):]
-                shared_partial[shared_key] = value
-
-            # Check for specific subconfig attributes
-            elif obj.__config_delimiter__ in key:
-                # Split key into child and nested_key
-                child_key, nested_key = key.split(obj.__config_delimiter__, maxsplit=1)
-                # Add nested key to child dict
-                if child_key not in fold_partial:
-                    fold_partial[child_key] = {}
-                fold_partial[child_key][nested_key] = value
-
-            # Attribute is part of the current level
-            else:
-                fold_partial[key] = value
-
-            # Add shared keys to current level and all its childs
-            for s_key, value in shared_partial.items():
-                fold_partial[s_key] = value
-            for key in fold_partial.keys():
-                if isinstance(fold_partial[key], dict):
-                    for s_key, value in shared_partial.items():
-                        # Add __shared_config_delimiter__ to allow for further propagation of the parameter
-                        fold_partial[key][obj.__shared_config_delimiter__ + s_key] = value
-        
-        return fold_partial, shared_partial
-
-
-
-    # TODO: We need to validate that whenever we set a config class it is a valid subclass for the field
-    def _set_partial_attributes(
-            self, 
-            kwargs_fold: dict[str, tp.Any], 
-            shared_partial: dict[str, tp.Any], 
-            skip_validation: bool = False,
-        ) -> None:
-        """
-            Method to recursively set/override the attributes of the configuration instance from a dictionary of values.
-        """
-
-        # Get type hints
-        from spark.core.specs import ModuleSpecs
-        from spark.nn.initializers.base import Initializer, InitializerConfig
-        type_hints = {k: normalize_typehint(v) for k,v in tp.get_type_hints(self.__class__).items()}
-        optional_attrs = {k: type(None) in v for k,v in type_hints.items()}
-
-        for k in type_hints.keys():
-            if Initializer in type_hints[k] and not InitializerConfig in type_hints[k]:
-                type_hints[k] += (InitializerConfig,)
-            elif InitializerConfig in type_hints[k] and not Initializer in type_hints[k]:
-                type_hints[k] += (Initializer,)
-
-        # Set attributes programatically
-        prefixed_shared_partial = {f'{self.__shared_config_delimiter__}{k}':v for k,v in shared_partial.items()}
-        for field in dc.fields(self.__class__):
-
-            # Skip metadata fields
-            if field.name in [
-                '__config_delimiter__', 
-                '__shared_config_delimiter__', 
-                '__class_ref__', 
-                '__graph_editor_metadata__',
-                '__metadata__',
-            ]:
-                continue
-            
-            # Parse field name, remove __shared_config_delimiter__ if present
-            if self.__shared_config_delimiter__ == field.name[:len(self.__shared_config_delimiter__)]:
-                field_name = field.name[len(self.__shared_config_delimiter__):]
-            else:
-                field_name = field.name
-
-            # Check if attribute is optional and the user manually set it to None. Kwargs have priority over defaults.
-            if optional_attrs[field_name] and (
-                (field_name in kwargs_fold.keys() and isinstance(kwargs_fold[field_name], type(None))) or
-                (not field_name in kwargs_fold.keys() and getattr(self, field_name, None) == None and isinstance(field.default, type(None)))
-                ):
-                # Unfortunately, the user is correct in this one, set the parameter to None and move on.
-                field.default_factory = dc.MISSING
-                field.default = None
-                setattr(self, field_name, None)
-                continue
-
-            # Current field relevant values
-            field_type = type_hints[field_name]
-            field_value = getattr(self, field_name, None)
-
-            # Unpack.
-            # TODO: Packing and unpacking looks dirty, maybe there is a workaround?
-            if isinstance(field.default, InitializableField):
-                field.default = field.default.__obj__
-            if isinstance(field.default_factory, InitializableField):
-                field.default_factory = field.default_factory.__obj__
-            if isinstance(field_value, InitializableField):
-                field_value = field_value.__obj__
-
-            # Fields of type Initializer are appended the class InitializerConfig.
-            # We need to resolve simple fields and kwargs before the Config case 
-            if any([isinstance(t, type) and issubclass(t, Initializer) for t in field_type]):
-
-                if field_name in kwargs_fold:
-                    if isinstance(kwargs_fold[field_name], Initializer):
-                        # Extract config and let it reach the next section
-                        kwargs_fold[field_name] = kwargs_fold[field_name].config
-                    elif isinstance(kwargs_fold[field_name], InitializerConfig):
-                        # Let it reach the next section
-                        pass
-                    elif not isinstance(kwargs_fold[field_name], dict):
-                        # NOTE: dict means that want to initialize a config.
-                        # Use kwargs attribute to set field
-                        self._validate_and_set(field_name, kwargs_fold[field_name], field_type)
-                        continue
-                elif not isinstance(field_value, type(None)):
-                    if isinstance(field_value, Initializer):
-                        # Extract config and let it reach the next section
-                        field_value = field_value.config
-                    elif isinstance(field_value, InitializerConfig):
-                        # Let it reach the next section
-                        pass
-                    else:
-                        # Use field_value attribute to set field
-                        self._validate_and_set(field_name, field_value, field_type)
-                        continue
-                else:
-                    if len(field_type) > 2 and field.default == dc.MISSING and field.default_factory == dc.MISSING and field_value == None:
-                        raise ValueError(
-                            f'Field \"{self.__class__.__name__}.{field_name}\" does not define a default value and multiple types are ' \
-                            f'provided, automatic resolution is not possible for fields with the type Initializer | InitializerConfig ' \
-                            f'when multiple types are provided. Please define a default value for this field.'
-                        )
-
-            # Check for ModuleSpecs
-            # ModuleSpecs cannot be implicitly inferred they were either passed as a kwargs or as a default value
-            # NOTE: I am not sure there is a nice way to target ModuleSpecs.config parameters that keeps the notation consistent,
-            # so for now these configs only support shared parameters.
-            # TODO: This needs a refactor since there is a lot of repeated code.
-            if any([t == ModuleSpecs for t in field_type]): 
-                module_spec: ModuleSpecs = field_value if field_value is not None else kwargs_fold.get(field_name, None)
-                # Sanity checks
-                if module_spec is None:
-                    raise ValueError(
-                        f'Field \"{self.__class__.__name__}.{field_name}\" of type "ModuleSpecs" cannot be auto-inferred. '
-                        f'A default value must be set or passed as a kwarg when creating the object. '
-                    )
-                elif not isinstance(module_spec, ModuleSpecs):
-                    raise TypeError(
-                        f'Field \"{self.__class__.__name__}.{field_name}\" expected type "ModuleSpecs" but got "{type(kwargs_fold[field_name])}"'
-                    )
-                # Check if ModuleSpecs defines a custom config
-                config: SparkConfig | None = getattr(module_spec, 'config', None)
-                if config is None:
-                    # Config is not defined get default config
-                    config_cls: type[SparkConfig] = module_spec.module_cls.get_config_spec()
-                    config = config_cls()
-                # Merge configs and let the it reach the end  
-                config.merge(partial={**prefixed_shared_partial}, skip_validation=skip_validation)
-                module_spec.config = config
-                setattr(self, field_name, module_spec)
-                continue
-            if any([t == list[ModuleSpecs] for t in field_type]): 
-                module_spec_list: list[ModuleSpecs] | None = field_value if field_value is not None else kwargs_fold.get(field_name, None)
-                if module_spec_list is None and field.default_factory != dc.MISSING:
-                    module_spec_list = field.default_factory()
-                # Sanity checks
-                if module_spec_list is None:
-                    raise ValueError(
-                        f'Field \"{self.__class__.__name__}.{field_name}\" of type "ModuleSpecs" cannot be auto-inferred. '
-                        f'A default value must be set or passed as a kwarg when creating the object. '
-                    )
-                elif not isinstance(module_spec_list, list):
-                    for module_spec in module_spec_list:
-                        if not isinstance(ModuleSpecs, list):
-                            raise TypeError(
-                                f'Field \"{self.__class__.__name__}.{field_name}\" expected type "ModuleSpecs" but got "{type(kwargs_fold[field_name])}"'
-                            )
-                # Iterate over specs
-                for module_spec in module_spec_list:
-                    # Check if ModuleSpecs defines a custom config
-                    config: SparkConfig | None = getattr(module_spec, 'config', None)
-                    if config is None:
-                        # Config is not defined get default config
-                        config_cls: type[SparkConfig] = module_spec.module_cls.get_config_spec()
-                        config = config_cls()
-                    # Merge configs and let the it reach the end  
-                    target_kwargs = kwargs_fold.get(module_spec.name, {})
-                    config.merge(partial={**prefixed_shared_partial, **target_kwargs}, skip_validation=skip_validation)
-                    module_spec.config = config
-                setattr(self, field_name, module_spec_list)
-                continue
-
-            # Nested Config case
-            if any([isinstance(t, type) and issubclass(t, SparkConfig) for t in field_type]):
-                # Check if user manually set this attribute and is a SparkConfig
-                subconfig = kwargs_fold.get(field_name, {})
-                if isinstance(subconfig, SparkConfig):
-                    # User set a config. Copy subconfig to avoid weird overwrittings.
-                    field_config = copy.deepcopy(subconfig)
-                    field_config.merge(partial={**prefixed_shared_partial}, skip_validation=skip_validation)
-                    setattr(self, field_name, field_config)
-                elif isinstance(subconfig, type) and issubclass(subconfig, SparkConfig):
-                    # Use current config 
-                    field_value = subconfig(**{**subconfig, **prefixed_shared_partial}, skip_validation=skip_validation)
-                    setattr(self, field_name, field_value)
-                # Check if parent config set this attribute and is a SparkConfig
-                elif isinstance(field_value, SparkConfig):
-                    # Use current config 
-                    field_value.merge(partial={**subconfig, **prefixed_shared_partial}, skip_validation=skip_validation)
-                    setattr(self, field_name, field_value)
-                elif isinstance(field_value, type) and issubclass(field_value, SparkConfig):
-                    # Use current config 
-                    field_value = field_value(**{**subconfig, **prefixed_shared_partial}, skip_validation=skip_validation)
-                    setattr(self, field_name, field_value)
-                # Use default factory if provided
-                elif field.default_factory is not dc.MISSING:
-                    # NOTE: This case is not only covering generic factories, but also the case when a SparkConfig() 
-                    # is used as a default value. The simple solution is call the factory, then merge with default parameters.
-                    field_value = field.default_factory()
-                    # TODO: This is just a temporary patch to defer fields of type jax.Array | Initializers that define a default array
-                    # to the next section of this method.
-                    if not isinstance(field_value, jax.Array):
-                        field_value.merge(
-                            partial={**subconfig, **prefixed_shared_partial},
-                            skip_validation=skip_validation
-                        )
-                        setattr(self, field_name, field_value)
-                # Use type class otherwise
-                else:
-                    # TODO: It is not clear how to fully resolve multiple SparkConfig types. We currently select the first one.
-                    valid_types = [isinstance(t, type) and issubclass(t, SparkConfig) for t in field_type]
-                    if sum(valid_types) > 1:
-                        raise TypeError(
-                            f'Multiple SparkConfig types for field \"{field_name}\" in \"{self.__class__.__name__}\" were assigned. '\
-                            f'It is not possible to automatically resolve config initialization. ' \
-                            f'Only one SparkConfig class per field annotation can be used to allow for automatic initialization. ' \
-                            f'If this is inteded, define a default_factory or provide a SparkConfig to the parent initializer. '
-                        )
-                    # Recover instance
-                    valid_field_type = field_type[valid_types.index(True)]
-                    setattr(self, field_name, valid_field_type(**{
-                        **subconfig, 
-                        **prefixed_shared_partial,
-                        **{'skip_validation': skip_validation}
-                    }))
-                 # TODO: More of the same patch
-                if not isinstance(field_value, jax.Array):
-                    continue
-
-            # Generic case
-            if field_name in kwargs_fold:
-                # Use kwargs attribute if provided
-                self._validate_and_set(field_name, kwargs_fold[field_name], field_type, skip_validation=skip_validation)
-                continue
-            elif not isinstance(field_value, type(None)):
-                # Use field_value attribute if provided
-                self._validate_and_set(field_name, field_value, field_type,  skip_validation=skip_validation)
-                continue
-            elif isinstance(field_value, type(None)) and field.default_factory is not dc.MISSING:
-                # Fallback to default factory.
-                setattr(self, field_name, field.default_factory())
-                continue
-            elif isinstance(field_value, type(None)) and field.default is not dc.MISSING:
-                # Fallback to default.
-                setattr(self, field_name, field.default)
-                continue
-            else:
-                if skip_validation:
-                    continue
-                # Try a default initialization of the parameter
-                if len(field_type) > 1:
-                    raise ValueError(
-                        f'Field "{field_name}" does not define a default value and multiple types are provided, ' \
-                        f'automatic resolution is not possible. ' \
-                        f'Please define a default value for this field.'
-                    )
-                else:
-                    try:
-                        default_value = field_type[0]()
-                        field.default = default_value
-                        setattr(self, field_name, default_value)
-                        continue
-                    except:
-                        raise ValueError(
-                            f'Field "{field_name}" does not define a default value, ' \
-                            f'and automatic resolution failed to produce a default value. ' \
-                            f'Please define a default value or a factory for this field.'
-                        )
-
-
-    # NOTE: If skip_validation is set to True we still use default logic to try to match the value to the best 
-    # possible candidate and we force the value in case it was not possible to find a good match.
-    def _validate_and_set(self, field_name, value, field_type, skip_validation: bool = False) -> None:
-        # Use kwargs attribute if provided
-        if is_instance(value, field_type):
-            # kwargs_fold provides a valid type:
-            setattr(self, field_name, value)
-        else:
-            # Try some safe promotions
-            valid_safer_types = [float, int, bool, str, tuple, list]
-            for t in field_type:
-                origin = tp.get_origin(t) or t
-                if origin in valid_safer_types:
-                    try:
-                        safe_value = origin(value)
-                        setattr(self, field_name, safe_value)
-                        return
-                    except:
-                        pass
-            if skip_validation:
-                setattr(self, field_name, value)
-            else:
-                raise TypeError(
-                    f'Field {field_name} got value of type {type(value)} but ' \
-                    f'it is not possible to safely promote it to the types: {field_type}.'
-                )
-
-
-
-    def diff(self, other: 'SparkConfig') -> dict[str, tp.Any]:
-        """
-            Return differences from another config.
-        """
-        return {
-            field.name: getattr(self, field.name) 
-            for field in dc.fields(self) 
-            if not self._is_equal(getattr(self, field.name), getattr(other, field.name))
-        }
-
-
-    def _get_nested_configs_names(self, exclude_initializers=False) -> list[str]:
-        """
-            Returns a list containing all nested SparkConfigs' names.
-        """
-        # Get type hints
-        from spark.nn.initializers import InitializerConfig
-        type_hints = {k: normalize_typehint(h) for k, h in tp.get_type_hints(self.__class__).items()}
-
-        nested_configs = []
-        for field in dc.fields(self):
-            # Check if field is another SparkConfig
-            for t in type_hints[field.name]:
-                if isinstance(t, type) and issubclass(t, SparkConfig):
-                    if exclude_initializers and issubclass(t, InitializerConfig):
-                        continue
-                    nested_configs.append(field.name)
-                    break
-        return nested_configs
-
-
-
-    def _get_type_hints(self,):
-        """
-            Returns a dict containing all type hints.
-        """
-        # Get type hints
-        type_hints = tp.get_type_hints(self.__class__)
-        for key in type_hints.keys():
-            if tp.get_origin(type_hints[key]): 
-                hints = list(tp.get_args(type_hints[key]))
-                process_hints = tuple([h for h in hints if h is not type(None)])
-                if np.dtype in process_hints or jnp.dtype in process_hints:
-                    type_hints[key] = (np.dtype,)
-                else:
-                    type_hints[key] = process_hints
-            else:
-                type_hints[key] = (type_hints[key],)
-        return type_hints
-    
-
-
-    def validate(self, is_partial: bool = False, errors: list | None = None, current_path: list[str] | None = None) -> None:
-        """
-            Validates all fields in the configuration class.
-        """
-        if current_path is None:
-            current_path = ['main']
-        # Get type hints
-        raw_type_hints = tp.get_type_hints(self.__class__)
-        optional_attrs = {}
-        for key in raw_type_hints.keys():
-            if tp.get_origin(raw_type_hints[key]): 
-                hints = list(tp.get_args(raw_type_hints[key]))
-                optional_attrs[key] = len(tuple([h for h in hints if h is type(None)])) > 0
-            else:
-                optional_attrs[key] = False
-        # Iterate over fields
-        for field in dc.fields(self):
-            # Skip optional fields
-            if optional_attrs[field.name] and (getattr(self, field.name, None) != None):
-                continue
-            # Validate field
-            for validator in field.metadata.get('validators', []):
-                validator_instance = validator(field)
-                value_attr = getattr(self, field.name, None)
-                # Remove descriptor
-                if isinstance(value_attr, InitializableField):
-                    value_attr = value_attr.__obj__
-                # TODO: Add a wrapper to init to perform dynamic validation
-                if isinstance(value_attr, SparkConfig):
-                    value_attr.validate(is_partial=is_partial, errors=errors, current_path=current_path+[field.name])
-
-                if is_partial:
-                    # If the program crash replace the value with a None value and skip
-                    try:
-                        validator_instance.validate(value_attr)
-                    except:
-                        setattr(self, field.name, None)
-                        logger.info(
-                            f'Field "{field.name}" with path "{"/".join(current_path)}" set to "None" due to partial validation.'
-                        )
-                        break
-                else:
-                    try:
-                        validator_instance.validate(value_attr)
-                    except Exception as e:
-                        msg = f'Error at field "{field.name}" with path "{"/".join(current_path)}": {e}'
-                        logger.error(e)
-                        if errors is not None:
-                            # Stack error
-                            errors.append((current_path+[field.name], e))
-                        else:
-                            # Let the program crash if an error is found
-                            raise ValueError(msg)
-
-
-
-    # TODO: This method could be blended with validate
-    def get_field_errors(self, field_name: str) -> list[str]:
-        """
-            Validates all fields in the configuration class.
-        """
-        # Validate field
-        field: dc.Field | None = getattr(self, '__dataclass_fields__').get(field_name, None)
-        if field is None:
-            msg = f'SparkConfig \"{self.__class__}\" does not define a field with name \"{field_name}\".'
-            logger.error(msg)
-            raise KeyError(msg)
-        # Try to validate field
-        errors = []
-        for validator in field.metadata.get('validators', []):
-            validator_instance = validator(field)
-            try:
-                value = getattr(self, field.name)
-                if isinstance(value, InitializableField):
-                    value = value.__obj__
-                validator_instance.validate(value)
-            except Exception as e:
-                errors.append(f'{validator.__name__}: {e}')
-        return errors
-
-
-
-    def get_metadata(self) -> dict[str, tp.Any]:
-        """
-            Returns all the metadata in the configuration class, indexed by the attribute name.
-        """
-        metadata = {}
-        for field in dc.fields(self):
-            metadata[field.name] = dict(field.metadata)
-        return metadata
-
-
-    # TODO: This method is not ideal. It solves the module association problem in a very brittle way. 
-    # There should be another better pattern for this problem.
-    @property
-    def class_ref(obj: 'SparkConfig') -> type:
-        """
-            Returns the type of the associated Module/Initializer.
-
-            NOTE: It is recommended to set the __class_ref__ to the name of the associated module/initializer
-            when defining custom configuration classes. The automatic class_ref solver is extremely brittle and
-            likely to fail in many different custom scenarios.
-        """
-        # TODO: This could probably be handle more gracefully (part of the todo above)
-        # Check if this Config is for a controller (Brain/Neuron) 
-        from spark.nn.controllers.brain import Brain, BrainConfig
-        from spark.nn.controllers.neuron import Neuron, NeuronConfig
-        if isinstance(obj, BrainConfig):
-            return Brain
-        elif is_instance(obj, NeuronConfig):
-            return Neuron
-
-        # Check for class_ref otherwise try to set it up.
-        if getattr(obj, '__class_ref__', None) is None:
-            if obj.__class__.__name__[-6:].lower() == 'config':
-                obj.__class_ref__ = obj.__class__.__name__[:-6]
-            else:
-                # Config is not following convention, manual input of __class_ref__ is required.
-                raise AttributeError(f'Configuration \"{obj.__name__}\" does not define a __class_ref__.')
-        # Currently it can only be either a Module or a Initializer, so better check those two.
-        module_class_ref = REGISTRY.MODULES.get(obj.__class_ref__)
-        initializer_class_ref = REGISTRY.INITIALIZERS.get(obj.__class_ref__)
-        # Check we only got one coincidence, otherwise throw an error to avoid headaches.
-        if module_class_ref and initializer_class_ref:
-            raise AttributeError(
-                f'Configuration \"{obj.__class__.__name__}\" cannot resolve __class_ref__. '
-                f'A Module and an Initializer with the same reference were found. '
-                f'To prevent errors impute the class manually. Alternatively, update the name '
-                f'of one of the classes to avoid overlappings.'
-            )
-        if module_class_ref:
-            class_ref = module_class_ref.class_ref
-        elif initializer_class_ref: 
-            class_ref = initializer_class_ref.class_ref
-        else:
-            raise AttributeError(
-                f'Configuration \"{obj.__class__.__name__}\" cannot resolve __class_ref__. '
-                f'No Module nor Initializer with the same reference were found. '
-                f'Either rename the configuration object as \"Object.__class__.__name__ + Config\" or'
-                f'manually define __class_ref__ using the registry name of the object (default: Object.__class__.__name__).'
-            )
-        return class_ref
-
-
-
-    def __post_init__(self,) -> None:
-        self.validate()
-
-
-    def to_dict(self, is_partial: bool = False) -> dict[str, dict[str, tp.Any]]:
-        """
-            Serialize config to dictionary
-        """
-        from spark.nn.initializers import Initializer, InitializerConfig
-        # Collect all fields and map into a dict
-        dataclass_dict = {}
-        for field in dc.fields(self):
-            if is_partial:
-                # Set all missing values to None
-                value = getattr(self, field.name, None)
-            else:
-                # Try get value
-                try:
-                    value = getattr(self, field.name)
-                except:
-                    raise ValueError(
-                        f'Undefined value for field "{field.name}" in configuration class "{type(self).__name__}".'
-                    )
-            if isinstance(value, SparkConfig):
-                dataclass_dict[field.name] = value
-            elif isinstance(value, InitializableField) and isinstance(value.__obj__, Initializer):
-                dataclass_dict[field.name] = value.__obj__.config
-            elif isinstance(value, InitializableField) and isinstance(value.__obj__, InitializerConfig):
-                dataclass_dict[field.name] = value.__obj__
-            elif isinstance(value, InitializableField):
-                dataclass_dict[field.name] = value.__obj__
-            else:
-                dataclass_dict[field.name] = value
-        return dataclass_dict
-
-
-
-    def get_kwargs(self) -> dict[str, dict[str, tp.Any]]:
-        """
-            Returns a dictionary with pairs of key, value fields (skips metadata).
-        """
-        from spark.nn.initializers import Initializer, InitializerConfig
-        kwargs_dict = {}
-        for name, field, value in self:
-            if isinstance(value, SparkConfig):
-                kwargs_dict[name] = value.get_kwargs()
-            elif isinstance(value, InitializableField):
-                kwargs_dict[name] = value.__obj__
-            else:
-                kwargs_dict[name] = value
-        return kwargs_dict
-
-
-
-    @classmethod
-    def from_dict(cls: type['SparkConfig'], dct: dict) -> 'SparkConfig':
-        """
-            Create config instance from dictionary.
-        """
-        return cls(**dct)
-
-
-
-    def to_file(self, file_path: str, is_partial: bool = False, compress: bool = True) -> None:
-        """
-            Export a config instance from a .scfg file.
-        """
-        try:
-            # Validate the config
-            # If partial is True, values with errors are replaced with a None.
-            self.validate(is_partial=is_partial)
-            # Validate path
-            path = pl.Path(file_path)
-            # Ensure the parent directory exists.
-            path.parent.mkdir(parents=True, exist_ok=True)
-            # Write to file.
-            from spark.core.serializer import SparkJSONEncoder
-            opener = lzma.open if compress else open
-            mode = 'wt' if compress else 'w'
-            with opener(path, mode, encoding='utf-8') as json_file:
-                reg = REGISTRY.CONFIG.get_by_cls(self.__class__)
-                if not reg:
-                    raise RuntimeError(
-                        f'Config class "{self.__class__}" is not in the registry.'
-                        f'Reconstruction from unregistered classes is not currently possible.'
-                        f'Use the "register_config" decorator to add the class to the registry.'
-                    )
-                # Add top config metadata
-                json_dict = {
-                    '__type__': reg.name,
-                    '__cfg__': self.to_dict(is_partial=is_partial),
-                }
-                encoder_cls = partial(SparkJSONEncoder, is_partial=is_partial)
-                json.dump(json_dict, json_file, cls=encoder_cls, indent=4)
-            print(f'Successfully exported data to "{path}".')
-        except Exception as e:
-            raise Exception(
-                f'ERROR: Could not write file "{file_path}". Reason: {e}'
-            )
-
-
-
-    @classmethod
-    def from_file(cls: type['SparkConfig'], file_path: str, is_partial: bool = False) -> 'SparkConfig':
-        """
-            Create config instance from a .scfg file.
-        """
-        try:
-            path = pl.Path(file_path)
-            # Validate path
-            if not path.is_file():
-                raise FileNotFoundError(f'No file found at the specified path: "{path}".')
-            # Read the header to determine if the file start with the magic bytes: \xfd7zXZ\x00 (is LZMA compressed)
-            with open(path, 'rb') as f:
-                magic_bytes = f.read(6)
-            is_compressed = (magic_bytes == b'\xfd7zXZ\x00')
-            # Parse the file
-            opener = lzma.open if is_compressed else open
-            mode = 'rt' if is_compressed else 'r'
-            with opener(path, mode, encoding='utf-8') as json_file:
-                # Try to decode
-                from spark.core.serializer import SparkJSONDecoder
-                try:
-                    decoder_cls = partial(SparkJSONDecoder, is_partial=is_partial)
-                    obj = json.load(json_file, cls=decoder_cls) 
-                except Exception as e:
-                    raise RuntimeError(
-                        f'An unexpected error ocurred when trying to decode... '
-                        f'418 I\'m a teapot.'
-                        f'Error: {e}'
-                    )
-                if not _is_config_instance(obj):
-                    raise TypeError(
-                        f'Expected final object to be of type "SparkConfig" but after decoding the final object was of type "{obj.__class__}".'
-                    )
-                return obj
-        except Exception as e:
-            raise Exception(
-                f'ERROR: Could not read file "{file_path}". Reason: {e}'
-            )
-
-
-
-    def __iter__(self) -> tp.Iterator[tuple[str, dc.Field, tp.Any]]:
-        """
-            Custom iterator to simplify SparkConfig inspection across the entire ecosystem.
-            This iterator excludes private fields.
-
-            Output:
-                field_name: str, field name 
-                field_value: tp.Any, field value
-        """
-        # Iterate over all defined fields of the dataclass
-        for f in dc.fields(self):
-            # Check for fields to skip
-            if f.name in [
-                '__config_delimiter__', 
-                '__shared_config_delimiter__', 
-                '__class_ref__', 
-                '__graph_editor_metadata__',
-                '__metadata__'
-            ]:
-                continue
-
-            # Yield the field name and its corresponding value
-            value = getattr(self, f.name, None)
-            if isinstance(value, InitializableField):
-                value = value.__obj__
-            yield (f.name, f, value)
-
-
-
-    def __repr__(self,):
-        return f'{self.__class__.__name__}(...)'
-
-
-
-    def inspect(self, simplified=False) -> str:
-        """
-            Returns a formated string of the datastructure.
-        """
-        print(utils.ascii_tree(self._parse_tree_structure(0, simplified=simplified)))
-
-
-
-    def _inspect(self, simplified=True) -> str:
-        """
-            Returns a formated string of the datastructure.
-        """
-        return utils.ascii_tree(self._parse_tree_structure(0, simplified=simplified))
-
-
-
-    def _parse_tree_structure(self, current_depth: int, simplified: bool = False, header: str | None= None) -> str:
-        """
-            Parses the tree to produce a string with the appropiate format for the ascii_tree method.
-        """
-        from spark.core.specs import ModuleSpecs
-        level_header = f'{header}: ' if header else ''
-        rep = current_depth * ' ' + f'{level_header}{self.__class__.__name__}\n'
-        for name, field, value in self:
-            if not simplified:
-                if isinstance(value, InitializableField):
-                    # Unpack Initializable fields
-                    value = value.__obj__
-                if isinstance(value, SparkConfig):
-                    rep += value._parse_tree_structure(current_depth+1, simplified=simplified, header=name)
-                else:
-                    if isinstance(value, (list, tuple)) and len(value) > 0 and all([isinstance(v, ModuleSpecs) for v in value]):
-                        rep += (current_depth+1) * ' ' + f'{name}: list[ModuleSpecs]\n'
-                        for spec in value:
-                            rep += spec.config._parse_tree_structure(current_depth+2, simplified=simplified, header=spec.name)
-                        continue
-
-                    if isinstance(value, (list, tuple, set)) and len(value) > 5:
-                        value_str = str(value_str[:5])
-                        value_str = f'{type(value)}([{value_str[1:-1]}, ...])'
-                    elif isinstance(value, (np.ndarray, jnp.ndarray)) and prod(value.shape) > 5:
-                        value_str = ', '.join([f'{x:.2f}'.rstrip('0').rstrip('.') for x in value.reshape(-1)[:5]]).strip('\n').replace('\n', '')
-                        value_str = f'array([{value_str[:-1]}, ...], dtype={value.dtype})'
-                    else:
-                        value_str = str(value).strip('\n')
-
-                    if field.type == jax.typing.DTypeLike:
-                        field_types = 'DTypeLike'
-                    elif isinstance(field.type, type):
-                        field_types = field.type.__name__
-                    else:
-                        field_types = str(field.type)
-                    #field_types = ' | '.join([t.replace(' ', '').split('.')[-1] for t in str(field.type).split('|')])
-                    rep += (current_depth+1) * ' ' + f'{name}: {field_types} <- {value_str}\n'
-            else:
-                if isinstance(value, SparkConfig):
-                    rep += value._parse_tree_structure(current_depth+1, simplified=simplified)
-                elif isinstance(value, (list, tuple)) and all([isinstance(v, ModuleSpecs) for v in value]):
-                    rep += (current_depth+1) * ' ' + f'ModuleSpecs\n'
-                    for spec in value:
-                        rep += spec.config._parse_tree_structure(current_depth+2, simplified=simplified)
-        return rep
-
-    def with_new_seeds(self, seed: int | None = None) -> 'SparkConfig':
-        """
-            Utility method to recompute all seed variables within the SparkConfig.
-            Useful when creating several populations from the same config.
-        """
-        from spark.core.specs import ModuleSpecs
-        new_instance = copy.deepcopy(self)
-        if seed is None:
-            for name, field, value in new_instance:
-                if isinstance(value, SparkConfig):
-                    setattr(new_instance, name, value.with_new_seeds())
-                elif isinstance(value, ModuleSpecs):
-                    setattr(new_instance, name, value.config.with_new_seeds())
-                elif isinstance(value, list):
-                    for item in value:
-                        if isinstance(item, SparkConfig):
-                            item = item.with_new_seeds()
-                        elif isinstance(item, ModuleSpecs):
-                            item.config = item.config.with_new_seeds()
-                elif name == 'seed':
-                    setattr(new_instance, name, int.from_bytes(os.urandom(4), 'little'))
-        else:
-            key = jax.random.key(seed)
-            for name, field, value in new_instance:
-                if isinstance(value, SparkConfig):
-                    key, subkey = jax.random.split(key, 2)
-                    new_seed = int(subkey._base_array[0])
-                    setattr(new_instance, name, value.with_new_seeds(seed=new_seed))
-                elif isinstance(value, ModuleSpecs):
-                    key, subkey = jax.random.split(key, 2)
-                    new_seed = int(subkey._base_array[0])
-                    setattr(new_instance, name, value.config.with_new_seeds(seed=new_seed))
-                elif isinstance(value, list):
-                    for item in value:
-                        if isinstance(item, SparkConfig):
-                            key, subkey = jax.random.split(key, 2)
-                            new_seed = int(subkey._base_array[0])
-                            item = item.with_new_seeds(seed=new_seed)
-                        elif isinstance(item, ModuleSpecs):
-                            key, subkey = jax.random.split(key, 2)
-                            new_seed = int(subkey._base_array[0])
-                            item.config = item.config.with_new_seeds(seed=new_seed)
-                elif name == 'seed':
-                    key, subkey = jax.random.split(key, 2)
-                    new_seed = int(subkey._base_array[0])
-                    setattr(new_instance, name, new_seed)
-        return new_instance
-
+class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
+	"""
+		Base Configuration.
+	"""
+
+	@classmethod
+	def partial(cls, **kwargs) -> 'SparkConfig':
+		# Set None as a default value
+		for field in dc.fields(cls):
+			if field.default is dc.MISSING and field.default_factory is dc.MISSING and (not field.name in kwargs):
+				kwargs[field.name] = None
+		return cls(**kwargs)
+
+	# TODO: This method is not ideal. It solves the module association problem in a very brittle way. 
+	# There should be another better pattern for this problem.
+	@property
+	def class_ref(obj: 'SparkConfig') -> type:
+		"""
+			Returns the type of the associated Module/Initializer.
+
+			NOTE: It is recommended to set the __class_ref__ to the name of the associated module/initializer
+			when defining custom configuration classes. The automatic class_ref solver is extremely brittle and
+			likely to fail in many different custom scenarios.
+		"""
+		# TODO: This could probably be handle more gracefully (part of the todo above)
+		# Check if this Config is for a controller (Brain/Neuron) 
+		from spark.nn.controllers.brain import Brain, BrainConfig
+		from spark.nn.controllers.neuron import Neuron, NeuronConfig
+		if isinstance(obj, BrainConfig):
+			return Brain
+		elif is_instance(obj, NeuronConfig):
+			return Neuron
+		# Check for class_ref otherwise try to set it up.
+		if getattr(obj, '__class_ref__', None) is None:
+			if obj.__class__.__name__[-6:].lower() == 'config':
+				obj.__class_ref__ = obj.__class__.__name__[:-6]
+			else:
+				# Config is not following convention, manual input of __class_ref__ is required.
+				raise AttributeError(
+					f'Configuration \"{obj.__name__}\" does not define a __class_ref__.'
+				)
+		# Currently it can only be either a Module or a Initializer, so better check those two.
+		module_class_ref = REGISTRY.MODULES.get(obj.__class_ref__)
+		initializer_class_ref = REGISTRY.INITIALIZERS.get(obj.__class_ref__)
+		# Check we only got one coincidence, otherwise throw an error to avoid headaches.
+		if module_class_ref and initializer_class_ref:
+			raise AttributeError(
+				f'Configuration \"{obj.__class__.__name__}\" cannot resolve __class_ref__. '
+				f'A Module and an Initializer with the same reference were found. '
+				f'To prevent errors impute the class manually. Alternatively, update the name '
+				f'of one of the classes to avoid overlappings.'
+			)
+		if module_class_ref:
+			class_ref = module_class_ref.class_ref
+		elif initializer_class_ref: 
+			class_ref = initializer_class_ref.class_ref
+		else:
+			raise AttributeError(
+				f'Configuration \"{obj.__class__.__name__}\" cannot resolve __class_ref__. '
+				f'No Module nor Initializer with the same reference were found. '
+				f'Either rename the configuration object as \"Object.__class__.__name__ + Config\" or'
+				f'manually define __class_ref__ using the registry name of the object (default: Object.__class__.__name__).'
+			)
+		return class_ref
+
+
+
+	def __iter__(self) -> tp.Iterator[tuple[str, tp.Any]]:
+		"""
+			(key, value) iterator.
+
+			Output:
+				field_name: str, field name 
+				field_value: tp.Any, field value
+		"""
+		# Iterate over all defined fields of the dataclass
+		for f in dc.fields(self):
+			# Yield the field name and its corresponding value
+			value = getattr(self, f.name, None)
+			yield (f.name, value)
+
+
+
+	def inspect(self, simplified=False) -> str:
+		"""
+			Returns a formated string of the datastructure.
+		"""
+		print(utils.ascii_tree(self._parse_tree_structure(0, simplified=simplified)))
+
+
+
+	def _inspect(self, simplified=True) -> str:
+		"""
+			Returns a formated string of the datastructure.
+		"""
+		return utils.ascii_tree(self._parse_tree_structure(0, simplified=simplified))
+
+
+
+	def _parse_tree_structure(self, current_depth: int, simplified: bool = False, header: str | None= None) -> str:
+		"""
+			Parses the tree to produce a string with the appropiate format for the ascii_tree method.
+		"""
+		from spark.core.specs import ModuleSpecs
+		level_header = f'{header}: ' if header else ''
+		rep = current_depth * ' ' + f'{level_header}{self.__class__.__name__}\n'
+		for field in dc.fields(self):
+			name = field.name
+			value = getattr(self, field.name, None)
+			if not simplified:
+				if isinstance(value, SparkConfig):
+					rep += value._parse_tree_structure(current_depth+1, simplified=simplified, header=name)
+				else:
+					# Module spec lists
+					if isinstance(value, (list, tuple)) and len(value) > 0 and all([isinstance(v, ModuleSpecs) for v in value]):
+						rep += (current_depth+1) * ' ' + f'{name}: list[ModuleSpecs]\n'
+						for spec in value:
+							rep += spec.config._parse_tree_structure(current_depth+2, simplified=simplified, header=spec.name)
+						continue
+					# Iterables
+					if isinstance(value, (list, tuple, set)) and len(value) > 5:
+						value_str = str(value_str[:5])
+						value_str = f'{type(value)}([{value_str[1:-1]}, ...])'
+					elif isinstance(value, (np.ndarray, jnp.ndarray)) and prod(value.shape) > 5:
+						value_str = ', '.join([f'{x:.2f}'.rstrip('0').rstrip('.') for x in value.reshape(-1)[:5]]).strip('\n').replace('\n', '')
+						value_str = f'array([{value_str[:-1]}, ...], dtype={value.dtype})'
+					else:
+						value_str = str(value).strip('\n')
+					# Missing types
+					if field.type == jax.typing.DTypeLike:
+						field_types = 'DTypeLike'
+					elif isinstance(value, (np.ndarray, jnp.ndarray)):
+						field_types = 'ArrayLike'
+					elif isinstance(field.type, type):
+						field_types = field.type.__name__
+					else:
+						field_types = str(type(value).__name__)
+					rep += (current_depth+1) * ' ' + f'{name}: {field_types} <- {value_str}\n'
+			else:
+				if isinstance(value, SparkConfig):
+					rep += value._parse_tree_structure(current_depth+1, simplified=simplified)
+				elif isinstance(value, (list, tuple)) and all([isinstance(v, ModuleSpecs) for v in value]):
+					rep += (current_depth+1) * ' ' + f'ModuleSpecs\n'
+					for spec in value:
+						rep += spec.config._parse_tree_structure(current_depth+2, simplified=simplified)
+		return rep
+
+
+
+	def with_new_seeds(self, seed: int | None = None) -> 'SparkConfig':
+		"""
+			Utility method to recompute all seed variables within the SparkConfig.
+			Useful when creating several populations from the same config.
+		"""
+		from spark.core.specs import ModuleSpecs
+
+		def _with_new_seeds(config: 'SparkConfig', _seed: int) -> 'SparkConfig':
+			# Current config to dict
+			_config = copy.deepcopy(config)
+			# Jax key
+			key = jax.random.key(_seed)
+			for field in dc.fields(config):
+				if dc.is_dataclass(getattr(_config, field.name, None)):
+					# Create new seed
+					key, subkey = jax.random.split(key, 2)
+					new_seed = int(subkey._base_array[0])
+					# Rebuild nested config with new seed
+					setattr(_config, field.name, _with_new_seeds(getattr(_config, field.name), new_seed)) 
+				elif field.type is list[ModuleSpecs]:
+					module_specs_list = []
+					for module_spec in getattr(_config, field.name, []):
+						module_spec: ModuleSpecs = copy.deepcopy(module_spec)
+						# Create new seed
+						key, subkey = jax.random.split(key, 2)
+						new_seed = int(subkey._base_array[0])
+						# Update spec config
+						module_spec.config = _with_new_seeds(module_spec.config, new_seed)
+						module_specs_list.append(module_spec)
+					# Update spec list
+					setattr(_config, field.name, module_specs_list)
+				elif field.name == 'seed':
+					# Update config seed
+					key, subkey = jax.random.split(key, 2)
+					new_seed = int(subkey._base_array[0])
+					setattr(_config, 'seed', new_seed)
+			# Rebuild current config
+			return _config
+
+		# Generate a new seed if none was provided
+		seed = int.from_bytes(os.urandom(4), 'little') if seed is None else seed
+		return _with_new_seeds(self, seed)
+
+
+
+	def to_dict(self,) -> dict[str, dict[str, tp.Any]]:
+		"""
+			Serialize config to dictionary
+		"""
+		return dc.asdict(self)
+
+
+
+	@classmethod
+	def from_dict(cls: type['SparkConfig'], dct: dict[str, tp.Any]) -> 'SparkConfig':
+		"""
+			Create config instance from dictionary.
+		"""
+		return cls(**dct)
+
+
+
+	def to_file(self, file_path: str, compress: bool = True, verbose: bool = True) -> None:
+		"""
+			Export a config instance from a .scfg file.
+		"""
+		# Validate the config
+		# If partial is True, values with errors are replaced with a None.
+		#self.validate(is_partial=is_partial)
+		# Validate path
+		path = pl.Path(file_path)
+		# Ensure the parent directory exists.
+		path.parent.mkdir(parents=True, exist_ok=True)
+		# Write to file.
+		from spark.core.serializer import SparkJSONEncoder
+		opener = lzma.open if compress else open
+		mode = 'wt' if compress else 'w'
+		with opener(path, mode, encoding='utf-8') as json_file:
+			reg = REGISTRY.CONFIG.get_by_cls(self.__class__)
+			if not reg:
+				raise RuntimeError(
+					f'Config class "{self.__class__}" is not in the registry.'
+					f'Reconstruction from unregistered classes is not currently possible.'
+					f'Use the "register_config" decorator to add the class to the registry.'
+				)
+			# Add top config metadata
+			encoder_cls = SparkJSONEncoder #partial(SparkJSONEncoder, is_partial=is_partial)
+			json.dump(self, json_file, cls=encoder_cls, indent=4)
+		if verbose:
+			print(f'Configuration saved to "{path}".')
+
+
+
+	@classmethod
+	def from_file(cls: type['SparkConfig'], file_path: str, is_partial: bool = False) -> 'SparkConfig':
+		"""
+			Create config instance from a .scfg file.
+		"""
+		path = pl.Path(file_path)
+		# Validate path
+		if not path.is_file():
+			raise FileNotFoundError(f'No file found at the specified path: "{path}".')
+		# Read the header to determine if the file start with the magic bytes: \xfd7zXZ\x00 (is LZMA compressed)
+		with open(path, 'rb') as f:
+			magic_bytes = f.read(6)
+		is_compressed = (magic_bytes == b'\xfd7zXZ\x00')
+		# Parse the file
+		opener = lzma.open if is_compressed else open
+		mode = 'rt' if is_compressed else 'r'
+		with opener(path, mode, encoding='utf-8') as json_file:
+			# Try to decode
+			from spark.core.serializer import SparkJSONDecoder
+			decoder_cls = partial(SparkJSONDecoder, is_partial=is_partial)
+			obj = json.load(json_file, cls=decoder_cls) 
+			if not _is_config_instance(obj):
+				raise TypeError(
+					f'Expected final object to be of type "SparkConfig" but after decoding the final object was of type "{obj.__class__}".'
+				)
+			return obj
+		
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

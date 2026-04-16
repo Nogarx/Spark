@@ -171,6 +171,12 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
         # Construct input specs.
         self._construct_input_specs(bound_args.arguments)
+        # TODO: This is quick hack to prevent manual initialization of synaptic masks.
+        # Ideally, this should be handle within the Plasticity component but it would require
+        # to maintain a custom _build method, which is not ideal right now due to the todo below. 
+        # Initialize masks for plasticity
+        if hasattr(self, '_initialize_synaptic_mask'):
+            self._initialize_synaptic_mask(self._input_specs)
         # Build model.
         self.build(self._input_specs)
         self.__built__ = True

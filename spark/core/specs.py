@@ -66,7 +66,7 @@ class PortSpecs:
         self.async_spikes = async_spikes
         self.inhibition_mask = inhibition_mask
 
-    def to_dict(self, is_partial: bool = False) -> dict[str, tp.Any]:
+    def to_dict(self,) -> dict[str, tp.Any]:
         """
             Serialize PortSpecs to dictionary
         """
@@ -81,7 +81,7 @@ class PortSpecs:
         }
     
     @classmethod
-    def from_dict(cls, dct: dict, is_partial: bool = False) -> tp.Self:
+    def from_dict(cls, dct: dict[str, tp.Any]) -> tp.Self:
         """
             Deserialize dictionary to  PortSpecs
         """
@@ -177,7 +177,7 @@ class PortMap:
         self.port = port
         self.is_property = is_property
 
-    def to_dict(self, is_partial: bool = False) -> dict[str, tp.Any]:
+    def to_dict(self,) -> dict[str, tp.Any]:
         """
             Serialize PortMap to dictionary
         """
@@ -188,7 +188,7 @@ class PortMap:
         }
     
     @classmethod
-    def from_dict(cls, dct: dict, is_partial: bool = False) -> tp.Self:
+    def from_dict(cls, dct: dict[str, tp.Any]) -> tp.Self:
         """
             Deserialize dictionary to PortMap
         """
@@ -251,11 +251,11 @@ class ModuleSpecs:
         self.module_cls = module_cls
         self.inputs = inputs
         # NOTE: We allow partial configs to simplify controller definitions
-        self.config = config if config is not None else module_cls.get_config_spec()._create_partial()
+        self.config = config if config is not None else module_cls.get_config_spec().partial()
         self.outputs = {} if outputs is None else outputs
         self.effects = {} if effects is None else effects
 
-    def to_dict(self, is_partial: bool = False) -> dict[str, tp.Any]:
+    def to_dict(self,) -> dict[str, tp.Any]:
         """
             Serialize ModuleSpecs to dictionary
         """
@@ -278,20 +278,20 @@ class ModuleSpecs:
                 '__subregistry__': subregistry,
             },
             'inputs': self.inputs,
-            'config': self.config.to_dict(is_partial=is_partial),
+            'config': self.config,
             'outputs': self.outputs,
             'effects': self.effects,
         }
     
     @classmethod
-    def from_dict(cls, dct: dict, is_partial: bool = False) -> tp.Self:
+    def from_dict(cls, dct: dict[str, tp.Any],) -> tp.Self:
         """
             Deserialize dictionary to ModuleSpecs
         """
         module_cls = dct.get('module_cls', None)
         config = dct.get('config', None)
-        config_fn = lambda x: module_cls.get_config_spec()._create_partial(**x) if is_partial else module_cls.get_config_spec()(**x)
-        config = config_fn(config) if isinstance(config, dict) else config
+        #config_fn = lambda x: module_cls.get_config_spec().partial(**x) if is_partial else module_cls.get_config_spec()(**x)
+        #config = config_fn(config) if isinstance(config, dict) else config
         # Reconstruct spec
         return cls(
             name=dct.get('name', None), 

@@ -1,4 +1,4 @@
-from spark.nn.initializers.base import Initializer, InitializerConfig
+from spark.nn.initializers.base import Initializer, InitializerConfig, MaskedInitializer
 from spark.nn.initializers.common import (
     ConstantInitializer, ConstantInitializerConfig,
     UniformInitializer, UniformInitializerConfig,
@@ -8,7 +8,7 @@ from spark.nn.initializers.common import (
 
 __all__ = [
     # Delay initializers
-    'Initializer', 'InitializerConfig',
+    'Initializer', 'InitializerConfig', 'MaskedInitializer',
     # Common
     'ConstantInitializer', 'ConstantInitializerConfig',
     'UniformInitializer', 'UniformInitializerConfig',

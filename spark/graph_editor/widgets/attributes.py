@@ -215,7 +215,7 @@ class QAttribute(QtWidgets.QWidget):
             self.config_selector.on_field_update.connect(self._on_init_selection_update)
             main_layout.addWidget(self.config_selector)  
             # Instantiate an initializer config
-            self.init_config = attr_value if isinstance(attr_value, InitializerConfig) else starting_init_cls._create_partial()
+            self.init_config = attr_value if isinstance(attr_value, InitializerConfig) else starting_init_cls.partial()
             self._setup_initializer_config(
                 ref_post_callback_stack=ref_post_callback_stack if (initializer_flags & QControlFlags.ACTIVE) else None,
             )
@@ -234,7 +234,7 @@ class QAttribute(QtWidgets.QWidget):
             self.secondary_row.setVisible(state)
             if self.config_widget is None:
                 starting_init_cls: type[InitializerConfig] = self.config_selector.get_value()
-                config = starting_init_cls._create_partial()
+                config = starting_init_cls.partial()
                 self._setup_initializer_config(config)
         self._initializer_active = state
         self.on_size_change.emit(self.size())

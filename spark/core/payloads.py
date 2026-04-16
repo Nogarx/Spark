@@ -92,6 +92,9 @@ class SpikeArray(SparkPayload):
     def __init__(self, spikes: jax.Array, inhibition_mask: jax.Array = False, async_spikes: bool = False) -> None:
         spikes = jnp.array(spikes, dtype=jnp.uint8)
         inhibition_mask = jnp.array(inhibition_mask, dtype=jnp.uint8)
+        if inhibition_mask.ndim != spikes.ndim:
+            new_shape = (1,) * (spikes.ndim - inhibition_mask.ndim) + inhibition_mask.shape
+            inhibition_mask = inhibition_mask.reshape(new_shape)
         self._encoding = spikes | (inhibition_mask << 1)
         self.async_spikes = async_spikes
 
@@ -150,6 +153,9 @@ class SpikeArray(SparkPayload):
                     inhibition_mask = spec.inhibition_mask * jnp.ones(shape, dtype=jnp.uint8)
                 else:
                     inhibition_mask = jnp.zeros(shape, dtype=jnp.uint8)
+                if inhibition_mask.ndim != spikes.ndim:
+                    new_shape = (1,) * (spikes.ndim - inhibition_mask.ndim) + inhibition_mask.shape
+                    inhibition_mask = inhibition_mask.reshape(new_shape)
                 obj._encoding = spikes | (inhibition_mask.reshape(shape) << 1)
                 obj.async_spikes = spec.async_spikes
                 objs.append(obj)  
@@ -163,6 +169,9 @@ class SpikeArray(SparkPayload):
                 inhibition_mask = spec.inhibition_mask * jnp.ones(spec.shape, dtype=jnp.uint8)
             else:
                 inhibition_mask = jnp.zeros(spec.shape, dtype=jnp.uint8)
+            if inhibition_mask.ndim != spikes.ndim:
+                new_shape = (1,) * (spikes.ndim - inhibition_mask.ndim) + inhibition_mask.shape
+                inhibition_mask = inhibition_mask.reshape(new_shape)
             obj._encoding = spikes | (inhibition_mask << 1)
             obj.async_spikes = spec.async_spikes
             return obj 

@@ -337,7 +337,7 @@ class SparkModuleNode(AbstractNode, abc.ABC):
                 )
         # Create partial configuration
         node_config_type: SparkConfig = self.module_cls.get_config_spec()
-        self.node_config = node_config_type._create_partial(_s_units=(1,))
+        self.node_config = node_config_type.partial(_s_units=(1,))
 
     @property
     def metadata(self,) -> dict:
@@ -417,7 +417,7 @@ class SparkNeuronNode(AbstractNode, abc.ABC):
         super().__init__()
         # Create partial configuration
         node_config_type: NeuronConfig = self.module_cls.get_config_spec()
-        self.node_config = node_config_type._create_partial(_s_units=(1,))
+        self.node_config = node_config_type.partial(_s_units=(1,))
         self.node_config_flat = flattify_controller_config(self.node_config)
         
         # Add input ports.

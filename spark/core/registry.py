@@ -95,9 +95,10 @@ class SubRegistry(Mapping):
                                 f'"{cls.__name__}" does not inherit from {self._registry_base_type}.')
         # Everything else
         else:
-            if not validation._is_spark_type(cls, self._registry_base_type):
-                raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
-                                f'"{cls.__name__}" does not inherit from {self._registry_base_type}.')
+            pass
+            #if not validation._is_spark_type(cls, self._registry_base_type):
+            #    raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
+            #                    f'"{cls.__name__}" does not inherit from {self._registry_base_type}.')
         if self._exists(name):
             raise ValueError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
                             f'name "{name}" is already registered to another class.')
