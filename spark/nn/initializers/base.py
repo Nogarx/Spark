@@ -13,6 +13,7 @@ import dataclasses as dc
 from jax.typing import DTypeLike
 from spark.core.config import SparkConfig
 from spark.core.config_validation import TypeValidator
+from spark.core.flax_imports import data as set_data_fn
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -98,9 +99,7 @@ class Initializer(abc.ABC):
         if config is None:
             self.config = self.default_config(**kwargs)
         else:
-            import copy
-            self.config = copy.deepcopy(config)
-            self.config.merge(partial=kwargs)
+            self.config = config.merge(**kwargs)
 
     @classmethod 
     def get_config_spec(cls) -> type[InitializerConfig]:
@@ -111,7 +110,7 @@ class Initializer(abc.ABC):
         return type_hints['config']
 
     @abc.abstractmethod
-    def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
+    def __call__(self, key: jax.Array, shape: tuple[int, ...], **kwargs) -> jax.Array:
         raise NotImplementedError
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

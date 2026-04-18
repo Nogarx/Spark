@@ -23,7 +23,9 @@ class HierarchicalMenuTree:
     def __init__(self, graph_menu: NodeGraphMenu) -> None:
         # Sanity checks.
         if not isinstance(graph_menu, NodeGraphMenu):
-            raise ValueError('HierarchicalMenuTree must be initialized with a valid NodeGraphMenu object.')
+            raise ValueError(
+                'HierarchicalMenuTree must be initialized with a valid NodeGraphMenu object.'
+            )
         # NodeGraphQt menu object.
         self.graph_menu_ref: NodeGraphMenu = graph_menu
         # Child MenuTree nodes.

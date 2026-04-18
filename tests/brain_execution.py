@@ -25,9 +25,9 @@ def test_brain_config() -> spark.nn.BrainConfig:
             ]
         },
         config = spark.nn.interfaces.TopologicalLinearSpikerConfig(
-            glue = jnp.array(0), 
-            mins = jnp.array(-1),  
-            maxs = jnp.array(1), 
+            glue = 0,#jnp.array(0), 
+            mins = -1,#jnp.array(-1),  
+            maxs = 1,#jnp.array(1), 
             resolution = 128, 
             max_freq = 200.0, 
             tau = 30.0
@@ -35,14 +35,14 @@ def test_brain_config() -> spark.nn.BrainConfig:
     )
     neurons_specs = spark.ModuleSpecs(
         name ='neurons', 
-        module_cls = spark.nn.neurons_OLD.ALIFNeuron, 
+        module_cls = spark.nn.neurons.ALIFNeuron, 
         inputs = {
             'in_spikes': [
                 spark.PortMap(origin='spiker', port='spikes'),
                 spark.PortMap(origin='neurons', port='out_spikes'),
             ]
         },
-        config = spark.nn.neurons_OLD.ALIFNeuronConfig(
+        config = spark.nn.neurons.ALIFNeuronConfig(
             _s_units = (16,),
             synapses_params__kernel__scale = 3.0,
             soma_params__threshold_tau = 25.0 * jax.random.uniform(jax.random.key(43), shape=(16,), dtype=jnp.float16)**2,
@@ -58,36 +58,18 @@ def test_brain_config() -> spark.nn.BrainConfig:
                 spark.PortMap(origin='neurons', port='out_spikes'),
             ]
         },
+        outputs={
+            'action': 'signal'
+        },
         config = spark.nn.interfaces.ExponentialIntegratorConfig(
             num_outputs = 2,
         )
     )
-    input_map = {
-        'drive': spark.PortSpecs(
-            payload_type=spark.FloatArray, 
-            shape=(4,), 
-            dtype=jnp.float16,
-        )
-    }
-    output_map = {
-        'action': {
-            'input': spark.PortMap(
-                origin='integrator',
-                port='signal'
-            ),
-            'spec': spark.PortSpecs(
-                payload_type=spark.FloatArray,
-                shape=(2,),
-                dtype=jnp.float16
-            )
-        }
-    }
-    modules_map = {
-        'spiker': spiker_specs,
-        'neurons': neurons_specs,
-        'integrator': integrator,
-    }
-    return spark.nn.BrainConfig(input_map=input_map, output_map=output_map, modules_map=modules_map)
+
+    modules_specs = [
+        spiker_specs, neurons_specs, integrator
+    ]
+    return spark.nn.BrainConfig(modules_specs=modules_specs)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -96,8 +78,8 @@ def run_module_simplified(
         module: spark.nn.Brain, 
         module_inputs: dict
     ) -> tuple[dict[str, spark.SparkPayload], spark.nn.Module]:
-    s = module(**module_inputs)
-    return s, module
+    out = module(**module_inputs)
+    return out, module
 
 def test_jax_jit_split(
         test_brain_config: spark.nn.BrainConfig
@@ -111,11 +93,11 @@ def test_jax_jit_split(
         'drive': spark.FloatArray(jnp.zeros((4,), dtype=jnp.float16))
     }
     brain_model(**brain_inputs)
-    spikes, brain_model = run_module_simplified(brain_model, brain_inputs)
-    assert isinstance(spikes['action'], spark.FloatArray)
-    assert spikes['action'].value.shape == (2,)
-    assert jnp.sum(jnp.isnan(spikes['action'].value)) == 0
-    assert jnp.sum(jnp.isinf(spikes['action'].value)) == 0
+    out, brain_model = run_module_simplified(brain_model, brain_inputs)
+    assert isinstance(out['action'], spark.FloatArray)
+    assert out['action'].value.shape == (2,)
+    assert jnp.sum(jnp.isnan(out['action'].value)) == 0
+    assert jnp.sum(jnp.isinf(out['action'].value)) == 0
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -126,9 +108,9 @@ def run_module_split(
         module_inputs: dict
     ) -> tuple[dict[str, spark.SparkPayload], nnx.GraphState | nnx.VariableState]:
     module = spark.merge(graph, state)
-    s = module(**module_inputs)
+    out = module(**module_inputs)
     _, state = spark.split((module))
-    return s, state
+    return out, state
 
 def test_jax_jit_split(
         test_brain_config: spark.nn.BrainConfig
@@ -144,11 +126,11 @@ def test_jax_jit_split(
     }
     brain_model(**brain_inputs)
     graph, state = spark.split((brain_model))
-    spikes, state = run_module_split(graph, state, brain_inputs)
-    assert isinstance(spikes['action'], spark.FloatArray)
-    assert spikes['action'].value.shape == (2,)
-    assert jnp.sum(jnp.isnan(spikes['action'].value)) == 0
-    assert jnp.sum(jnp.isinf(spikes['action'].value)) == 0
+    out, state = run_module_split(graph, state, brain_inputs)
+    assert isinstance(out['action'], spark.FloatArray)
+    assert out['action'].value.shape == (2,)
+    assert jnp.sum(jnp.isnan(out['action'].value)) == 0
+    assert jnp.sum(jnp.isinf(out['action'].value)) == 0
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

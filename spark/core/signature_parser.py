@@ -176,7 +176,6 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
     signature = inspect.signature(module.__call__)
     signature_type_hints = tp.get_type_hints(module.__call__)
     
-    
     # Create signatures.
     input_specs = {}
     for parameter in signature.parameters.values():
@@ -184,20 +183,31 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
         # Skip unimportant parameters.
         if parameter.name in ['self', 'cls']: 
             continue
-        # Scrap parameter.
-        payload_types = normalize_typehint(signature_type_hints[parameter.name])
+
+        # NOTE: Dynamic input workaround (Concat & friends >:c )
+        if hasattr(module, '_overwrite_call_signature'):
+            # Scrap parameter.
+            payload_types = normalize_typehint(parameter.annotation)
+        else:
+            # Scrap parameter.
+            payload_types = normalize_typehint(signature_type_hints[parameter.name])
         if len(payload_types) > 1:
             payload_types = (payload_types[0],) if payload_types[0] != type(None) else (payload_types[1],)
+
         # Check if the payload_type is a valid class and a subclass of SparkPayload
         if any([not validation._is_payload_type(pt) for pt in payload_types]):
-            # Raise error, payload is not fully compatible with the framework.
-            raise TypeError(
-                f'Error: Input parameter "{parameter.name}" has type {type(payload_types[0]).__name__}, ' 
-                f'which is not a valid SparkPayload, None or sequence of SparkPayload.' 
-                f'If you intended to pass a union (e.g. tuple, list, etc.) consider passing each entry ' 
-                f'in the union directly as SparkPayload type to the __call__ method. ' 
-                f'Alternatively, consider defining a custom SparkPayload dataclass as a wrapper for your input.'
-            )
+
+            # TODO: Concat are need to be rewokerd >:c
+            if not module.__name__ in ['Concat','ConcatReshape']:
+                
+                # Raise error, payload is not fully compatible with the framework.
+                raise TypeError(
+                    f'Error: Input parameter "{parameter.name}" has type {type(payload_types[0]).__name__}, ' 
+                    f'which is not a valid SparkPayload, None or sequence of SparkPayload.' 
+                    f'If you intended to pass a union (e.g. tuple, list, etc.) consider passing each entry ' 
+                    f'in the union directly as SparkPayload type to the __call__ method. ' 
+                    f'Alternatively, consider defining a custom SparkPayload dataclass as a wrapper for your input.'
+                )
         
         # Add the spec to collection.
         input_specs[parameter.name] = PortSpecs(

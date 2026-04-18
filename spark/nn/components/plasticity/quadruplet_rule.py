@@ -152,13 +152,13 @@ class QuadrupletRule(Plasticity):
         # handles the most common initialization patterns and tries to keep the variable the smallest shape possible
         # that is still compute efficient for plasticity computation (THIS APPRAOCH IS NOT ALWAYS MEMORY EFFICIENT).
         _initialize_variable_fn = lambda var: self._initialize_variable(var, shape=kernel_shape, dtype=ker_dtype)
-        _pre_tau = _initialize_variable_fn(self.config.pre_tau)
-        _post_tau = _initialize_variable_fn(self.config.post_tau)
-        _q_alpha = _initialize_variable_fn(self.config.q_alpha)
-        _q_beta = _initialize_variable_fn(self.config.q_beta)
-        _q_gamma = _initialize_variable_fn(self.config.q_gamma)
-        _q_delta = _initialize_variable_fn(self.config.q_delta)
-        _max_clip = _initialize_variable_fn(self.config.max_clip)
+        _pre_tau = _initialize_variable_fn(self.config.init.pre_tau)
+        _post_tau = _initialize_variable_fn(self.config.init.post_tau)
+        _q_alpha = _initialize_variable_fn(self.config.init.q_alpha)
+        _q_beta = _initialize_variable_fn(self.config.init.q_beta)
+        _q_gamma = _initialize_variable_fn(self.config.init.q_gamma)
+        _q_delta = _initialize_variable_fn(self.config.init.q_delta)
+        _max_clip = _initialize_variable_fn(self.config.init.max_clip)
         # Tracers.
         _post_trace_shape = output_shape if len(output_shape) > len(_post_tau) else kernel_shape
         self.pre_trace = Tracer(kernel_shape, tau=_pre_tau, scale=1/_pre_tau, dtype=ker_dtype, dt=self._dt) 

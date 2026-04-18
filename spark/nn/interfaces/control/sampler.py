@@ -14,7 +14,7 @@ from spark.core.variables import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.payloads import SparkPayload
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceConfig, ControlInterfaceOutput
+from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceConfig, ControlInterfaceOutput, _build_signature_from_inputs
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -61,8 +61,19 @@ class Sampler(ControlInterface):
         self.sample_size = self.config.sample_size
 
     def build(self, input_specs: dict[str, PortSpecs]) -> None:
+        # Validate payloads types.
+        payload_type = None
+        for key, value in input_specs.items():
+            payload_type = value.payload_type if payload_type is None else payload_type
+            if payload_type != value.payload_type:
+                raise TypeError(
+                    f'Expected all payload types to be of same type \"{payload_type}\" '
+                    f'but input spec \"{key}\" is of type "{value.payload_type}".'
+                )
+        self._payload_type = payload_type
         # Initialize shapes
-        input_shape = utils.validate_shape(input_specs['inputs'].shape)
+        flat_shape = sum([prod(spec.shape) for spec in input_specs.values()])
+        input_shape = utils.validate_shape((flat_shape,))
         # Initialize variables
         self._indices = Constant(
             jax.random.randint(
@@ -78,16 +89,21 @@ class Sampler(ControlInterface):
     def indices(self,) -> jax.Array:
         return self._indices.value
 
-    def __call__(self, inputs: SparkPayload) -> ControlInterfaceOutput:
+    def _overwrite_call_signature(self, raw_args: tuple[SparkPayload], raw_kwargs: dict[str, SparkPayload]) -> None:
+        # Create the new Signature object and assign it to the __call__ method
+        self.__call__.__func__.__signature__ = _build_signature_from_inputs(raw_args, raw_kwargs)
+
+    def __call__(self, **inputs: SparkPayload) -> ControlInterfaceOutput:
         """
             Sub/Super-sample the input stream to get the pre-specified number of samples.
         """
-        # Sample
-        sample = type(inputs)(inputs.value.reshape(-1)[self.indices])
+        # Control flow operation
         return {
-            'output': sample
+            'output': self._payload_type(
+                jnp.concatenate([x.value.reshape(-1) for x in inputs.values()])[self.indices]
+            )
         }
-
+    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

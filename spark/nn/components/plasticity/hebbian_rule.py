@@ -92,8 +92,8 @@ class HebbianRule(Plasticity):
         output_shape = input_specs['post_spikes'].shape
         kernel_shape = input_specs['kernel'].shape
         # Initialize variables.
-        _pre_tau = self.config.pre_tau.init(key=self.get_rng_keys(1), shape=input_shape, dtype=self._dtype)
-        _post_tau = self.config.post_tau.init(key=self.get_rng_keys(1), shape=output_shape, dtype=self._dtype)
+        _pre_tau = self.config.init.pre_tau(key=self.get_rng_keys(1), shape=input_shape, dtype=self._dtype)
+        _post_tau = self.config.init.post_tau(key=self.get_rng_keys(1), shape=output_shape, dtype=self._dtype)
         # Tracers.
         self.pre_trace = Tracer(input_shape, tau=_pre_tau, scale=1/_pre_tau, dtype=self._dtype, dt=self._dt) 
         self.post_trace = Tracer(output_shape, tau=_post_tau, scale=1/_post_tau, dtype=self._dtype, dt=self._dt)
@@ -192,7 +192,7 @@ class OjaRule(Plasticity):
         output_shape = input_specs['post_spikes'].shape
         kernel_shape = input_specs['kernel'].shape
         # Initialize variables.
-        _post_tau = self.config.post_tau.init(key=self.get_rng_keys(1), shape=output_shape, dtype=self._dtype)
+        _post_tau = self.config.init.post_tau(key=self.get_rng_keys(1), shape=output_shape, dtype=self._dtype)
         # Tracers.
         self.post_trace = Tracer(output_shape, tau=_post_tau, scale=1/_post_tau, dtype=self._dtype, dt=self._dt)
         self.eta = Constant(self.config.eta)

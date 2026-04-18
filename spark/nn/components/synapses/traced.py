@@ -89,7 +89,7 @@ class TracedSynapses(LinearSynapses):
         # Initialize shapes
         super().build(input_specs)
         # Initialize variables.
-        _tau = self.config.tau.init(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
+        _tau = self.config.init.tau(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
         # Current tracer.
         self.current_tracer = Tracer(
             shape=self._kernel.value.shape,
@@ -210,8 +210,8 @@ class RDTracedSynapses(LinearSynapses):
         # Initialize shapes
         super().build(input_specs)
         # Initialize variables.
-        _tau_rise = self.config.tau_rise.init(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
-        _tau_decay = self.config.tau_decay.init(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
+        _tau_rise = self.config.init.tau_rise(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
+        _tau_decay = self.config.init.tau_decay(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
         # Current tracer.
         self.current_tracer = RDTracer(
             shape=self._kernel.value.shape,
@@ -374,9 +374,9 @@ class RFSTracedSynapses(LinearSynapses):
         # Initialize shapes
         super().build(input_specs)
         # Initialize variables.
-        _tau_rise = self.config.tau_rise.init(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
-        _tau_fast_decay = self.config.tau_fast_decay.init(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
-        _tau_slow_decay = self.config.tau_slow_decay.init(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
+        _tau_rise = self.config.init.tau_rise(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
+        _tau_fast_decay = self.config.init.tau_fast_decay(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
+        _tau_slow_decay = self.config.init.tau_slow_decay(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
         # Current tracer.
         self.current_tracer = RFSTracer(
             shape=self._kernel.value.shape,

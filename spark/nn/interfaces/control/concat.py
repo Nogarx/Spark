@@ -11,7 +11,7 @@ from spark.core.specs import PortSpecs
 from spark.core.registry import register_module, register_config
 from spark.core.payloads import SparkPayload
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceConfig, ControlInterfaceOutput
+from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceConfig, ControlInterfaceOutput, _build_signature_from_inputs
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -56,15 +56,19 @@ class Concat(ControlInterface):
                     f'Expected all payload types to be of same type \"{payload_type}\" '
                     f'but input spec \"{key}\" is of type "{value.payload_type}".'
                 )
-        self.payload_type = payload_type
+        self._payload_type = payload_type
 
-    def __call__(self, inputs: list[SparkPayload]) -> ControlInterfaceOutput:
+    def _overwrite_call_signature(self, raw_args: tuple[SparkPayload], raw_kwargs: dict[str, SparkPayload]) -> None:
+        # Create the new Signature object and assign it to the __call__ method
+        self.__call__.__func__.__signature__ = _build_signature_from_inputs(raw_args, raw_kwargs)
+
+    def __call__(self, **inputs: SparkPayload) -> ControlInterfaceOutput:
         """
             Merge all input streams into a single data output stream.
         """
         # Control flow operation
         return {
-            'output': self.payload_type(jnp.concatenate([x.value.reshape(-1) for x in inputs]))
+            'output': self._payload_type(jnp.concatenate([x.value.reshape(-1) for x in inputs.values()]))
         }
 
 #################################################################################################################################################
@@ -123,18 +127,21 @@ class ConcatReshape(ControlInterface):
         self.payload_type = payload_type
         # Validate final shape.
         try:
-            jnp.concatenate([jnp.zeros(s).reshape(-1) for s in input_specs['inputs'].shape]).reshape(self.reshape)
+            jnp.concatenate([jnp.zeros(s.shape).reshape(-1) for s in input_specs.values()]).reshape(self.reshape)
         except:
-            raise ValueError(f'Shapes {input_specs['inputs'].shape} are not broadcastable to {self.reshape}')
+            raise ValueError(f'Shapes {[s.shape for s in input_specs.values()]} are not broadcastable to {self.reshape}')
 
+    def _overwrite_call_signature(self, raw_args: tuple[SparkPayload], raw_kwargs: dict[str, SparkPayload]) -> None:
+        # Create the new Signature object and assign it to the __call__ method
+        self.__call__.__func__.__signature__ = _build_signature_from_inputs(raw_args, raw_kwargs)
 
-    def __call__(self, inputs: list[SparkPayload]) -> ControlInterfaceOutput:
+    def __call__(self, **inputs: SparkPayload) -> ControlInterfaceOutput:
         """
             Merge all input streams into a single data output stream. Output stream is reshape to match the pre-specified shape.
         """
         # Control flow operation
         return {
-            'output': self.payload_type(jnp.concatenate([x.value.reshape(-1) for x in inputs]).reshape(self.reshape))
+            'output': self.payload_type(jnp.concatenate([x.value.reshape(-1) for x in inputs.values()]).reshape(self.reshape))
         }
 
 #################################################################################################################################################

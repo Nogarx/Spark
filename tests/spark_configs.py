@@ -10,6 +10,7 @@ import spark
 import dataclasses as dc
 np.random.seed(42)
 from spark.nn.initializers import Initializer, InitializerConfig, ConstantInitializer, ConstantInitializerConfig
+from spark.core.config import SparkConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -29,6 +30,9 @@ def make_config(cls_name: str, annotations: dict[str, tp.Any], defaults: dict[st
     namespace: dict[str, tp.Any] = {}
 
     for attr, ann in annotations.items():
+        if attr.startswith('__'):
+            continue
+        
         if isinstance(ann, tp.Mapping):
             # Nested class name
             nested_cls_name = f'{cls_name}_NC_{attr.capitalize()}'
@@ -43,6 +47,10 @@ def make_config(cls_name: str, annotations: dict[str, tp.Any], defaults: dict[st
             # Assign the nested defaults to the class
             if attr in defaults and isinstance(defaults[attr], tp.Mapping):
                 namespace[attr] = nested_cls
+        elif isinstance(ann, type) and issubclass(ann, SparkConfig) and isinstance(defaults[attr], tp.Mapping):
+            # Regular attribute
+            ns_annotations[attr] = ann
+            namespace[attr] = ann(**defaults[attr])
         else:
             # Regular attribute
             ns_annotations[attr] = ann
@@ -50,16 +58,10 @@ def make_config(cls_name: str, annotations: dict[str, tp.Any], defaults: dict[st
             if attr in defaults and not isinstance(defaults[attr], tp.Mapping):
                 namespace[attr] = defaults[attr]
                 
-    # Repalce default cls_tags with type/instance
-    for attr, value in defaults.items():
-        if value == '__SELF_CLS__':
-            namespace[attr] = ns_annotations[attr]
-        elif value == '__SELF_CLS_INIT__':
-            namespace[attr] = ns_annotations[attr]()
-            
     # Create class dynamically
     namespace['__annotations__'] = ns_annotations
-    return type(cls_name, (spark.nn.BaseConfig,), namespace)
+
+    return type(cls_name, (SparkConfig,), namespace)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -69,49 +71,49 @@ data_test_success = [
     (
         'Simple_1',
         {'foo': int, 'bar': float, 'baz': bool},
-        {'foo': 10, 'bar': 15.0},
+        {'foo': 10, 'bar': 15.0, 'baz': False},
         {},
         {'foo': 10, 'bar': 15.0, 'baz': False},
     ),
     (
         'Simple_2',
         {'foo': int | Initializer, 'bar': float, 'baz': bool},
-        {'foo': 10, 'bar': 15.0},
+        {'foo': 10, 'bar': 15.0, 'baz': False},
         {},
         {'foo': 10, 'bar': 15.0, 'baz': False},
     ),
     (
         'Simple_3',
         {'foo': int | InitializerConfig, 'bar': float, 'baz': bool},
-        {'foo': 10, 'bar': 15.0},
+        {'foo': 10, 'bar': 15.0, 'baz': False},
         {},
         {'foo': 10, 'bar': 15.0, 'baz': False},
     ),
     (
         'Nested_1',
         {'foo': int, 'bar': float, 'baz': bool, 'config': {'foo': int, 'bar': float, 'baz': bool}},
-        {'foo': 10, 'bar': 15.0, 'baz': True},
+        {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 0, 'bar': 0, 'baz': False}},
         {},
         {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 0, 'bar': 0, 'baz': False}},
     ),
     (
         'Nested_2',
         {'foo': int, 'bar': float, 'baz': bool, 'config': {'foo': int, 'bar': float, 'baz': bool}},
-        {'foo': 10, 'bar': 15.0, 'baz': True, 'config': '__SELF_CLS__'},
+        {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 0, 'bar': 0, 'baz': False}},
         {},
         {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 0, 'bar': 0, 'baz': False}},
     ),
     (
         'Nested_3',
         {'foo': int, 'bar': float, 'baz': bool, 'config': {'foo': int, 'bar': float, 'baz': bool, 'config': {'foo': int, 'bar': float, 'baz': bool}}},
-        {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 10, 'bar': 15.0, 'baz': True, 'config': '__SELF_CLS__'}},
+        {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 0, 'bar': 0, 'baz': False}}},
         {},
         {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 0, 'bar': 0, 'baz': False}}},
     ),
     (
         'Simple_Kwargs_1',
         {'foo': int, 'bar': float, 'baz': bool},
-        {'foo': 10, 'bar': 15.0},
+        {'foo': 10, 'bar': 15.0, 'baz': False},
         {'foo': 1},
         {'foo': 1, 'bar': 15.0, 'baz': False},
     ),
@@ -146,108 +148,94 @@ data_test_success = [
     (
         'Simple_Kwargs_6',
         {'foo': int, 'bar': float, 'baz': bool, 'config': {'foo': int, 'bar': float, 'baz': bool, 'config': {'foo': int, 'bar': float, 'baz': bool}}},
-        {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 10, 'bar': 15.0, 'baz': True}}},
+        {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': None, 'bar': 15.0, 'baz': True, 'config': {'foo': None, 'bar': 15.0, 'baz': True}}},
         {'_s_foo': 1},
         {'foo': 1, 'bar': 15.0, 'baz': True, 'config': {'foo': 1, 'bar': 15.0, 'baz': True, 'config': {'foo': 1, 'bar': 15.0, 'baz': True}}},
     ),
     (
         'ConfigInit_Kwargs_1',
         {'foo': int, 'bar': float, 'baz': bool, 'config': {'foo': int, 'bar': float, 'baz': bool, 'config': {'foo': int, 'bar': float, 'baz': bool}}},
-        {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 10, 'bar': 15.0, 'baz': True, 'config': '__SELF_CLS_INIT__'}},
+        {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 0, 'bar': 0.0, 'baz': False}}},
         {'foo': 1},
         {'foo': 1, 'bar': 15.0, 'baz': True, 'config': {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 0, 'bar': 0.0, 'baz': False}}},
     ),
     (
         'ConfigInit_Kwargs_2',
         {'foo': int, 'bar': float, 'baz': bool, 'config': {'foo': int, 'bar': float, 'baz': bool, 'config': {'foo': int, 'bar': float, 'baz': bool}}},
-        {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 10, 'bar': 15.0, 'baz': True, 'config': '__SELF_CLS_INIT__'}},
+        {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 0, 'bar': 0.0, 'baz': False}}},
         {'config__foo': 1},
         {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 1, 'bar': 15.0, 'baz': True, 'config': {'foo': 0, 'bar': 0.0, 'baz': False}}},
     ),
     (
         'ConfigInit_Kwargs_3',
         {'foo': int, 'bar': float, 'baz': bool, 'config': {'foo': int, 'bar': float, 'baz': bool, 'config': {'foo': int, 'bar': float, 'baz': bool}}},
-        {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 10, 'bar': 15.0, 'baz': True, 'config': '__SELF_CLS_INIT__'}},
+        {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 0, 'bar': 0.0, 'baz': False}}},
         {'config__config__foo': 1},
         {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 1, 'bar': 0.0, 'baz': False}}},
     ),
     (
         'ConfigInit_Kwargs_4',
         {'foo': int, 'bar': float, 'baz': bool, 'config': {'foo': int, 'bar': float, 'baz': bool, 'config': {'foo': int, 'bar': float, 'baz': bool}}},
-        {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': 10, 'bar': 15.0, 'baz': True, 'config': '__SELF_CLS_INIT__'}},
+        {'foo': 10, 'bar': 15.0, 'baz': True, 'config': {'foo': None, 'bar': 15.0, 'baz': True, 'config': {'foo': None, 'bar': 0.0, 'baz': False}}},
         {'_s_foo': 1},
         {'foo': 1, 'bar': 15.0, 'baz': True, 'config': {'foo': 1, 'bar': 15.0, 'baz': True, 'config': {'foo': 1, 'bar': 0.0, 'baz': False}}},
     ),
     (
         'Init_1',
-        {'foo': int, 'bar': Initializer},
-        {'foo': 10, 'bar': ConstantInitializer},
+        {'foo': int, 'bar': InitializerConfig},
+        {'foo': 10, 'bar': ConstantInitializerConfig},
         {},
-        {'foo': 10, 'bar': ConstantInitializerConfig().get_kwargs()},
+        {'foo': 10, 'bar': ConstantInitializerConfig().to_dict()},
     ),
     (
         'Init_2',
-        {'foo': int, 'bar': Initializer},
-        {'foo': 10, 'bar': ConstantInitializer(scale=2, max_value=4)},
+        {'foo': int, 'bar': InitializerConfig},
+        {'foo': 10, 'bar': ConstantInitializerConfig()},
         {},
-        {'foo': 10, 'bar': ConstantInitializerConfig(scale=2, max_value=4).get_kwargs()},
+        {'foo': 10, 'bar': ConstantInitializerConfig().to_dict()},
     ),
     (
         'Init_3',
-        {'foo': int, 'bar': Initializer},
-        {'foo': 10, 'bar': ConstantInitializerConfig},
+        {'foo': int, 'bar': InitializerConfig},
+        {'foo': 10, 'bar': {'scale':2, 'max_value':4}},
         {},
-        {'foo': 10, 'bar': ConstantInitializerConfig().get_kwargs()},
+        {'foo': 10, 'bar': ConstantInitializerConfig(scale=2, max_value=4).to_dict()},
     ),
     (
         'Init_4',
-        {'foo': int, 'bar': Initializer},
+        {'foo': int, 'bar': InitializerConfig},
         {'foo': 10, 'bar': ConstantInitializerConfig(scale=2, max_value=4)},
         {},
-        {'foo': 10, 'bar': ConstantInitializerConfig(scale=2, max_value=4).get_kwargs()},
+        {'foo': 10, 'bar': ConstantInitializerConfig(scale=2, max_value=4).to_dict()},
     ),
     (
         'Init_5',
-        {'foo': int, 'bar': Initializer},
-        {'foo': 10, 'bar': dc.field(default=ConstantInitializer)},
+        {'foo': int, 'bar': InitializerConfig},
+        {'foo': 10, 'bar': dc.field(default=ConstantInitializerConfig)},
         {},
-        {'foo': 10, 'bar': ConstantInitializerConfig().get_kwargs()},
+        {'foo': 10, 'bar': ConstantInitializerConfig().to_dict()},
     ),
     (
         'Init_6',
-        {'foo': int, 'bar': Initializer},
-        {'foo': 10, 'bar': dc.field(default_factory=ConstantInitializer)},
+        {'foo': int, 'bar': InitializerConfig},
+        {'foo': 10, 'bar': dc.field(default=ConstantInitializerConfig())},
         {},
-        {'foo': 10, 'bar': ConstantInitializerConfig().get_kwargs()},
+        {'foo': 10, 'bar': ConstantInitializerConfig().to_dict()},
     ),
     (
         'Init_7',
-        {'foo': int, 'bar': Initializer},
-        {'foo': 10, 'bar': dc.field(default=ConstantInitializerConfig)},
+        {'foo': int, 'bar': InitializerConfig},
+        {'foo': 10, 'bar': dc.field(default_factory=ConstantInitializerConfig)},
         {},
-        {'foo': 10, 'bar': ConstantInitializerConfig().get_kwargs()},
+        {'foo': 10, 'bar': ConstantInitializerConfig().to_dict()},
     ),
     (
         'Init_8',
-        {'foo': int, 'bar': Initializer},
-        {'foo': 10, 'bar': dc.field(default_factory=ConstantInitializerConfig)},
+        {'foo': int, 'bar': InitializerConfig},
+        {'foo': 10, 'bar':  dc.field(default=ConstantInitializerConfig(scale=2, max_value=4))},
         {},
-        {'foo': 10, 'bar': ConstantInitializerConfig().get_kwargs()},
+        {'foo': 10, 'bar': ConstantInitializerConfig(scale=2, max_value=4).to_dict()},
     ),
-    (
-        'Init_9',
-        {'foo': int, 'bar': Initializer},
-        {'foo': 10, 'bar':  dc.field(default=ConstantInitializer(scale=2, max_value=4))},
-        {},
-        {'foo': 10, 'bar': ConstantInitializerConfig(scale=2, max_value=4).get_kwargs()},
-    ),
-    (
-        'Init_10',
-        {'foo': int, 'bar': Initializer},
-        {'foo': 10, 'bar': dc.field(default=ConstantInitializerConfig(scale=2, max_value=4))},
-        {},
-        {'foo': 10, 'bar': ConstantInitializerConfig(scale=2, max_value=4).get_kwargs()},
-    )
 ]
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -262,7 +250,7 @@ def test_spark_config_success(name, annotations, defaults, init_kwargs, expected
     # Instantiate class with custom init kwargs
     c = DynamicConfig(**init_kwargs)
     # Compare class content with expected dictionary
-    assert c.get_kwargs() == expected
+    assert c.to_dict() == expected
     
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

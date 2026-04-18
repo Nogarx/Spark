@@ -75,7 +75,9 @@ class AbstractNode(BaseNode, abc.ABC):
         getattr(self, target_spec)
         # Sanity checks
         if not port_name in getattr(self, target_spec):
-            raise ValueError(f'{spec.capitalize()} specs does not define an input port named "{port_name}"')
+            raise ValueError(
+                f'{spec.capitalize()} specs does not define an input port named "{port_name}"'
+            )
         # Update port
         errors, info = [], []
         if payload_type:

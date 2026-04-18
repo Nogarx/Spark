@@ -25,6 +25,7 @@ from spark.core.payloads import SparkPayload, SpikeArray
 from spark.core.decorators import spark_property
 from spark.core.typing import is_object_of_type
 from spark.core.config_validation import TypeValidator, PositiveValidator
+from spark.core.flax_imports import data as set_data_fn
 
 # TODO: Currently inputs and effects require the ports to be defined inside a list. 
 # This is not ideal from the point of view of user, it makes everything slightly more annoying that it needs.
@@ -71,9 +72,9 @@ class ControllerConfig(SparkConfig):
     # This solution is probably good enough but it is not clear that will not clash with other user intentions.
     # A similar situation is present in Neuron.__post_init__
     def __post_init__(self,) -> None:
-        super().__post_init__()
+        pass
         # Synchronize dt's. NOTE: Skip validation, otherwise will fall into an infinite loop.
-        self.merge(partial={'_s_dt':self.dt}, skip_validation=True)
+        #self = self.merge(_s_dt=self.dt)
 
 ConfigT = tp.TypeVar("ConfigT", bound=ControllerConfig)
 
@@ -111,16 +112,23 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         if config is None:
             self.config = self.default_config(**kwargs)
         else:
-            self.config = copy.deepcopy(config)
-            self.config.merge(partial=kwargs)
+            self.config = config.merge(**kwargs)
         # Rng
         seed = getattr(self.config, 'seed', None)
         if seed is not None:
             self._seed = seed
             # Random engine key.
             self.rng = Variable(jax.random.PRNGKey(self._seed))
-        # Input validation
-        assert is_object_of_type(self.config.modules_specs, list[ModuleSpecs]), 'Invalid modules list'
+        # Quick spec validation
+        if not isinstance(self.config.modules_specs, tp.Iterable):
+            raise RuntimeError(
+                'Invalid modules list: "modules_specs" must of type Iterable.'
+            )
+        else:
+            if any([not isinstance(t, ModuleSpecs) for t in self.config.modules_specs]):
+                raise RuntimeError(
+                    'Invalid modules list: all elements of "modules_specs" must of type ModuleSpecs.'
+                )
         # Get specs and perform basic validation
         input_specs, output_specs = self._validate_modules(self.config.modules_specs)
         self._controller_input_specs = input_specs

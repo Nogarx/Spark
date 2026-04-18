@@ -92,8 +92,8 @@ class Plasticity(Component, tp.Generic[ConfigT]):
             Parses a config parameter into a JAX array matching the synapse configuration
         """
         # Resolve variable raw value
-        if isinstance(variable, InitializableField):
-            _var = variable.init(key=self.get_rng_keys(1), shape=shape, dtype=dtype)
+        if callable(variable):
+            _var = variable(key=self.get_rng_keys(1), shape=shape, dtype=dtype)
         else:
             _var = variable
         # Construct jax.Array

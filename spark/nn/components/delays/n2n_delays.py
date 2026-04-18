@@ -80,9 +80,12 @@ class N2NDelays(Delays):
         self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
         self._current_idx = Variable(0, dtype=jnp.int32)
         # Initialize kernel
-        delays_kernel = self.config.delays.init(
-            init_kwargs = {'scale':self._buffer_size+1, 'min_value':1,},
-            key=self.get_rng_keys(1), shape=self._kernel_shape, dtype=jnp.uint8,
+        delays_kernel = self.config.init.delays(
+            key=self.get_rng_keys(1), 
+            shape=self._kernel_shape, 
+            dtype=jnp.uint8,
+            scale=self._buffer_size+1, 
+            min_value=1,
         )
         self._kernel = Constant(delays_kernel, dtype=jnp.uint8)
 

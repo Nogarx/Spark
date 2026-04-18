@@ -30,8 +30,8 @@ class TopologicalSpikerConfig(InputInterfaceConfig):
         Base TopologicalSpiker configuration class.
     """
     
-    glue: jax.Array | Initializer = dc.field(
-        default_factory = lambda: jnp.array(0), 
+    glue: int | jax.Array | Initializer = dc.field(
+        default = 0, 
         metadata = {
             'validators': [
                 TypeValidator,
@@ -42,8 +42,8 @@ class TopologicalSpikerConfig(InputInterfaceConfig):
                             It may be either an array with a single element or \
                             an array with the same dimensionality as the input vector.',
         })
-    mins: jax.Array | Initializer = dc.field(
-        default_factory = lambda: jnp.array(0), 
+    mins: int | jax.Array | Initializer = dc.field(
+        default = 0, 
         metadata = {
             'validators': [
                 TypeValidator,
@@ -51,8 +51,8 @@ class TopologicalSpikerConfig(InputInterfaceConfig):
             'description': 'Minimum value for the rescaling factor. It may be either an array with a single element or \
                             an array with the same dimensionality as the input vector.',
         })
-    maxs: jax.Array | Initializer = dc.field(
-        default_factory = lambda: jnp.array(1), 
+    maxs: int | jax.Array | Initializer = dc.field(
+        default = 1, 
         metadata = {
             'validators': [
                 TypeValidator,
@@ -121,9 +121,9 @@ class TopologicalPoissonSpiker(InputInterface):
         self.max_freq = self.config.max_freq
         self.sigma = self.config.sigma
         self._scale = self._dt * (self.max_freq / 1000)
-        self._glue = Constant(self.config.glue, dtype=jnp.bool_)
-        self._mins = Constant(self.config.mins, dtype=self._dtype)
-        self._maxs = Constant(self.config.maxs, dtype=self._dtype)
+        self._glue = Constant(self.config.init.glue(), dtype=jnp.bool_)
+        self._mins = Constant(self.config.init.mins(), dtype=self._dtype)
+        self._maxs = Constant(self.config.init.maxs(), dtype=self._dtype)
         self._sigma = Constant(self.sigma, dtype=self._dtype)
 
 
@@ -199,9 +199,9 @@ class TopologicalLinearSpiker(InputInterface):
         self.cd = self.config.cd
         self.max_freq = self.config.max_freq
         self.sigma = self.config.sigma
-        self._glue = Constant(self.config.glue, dtype=jnp.bool_)
-        self._mins = Constant(self.config.mins, dtype=self._dtype)
-        self._maxs = Constant(self.config.maxs, dtype=self._dtype)
+        self._glue = Constant(self.config.init.glue(), dtype=jnp.bool_)
+        self._mins = Constant(self.config.init.glue(), dtype=self._dtype)
+        self._maxs = Constant(self.config.init.glue(), dtype=self._dtype)
         self._sigma = Constant(self.sigma, dtype=self._dtype)
         exp_term = jnp.exp((1/self.tau) * ((1000-self.cd*self.max_freq) / self.max_freq)) # dt cancels out
         scale = ((1 / (exp_term - 1)) + 1)

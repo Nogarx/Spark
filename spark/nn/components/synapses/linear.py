@@ -89,7 +89,7 @@ class LinearSynapses(Synapses):
         self._real_input_shape = self._input_shape[len(self._output_shape):] if self.async_spikes else self._input_shape
         self._sum_axes = tuple(range(len(self._output_shape), len(self._output_shape)+len(self._real_input_shape)))
         # Initialize kernel
-        kernel = self.config.kernel.init(
+        kernel = self.config.init.kernel(
             init_kwargs = {'norm_axes': tuple(s for s in range(len(self._output_shape))),},
             key=self.get_rng_keys(1), shape=self._output_shape+self._real_input_shape, dtype=self._dtype,
         )

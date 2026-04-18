@@ -288,18 +288,40 @@ class ModuleSpecs:
         """
             Deserialize dictionary to ModuleSpecs
         """
-        module_cls = dct.get('module_cls', None)
+        # Name
+        name = dct.get('name', None)
+        if name is None:
+            raise ValueError(
+                'ModuleSpecs name cannot be "None".'
+            )
+        # Module
+        module_cls: SparkModule = dct.get('module_cls', None)
+        # Config
+        config_cls: SparkConfig = module_cls.get_config_spec()
         config = dct.get('config', None)
-        #config_fn = lambda x: module_cls.get_config_spec().partial(**x) if is_partial else module_cls.get_config_spec()(**x)
-        #config = config_fn(config) if isinstance(config, dict) else config
+        config = config_cls.from_dict(config) if isinstance(config, dict) else config
+        # Inputs
+        inputs = dct.get('inputs', {})
+        for key, port_list in inputs.items():
+            inputs[key] = [
+                PortMap.from_dict(port) if isinstance(port, dict) else port for port in port_list
+            ]
+        # Outputs
+        outputs = dct.get('outputs', {})
+        # Effects
+        effects = dct.get('effects', {})
+        for key, port_list in effects.items():
+            effects[key] = [
+                PortMap.from_dict(port) if isinstance(port, dict) else port for port in port_list
+            ]
         # Reconstruct spec
         return cls(
-            name=dct.get('name', None), 
+            name=name, 
             module_cls=module_cls,
-            inputs=dct.get('inputs', None),
+            inputs=inputs,
             config=config,
-            outputs=dct.get('outputs', None),
-            effects=dct.get('effects', None),
+            outputs=outputs,
+            effects=effects,
         )
         
 #################################################################################################################################################

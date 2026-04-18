@@ -47,13 +47,13 @@ data_test = [
     # Control interfaces
     (
         spark.nn.interfaces.Concat, 
-        {'inputs': [spark.FloatArray(jnp.array(np.random.rand(*s), dtype=jnp.float16)) for s in [(5,5,5),(50,),(10,10)]],}, 
-        {'num_inputs':3, 'payload_type':spark.SpikeArray,}
+        {f'input_{idx}': spark.FloatArray(jnp.array(np.random.rand(*s), dtype=jnp.float16)) for idx, s in enumerate([(5,5,5),(50,),(10,10)])}, 
+        {},
     ),
     (
         spark.nn.interfaces.ConcatReshape, 
-        {'inputs': [spark.FloatArray(jnp.array(np.random.rand(*s), dtype=jnp.float16)) for s in [(5,5,4),(10,10),(100,)]],}, 
-        {'num_inputs':3, 'reshape':(30,10), 'payload_type':spark.SpikeArray,}
+        {f'input_{idx}': spark.FloatArray(jnp.array(np.random.rand(*s), dtype=jnp.float16)) for idx, s in enumerate([(5,5,4),(10,10),(100,)])}, 
+        {'reshape':(30,10)}
     ),
     (
         spark.nn.interfaces.Sampler, 
@@ -193,34 +193,13 @@ data_test = [
         }, 
         {'units':(2,3),}
     ),
-    # Neurons
-    (
-        spark.nn.neurons_OLD.LIFNeuron, 
-        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
-        {'_s_units':(2,3),}
-    ),
-    (
-        spark.nn.neurons_OLD.LIFNeuron, 
-        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
-        {'_s_units':(2,3),}
-    ),
-    (
-        spark.nn.neurons_OLD.ALIFNeuron, 
-        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
-        {'_s_units':(2,3),}
-    ),
-    (
-        spark.nn.neurons_OLD.ALIFNeuron, 
-        {'in_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),}, 
-        {'_s_units':(2,3),}
-    ),
 ]
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@jax.jit
+@spark.jit
 def run_module_simplified(
-        module: spark.nn.Brain, 
+        module: spark.nn.Module, 
         module_inputs: dict
     ) -> tuple[dict[str, spark.SparkPayload], spark.nn.Module]:
     s = module(**module_inputs)
@@ -248,9 +227,9 @@ def run_jax_jit_simplified(
 @jax.jit
 def run_module_split(
         graph: nnx.GraphDef, 
-        state: nnx.GraphState | nnx.VariableState, 
+        state: nnx.State, 
         module_inputs: dict
-    ) -> tuple[dict[str, spark.SparkPayload], nnx.GraphState | nnx.VariableState]:
+    ) -> tuple[dict[str, spark.SparkPayload], nnx.State]:
     module = spark.merge(graph, state)
     s = module(**module_inputs)
     _, state = spark.split((module))

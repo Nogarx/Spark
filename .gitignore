@@ -1,9 +1,8 @@
 _run_tests.py
 .env/
 .env_docs/
-.env_benchmarks/
-hidden/
-Spark_paper/
+test.ipynb
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

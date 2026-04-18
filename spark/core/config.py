@@ -8,6 +8,7 @@ import jax
 import copy
 import lzma
 import json
+import inspect
 import logging
 import warnings
 import numpy as np
@@ -72,6 +73,65 @@ def unflatten_kwargs(kwargs: dict[str, tp.Any], __nested_delimiter__: str = '__'
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class _InitNamespace:
+	"""
+		Proxy namespace to handle dynamic parameter injection.
+	"""
+
+	def __init__(self, instance) -> None:
+		self._instance = instance
+
+	# NOTE: Partial autocomplete for dynamic interpreters
+	def __dir__(self) -> list[str]:
+		return [f.name for f in dc.fields(self._instance)]
+
+	def __getattr__(self, attr_name: str) -> tp.Callable[..., ArrayLike]:
+
+		# Validate attr_name
+		if not hasattr(self._instance, attr_name):
+			raise AttributeError(
+				f'{type(self._instance).__name__} has no attribute "{attr_name}".'
+			)
+		# Get attribute
+		raw_attribute = getattr(self._instance, attr_name)
+		# Generate callable method
+		def field_init(**kwargs) -> ArrayLike:
+			from spark.nn.initializers import Initializer, InitializerConfig 
+			if isinstance(raw_attribute, InitializerConfig):
+				# Filter intializer kwargs
+				valid_config_fields = [f.name for f in dc.fields(raw_attribute)]
+				init_config_kwargs = {k:v for k,v in kwargs.items() if k in valid_config_fields}
+				# Create initializer
+				initializer = raw_attribute.class_ref(**init_config_kwargs)
+				# Filter call kwargs
+				valid_init_kwargs = [k for k in inspect.signature(initializer).parameters]
+				init_call_kwargs = {k:v for k,v in kwargs.items() if k in valid_init_kwargs}
+				# Execute method
+				return initializer(**init_call_kwargs)
+			elif isinstance(raw_attribute, Initializer):
+				# Filter call kwargs
+				valid_init_kwargs = [k for k in inspect.signature(raw_attribute).parameters]
+				init_call_kwargs = {k:v for k,v in kwargs.items() if k in valid_init_kwargs}
+				return raw_attribute(**init_call_kwargs)
+			elif isinstance(raw_attribute, SparkConfig):
+				return raw_attribute.merge(**kwargs)
+			elif callable(raw_attribute):
+				# Filter call kwargs
+				valid_fn_kwargs = [k for k in inspect.signature(raw_attribute).parameters]
+				fn_call_kwargs = {k:v for k,v in kwargs.items() if k in valid_fn_kwargs}
+				# Execute method
+				return raw_attribute(**fn_call_kwargs)
+			else:
+				# Method is a simple instance
+				return raw_attribute
+		# NOTE: Wrap method for partial autocomplete for dynamic interpreters
+		if callable(raw_attribute):
+			field_init = wraps(raw_attribute)(field_init)
+
+		return field_init
+	
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class SparkConfigMeta(abc.ABCMeta):
 	"""
 		Spark Configuration Metaclass
@@ -90,6 +150,9 @@ class SparkConfigMeta(abc.ABCMeta):
 		# Iterate over annotations.
 		annotations: dict[str, tp.Any] = dct.get('__annotations__', {})
 		for attr_name, attr_type in annotations.items():
+			# Ignore dunder methods
+			if attr_name.startswith('__'):
+				continue
 			# Parse valid types.
 			attr_typehints = cls._valid_types(attr_type)
 			valid_types = {'valid_types': attr_typehints}
@@ -130,26 +193,84 @@ class SparkConfigMeta(abc.ABCMeta):
 		init_method = getattr(cls, '__init__', None)
 		@wraps(init_method)
 		def wrapped_init(self, **kwargs) -> None:
-			# Filter fields
-			valid_fields = {f.name: f for f in dc.fields(cls)}
+			from spark.core.specs import ModuleSpecs
+			# Parse kwargs
+			raw_shared = {k:v for k,v in kwargs.items() if k.startswith('_s_')}
+			clean_shared_kwargs = {k[len('_s_'):]:v for k,v in kwargs.items() if k.startswith('_s_')}
 			_kwargs = unflatten_kwargs(kwargs)
 			clean_kwargs = {}
-			for key, value in _kwargs.items():
-				# Remove invalid fields
-				if not key in valid_fields.keys():
+			# Filter invalid fields
+			for field in dc.fields(cls):
+				key = field.name
+
+				# Check for module specs
+				# TODO: field.type is str, so we re we need to check for 'list[ModuleSpecs]', which is not ideal 
+				if field.type in ['list[ModuleSpecs]', 'tuple[ModuleSpecs]']:
+					module_specs_list = []
+					# Get specs_list
+					default_specs_list = _kwargs.get(field.name, None)
+					if default_specs_list is None:
+						default_specs_list = field.default if not field.default is dc.MISSING else field.default_factory()
+					for module_spec in default_specs_list:
+						module_spec = copy.deepcopy(module_spec)
+						if isinstance(module_spec, dict):
+							module_spec = ModuleSpecs.from_dict(module_spec)
+						# Update spec config
+						if dc.is_dataclass(module_spec.config):
+							module_spec.config = module_spec.config.merge(**raw_shared)
+						elif callable(module_spec.config):
+							module_spec.config = module_spec.config(**raw_shared)
+						module_specs_list.append(module_spec)
+					# Update spec list
+					clean_kwargs[key] = module_specs_list
 					continue
-				field = valid_fields[key]
-				# Attribute is a config, forward kwargs and rebuild it
-				if dc.is_dataclass(field.default) and (isinstance(value, dict) or dc.is_dataclass(value)) :
-					value_dict = dc.asdict(value) if dc.is_dataclass(value) else value
-					clean_kwargs[key] = type(field.default)(**{**dc.asdict(field.default), **value_dict})
-				# Attribute defines factory, forward kwargs and rebuild it
-				elif (not field.default_factory is dc.MISSING) and (isinstance(value, dict) or dc.is_dataclass(value)):
-					value_dict = dc.asdict(value) if dc.is_dataclass(value) else value
-					clean_kwargs[key] = field.default_factory(**value_dict)
+
+				# Common fields
+				if key in _kwargs.keys():
+					value = _kwargs[key]
+					# Attribute is a config, forward kwargs and rebuild it
+					if dc.is_dataclass(field.default) and (isinstance(value, dict) or dc.is_dataclass(value)) :
+						value_dict = dc.asdict(value) if dc.is_dataclass(value) else value
+						value_dict = {k:v for k,v in value_dict.items() if not v is None}
+						clean_kwargs[key] = type(field.default)(**(dc.asdict(field.default) | raw_shared | value_dict))
+					# Attribute defines factory, forward kwargs and rebuild it
+					elif (not field.default_factory is dc.MISSING) and (isinstance(value, dict) or dc.is_dataclass(value)):
+						value_dict = dc.asdict(value) if dc.is_dataclass(value) else value
+						value_dict = {k:v for k,v in value_dict.items() if not v is None}
+						try:
+							# Is this a Config factory?
+							clean_kwargs[key] = field.default_factory(**(raw_shared | value_dict))
+						except:
+							# Or a simple factory? ¯\_(ツ)_/¯
+							valid_fn_kwargs = [k for k in inspect.signature(field.default_factory).parameters]
+							fn_call_kwargs = {k:v for k,v in value_dict.items() if k in valid_fn_kwargs}
+							clean_kwargs[key] = field.default_factory(**fn_call_kwargs)
+					else:
+						# Parameter is a simple attribute
+						if key in clean_shared_kwargs and value is None:
+							clean_kwargs[key] = clean_shared_kwargs[key]
+						else:
+							clean_kwargs[key] = value
 				else:
-					# Parameter is a simple attribute
-					clean_kwargs[key] = value
+					# Attribute is a config, forward kwargs and rebuild it
+					if dc.is_dataclass(field.default):
+						clean_kwargs[key] = type(field.default)(**(dc.asdict(field.default) | raw_shared))
+					# Attribute defines factory, forward kwargs and rebuild it
+					elif (not field.default_factory is dc.MISSING):
+						try:
+							# Is this a Config factory?
+							clean_kwargs[key] = field.default_factory(**raw_shared)
+						except:
+							# Or a simple factory? ¯\_(ツ)_/¯
+							clean_kwargs[key] = field.default_factory()
+			# Map mutable to lambdas
+			for key, value in clean_kwargs.items():
+				# NOTE: We need to crystalize iterables of ModuleSpecs
+				if isinstance(value, (list, set)):
+					clean_kwargs[key] = tuple(value)
+				if isinstance(value, (dict, jax.Array, np.ndarray)):
+					clean_kwargs[key] = lambda v=value, **kwargs: copy.deepcopy(v)
+			# Call init with clean args
 			return init_method(self, **clean_kwargs)
 		setattr(cls, '__init__', wrapped_init)
 
@@ -163,10 +284,6 @@ class SparkConfigMeta(abc.ABCMeta):
 			Method to parse annotations for the attributes
 		"""
 		return normalize_typehint(attr_type)
-		if isinstance(attr_type, str):
-			raise RuntimeError(f'_valid_types got an str "{attr_type}".')
-		else:
-			return normalize_typehint(attr_type)
 		
 	def _get_default_and_factory(attr_value, attr_type) -> tuple[tp.Any, tp.Any]:
 		"""
@@ -184,6 +301,15 @@ class SparkConfigMeta(abc.ABCMeta):
 				default, factory = dc.MISSING, dc.MISSING
 		else:
 			default, factory = attr_value, dc.MISSING
+		# Post process factories to allow for any kwargs
+		if not factory is dc.MISSING:
+			if not dc.is_dataclass(factory):
+				# Create a simple kwargs around the factory
+				def _clean_factory(fn, **kwargs) -> tp.Callable[..., tp.Any]:
+					valid_fn_kwargs = [k for k in inspect.signature(factory).parameters]
+					fn_call_kwargs = {k:v for k,v in kwargs.items() if k in valid_fn_kwargs}
+					return fn(**fn_call_kwargs)
+				factory = lambda fn=factory, **kwargs: _clean_factory(fn, **kwargs)
 		# Dtypes
 		if utils.is_dtype(default):
 			pass
@@ -192,9 +318,10 @@ class SparkConfigMeta(abc.ABCMeta):
 			factory = lambda v=default, **kwargs: v(**kwargs)
 			default = dc.MISSING
 		# Mutable data structures
-		elif isinstance(default, (list, dict, set, ArrayLike)):
-			factory = lambda v=default: copy.deepcopy(v)
+		elif isinstance(default, (list, dict, set, jax.Array, np.ndarray)):
+			factory = lambda v=default, **kwargs: copy.deepcopy(v)
 			default = dc.MISSING
+
 		return default, factory
 		
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -211,6 +338,14 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 			if field.default is dc.MISSING and field.default_factory is dc.MISSING and (not field.name in kwargs):
 				kwargs[field.name] = None
 		return cls(**kwargs)
+
+	def merge(self, **kwargs) -> 'SparkConfig':
+		_self = self.to_dict()
+		return type(self)(**(_self | kwargs))
+
+	@property
+	def init(self,):
+		return _InitNamespace(self,)
 
 	# TODO: This method is not ideal. It solves the module association problem in a very brittle way. 
 	# There should be another better pattern for this problem.
@@ -397,7 +532,16 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 		"""
 			Serialize config to dictionary
 		"""
-		return dc.asdict(self)
+
+		def _clean_dict(dct: dict[str, tp.Any]):
+			for k in list(dct.keys()):
+				if k.startswith('__'):
+					dct.pop(k)
+				elif isinstance(dct[k], dict):
+					dct[k] = _clean_dict(dct[k])
+			return dct
+
+		return _clean_dict(dc.asdict(self))
 
 
 

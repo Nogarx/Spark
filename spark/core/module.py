@@ -23,6 +23,7 @@ from spark.core.specs import PortSpecs
 from spark.core.config import SparkConfig
 from spark.core.variables import Variable
 from spark.core.decorators import spark_property
+from spark.core.flax_imports import data as set_data_fn
 
 # TODO: Support for list[SparkPayloads] was implemented in a wacky manner and 
 # may have damage several parts of the module. This needs to be further validated. 
@@ -123,8 +124,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         if config is None:
             self.config = self.default_config(**kwargs)
         else:
-            self.config = copy.deepcopy(config)
-            self.config.merge(partial=kwargs)
+            self.config = config.merge(**kwargs)
         # Define default parameters.
         self.name = name if name else self.__class__.__name__
         dtype = getattr(self.config, 'dtype', None)
@@ -161,6 +161,12 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         """
             Triggers the shape inference and parameter initialization cascade.
         """
+        # Override signatures 
+        # NOTE: This is a particular case for modules that expect abstract variadic positional arguments. 
+        # I am looking at you Concat (╯°□°）╯︵ ┻━┻.
+        if hasattr(self, '_overwrite_call_signature'):
+            self._overwrite_call_signature(abc_args, kwargs)
+
         # Bind arguments to avoid parameter mixing.
         call_signature = inspect.signature(self.__call__)
         try:
@@ -181,11 +187,10 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         self.build(self._input_specs)
         self.__built__ = True
         # Construct mock input to compute the module output shapes.
-        from spark.core.payloads import ValueSparkPayload
-        mock_input = {}
-        for key, value in self._input_specs.items():
-            mock_input[key] = value._create_mock_input()
-
+        mock_input = {
+            key: value._create_mock_input() for key, value in self._input_specs.items()
+        }
+        
         # TODO: The correct approach to build the model is through eval_shape. 
         # However, the SpikeArray doesn't know how to deal with ShapeDtypeStruct's
         #   -> _construct_output_specs() requestes the inhibitory mask from SpikeArray's.
@@ -332,19 +337,9 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                     f'Module "{self.name}" received an empty list for input "{key}". '
                     f'Shape and dtype inference cannot proceed without at least one element.'
                 )
-            # NOTE: This is a particular case for modules that expect abstract variadic positional arguments. 
-            # I am looking at you Concat (╯°□°）╯︵ ┻━┻.
             payload_type = input_specs[key].payload_type
-            if payload_type and payload_type.__name__ == 'SparkPayload':
-                payload_type = payload.__class__ if not isinstance(payload, list) else payload[0].__class__
-            else:
-                payload_type = input_specs[key].payload_type
-            if payload is not None:
-                shape = payload.shape if not isinstance(payload, list) else [p.shape for p in payload]
-                dtype = payload.dtype if not isinstance(payload, list) else payload[0].dtype
-            else:
-                shape = None
-                dtype = None
+            shape = payload.shape if payload is not None else None
+            dtype = payload.dtype if payload is not None else None
             # PortSpecs are immutable, we need to create a new one.
             input_specs[key] = PortSpecs(
                 payload_type=payload_type,
@@ -355,7 +350,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                 async_spikes=payload.async_spikes if isinstance(payload, SpikeArray) else None,
                 inhibition_mask=payload.inhibition_mask if isinstance(payload, SpikeArray) else None
             )
-        self._input_specs = nnx.data(input_specs)
+        self._input_specs = set_data_fn(input_specs)
 
 
 
@@ -385,7 +380,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                 async_spikes=output_payload.async_spikes if isinstance(output_payload, SpikeArray) else None,
                 inhibition_mask=output_payload.inhibition_mask if isinstance(output_payload, SpikeArray) else None
             )
-        self._output_specs = nnx.data(output_specs)
+        self._output_specs = set_data_fn(output_specs)
 
 
 
@@ -410,7 +405,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                 async_spikes=property_payload.async_spikes if isinstance(property_payload, SpikeArray) else None,
                 inhibition_mask=property_payload.inhibition_mask if isinstance(property_payload, SpikeArray) else None
             )
-        self._property_specs = nnx.data(property_specs)
+        self._property_specs = set_data_fn(property_specs)
         
 
 

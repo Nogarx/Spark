@@ -135,13 +135,13 @@ class IzhikevichSoma(Soma):
     def build(self, input_specs: dict[str, PortSpecs]) -> None:
         super().build(input_specs)
         # Initialize variables.
-        _potential_rest = self.config.potential_rest.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        _potential_reset = self.config.potential_reset.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        _recovery_update = self.config.recovery_update.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        _recovery_timescale = self.config.recovery_timescale.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        _recovery_sensitivity = self.config.recovery_sensitivity.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        _resistance = self.config.resistance.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        _threshold = self.config.threshold.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _potential_rest = self.config.init.potential_rest(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _potential_reset = self.config.init.potential_reset(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _recovery_update = self.config.init.recovery_update(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _recovery_timescale = self.config.init.recovery_timescale(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _recovery_sensitivity = self.config.init.recovery_sensitivity(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _resistance = self.config.init.resistance(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _threshold = self.config.init.threshold(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
         # Membrane. Substract potential_rest to potential related terms to rebase potential at zero.
         self.potential_rest = Constant(_potential_reset, dtype=self._dtype)
         self.potential_reset = Constant(_potential_reset - _potential_rest, dtype=self._dtype)

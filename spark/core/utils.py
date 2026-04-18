@@ -575,7 +575,9 @@ class TwoKeyDict(MutableMapping[_KT, _KT, _VT]):
         elif isinstance(value, dict):
             self._data[keys] = value
         else:
-            raise ValueError(f'Invalid keys: {keys} or value: {value}.')
+            raise ValueError(
+                f'Invalid keys: {keys} or value: {value}.'
+            )
 
     @tp.overload
     def __delitem__(self, keys: _KT) -> None: ...
