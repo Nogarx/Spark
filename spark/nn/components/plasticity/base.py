@@ -70,23 +70,25 @@ class Plasticity(Component, tp.Generic[ConfigT]):
         if getattr(self, '_synaptic_mask', None) is None:
             pre_spikes: SpikeArray = abc_args['pre_spikes']
             post_spikes: SpikeArray = abc_args['post_spikes']
-
-            post_inhibition_mask = post_spikes.inhibition_mask
-            if pre_spikes.async_spikes: 
-                _slice = post_inhibition_mask.ndim * (0,) + (pre_spikes.inhibition_mask.ndim - post_inhibition_mask.ndim) * (slice(None),)
-                pre_inhibition_mask = pre_spikes.inhibition_mask[_slice]
+            # Get shapes
+            pre_shape = pre_spikes.shape
+            post_shape = post_spikes.shape
+            # Reshape spikes to match kernel shape
+            # NOTE: Post spikes should never be async
+            if not pre_spikes.async_spikes:
+                pre_shape = (1,) * len(post_spikes.shape) + pre_spikes.shape
+                post_shape = post_spikes.shape + (1,) * len(pre_spikes.shape)
+                pre_inhibition_mask = pre_spikes.inhibition_mask.reshape(pre_shape)
+                post_inhibition_mask = post_spikes.inhibition_mask.reshape(post_shape)
             else:
-                pre_inhibition_mask = pre_spikes.inhibition_mask 
-            einsum_str = get_einsum_dot_exp_string(
-                post_inhibition_mask.shape, 
-                pre_inhibition_mask.shape, 
-                side='none'
-            )
+                post_shape = post_spikes.shape + (1,) * (len(pre_spikes.shape) - len(post_spikes.shape))
+                pre_inhibition_mask = pre_spikes.inhibition_mask
+                post_inhibition_mask = post_spikes.inhibition_mask.reshape(post_shape)
             synaptic_mask = (
-                + 0*jnp.einsum(einsum_str, 1-post_inhibition_mask, 1-pre_inhibition_mask)    # EE
-                + 1*jnp.einsum(einsum_str, 1-post_inhibition_mask, pre_inhibition_mask)      # EI
-                + 2*jnp.einsum(einsum_str, post_inhibition_mask, 1-pre_inhibition_mask)      # IE
-                + 3*jnp.einsum(einsum_str, post_inhibition_mask, pre_inhibition_mask)        # II
+                + 0 * (1-post_inhibition_mask) * (1-pre_inhibition_mask)    # EE
+                + 1 * (1-post_inhibition_mask) *    pre_inhibition_mask     # EI
+                + 2 *    post_inhibition_mask  * (1-pre_inhibition_mask)    # IE
+                + 3 *    post_inhibition_mask  *    pre_inhibition_mask     # II
             )
             self._synaptic_mask = Constant(synaptic_mask, dtype=jnp.uint8)
 

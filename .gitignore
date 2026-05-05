@@ -1,7 +1,6 @@
 _run_tests.py
 .env/
 .env_docs/
-test.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
