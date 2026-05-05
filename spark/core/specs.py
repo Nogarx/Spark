@@ -17,7 +17,6 @@ import dataclasses as dc
 import spark.core.utils as utils
 import spark.core.validation as validation
 from spark.core.variables import Constant
-from spark.core.typing import enforce_annotations
 from jax.typing import DTypeLike
 from spark.core.registry import REGISTRY
 from math import prod
