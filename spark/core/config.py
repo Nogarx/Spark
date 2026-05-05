@@ -100,7 +100,7 @@ class _InitNamespace:
 			if isinstance(raw_attribute, InitializerConfig):
 				# Filter intializer kwargs
 				valid_config_fields = [f.name for f in dc.fields(raw_attribute)]
-				init_config_kwargs = {k:v for k,v in kwargs.items() if k in valid_config_fields}
+				init_config_kwargs = raw_attribute.to_dict() | {k:v for k,v in kwargs.items() if k in valid_config_fields}
 				# Create initializer
 				initializer = raw_attribute.class_ref(**init_config_kwargs)
 				# Filter call kwargs
@@ -204,8 +204,8 @@ class SparkConfigMeta(abc.ABCMeta):
 				key = field.name
 
 				# Check for module specs
-				# TODO: field.type is str, so we re we need to check for 'list[ModuleSpecs]', which is not ideal 
-				if field.type in ['list[ModuleSpecs]', 'tuple[ModuleSpecs]']:
+				# TODO: field.type is str, so we re we need to check for 'tuple[ModuleSpecs, ...]', which is not ideal 
+				if field.type in ['tuple[ModuleSpecs, ...]', 'tuple[ModuleSpecs]']:
 					module_specs_list = []
 					# Get specs_list
 					default_specs_list = _kwargs.get(field.name, None)
@@ -411,6 +411,8 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 		"""
 		# Iterate over all defined fields of the dataclass
 		for f in dc.fields(self):
+			if f.name.startswith('__'):
+				continue
 			# Yield the field name and its corresponding value
 			value = getattr(self, f.name, None)
 			yield (f.name, value)
@@ -449,7 +451,7 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 				else:
 					# Module spec lists
 					if isinstance(value, (list, tuple)) and len(value) > 0 and all([isinstance(v, ModuleSpecs) for v in value]):
-						rep += (current_depth+1) * ' ' + f'{name}: list[ModuleSpecs]\n'
+						rep += (current_depth+1) * ' ' + f'{name}: tuple[ModuleSpecs, ...]\n'
 						for spec in value:
 							rep += spec.config._parse_tree_structure(current_depth+2, simplified=simplified, header=spec.name)
 						continue
@@ -502,7 +504,7 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 					new_seed = int(subkey._base_array[0])
 					# Rebuild nested config with new seed
 					setattr(_config, field.name, _with_new_seeds(getattr(_config, field.name), new_seed)) 
-				elif field.type is list[ModuleSpecs]:
+				elif field.type is tuple[ModuleSpecs, ...]:
 					module_specs_list = []
 					for module_spec in getattr(_config, field.name, []):
 						module_spec: ModuleSpecs = copy.deepcopy(module_spec)
@@ -558,9 +560,6 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 		"""
 			Export a config instance from a .scfg file.
 		"""
-		# Validate the config
-		# If partial is True, values with errors are replaced with a None.
-		#self.validate(is_partial=is_partial)
 		# Validate path
 		path = pl.Path(file_path)
 		# Ensure the parent directory exists.
@@ -578,15 +577,14 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 					f'Use the "register_config" decorator to add the class to the registry.'
 				)
 			# Add top config metadata
-			encoder_cls = SparkJSONEncoder #partial(SparkJSONEncoder, is_partial=is_partial)
-			json.dump(self, json_file, cls=encoder_cls, indent=4)
+			json.dump(self, json_file, cls=SparkJSONEncoder, indent=4)
 		if verbose:
 			print(f'Configuration saved to "{path}".')
 
 
 
 	@classmethod
-	def from_file(cls: type['SparkConfig'], file_path: str, is_partial: bool = False) -> 'SparkConfig':
+	def from_file(cls: type['SparkConfig'], file_path: str) -> 'SparkConfig':
 		"""
 			Create config instance from a .scfg file.
 		"""
@@ -604,8 +602,7 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 		with opener(path, mode, encoding='utf-8') as json_file:
 			# Try to decode
 			from spark.core.serializer import SparkJSONDecoder
-			decoder_cls = partial(SparkJSONDecoder, is_partial=is_partial)
-			obj = json.load(json_file, cls=decoder_cls) 
+			obj = json.load(json_file, cls=SparkJSONDecoder) 
 			if not _is_config_instance(obj):
 				raise TypeError(
 					f'Expected final object to be of type "SparkConfig" but after decoding the final object was of type "{obj.__class__}".'

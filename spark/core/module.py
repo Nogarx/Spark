@@ -25,10 +25,6 @@ from spark.core.variables import Variable
 from spark.core.decorators import spark_property
 from spark.core.flax_imports import data as set_data_fn
 
-# TODO: Support for list[SparkPayloads] was implemented in a wacky manner and 
-# may have damage several parts of the module. This needs to be further validated. 
-# Some checks that assumed that shape was a tuple may now not work properly.
-
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
@@ -157,20 +153,20 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
 
 
-    def _build(self, *abc_args: SparkPayload, **kwargs) -> None:
+    def _build(self, **abc_kwargs: SparkPayload) -> None:
         """
             Triggers the shape inference and parameter initialization cascade.
         """
         # Override signatures 
-        # NOTE: This is a particular case for modules that expect abstract variadic positional arguments. 
+        # NOTE: This is a particular case for modules that expect many abstract arguments. 
         # I am looking at you Concat (╯°□°）╯︵ ┻━┻.
         if hasattr(self, '_overwrite_call_signature'):
-            self._overwrite_call_signature(abc_args, kwargs)
+            self._overwrite_call_signature(abc_kwargs)
 
         # Bind arguments to avoid parameter mixing.
         call_signature = inspect.signature(self.__call__)
         try:
-            bound_args = call_signature.bind(*abc_args, **kwargs)
+            bound_args = call_signature.bind(**abc_kwargs)
             bound_args.apply_defaults()
         except TypeError as error:
             raise TypeError(f'Error binding arguments for "{self.name}": {error}') from error
@@ -182,15 +178,11 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # to maintain a custom _build method, which is not ideal right now due to the todo below. 
         # Initialize masks for plasticity
         if hasattr(self, '_initialize_synaptic_mask'):
-            self._initialize_synaptic_mask(self._input_specs)
+            self._initialize_synaptic_mask(**abc_kwargs)
         # Build model.
-        self.build(self._input_specs)
+        self.build(**abc_kwargs)
         self.__built__ = True
-        # Construct mock input to compute the module output shapes.
-        mock_input = {
-            key: value._create_mock_input() for key, value in self._input_specs.items()
-        }
-        
+
         # TODO: The correct approach to build the model is through eval_shape. 
         # However, the SpikeArray doesn't know how to deal with ShapeDtypeStruct's
         #   -> _construct_output_specs() requestes the inhibitory mask from SpikeArray's.
@@ -198,9 +190,9 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # Additionally, the current random generator mutates the object which is not allowed in eval_shape:
         #   -> Cannot mutate {type(self).__name__} from a different trace level
         # This probably requires handling both cases manually to tell them what to do with ShapeDtypeStruct / eval_shape
-        #abc_output = nnx.eval_shape(self.__call__, **mock_input)
-        # NOTE: workaround, just use the __call__ directly with some mock input and reset the module. 
-        abc_output = self.__call__(**mock_input)
+        #abc_output = nnx.eval_shape(self.__call__, **abc_kwargs)
+        # NOTE: workaround, just use the __call__ directly with the arg inputs and reset the module. 
+        abc_output = self.__call__(**abc_kwargs)
         self.reset()
 
         # Contruct output specs.
@@ -212,9 +204,9 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
     def recurrent_contract(
             self, 
-        ) -> tuple[dict[str, tp.Any], dict[str, PortSpecs]]:
+        ) -> tuple[dict[str, SparkPayload], dict[str, SparkPayload]]:
         """
-            Returns the expected specs for the outputs and properties of the module.
+            Returns expected-like outputs and properties of the module.
 
             This function is a binding contract that allows the modules to accept self connections.
         """
@@ -237,7 +229,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
 
 
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
+    def build(self, **abc_kwargs: SparkPayload) -> None:
         """
             Build method.
         """
@@ -309,29 +301,29 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
 
 
 
-    def _construct_input_specs(self, abc_args: dict[str, SparkPayload | list[SparkPayload]]) -> None:
+    def _construct_input_specs(self, abc_kwargs: dict[str, SparkPayload]) -> None:
         """
             Input spec constructor.
         """
         # Get default spec from signature. Default specs helps validate the user didn't make a mistake.
         input_specs = sig_parser.get_input_specs(type(self))
-        # Validate specs and abc_args match.
-        if input_specs.keys() != abc_args.keys():
+        # Validate specs and abc_kwargs match.
+        if input_specs.keys() != abc_kwargs.keys():
             # Check if missing key is optional.
-            set_diff = set(input_specs.keys()).difference(abc_args.keys())
+            set_diff = set(input_specs.keys()).difference(abc_kwargs.keys())
             for key in set_diff:
                 raise ValueError(
                     f'Module \"{self.name}\" expects variable \"{key}\" but it was not provided.'
                 )
             # Check if extra keys are provided.
-            set_diff = set(abc_args.keys()).difference(input_specs.keys())
+            set_diff = set(abc_kwargs.keys()).difference(input_specs.keys())
             for key in set_diff:
                 raise ValueError(
                     f'Module \"{self.name}\" received an extra variable \"{key}\" but it is not part of the specification.'
                 )
-        # Finish specs, use abc_args to skip optional missing keys.
+        # Finish specs, use abc_kwargs to skip optional missing keys.
         from spark.core.payloads import SpikeArray
-        for key, payload in abc_args.items():
+        for key, payload in abc_kwargs.items():
             if isinstance(payload, list) and len(payload) == 0:
                 raise ValueError(
                     f'Module "{self.name}" received an empty list for input "{key}". '
@@ -346,39 +338,33 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                 shape=shape,
                 dtype=dtype,
                 description=f'Auto-generated input spec for input \"{key}\" of module \"{self.name}\".',
-                # Payload specific build metadata
-                async_spikes=payload.async_spikes if isinstance(payload, SpikeArray) else None,
-                inhibition_mask=payload.inhibition_mask if isinstance(payload, SpikeArray) else None
             )
         self._input_specs = set_data_fn(input_specs)
 
 
 
-    def _construct_output_specs(self, abc_args: ModuleOutput) -> None:
+    def _construct_output_specs(self, abc_kwargs: ModuleOutput) -> None:
         """
             Output spec constructor.
         """
         # Get default spec from signature.
         output_specs = sig_parser.get_output_specs(type(self))
-        # Validate specs and abc_args match.
-        if output_specs.keys() != abc_args.keys():
+        # Validate specs and abc_kwargs match.
+        if output_specs.keys() != abc_kwargs.keys():
             raise ValueError(
                 f'Keys missmatch between expected outputs (TypedDict) and outputs (__call__). '
                 f'Expected: {list(output_specs.keys())}. '
-                f'__call__: {list(abc_args.keys())},'
+                f'__call__: {list(abc_kwargs.keys())},'
             )
         # Finish specs.
         from spark.core.payloads import SpikeArray
         for key in output_specs.keys():
-            output_payload: SparkPayload = abc_args[key]
+            output_payload: SparkPayload = abc_kwargs[key]
             output_specs[key] = PortSpecs(
                 payload_type=output_specs[key].payload_type,
                 shape=output_payload.shape,
                 dtype=output_payload.dtype,
                 description=f'Auto-generated output spec for input \"{key}\" of module \"{self.name}\".',
-                # Payload specific build metadata
-                async_spikes=output_payload.async_spikes if isinstance(output_payload, SpikeArray) else None,
-                inhibition_mask=output_payload.inhibition_mask if isinstance(output_payload, SpikeArray) else None
             )
         self._output_specs = set_data_fn(output_specs)
 
@@ -401,9 +387,6 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
                 shape=property_payload.shape,
                 dtype=property_payload.dtype,
                 description=f'Auto-generated output spec for input \"{key}\" of module \"{self.name}\".',
-                # Payload specific build metadata
-                async_spikes=property_payload.async_spikes if isinstance(property_payload, SpikeArray) else None,
-                inhibition_mask=property_payload.inhibition_mask if isinstance(property_payload, SpikeArray) else None
             )
         self._property_specs = set_data_fn(property_specs)
         
@@ -527,7 +510,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         return rep
 
 
-
+    # TODO: The major controllers refactor broke this method.
     def checkpoint(self, path, overwrite=False) -> None:
 
         import os
@@ -571,6 +554,8 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             raise RuntimeError(f'Unable to generate checkpoint for model {self.__class__.__name__}: {e}')
 
 
+
+    # TODO: The major controllers refactor broke this method.
     # TODO: This is a potentially dangerous operation. We need to add some safe guards
     #  to prevent malicious software to enter a computer unintentionally.
     @classmethod
@@ -636,7 +621,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             # Initialize the module.
             model = model_cls(config=config)
             dummy_input = {
-                port_name: port_spec._create_mock_input() for port_name, port_spec in config.__metadata__['input_specs'].items()
+                port_name: port_spec._create_mock_payload() for port_name, port_spec in config.__metadata__['input_specs'].items()
             }
             model(**dummy_input)
             graph, template_state = split((model))

@@ -355,7 +355,7 @@ class SparkNodeGraph(NodeGraph):
         self.center_on()
         self._is_dirty = False
 
-    def _gather_modules_specs(self, errors: list | None = None) -> list[ModuleSpecs]:
+    def _gather_modules_specs(self, errors: list | None = None) -> tuple[ModuleSpecs, ...]:
         """
             Build the controller modules spec list from the graph state.
         """

@@ -22,13 +22,8 @@ from spark.core.config import SparkConfig
 from spark.core.module import SparkModule, SparkMeta
 from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
 from spark.core.payloads import SparkPayload, SpikeArray
-from spark.core.decorators import spark_property
-from spark.core.typing import is_object_of_type
+from spark.core.decorators import spark_property, limit_recursion
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.core.flax_imports import data as set_data_fn
-
-# TODO: Currently inputs and effects require the ports to be defined inside a list. 
-# This is not ideal from the point of view of user, it makes everything slightly more annoying that it needs.
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -43,7 +38,7 @@ class ControllerMeta(SparkMeta):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class ControllerConfig(SparkConfig):
-    modules_specs: list[ModuleSpecs] = dc.field(
+    modules_specs: tuple[ModuleSpecs, ...] = dc.field(
         metadata = {
             'validators': [
             ],
@@ -71,10 +66,10 @@ class ControllerConfig(SparkConfig):
     # TODO: Manual override to synchronize all time integration constants across the controller.
     # This solution is probably good enough but it is not clear that will not clash with other user intentions.
     # A similar situation is present in Neuron.__post_init__
+    @limit_recursion(limit=1)
     def __post_init__(self,) -> None:
-        pass
         # Synchronize dt's. NOTE: Skip validation, otherwise will fall into an infinite loop.
-        #self = self.merge(_s_dt=self.dt)
+        self = self.merge(_s_dt=self.dt)
 
 ConfigT = tp.TypeVar("ConfigT", bound=ControllerConfig)
 
@@ -184,7 +179,7 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
 
 
     @classmethod
-    def _get_controller_input_specs(cls, modules_specs: list[ModuleSpecs]) -> dict[str, PortSpecs]:
+    def _get_controller_input_specs(cls, modules_specs: tuple[ModuleSpecs, ...]) -> dict[str, PortSpecs]:
         """
             Dynamically constructs the input specs of a controller from a list of ModuleSpecs.
             Module level validation is applied to ensure that input ports exist.
@@ -224,7 +219,7 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
 
 
     @classmethod
-    def _get_controller_output_specs(cls, modules_specs: list[ModuleSpecs]) -> dict[str, dict]:
+    def _get_controller_output_specs(cls, modules_specs: tuple[ModuleSpecs, ...]) -> dict[str, dict]:
         """
             Dynamically constructs the output specs of a controller from a list of ModuleSpecs.
             Module level validation is applied to ensure that defined output ports exist and do not overlap.
@@ -273,7 +268,7 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
             self, 
         ) -> tuple[dict[str, tp.Any], dict[str, PortSpecs]]:
         """
-            Returns the expected specs for the outputs and properties of the module.
+            Returns expected-like outputs and properties of the module.
 
             This function is a binding contract that allows the modules to accept self connections.
         """
@@ -304,7 +299,7 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
 
     # TODO: Validate port shapes (broadcastable). I think this can only be done after all the modules are built.
     @classmethod
-    def _validate_modules(cls, modules_specs: list[ModuleSpecs]) -> tuple[dict[str, PortSpecs], dict[str, dict]]:
+    def _validate_modules(cls, modules_specs: tuple[ModuleSpecs, ...]) -> tuple[dict[str, PortSpecs], dict[str, dict]]:
         
         # Get controller specs for validation.
         # NOTE: The following two methods perform port name validations and must be called in order to fully validate the model. 
@@ -404,7 +399,7 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
     @classmethod
     def _execution_order(
             cls, 
-            modules_specs: list[ModuleSpecs],
+            modules_specs: tuple[ModuleSpecs, ...],
             ignore_output_contracts: bool = False,
             skip_validation: bool = False,
         ) -> list[list[str]]:
@@ -470,78 +465,56 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
 
     def _instantiate_modules(
             self, 
-            input_specs: dict[str, PortSpecs], 
+            abc_args: dict[str, SparkPayload], 
             execution_order: list[list[str]]
         ) -> tuple[utils.TwoKeyDict, utils.TwoKeyDict]:
-        # Compute controller property specs. Shapes for properties should be known by this point.
-        property_specs = self._get_controller_property_specs()
-        for property_name in property_specs.keys():
-            property_specs[property_name].shape = getattr(self, property_name).shape
-            property_specs[property_name].dtype = getattr(self, property_name).dtype
         # Set initial specs
-        modules_output_specs = utils.TwoKeyDict()
-        modules_output_specs['__call__'] = input_specs
-        modules_property_specs = utils.TwoKeyDict()
-        modules_property_specs['__self__'] = property_specs
+        modules_outputs = utils.TwoKeyDict()
+        modules_outputs['__call__'] = abc_args
+        modules_properties = utils.TwoKeyDict()
+        # Property specs. Properties should be defined inside __init__, so it is safe to inspect them.
+        modules_properties['__self__'] = {k: getattr(self, k, None) for k in self.get_properties()}
         # Build modules. 
         for group in execution_order:
             for module_name in group:
                 # Skip __call__
                 if module_name == '__call__':
                     continue
-                # Collect module specs and construct a mock input
-                mock_input = {}
-                validate_async = True
+                # Gather module arguments
+                module_abc_args = {}
                 for port_name, port_map_list in self._modules_inputs_map[module_name].items():
-                    portspecs_list = []
+                    port_args = []
                     for port_map in port_map_list:
-                        if port_map.is_property and port_map.origin in modules_property_specs:
+                        if port_map.is_property and port_map.origin in modules_properties:
                             # Module was already built grab, get the spec.
-                            spec = modules_property_specs[port_map.origin, port_map.port]
-                            portspecs_list.append(spec)
-                        elif port_map.origin in modules_output_specs:
+                            arg = modules_properties[port_map.origin, port_map.port]
+                            port_args.append(arg)
+                        elif port_map.origin in modules_outputs:
                             # Module was already built grab, get the spec.
-                            spec = modules_output_specs[port_map.origin, port_map.port]
-                            portspecs_list.append(spec)
+                            arg = modules_outputs[port_map.origin, port_map.port]
+                            port_args.append(arg)
                         elif port_map.origin in group:
                             # Module is not built yet, it must define a recurrent spec to be part of a cyclic dependency.
                             origin_module: SparkModule = getattr(self, port_map.origin)
-                            output_spec, property_spec = origin_module.recurrent_contract()
-                            spec = property_spec[port_map.port] if port_map.is_property else output_spec[port_map.port]
-                            portspecs_list.append(spec)
-                            # Turn off async validation.
-                            validate_async = False
+                            outputs, properties = origin_module.recurrent_contract()
+                            arg = properties[port_map.port] if port_map.is_property else outputs[port_map.port]
+                            port_args.append(arg)
                         else:
                             # Something weird happend. The constructor is trying to get something from a module that should have been called later.
                             raise RuntimeError(
                                 f'Trying to get port from module "{port_map.origin}" for "{module_name}"... '
                                 f'418 I\'m a teapot.'
                             )
-                    mock_port_spec = PortSpecs.from_portspecs_list(portspecs_list, validate_async=validate_async)
-                    mock_input[port_name] = mock_port_spec._create_mock_input()
+                    port_args = self._concatenate_payloads(port_args)
+                    module_abc_args[port_name] = port_args
                 # Initialize module
                 module: SparkModule | Controller = getattr(self, module_name)
-                abc_output = module(**mock_input)
-                # Add output specs to list
-                if isinstance(module, Controller):
-                    # TODO: Several comparisons like this one are required throught the entire code to deal with Neuron controllers
-                    # A good equivalent of get_X_specs from the instance is missing.
-                    modules_output_specs[module_name] = {k:v['spec'] for k,v in module._get_controller_output_specs(module.config.modules_specs).items()}
-                    for output_name in modules_output_specs[module_name].keys():
-                        modules_output_specs[module_name][output_name].shape = abc_output[output_name].shape
-                        modules_output_specs[module_name][output_name].dtype = abc_output[output_name].dtype
-                        if issubclass(modules_output_specs[module_name][output_name].payload_type, SpikeArray):
-                            modules_output_specs[module_name][output_name].inhibition_mask = abc_output[output_name].inhibition_mask
-                            modules_output_specs[module_name][output_name].async_spikes = abc_output[output_name].async_spikes
-                    modules_property_specs[module_name] = module._get_controller_property_specs()
-                    for property_name in modules_property_specs[module_name].keys():
-                        modules_property_specs[module_name][property_name].shape = getattr(module, property_name).shape
-                        modules_property_specs[module_name][property_name].dtype = getattr(module, property_name).dtype
-                else:
-                    modules_output_specs[module_name] = module.get_output_specs()
-                    modules_property_specs[module_name] = module.get_property_specs()
+                abc_output = module(**module_abc_args)
+                # Add outputs and properties to list
+                modules_outputs[module_name] = abc_output
+                modules_properties[module_name] = {k: getattr(module, k, None) for k in module.get_properties()}
+        return modules_outputs
 
-        return modules_output_specs, modules_property_specs
 
 
     def _build(self, **abc_args: SparkPayload) -> None:
@@ -556,31 +529,24 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         except TypeError as error:
             raise TypeError(f'Error binding arguments for "{self}": {error}') from error
 
-        # Update shapes on controller specs
-        for key, value in abc_args.items():
-            self._controller_input_specs[key].shape = value.shape
         # Build model.
-        self.build(self._controller_input_specs)
+        self.build(**abc_args)
         self.__built__ = True
-        # Construct mock input to compute the module output shapes.
-        from spark.core.payloads import ValueSparkPayload
-        mock_input = {}
-        for key, value in self._controller_input_specs.items():
-            mock_input[key] = value._create_mock_input()
 
         # TODO: See _build in spark.Module. 
-        abc_output = self.__call__(**mock_input)
+        abc_output = self.__call__(**abc_args)
         self.reset()
 
-        # Update shapes on controller specs
+        # Update shapes on controller specs.
+        self._controller_output_specs = self._get_controller_output_specs(self._modules_specs)
         for key, value in abc_output.items():
-            self._controller_output_specs[key]['spec'].shape = value.shape
+            self._controller_output_specs[key]['spec'] = PortSpecs.from_payload(value)
 
 
 
     #@abc.abstractmethod
-    def build(self, input_specs: dict[str, PortSpecs]):
-        self._call_build(input_specs)
+    def build(self, **abc_args: SparkPayload):
+        self._call_build(**abc_args)
 
 
 

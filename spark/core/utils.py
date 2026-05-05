@@ -237,8 +237,8 @@ def get_einsum_dot_exp_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one
         Generates labels for a generalized dot expansion product using Einstein notation.
             right:	(a,b)•(a,b,c,d)=(a,b,c,d) - ab,abcd->abcd   |   (a,b,c,d)•(a,b)=(a,b,c,d) - abcd,ab->abcd
             left:	(c,d)•(a,b,c,d)=(a,b,c,d) - cd,abcd->abcd	|	(c,d)•(a,b,c,d)=(a,b,c,d) - abcd,cd->abcd
-            none: 	(a,b)•(c,d)=(a,b,c,d) - ab,cd->abcd		    | 	(a)•(b,c,d)=(a,b,c,d) - a,bcde->abcde
-
+            none: 	(a,b)•(c,d)=(a,b,c,d) - ab,cd->abcd		    | 	(a)•(b,c,d)=(a,b,c,d) - a,bcd->abcd
+            flip:   (a,b)•(c,d)=(c,d,a,b) - cd,ab->abcd		    | 	(a)•(b,c,d)=(b,c,d,a) - bcd,a->abcd
         Args:
             x: tuple[int, ...], shape for the first variable of the dot product
             y: tuple[int, ...], shape for the second variable of the dot product
@@ -283,6 +283,11 @@ def get_einsum_dot_exp_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one
     elif side == 'none' or side == 'n':
         x_indices = get_einsum_labels(len(x), offset=0)
         y_indices = get_einsum_labels(len(y), offset=len(x))
+        z_size = len(x) + len(y)
+        z_indices = get_einsum_labels(z_size, offset=0)
+    elif side == 'flip' or side == 'f':
+        y_indices = get_einsum_labels(len(x), offset=0)
+        x_indices = get_einsum_labels(len(y), offset=len(x))
         z_size = len(x) + len(y)
         z_indices = get_einsum_labels(z_size, offset=0)
     else:
@@ -350,7 +355,6 @@ def validate_list_shape(obj: tp.Any) -> list[tuple[int, ...]]:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# TODO: Extend shape promotion to allow some sensible shape blends like stacks.
 def merge_shape_list(shape_list: list[tuple[int, ...]]) -> tuple[int, ...]:
     """
         Merges a list of shapes into a single shape.

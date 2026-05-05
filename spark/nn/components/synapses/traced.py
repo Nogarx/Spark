@@ -11,7 +11,7 @@ import jax
 import jax.numpy as jnp
 import dataclasses as dc
 from spark.core.tracers import Tracer, RDTracer, RFSTracer
-from spark.core.payloads import SpikeArray, CurrentArray
+from spark.core.payloads import SpikeArray, CurrentArray, SparkPayload
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator, ZeroOneValidator
 from spark.nn.components.synapses.linear import LinearSynapses, LinearSynapsesConfig
@@ -85,9 +85,9 @@ class TracedSynapses(LinearSynapses):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
-    def build(self, input_specs: dict[str, PortSpecs]):
+    def build(self, **abc_args: SparkPayload):
         # Initialize shapes
-        super().build(input_specs)
+        super().build(**abc_args)
         # Initialize variables.
         _tau = self.config.init.tau(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
         # Current tracer.
@@ -206,9 +206,9 @@ class RDTracedSynapses(LinearSynapses):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
-    def build(self, input_specs: dict[str, PortSpecs]):
+    def build(self, **abc_args: SparkPayload):
         # Initialize shapes
-        super().build(input_specs)
+        super().build(**abc_args)
         # Initialize variables.
         _tau_rise = self.config.init.tau_rise(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
         _tau_decay = self.config.init.tau_decay(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
@@ -370,9 +370,9 @@ class RFSTracedSynapses(LinearSynapses):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
-    def build(self, input_specs: dict[str, PortSpecs]):
+    def build(self, **abc_args: SparkPayload):
         # Initialize shapes
-        super().build(input_specs)
+        super().build(**abc_args)
         # Initialize variables.
         _tau_rise = self.config.init.tau_rise(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
         _tau_fast_decay = self.config.init.tau_fast_decay(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)

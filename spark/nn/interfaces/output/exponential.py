@@ -116,9 +116,9 @@ class ExponentialIntegrator(OutputInterface):
         self.shuffle = self.config.shuffle
         self.smooth_trace = self.config.smooth_trace
 
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
+    def build(self, spikes: SpikeArray) -> None:
         # Output mapping.
-        in_dim = prod(input_specs['spikes'].shape)
+        in_dim = prod(spikes.shape)
         out_dim = self.num_outputs
         base = in_dim // out_dim
         remainder = in_dim % out_dim

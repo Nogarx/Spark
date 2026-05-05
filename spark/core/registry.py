@@ -373,12 +373,12 @@ def _construct_neuron_config_cls(cls_name: str, config: NeuronConfig) -> type[Ne
     ns_annotations: dict[str, tp.Any] = {}
     namespace: dict[str, tp.Any] = {}
     # Grab config fields
-    for name, field, value in config:
-        namespace[name] = value
-        ns_annotations[name] = field.type
+    for field in dc.fields(config):
+        namespace[field.name] = getattr(config, field.name, None)
+        ns_annotations[field.name] = field.type
     # Copy metadata
-    namespace['__metadata__'] = config.__metadata__
-    namespace['__graph_editor_metadata__'] = config.__graph_editor_metadata__
+    namespace['__metadata__'] = getattr(config, '__metadata__', {})
+    namespace['__graph_editor_metadata__'] = getattr(config, '__graph_editor_metadata__', {})
     namespace['__annotations__'] = ns_annotations
     # Create class and link it to spark
     neuron_config_cls = type(cls_name, (NeuronConfig,), namespace)

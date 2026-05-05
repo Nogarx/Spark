@@ -11,7 +11,7 @@ import jax
 import jax.numpy as jnp
 import dataclasses as dc
 from spark.core.tracers import Tracer
-from spark.core.payloads import SpikeArray, CurrentArray
+from spark.core.payloads import SpikeArray, CurrentArray, SparkPayload
 from spark.core.variables import Variable, Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
@@ -131,8 +131,8 @@ class ExponentialSoma(Soma):
         super().__init__(config=config, **kwargs)
 
     # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
-        super().build(input_specs)
+    def build(self, **abc_args: SparkPayload) -> None:
+        super().build(**abc_args)
         # Initialize variables.
         _potential_rest = self.config.init.potential_rest(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
         _potential_reset = self.config.init.potential_reset(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
@@ -231,8 +231,8 @@ class RefractoryExponentialSoma(ExponentialSoma):
         super().__init__(config=config, **kwargs)
 
     # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
-        super().build(input_specs)
+    def build(self, **abc_args: SparkPayload) -> None:
+        super().build(**abc_args)
         # Initialize variables.
         _cooldown = self.config.init.cooldown(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
         # Refractory period.
@@ -357,8 +357,8 @@ class AdaptiveExponentialSoma(ExponentialSoma):
         super().__init__(config=config, **kwargs)
 
     # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
-        super().build(input_specs)
+    def build(self, **abc_args: SparkPayload) -> None:
+        super().build(**abc_args)
         # Initialize variables.
         _adaptation_delta = self.config.init.adaptation_delta(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
         _adaptation_subthreshold = self.config.init.adaptation_subthreshold(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
@@ -471,8 +471,8 @@ class SimplifiedAdaptiveExponentialSoma(RefractoryExponentialSoma):
         super().__init__(config=config, **kwargs)
 
     # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
-        super().build(input_specs)
+    def build(self, **abc_args: SparkPayload) -> None:
+        super().build(**abc_args)
         # Initialize variables.
         _threshold_tau = self.config.init.threshold_tau(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
         _threshold_delta = self.config.init.threshold_delta(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)

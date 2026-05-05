@@ -17,9 +17,6 @@ import spark.core.validation as validation
 import itertools
 import types
 
-# TODO: Currently we only accept a single payload type per port. It may be worth it to accept multiple types. 
-# However accepting multiple types will drastically increase the already difficult problem of model validation.
-
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
@@ -196,18 +193,14 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
 
         # Check if the payload_type is a valid class and a subclass of SparkPayload
         if any([not validation._is_payload_type(pt) for pt in payload_types]):
-
-            # TODO: Concat are need to be rewokerd >:c
-            if not module.__name__ in ['Concat','ConcatReshape']:
-                
-                # Raise error, payload is not fully compatible with the framework.
-                raise TypeError(
-                    f'Error: Input parameter "{parameter.name}" has type {type(payload_types[0]).__name__}, ' 
-                    f'which is not a valid SparkPayload, None or sequence of SparkPayload.' 
-                    f'If you intended to pass a union (e.g. tuple, list, etc.) consider passing each entry ' 
-                    f'in the union directly as SparkPayload type to the __call__ method. ' 
-                    f'Alternatively, consider defining a custom SparkPayload dataclass as a wrapper for your input.'
-                )
+            # Raise error, payload is not fully compatible with the framework.
+            raise TypeError(
+                f'Error: Input parameter "{parameter.name}" has type {type(payload_types[0]).__name__}, ' 
+                f'which is not a valid SparkPayload, None or sequence of SparkPayload.' 
+                f'If you intended to pass a union (e.g. tuple, list, etc.) consider passing each entry ' 
+                f'in the union directly as SparkPayload type to the __call__ method. ' 
+                f'Alternatively, consider defining a custom SparkPayload dataclass as a wrapper for your input.'
+            )
         
         # Add the spec to collection.
         input_specs[parameter.name] = PortSpecs(

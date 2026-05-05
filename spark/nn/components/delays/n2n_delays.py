@@ -66,9 +66,9 @@ class N2NDelays(Delays):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
-    def build(self, input_specs: dict[str, PortSpecs]):
+    def build(self, in_spikes: SpikeArray):
         # Initialize shapes
-        self._in_shape = utils.validate_shape(input_specs['in_spikes'].shape)
+        self._in_shape = utils.validate_shape(in_spikes.shape)
         self.output_shape = utils.validate_shape(self.config.units)
         self._kernel_shape = utils.validate_shape((prod(self.output_shape), prod(self._in_shape)))
         self._units = prod(self._in_shape)

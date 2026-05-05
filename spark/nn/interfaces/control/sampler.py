@@ -60,20 +60,19 @@ class Sampler(ControlInterface):
         # Initialize variables
         self.sample_size = self.config.sample_size
 
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
+    def build(self, **abc_args: SparkPayload) -> None:
         # Validate payloads types.
         payload_type = None
-        for key, value in input_specs.items():
-            payload_type = value.payload_type if payload_type is None else payload_type
-            if payload_type != value.payload_type:
+        for key, value in abc_args.items():
+            payload_type = type(value) if payload_type is None else payload_type
+            if payload_type != type(value):
                 raise TypeError(
                     f'Expected all payload types to be of same type \"{payload_type}\" '
-                    f'but input spec \"{key}\" is of type "{value.payload_type}".'
+                    f'but input spec \"{key}\" is of type "{type(value)}".'
                 )
         self._payload_type = payload_type
         # Initialize shapes
-        flat_shape = sum([prod(spec.shape) for spec in input_specs.values()])
-        input_shape = utils.validate_shape((flat_shape,))
+        input_shape = utils.merge_shape_list([spec.shape for spec in abc_args.values()])
         # Initialize variables
         self._indices = Constant(
             jax.random.randint(
@@ -89,9 +88,9 @@ class Sampler(ControlInterface):
     def indices(self,) -> jax.Array:
         return self._indices.value
 
-    def _overwrite_call_signature(self, raw_args: tuple[SparkPayload], raw_kwargs: dict[str, SparkPayload]) -> None:
+    def _overwrite_call_signature(self, raw_kwargs: dict[str, SparkPayload]) -> None:
         # Create the new Signature object and assign it to the __call__ method
-        self.__call__.__func__.__signature__ = _build_signature_from_inputs(raw_args, raw_kwargs)
+        self.__call__.__func__.__signature__ = _build_signature_from_inputs(raw_kwargs)
 
     def __call__(self, **inputs: SparkPayload) -> ControlInterfaceOutput:
         """

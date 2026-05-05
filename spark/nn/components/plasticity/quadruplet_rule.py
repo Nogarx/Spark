@@ -135,22 +135,22 @@ class QuadrupletRule(Plasticity):
     """
     config: QuadrupletRuleConfig
 
-    def __init__(self, config: QuadrupletRuleConfig | None = None, **kwargs):
+    def __init__(self, config: QuadrupletRuleConfig | None = None, **kwargs) -> None:
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
 
-    def build(self, input_specs: dict[str, PortSpecs]):
-        # Get shapes
-        input_shape = input_specs['pre_spikes'].shape
-        output_shape = input_specs['post_spikes'].shape
-        kernel_shape = input_specs['kernel'].shape
-        ker_dtype = input_specs['kernel'].dtype
+    def build(self, modulation: FloatArray, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> None:
         # Initialize variables.
         # NOTE: Since variables used for plasticity may have very different shapes and initialization patterns
         # variables should almost always be initialized using self._initialize_variable. This method automatically
         # handles the most common initialization patterns and tries to keep the variable the smallest shape possible
         # that is still compute efficient for plasticity computation (THIS APPRAOCH IS NOT ALWAYS MEMORY EFFICIENT).
+        # NOTE: Modulation is expected to come in the appropiate shape: scaler, _post_shape, _pre_shape or kernel_shape
+        kernel_shape = kernel.shape
+        pre_shape = pre_spikes.shape
+        post_shape = post_spikes.shape
+        ker_dtype = kernel.dtype
         _initialize_variable_fn = lambda var: self._initialize_variable(var, shape=kernel_shape, dtype=ker_dtype)
         _pre_tau = _initialize_variable_fn(self.config.init.pre_tau)
         _post_tau = _initialize_variable_fn(self.config.init.post_tau)
@@ -159,22 +159,21 @@ class QuadrupletRule(Plasticity):
         _q_gamma = _initialize_variable_fn(self.config.init.q_gamma)
         _q_delta = _initialize_variable_fn(self.config.init.q_delta)
         _max_clip = _initialize_variable_fn(self.config.init.max_clip)
+        # Broadcast shapes
+        # NOTE: Most learning rules may be reexpressed as sums of general dot products; the most robuts way to 
+        # implement this is by reshaping pre and post spikes to the shape of the kernel. It also makes the math more clear.
+        self._pre_shape = pre_shape if pre_shape == kernel_shape else (1,) * (len(kernel_shape) - len(pre_shape)) + pre_shape
+        self._post_shape = post_shape if post_shape == kernel_shape else post_shape + (1,) * (len(kernel_shape) - len(post_shape))
         # Tracers.
-        _post_trace_shape = output_shape if len(output_shape) > len(_post_tau) else kernel_shape
-        self.pre_trace = Tracer(kernel_shape, tau=_pre_tau, scale=1/_pre_tau, dtype=ker_dtype, dt=self._dt) 
-        self.post_trace = Tracer(_post_trace_shape, tau=_post_tau, scale=1/_post_tau, dtype=ker_dtype, dt=self._dt)
+        self.pre_trace = Tracer(self._pre_shape , tau=_pre_tau, scale=1/_pre_tau, dtype=ker_dtype, dt=self._dt) 
+        self.post_trace = Tracer(self._post_shape, tau=_post_tau, scale=1/_post_tau, dtype=ker_dtype, dt=self._dt)
         self.eta = Constant(self.config.eta, dtype=ker_dtype)
         self.q_alpha = Constant(_q_alpha, dtype=ker_dtype)
         self.q_beta = Constant(_q_beta, dtype=ker_dtype)
         self.q_gamma = Constant(_q_gamma, dtype=ker_dtype)
         self.q_delta = Constant(_q_delta, dtype=ker_dtype)
         self.max_clip = Constant(_max_clip, dtype=ker_dtype)
-        # Einsum labels.
-        async_spikes = input_specs['pre_spikes'].async_spikes
-        self._post_pre_dot = get_einsum_dot_exp_string(_post_trace_shape, input_shape, side='left' if async_spikes else 'none')
-        self._pre_post_dot = get_einsum_dot_exp_string(kernel_shape, output_shape, side='left')
-        self._post_reshape = output_shape + (len(kernel_shape) - len(output_shape)) * (1,)
-        
+
     def reset(self) -> None:
         """
             Resets component state.
@@ -186,30 +185,25 @@ class QuadrupletRule(Plasticity):
         """
             Computes next kernel update.
         """
-        # Update and get current trace value
-        _pre_spikes = pre_spikes.spikes
-        _post_spikes = post_spikes.spikes
+        # Extract and reshape inputs
+        _pre_spikes = pre_spikes.spikes.reshape(self._pre_shape)
+        _post_spikes = post_spikes.spikes.reshape(self._post_shape)
         _kernel = kernel.value
+        # Update and get current trace value
         pre_trace = self.pre_trace(_pre_spikes)
-        post_trace = self.post_trace(_post_spikes.reshape(self._post_reshape))
+        post_trace = self.post_trace(_post_spikes)
         # Compute rule
         dK = self.eta * modulation.value * (
-            + self.q_alpha * _pre_spikes 
-            + self.q_beta * jnp.einsum(self._post_pre_dot, post_trace, _pre_spikes)
-            + self.q_gamma * _post_spikes.reshape(self._post_reshape)
-            + self.q_delta * jnp.einsum(self._pre_post_dot, pre_trace, _post_spikes)
+            + self.q_alpha * _pre_spikes
+            + self.q_beta * post_trace * _pre_spikes
+            + self.q_gamma * _post_spikes
+            + self.q_delta * pre_trace * _post_spikes
         )
         new_kernel = jnp.clip(_kernel + self._dt * dK, min=0.0, max=self.max_clip.value)
         return new_kernel
         
 
-    def __call__(
-            self, 
-            modulation: FloatArray, 
-            pre_spikes: SpikeArray, 
-            post_spikes: SpikeArray, 
-            kernel: FloatArray
-        ) -> PlasticityOutput:
+    def __call__(self, modulation: FloatArray, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> PlasticityOutput:
         """
             Computes and returns the next kernel update.
         """

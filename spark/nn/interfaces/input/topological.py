@@ -127,10 +127,10 @@ class TopologicalPoissonSpiker(InputInterface):
         self._sigma = Constant(self.sigma, dtype=self._dtype)
 
 
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
+    def build(self, signal: FloatArray) -> None:
         # Initialize shapes
-        input_shape = utils.validate_shape(input_specs['signal'].shape)
-        self._output_shape = utils.validate_shape(input_specs['signal'].shape + (self.resolution,))
+        input_shape = utils.validate_shape(signal.shape)
+        self._output_shape = utils.validate_shape(signal.shape + (self.resolution,))
         # Initialize variables
         self._space = Constant(jnp.linspace(jnp.zeros(input_shape), 
                                                  jnp.pi*jnp.ones(input_shape), 
@@ -200,8 +200,8 @@ class TopologicalLinearSpiker(InputInterface):
         self.max_freq = self.config.max_freq
         self.sigma = self.config.sigma
         self._glue = Constant(self.config.init.glue(), dtype=jnp.bool_)
-        self._mins = Constant(self.config.init.glue(), dtype=self._dtype)
-        self._maxs = Constant(self.config.init.glue(), dtype=self._dtype)
+        self._mins = Constant(self.config.init.mins(), dtype=self._dtype)
+        self._maxs = Constant(self.config.init.maxs(), dtype=self._dtype)
         self._sigma = Constant(self.sigma, dtype=self._dtype)
         exp_term = jnp.exp((1/self.tau) * ((1000-self.cd*self.max_freq) / self.max_freq)) # dt cancels out
         scale = ((1 / (exp_term - 1)) + 1)
@@ -210,10 +210,10 @@ class TopologicalLinearSpiker(InputInterface):
         self._decay = Constant(jnp.exp(-self._dt / self._tau), dtype=self._dtype)
         self._gain = Constant(1 - self._decay, dtype=self._dtype)
 
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
+    def build(self, signal: FloatArray) -> None:
         # Initialize shapes
-        input_shape = utils.validate_shape(input_specs['signal'].shape)
-        self._output_shape = utils.validate_shape(input_specs['signal'].shape + (self.resolution,))
+        input_shape = utils.validate_shape(signal.shape)
+        self._output_shape = utils.validate_shape(signal.shape + (self.resolution,))
         # Initialize variables
         self._space = Constant(jnp.linspace(jnp.zeros(input_shape), 
                                                  jnp.pi*jnp.ones(input_shape), 

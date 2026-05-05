@@ -23,8 +23,7 @@ class SparkJSONEncoder(json.JSONEncoder):
 	"""
 	__version__ = '1.0'
 
-	def __init__(self, *args, is_partial: bool = False, **kwargs) -> None:
-		self._is_partial = is_partial
+	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 
 	def encode(self, obj):
@@ -89,9 +88,8 @@ class SparkJSONDecoder(json.JSONDecoder):
 	"""
 	__supported_versions__ = {'1.0'}
 
-	def __init__(self, *args, ignore_version: bool = False, is_partial: bool = False, **kwargs) -> None:
+	def __init__(self, *args, ignore_version: bool = False, **kwargs) -> None:
 		self._ignore_version = ignore_version
-		self._is_partial = is_partial
 		super().__init__(object_hook=self.object_hook, *args, **kwargs)
 
 	def object_hook(self, obj: dict) -> tp.Any:
@@ -113,7 +111,7 @@ class SparkJSONDecoder(json.JSONDecoder):
 			return obj.get('__data__')
 
 		# Decode arrays
-		if obj.get('__type__') == 'array':
+		if obj.get('__type__') in ['array', 'jax_array']:
 			return np.array(obj.get('data'), dtype=obj.get('dtype')).reshape(obj.get('shape'))
 		# Decode dtypes
 		if obj.get('__type__') == 'dtype':
@@ -148,7 +146,7 @@ class SparkJSONDecoder(json.JSONDecoder):
 		data = obj.get('__data__')
 		if not isinstance(data, dict):
 			raise TypeError(f'Expected \"__data__\" to be of type \"dict\", but got {data}')
-		return _type.from_dict(data, is_partial=self._is_partial)
+		return _type.from_dict(data)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

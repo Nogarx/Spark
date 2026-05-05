@@ -55,6 +55,30 @@ class spark_property:
     def deleter(self, fdel) -> tp.Self:
         return type(self)(self.fget, self.fset, fdel, self.__doc__)
     
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def limit_recursion(limit) -> tp.Callable[..., tp.Callable[..., tp.Any]]:
+    """
+		Decorator to limit recursion depth, used in some post config validation.
+	"""
+    def decorator(func):
+        func.current_depth = 0 
+        def wrapper(*args, **kwargs):
+            if wrapper.current_depth >= limit:
+                return args[0] 
+            wrapper.current_depth += 1
+            try:
+                # Standard recursion
+                result = func(*args, **kwargs)
+            finally:
+                # Decrease stack counter
+                wrapper.current_depth -= 1
+            return result
+        # Initialize the depth tracker on the wrapper
+        wrapper.current_depth = 0
+        return wrapper
+    return decorator
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

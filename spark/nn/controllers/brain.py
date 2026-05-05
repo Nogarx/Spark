@@ -49,13 +49,13 @@ class Brain(Controller, metaclass=BrainMeta):
 		# Initialize super.
 		super().__init__(config=config, **kwargs)
 
-	def build(self, input_specs: dict[str, PortSpecs]) -> None:
+	def build(self, **abc_args: SparkPayload) -> None:
 		# Get build order.
 		execution_order = self._execution_order(self._modules_specs)
 		# Instantiate modules
-		modules_output_specs, _ = self._instantiate_modules(input_specs, execution_order)
+		modules_outputs = self._instantiate_modules(abc_args, execution_order)
 		# Build cache.
-		self._cache = Cache.from_specs(modules_output_specs)
+		self._cache = Cache.from_payloads(modules_outputs)
 
 	def __call__(self, **inputs: SparkPayload) -> dict[str, SparkPayload]:
 		"""

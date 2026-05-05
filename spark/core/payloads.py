@@ -76,7 +76,7 @@ class SpikeArray(SparkPayload):
             inhibition_mask: jax.Array[bool], True if neuron is inhibitory, False otherwise
 
         The async_spikes flag is automatically set True by delay mechanisms that perform neuron-to-neuron specific delays.
-        Note that when async_spikes is True the shape of the spikes changes from (origin_units,) to (origin_units, target_units).
+        Note that when async_spikes is True the shape of the spikes changes from (origin_units,) to (target_units, origin_units).
         This is important when implementing new synaptic models, since fully valid synaptic models should be able to handle both cases. 
     """
     _encoding: jax.Array 
@@ -89,8 +89,13 @@ class SpikeArray(SparkPayload):
     # 2: (False, True)  -> -0
     # 3: (True,  True)  -> -1
 
-    def __init__(self, spikes: jax.Array, inhibition_mask: jax.Array = False, async_spikes: bool = False) -> None:
+    def __init__(self, spikes: jax.Array, inhibition_mask: BooleanMask | jax.Array | bool | None = None, async_spikes: bool = False) -> None:
         spikes = jnp.array(spikes, dtype=jnp.uint8)
+
+        if inhibition_mask is None:
+            inhibition_mask = False
+        elif isinstance(inhibition_mask, BooleanMask):
+            inhibition_mask = inhibition_mask.value
         inhibition_mask = jnp.array(inhibition_mask, dtype=jnp.uint8)
         if inhibition_mask.ndim != spikes.ndim:
             new_shape = (1,) * (spikes.ndim - inhibition_mask.ndim) + inhibition_mask.shape
@@ -142,39 +147,7 @@ class SpikeArray(SparkPayload):
 
     @classmethod
     def _from_spec(cls, spec: PortSpecs) -> tp.Self:
-        # TODO: This is incredibly convoluted due to Concat
-        if isinstance(spec.shape, list):
-            objs = []
-            for shape in spec.shape:
-                spikes = jnp.zeros(shape, dtype=jnp.uint8)
-                if isinstance(spec.inhibition_mask, jax.Array):
-                    inhibition_mask = jnp.array(spec.inhibition_mask, dtype=jnp.uint8)
-                elif isinstance(spec.inhibition_mask, bool):
-                    inhibition_mask = spec.inhibition_mask * jnp.ones(shape, dtype=jnp.uint8)
-                else:
-                    inhibition_mask = jnp.zeros(shape, dtype=jnp.uint8)
-                if inhibition_mask.ndim != spikes.ndim:
-                    new_shape = (1,) * (spikes.ndim - inhibition_mask.ndim) + inhibition_mask.shape
-                    inhibition_mask = inhibition_mask.reshape(new_shape)
-                obj._encoding = spikes | (inhibition_mask.reshape(shape) << 1)
-                obj.async_spikes = spec.async_spikes
-                objs.append(obj)  
-            return objs
-        else:
-            obj = cls.__new__(cls)
-            spikes = jnp.zeros(spec.shape, dtype=jnp.uint8)
-            if isinstance(spec.inhibition_mask, jax.Array):
-                inhibition_mask = jnp.array(spec.inhibition_mask, dtype=jnp.uint8)
-            elif isinstance(spec.inhibition_mask, bool):
-                inhibition_mask = spec.inhibition_mask * jnp.ones(spec.shape, dtype=jnp.uint8)
-            else:
-                inhibition_mask = jnp.zeros(spec.shape, dtype=jnp.uint8)
-            if inhibition_mask.ndim != spikes.ndim:
-                new_shape = (1,) * (spikes.ndim - inhibition_mask.ndim) + inhibition_mask.shape
-                inhibition_mask = inhibition_mask.reshape(new_shape)
-            obj._encoding = spikes | (inhibition_mask << 1)
-            obj.async_spikes = spec.async_spikes
-            return obj 
+        return cls(spikes=jnp.zeros(spec.shape, dtype=jnp.uint8)) 
 
     @classmethod
     def _from_encoding(cls, encoding: jax.Array) -> tp.Self:

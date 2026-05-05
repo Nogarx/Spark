@@ -76,9 +76,9 @@ class NDelays(Delays):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
-    def build(self, input_specs: dict[str, PortSpecs]):
+    def build(self, in_spikes: SpikeArray):
         # Initialize shapes
-        self._shape = utils.validate_shape(input_specs['in_spikes'].shape)
+        self._shape = utils.validate_shape(in_spikes.shape)
         self._units = prod(self._shape)
         # Initialize varibles
         self.max_delay = self.config.max_delay

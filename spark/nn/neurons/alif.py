@@ -27,8 +27,8 @@ class ALIFNeuronConfig(NeuronConfig):
 		NOTE: Parameter calibration is still necessary.
 	"""
 	
-	modules_specs: list[ModuleSpecs] = dc.field(
-		default = [
+	modules_specs: tuple[ModuleSpecs, ...] = dc.field(
+		default = (
 			# N2N delays
 			ModuleSpecs(
 				name ='delays', 
@@ -74,7 +74,7 @@ class ALIFNeuronConfig(NeuronConfig):
 				},
 				config = HebbianRuleConfig.partial(),
 			),
-		],
+		),
 		metadata = {
 			'description': 'Neuron component modules.',
 		})

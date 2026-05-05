@@ -55,6 +55,15 @@ class Cache(TwoKeyDict):
                 obj[key1][key2] = spec.payload_type._from_spec(spec)
         return obj
     
+    @classmethod
+    def from_payloads(cls, data: TwoKeyDict[str, str, SparkPayload]) -> tp.Self:
+        obj = cls()
+        for (key1, key2), payload in data.items():
+            # Skip optional
+            if payload.shape is not None:
+                obj[key1][key2] = type(payload)(jnp.zeros_like(payload.value))
+        return obj
+    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

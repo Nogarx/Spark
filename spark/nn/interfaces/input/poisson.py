@@ -62,9 +62,9 @@ class PoissonSpiker(InputInterface):
         self.max_freq = self.config.max_freq
         self._scale = self._dt * (self.max_freq / 1000)
 
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
+    def build(self, signal: FloatArray) -> None:
         # Initialize shapes
-        self._shape = utils.validate_shape(input_specs['signal'].shape)
+        self._shape = utils.validate_shape(signal.shape)
 
     def __call__(self, signal: FloatArray) -> InputInterfaceOutput:
         """

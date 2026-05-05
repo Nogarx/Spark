@@ -11,7 +11,7 @@ import jax
 import jax.numpy as jnp
 import dataclasses as dc
 from spark.core.tracers import Tracer
-from spark.core.payloads import SpikeArray, CurrentArray
+from spark.core.payloads import SpikeArray, CurrentArray, SparkPayload
 from spark.core.variables import Variable, Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
@@ -132,8 +132,8 @@ class IzhikevichSoma(Soma):
         super().__init__(config=config, **kwargs)
 
     # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
-        super().build(input_specs)
+    def build(self, **abc_args: SparkPayload) -> None:
+        super().build(**abc_args)
         # Initialize variables.
         _potential_rest = self.config.init.potential_rest(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
         _potential_reset = self.config.init.potential_reset(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)

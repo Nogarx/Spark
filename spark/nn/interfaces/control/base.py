@@ -14,7 +14,7 @@ from spark.nn.interfaces.base import Interface, InterfaceConfig
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-def _build_signature_from_inputs(raw_args: tuple[SparkPayload], raw_kwargs: dict[str, SparkPayload]) -> None:
+def _build_signature_from_inputs(raw_kwargs: dict[str, SparkPayload]) -> None:
     params = [inspect.Parameter('self', inspect.Parameter.POSITIONAL_OR_KEYWORD)]
     # Add inputs incrementally
     kwargs_names = set()
@@ -26,14 +26,14 @@ def _build_signature_from_inputs(raw_args: tuple[SparkPayload], raw_kwargs: dict
     # Add raw_args
     key_idx = 0
     key = f'input_{key_idx}'
-    for value in raw_args:
-        # Get next available key
-        while key in kwargs_names:
-            key_idx += 1
-            key = f'input_{key_idx}'
-        # Append param
-        params.append(inspect.Parameter(name=key, kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=type(value)))
-        kwargs_names.add(key)
+    #for value in raw_args:
+    #    # Get next available key
+    #    while key in kwargs_names:
+    #        key_idx += 1
+    #        key = f'input_{key_idx}'
+    #    # Append param
+    #    params.append(inspect.Parameter(name=key, kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=type(value)))
+    #    kwargs_names.add(key)
     # Combine args with kwargs
     params = params + kw_params
     return inspect.Signature(params)

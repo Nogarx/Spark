@@ -13,7 +13,7 @@ from math import prod
 import spark.core.utils as utils
 from spark.core.variables import Constant
 from spark.core.registry import register_module, register_config
-from spark.core.decorators import spark_property
+from spark.core.decorators import spark_property, limit_recursion
 from spark.core.specs import PortSpecs, PortMap
 from spark.core.payloads import SparkPayload, SpikeArray, BooleanMask
 from spark.core.config_validation import TypeValidator, ZeroOneValidator
@@ -56,11 +56,14 @@ class NeuronConfig(ControllerConfig):
 		}
 	)
 
+	@limit_recursion(limit=1)
 	def __post_init__(self,) -> None:
 		pass
 		# Synchronize units. NOTE: Skip validation, otherwise will fall into an infinite loop.
 		#self = self.merge(_s_dt=self.dt, _s_units=self.units)
-
+        # Synchronize dt's. NOTE: Skip validation, otherwise will fall into an infinite loop.
+		self = self.merge(_s_dt=self.dt)
+	
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 # TODO: This class needs a proper way to set up the inhibitory masks and the recurrent contract.
@@ -89,30 +92,42 @@ class Neuron(Controller, metaclass=NeuronMeta):
 	# TODO: Should we allow properties to be defined inside the build method? (Safe proof this method)
 	def recurrent_contract(
 			self, 
-		) -> tuple[dict[str, tp.Any], dict[str, PortSpecs]]:
+		) -> tuple[dict[str, SparkPayload], dict[str, SparkPayload]]:
 		"""
-			Returns the expected specs for the outputs and properties of the module.
+			Returns expected-like outputs and properties of the module.
 
 			This function is a binding contract that allows the modules to accept self connections.
 		"""
 		# Output specs
 		output_contract_specs = {k:v['spec'] for k,v in self._controller_output_specs.items()}
 		for output_name, spec in output_contract_specs.items():
-			output_contract_specs[output_name] = spec
-			output_contract_specs[output_name].shape = self.units
-			if issubclass(output_contract_specs[output_name].payload_type, SpikeArray):
-				output_contract_specs[output_name].inhibition_mask = self._inhibition_mask
+			spec = PortSpecs(
+				payload_type=spec.payload_type,
+				shape=self.units,
+				dtype=spec.dtype,
+				description=spec.description,
+			)
+			_mock: SparkPayload = spec._create_mock_payload()
+			if isinstance(_mock, SpikeArray):
+				_mock = SpikeArray(spikes=_mock.spikes, inhibition_mask=self._inhibition_mask)
+			output_contract_specs[output_name] = _mock
 		# Property specs. Properties should be defined inside __init__, so it is safe to inspect them.
 		property_contract_specs = self._get_controller_property_specs()
 		for property_name, spec in property_contract_specs.items():
 			_property: SparkPayload = getattr(self, property_name, None)
-			property_contract_specs[property_name] = PortSpecs(
-				payload_type=spec.payload_type,
-				shape=_property.shape if _property is not None else self.units,
-				dtype=_property.dtype if _property is not None else spec.dtype,
-				#is_optional=spec.is_optional,
-				description=spec.description,
-			)
+			if _property is None:
+				spec = property_contract_specs[property_name].spec
+				spec = PortSpecs(
+					payload_type=spec.payload_type,
+					shape=spec.shape if spec is not None else self.units,
+					dtype=spec.dtype if spec is not None else spec.dtype,
+					#is_optional=spec.is_optional,
+					description=spec.description,
+				)
+				_property: SparkPayload = spec._create_mock_payload()
+				if isinstance(_property, SpikeArray):
+					_property  = SpikeArray(spikes=_mock.spikes, inhibition_mask=self._inhibition_mask)
+			property_contract_specs[property_name] = _property
 		return output_contract_specs, property_contract_specs
 
 	@classmethod
@@ -126,11 +141,11 @@ class Neuron(Controller, metaclass=NeuronMeta):
 	def inhibition_mask(self,) -> BooleanMask:
 		return BooleanMask(self._inhibition_mask.value)
 
-	def build(self, input_specs: dict[str, PortSpecs]) -> None:
+	def build(self, **abc_args: SparkPayload) -> None:
 		# Get build order.
 		self._order = self._execution_order(self._modules_specs)
 		# Instantiate modules
-		_, _ = self._instantiate_modules(input_specs, self._order)
+		self._instantiate_modules(abc_args, self._order)
 
 	def __call__(self, **inputs: SparkPayload) -> dict[str, SparkPayload]:
 		"""

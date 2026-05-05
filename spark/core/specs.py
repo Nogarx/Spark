@@ -26,8 +26,6 @@ from math import prod
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-
-# TODO: We need to reliably distinguish between single and multi input ports.
 @jax.tree_util.register_dataclass
 @dc.dataclass(init=False)
 class PortSpecs:
@@ -39,19 +37,12 @@ class PortSpecs:
     dtype: DTypeLike | None
     description: str | None
 
-    # Auxiliary metadata only used at model build time.
-    # These are dynamic metadata variables that are only needed at build time.
-    async_spikes: bool | None
-    inhibition_mask: bool | None
-
     def __init__(
             self, 
             payload_type: type[SparkPayload] | None,
             shape: tuple[int, ...] | list[tuple[int, ...]] | None,
             dtype: DTypeLike | None, 
             description: str | None = None,
-            async_spikes: bool | None = None,
-            inhibition_mask: jax.Array | bool | None = None,
         ) -> None:
 
         if shape and utils.is_shape(shape):
@@ -63,8 +54,6 @@ class PortSpecs:
         self.shape = shape
         self.dtype = dtype
         self.description = description
-        self.async_spikes = async_spikes
-        self.inhibition_mask = inhibition_mask
 
     def to_dict(self,) -> dict[str, tp.Any]:
         """
@@ -88,7 +77,21 @@ class PortSpecs:
         return cls(**dct)
 
     @classmethod
-    def from_portspecs_list(cls, portspec_list: list[PortSpecs], validate_async: bool = True) -> tp.Self:
+    def from_payload(cls, payload: SparkPayload) -> tp.Self:
+        """
+            Deserialize dictionary to  PortSpecs
+        """
+        from spark.core.payloads import SpikeArray
+        dct = {
+            'payload_type': type(payload),
+            'shape': payload.shape,
+            'dtype': payload.dtype,
+            'description': 'Auto-generated payload description',
+        }
+        return cls(**dct)
+
+    @classmethod
+    def from_portspecs_list(cls, portspec_list: list[PortSpecs]) -> tp.Self:
         """
             Merges a list of PortSpecs into a single PortSpecs
         """
@@ -104,17 +107,6 @@ class PortSpecs:
                 f'In order to merge the PortSpecs into a single PortSpecs all types must be the same.'
             )
         payload_type = list(payload_type)[0]
-        # Validate that all  async_spikes has the same value.
-        if validate_async:
-            async_spikes = set([spec.async_spikes for spec in portspec_list])
-            if len(async_spikes) != 1:
-                raise TypeError(
-                    f'Expect all async_spikes values to be equal but got {async_spikes}.'
-                    f'In order to merge the PortSpecs into a single PortSpecs all async_spikes values must be the same.'
-                )
-            async_spikes = list(async_spikes)[0]
-        else:
-            async_spikes = None
         # Since we expect everything to be a valid PortSpecs we don't really need to validate anything else.
         # Generic description.
         description = 'Merged PortSpecs'
@@ -123,41 +115,14 @@ class PortSpecs:
         # Merge shapes.
         shape = utils.merge_shape_list([spec.shape for spec in portspec_list])
         # Merge inhibition_mask when present.
-        from spark.core.payloads import SpikeArray
-        if payload_type == SpikeArray:
-            inhibition_mask = []
-            for spec in portspec_list:
-                if isinstance(spec.inhibition_mask, (jax.Array, np.ndarray)):
-                    inhibition_mask.append(spec.inhibition_mask.reshape(-1))
-                elif isinstance(spec.inhibition_mask, Constant):
-                    inhibition_mask.append(spec.inhibition_mask.value.reshape(-1))
-                elif isinstance(spec.inhibition_mask, (bool, int, float)):
-                    inhibition_mask.append(
-                        bool(spec.inhibition_mask) * jnp.ones(spec.shape, dtype=jnp.bool).reshape(-1)
-                    )
-                else:
-                    # Inhibiton mask is ill defined.
-                    raise TypeError(
-                        f'Expected inhibition mask to be an instance of jax.Array | np.ndarray | bool but got '
-                        f'{spec.inhibition_mask}, which is not broadcastable to a mask.'
-                    )
-            inhibition_mask = jnp.concatenate(inhibition_mask)
-            if inhibition_mask.shape != shape:
-                raise ValueError(
-                    f'Inhibition mask with shape {inhibition_mask.shape} is not compatible with expected shape {shape}.'
-                )
-        else:
-            inhibition_mask = None
         return cls(
             payload_type=payload_type,
             shape=shape,
             dtype=dtype,
             description=description,
-            async_spikes=async_spikes,
-            inhibition_mask=inhibition_mask,
         )
 
-    def _create_mock_input(self,) -> SparkPayload:
+    def _create_mock_payload(self,) -> SparkPayload:
         return self.payload_type._from_spec(self)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -202,7 +167,6 @@ class PortMap:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# TODO: Serialization of this class is weak.
 @jax.tree_util.register_dataclass
 @dc.dataclass(init=False)
 class ModuleSpecs:

@@ -82,10 +82,10 @@ class LinearSynapses(Synapses):
         self._output_shape = utils.validate_shape(self.config.units)
         
 
-    def build(self, input_specs: dict[str, PortSpecs]):
+    def build(self, spikes: SpikeArray):
         # Initialize shapes
-        self.async_spikes = input_specs['spikes'].async_spikes
-        self._input_shape = utils.validate_shape(input_specs['spikes'].shape)
+        self.async_spikes = spikes.async_spikes
+        self._input_shape = utils.validate_shape(spikes.shape)
         self._real_input_shape = self._input_shape[len(self._output_shape):] if self.async_spikes else self._input_shape
         self._sum_axes = tuple(range(len(self._output_shape), len(self._output_shape)+len(self._real_input_shape)))
         # Initialize kernel

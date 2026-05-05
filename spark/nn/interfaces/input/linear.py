@@ -93,9 +93,9 @@ class LinearSpiker(InputInterface):
         self._decay = Constant(jnp.exp(-self._dt / self.tau), dtype=self._dtype)
         self._gain = Constant(1 - self._decay, dtype=self._dtype)
 
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
+    def build(self, signal: FloatArray) -> None:
         # Initialize shapes
-        self._shape = utils.validate_shape(input_specs['signal'].shape)
+        self._shape = utils.validate_shape(signal.shape)
         # Initialize variables
         self._cooldown = Constant(self.cd * jnp.ones(shape=self._shape), dtype=self._dtype)
         self._refractory = Variable(self._cooldown, dtype=self._dtype)

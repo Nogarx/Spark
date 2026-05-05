@@ -46,21 +46,21 @@ class Concat(ControlInterface):
 		# Initialize super.
         super().__init__(config=config, **kwargs)
 
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
+    def build(self, **abc_args: SparkPayload) -> None:
         # Validate payloads types.
         payload_type = None
-        for key, value in input_specs.items():
-            payload_type = value.payload_type if payload_type is None else payload_type
-            if payload_type != value.payload_type:
+        for key, value in abc_args.items():
+            payload_type = type(value) if payload_type is None else payload_type
+            if payload_type != type(value):
                 raise TypeError(
                     f'Expected all payload types to be of same type \"{payload_type}\" '
-                    f'but input spec \"{key}\" is of type "{value.payload_type}".'
+                    f'but input spec \"{key}\" is of type "{type(value)}".'
                 )
         self._payload_type = payload_type
 
-    def _overwrite_call_signature(self, raw_args: tuple[SparkPayload], raw_kwargs: dict[str, SparkPayload]) -> None:
+    def _overwrite_call_signature(self, raw_kwargs: dict[str, SparkPayload]) -> None:
         # Create the new Signature object and assign it to the __call__ method
-        self.__call__.__func__.__signature__ = _build_signature_from_inputs(raw_args, raw_kwargs)
+        self.__call__.__func__.__signature__ = _build_signature_from_inputs(raw_kwargs)
 
     def __call__(self, **inputs: SparkPayload) -> ControlInterfaceOutput:
         """
@@ -114,26 +114,26 @@ class ConcatReshape(ControlInterface):
         # Intialize variables.
         self.reshape = utils.validate_shape(self.config.reshape)
 
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
+    def build(self, **abc_args: SparkPayload) -> None:
         # Validate payloads types.
         payload_type = None
-        for key, value in input_specs.items():
-            payload_type = value.payload_type if payload_type is None else payload_type
-            if payload_type != value.payload_type:
+        for key, value in abc_args.items():
+            payload_type = type(value) if payload_type is None else payload_type
+            if payload_type !=type(value):
                 raise TypeError(
                     f'Expected all payload types to be of same type \"{payload_type}\" '
-                    f'but input spec \"{key}\" is of type "{value.payload_type}".'
+                    f'but input spec \"{key}\" is of type "{type(value)}".'
                 )
         self.payload_type = payload_type
         # Validate final shape.
         try:
-            jnp.concatenate([jnp.zeros(s.shape).reshape(-1) for s in input_specs.values()]).reshape(self.reshape)
+            jnp.concatenate([jnp.zeros(s.shape).reshape(-1) for s in abc_args.values()]).reshape(self.reshape)
         except:
-            raise ValueError(f'Shapes {[s.shape for s in input_specs.values()]} are not broadcastable to {self.reshape}')
+            raise ValueError(f'Shapes {[s.shape for s in abc_args.values()]} are not broadcastable to {self.reshape}')
 
-    def _overwrite_call_signature(self, raw_args: tuple[SparkPayload], raw_kwargs: dict[str, SparkPayload]) -> None:
+    def _overwrite_call_signature(self, raw_kwargs: dict[str, SparkPayload]) -> None:
         # Create the new Signature object and assign it to the __call__ method
-        self.__call__.__func__.__signature__ = _build_signature_from_inputs(raw_args, raw_kwargs)
+        self.__call__.__func__.__signature__ = _build_signature_from_inputs(raw_kwargs)
 
     def __call__(self, **inputs: SparkPayload) -> ControlInterfaceOutput:
         """

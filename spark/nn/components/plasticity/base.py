@@ -11,7 +11,7 @@ from jax.typing import ArrayLike
 from spark.core.specs import PortSpecs
 from spark.core.variables import Constant
 from spark.core.utils import get_einsum_dot_exp_string
-from spark.core.payloads import FloatArray, IntegerMask
+from spark.core.payloads import FloatArray, IntegerMask, SpikeArray, SparkPayload
 from spark.nn.components.base import Component, ComponentConfig
 from spark.nn.initializers import MaskedInitializer
 
@@ -65,15 +65,18 @@ class Plasticity(Component, tp.Generic[ConfigT]):
             3: 'II',
         }
 
-    def _initialize_synaptic_mask(self, input_specs: dict[str, PortSpecs]) -> None:
+    def _initialize_synaptic_mask(self, **abc_args: SparkPayload) -> None:
         # Generate mask once
         if getattr(self, '_synaptic_mask', None) is None:
-            post_inhibition_mask = input_specs['post_spikes'].inhibition_mask
-            if input_specs['pre_spikes'].async_spikes: 
-                _slice = post_inhibition_mask.ndim * (0,) + (input_specs['pre_spikes'].inhibition_mask.ndim - post_inhibition_mask.ndim) * (slice(None),)
-                pre_inhibition_mask = input_specs['pre_spikes'].inhibition_mask[_slice]
+            pre_spikes: SpikeArray = abc_args['pre_spikes']
+            post_spikes: SpikeArray = abc_args['post_spikes']
+
+            post_inhibition_mask = post_spikes.inhibition_mask
+            if pre_spikes.async_spikes: 
+                _slice = post_inhibition_mask.ndim * (0,) + (pre_spikes.inhibition_mask.ndim - post_inhibition_mask.ndim) * (slice(None),)
+                pre_inhibition_mask = pre_spikes.inhibition_mask[_slice]
             else:
-                pre_inhibition_mask = input_specs['pre_spikes'].inhibition_mask 
+                pre_inhibition_mask = pre_spikes.inhibition_mask 
             einsum_str = get_einsum_dot_exp_string(
                 post_inhibition_mask.shape, 
                 pre_inhibition_mask.shape, 

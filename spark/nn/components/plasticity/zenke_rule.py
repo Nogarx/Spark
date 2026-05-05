@@ -14,7 +14,6 @@ from spark.core.tracers import Tracer
 from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Constant
 from spark.core.registry import register_module, register_config
-from spark.core.utils import get_einsum_dot_exp_string
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.plasticity.base import Plasticity, PlasticityConfig, PlasticityOutput
 from spark.nn.initializers.base import Initializer
@@ -147,24 +146,33 @@ class ZenkeRule(Plasticity):
     """
     config: ZenkeRuleConfig
 
-    def __init__(self, config: ZenkeRuleConfig | None = None, **kwargs):
+    def __init__(self, config: ZenkeRuleConfig | None = None, **kwargs) -> None:
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
-    def build(self, input_specs: dict[str, PortSpecs]):
-        # Initialize shapes
-        input_shape = input_specs['pre_spikes'].shape
-        output_shape = input_specs['post_spikes'].shape
-        kernel_shape = input_specs['kernel'].shape
+    def build(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> None:
         # Initialize variables.
-        _pre_tau = self.config.init.pre_tau(key=self.get_rng_keys(1), shape=input_shape, dtype=self._dtype)
-        _post_tau = self.config.init.post_tau(key=self.get_rng_keys(1), shape=output_shape, dtype=self._dtype)
-        _post_slow_tau = self.config.init.post_slow_tau(key=self.get_rng_keys(1), shape=output_shape, dtype=self._dtype)
-        _target_tau = self.config.init.target_tau(key=self.get_rng_keys(1), shape=kernel_shape, dtype=self._dtype)
+        # NOTE: Since variables used for plasticity may have very different shapes and initialization patterns
+        # variables should almost always be initialized using self._initialize_variable. This method automatically
+        # handles the most common initialization patterns and tries to keep the variable the smallest shape possible
+        # that is still compute efficient for plasticity computation (THIS APPRAOCH IS NOT ALWAYS MEMORY EFFICIENT).
+        kernel_shape = kernel.shape
+        pre_shape = pre_spikes.shape
+        post_shape = post_spikes.shape
+        _initialize_variable_fn = lambda var: self._initialize_variable(var, shape=kernel_shape, dtype=kernel.dtype)
+        _pre_tau = _initialize_variable_fn(self.config.init.pre_tau)
+        _post_tau = _initialize_variable_fn(self.config.init.post_tau)
+        _post_slow_tau = _initialize_variable_fn(self.config.init.post_slow_tau)
+        _target_tau = _initialize_variable_fn(self.config.init.target_tau)
+        # Broadcast shapes
+        # NOTE: Most learning rules may be reexpressed as sums of general dot products; the most robuts way to 
+        # implement this is by reshaping pre and post spikes to the shape of the kernel. It also makes the math more clear.
+        self._pre_shape = pre_shape if pre_shape == kernel_shape else (1,) * (len(kernel_shape) - len(pre_shape)) + pre_shape
+        self._post_shape = post_shape if post_shape == kernel_shape else post_shape + (1,) * (len(kernel_shape) - len(post_shape))
         # Tracers.
-        self.pre_trace = Tracer(input_shape, tau=_pre_tau, scale=1/_pre_tau, dtype=self._dtype, dt=self._dt) 
-        self.post_trace = Tracer(output_shape, tau=_post_tau, scale=1/_post_tau, dtype=self._dtype, dt=self._dt)
-        self.post_slow_trace = Tracer(output_shape, tau=_post_slow_tau, scale=1/_post_slow_tau, dtype=self._dtype, dt=self._dt)
+        self.pre_trace = Tracer(self._pre_shape, tau=_pre_tau, scale=1/_pre_tau, dtype=self._dtype, dt=self._dt) 
+        self.post_trace = Tracer(self._post_shape, tau=_post_tau, scale=1/_post_tau, dtype=self._dtype, dt=self._dt)
+        self.post_slow_trace = Tracer(self._post_shape, tau=_post_slow_tau, scale=1/_post_slow_tau, dtype=self._dtype, dt=self._dt)
         self.target_trace = Tracer(kernel_shape, tau=_target_tau, scale=1/_target_tau, dtype=self._dtype, dt=self._dt)
         self.a = Constant(self.config.a)
         self.b = Constant(self.config.b)
@@ -172,10 +180,6 @@ class ZenkeRule(Plasticity):
         self.d = Constant(self.config.d)
         self.p = Constant(self.config.p)
         self.eta = Constant(self.config.eta)
-        # Einsum labels.
-        async_spikes = input_specs['pre_spikes'].async_spikes
-        self._post_pre_dot = get_einsum_dot_exp_string(output_shape, input_shape, side='left' if async_spikes else 'none')
-        self._ker_post_dot = get_einsum_dot_exp_string(kernel_shape, output_shape, side='left')
             
     def reset(self) -> None:
         """
@@ -190,9 +194,9 @@ class ZenkeRule(Plasticity):
         """
             Computes next kernel update.
         """
-        # Squeeze
-        _pre_spikes = pre_spikes.spikes
-        _post_spikes = post_spikes.spikes
+        # Extract and reshape inputs
+        _pre_spikes = pre_spikes.spikes.reshape(self._pre_shape)
+        _post_spikes = post_spikes.spikes.reshape(self._post_shape)
         _kernel = kernel.value
         # Update and get current trace value
         pre_trace = self.pre_trace(_pre_spikes)
@@ -202,11 +206,11 @@ class ZenkeRule(Plasticity):
         delta_target = _kernel - self.config.p * target_trace * (1/4 - target_trace) * (1/2 - target_trace)
         target_trace = self.target_trace(delta_target)
         # Triplet LTP
-        a = self.a * jnp.einsum(self._post_pre_dot, post_slow_trace * _post_spikes, pre_trace)
+        a = self.a * pre_trace * post_slow_trace * _post_spikes
         # Doublet LTD
-        b = self.b * jnp.einsum(self._post_pre_dot, post_trace, _pre_spikes)
+        b = self.b * post_trace * _pre_spikes
         # Heterosynaptic plasticity.
-        c = self.c * jnp.einsum(self._ker_post_dot, _kernel - target_trace, (post_trace**3) * _post_spikes)
+        c = self.c * (_kernel - target_trace) * (post_trace**3) * _post_spikes
         # Transmitter induced.
         d = self.d * _pre_spikes
         # Compute rule
