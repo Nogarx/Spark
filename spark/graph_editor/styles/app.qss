@@ -1,0 +1,407 @@
+/* ===== Main window ===== */
+
+QMainWindow {
+    background-color: $main_background_color;
+}
+QMainWindow::separator {
+    background-color: $main_background_color_separator;
+    width: 2px;
+    height: 2px;
+}
+QMainWindow::separator:hover {
+    background-color: $main_background_color_separator_hover;
+}
+
+/* ===== Status bar ===== */
+
+QStatusBar#statusBar {
+    background-color: $status_bar_background_color;
+    color: $status_bar_color;
+    border-top: 1px solid $status_bar_border_color;
+}
+
+/* ===== Menus ===== */
+
+QMenuBar {
+    background-color: $menu_bar_background_color;
+    color: $menu_bar_color;
+    border-bottom: 1px solid $menu_bar_border_color;
+}
+QMenuBar::item:selected {
+    background-color: $menu_bar_background_color_selected;
+}
+
+QMenu {
+    background-color: $menu_background_color;
+    color: $menu_color;
+    border: 1px solid $menu_border_color;
+}
+QMenu::item:selected {
+    background-color: $menu_background_color_selected;
+}
+QMenu::item:disabled {
+    color: $menu_color_disabled;
+}
+QMenu::separator {
+    background-color: $menu_separator_color;
+    height: 1px;
+    margin: 4px 0px;
+}
+
+QLabel#dockTitle {
+    background-color: $menu_background_color;
+    color: $menu_color;
+    border: 1px solid $menu_border_color;
+}
+
+
+/* ===== Shared scrollbars ===== */
+
+QScrollBar:vertical {
+    border: none;
+    background: transparent;
+    width: $scrollbar_width;
+    margin: 0px 0px 0px 0px;
+}
+QScrollBar::handle:vertical {
+    background-color: $scrollbar_handle;
+    min-height: $scrollbar_handle_min_height;
+    border-radius: $scrollbar_handle_radius;
+    margin: 2px 4px 2px 4px;
+}
+QScrollBar::handle:vertical:hover {
+    background-color: $scrollbar_handle_hover;
+}
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0px;
+    border: none;
+    background: none;
+}
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+/* ===== Inspector: attribute toggle buttons ===== */
+
+QAttrControls QToolButton {
+    background: transparent;
+    border: none;
+    color: $inspector_icon_idle;
+    font-size: $inspector_icon_size;
+    padding: 0px;
+    min-width: $inspector_icon_width;
+    max-width: $inspector_icon_width;
+}
+QAttrControls QToolButton:hover {
+    color: $inspector_icon_hover_fg;
+    background-color: $inspector_icon_hover_bg;
+}
+QAttrControls QToolButton:checked {
+    color: $inspector_icon_checked;
+}
+QAttrControls QToolButton:disabled {
+    color: $inspector_icon_disabled;
+}
+
+/* Warning icon: never hovers, never checks. */
+QAttrControls QToolButton#warningBtn,
+QAttrControls QToolButton#warningBtn:hover,
+QAttrControls QToolButton#warningBtn:disabled {
+    color: $inspector_icon_warn;
+    background: transparent;
+    border: none;
+}
+
+/* ===== Inspector: input fields ===== */
+
+QAttribute QComboBox,
+QAttribute QAbstractSpinBox,
+QAttribute QLineEdit {
+    background-color: $inspector_input_bg;
+    color: $inspector_input_fg;
+    border: 1px solid $inspector_input_border;
+    border-radius: $inspector_input_radius;
+    padding: $inspector_input_padding;
+    selection-background-color: $inspector_selection_bg;
+    selection-color: $inspector_selection_fg;
+}
+QAttribute QComboBox:focus,
+QAttribute QAbstractSpinBox:focus,
+QAttribute QLineEdit:focus {
+    border: 1px solid $inspector_input_focus;
+}
+
+/* ===== Inspector: combo popup ===== */
+
+QComboBox QAbstractItemView {
+    background-color: $inspector_input_bg;
+    color: $inspector_input_fg;
+    border: 1px solid $inspector_input_border;
+    selection-background-color: $inspector_popup_selection_bg;
+    outline: none;
+}
+QComboBox QListView::item {
+    background-color: $inspector_input_bg;
+    color: $inspector_input_fg;
+    padding: $inspector_popup_item_padding;
+    border: none;
+}
+QComboBox QListView::item:selected {
+    background-color: $inspector_popup_selection_bg;
+    color: $inspector_popup_selection_fg;
+}
+
+/* ===== Inspector: initializer block ===== */
+
+QWidget#initBlock {
+    background-color: $inspector_block_bg;
+    border: 1px solid $inspector_block_border;
+    border-radius: $inspector_block_radius;
+}
+QLabel#attrLabel {
+    color: $inspector_label_color;
+    background: transparent;
+    border: none;
+}
+
+/* ===== Hierarchy: chrome ===== */
+
+QWidget#hierarchySearchContainer {
+    background-color: $hierarchy_background_color;
+}
+QScrollArea#hierarchyScroll {
+    background-color: $hierarchy_background_color;
+    border: none;
+}
+QWidget#hierarchyScrollViewport {
+    background-color: $hierarchy_background_color;
+}
+QWidget#hierarchyContent {
+    background-color: $hierarchy_background_color;
+}
+
+/* ===== Hierarchy: search bar ===== */
+
+QLineEdit#hierarchySearch {
+    background-color: $hierarchy_search_bg;
+    color: $hierarchy_search_fg;
+    border: 1px solid $hierarchy_search_border;
+    border-radius: $hierarchy_search_border_radius;
+    padding: $hierarchy_search_padding;
+    font-size: $hierarchy_search_font_size;
+}
+QLineEdit#hierarchySearch:focus {
+    border: 1px solid $hierarchy_search_focus_border;
+}
+
+/* ===== Hierarchy: category blocks ===== */
+
+QWidget#hierarchyBlock {
+    background-color: $hierarchy_block_bg;
+    border: 1px solid $hierarchy_block_border;
+    border-radius: $hierarchy_block_radius;
+}
+
+QToolButton#hierarchyCategoryHeader {
+    background-color: $hierarchy_category_bg;
+    color: $hierarchy_category_fg;
+    font-weight: bold;
+    font-size: $hierarchy_category_font_size;
+    text-align: left;
+    border: none;
+    border-radius: $hierarchy_block_radius;
+    padding: $hierarchy_category_padding;
+}
+QToolButton#hierarchyCategoryHeader[expanded="true"] {
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+QToolButton#hierarchyCategoryHeader:hover {
+    background-color: $hierarchy_category_hover_bg;
+}
+
+/* ===== Hierarchy: trees ===== */
+
+QTreeWidget#hierarchyTree {
+    background-color: transparent;
+    border: none;
+    color: $hierarchy_tree_fg;
+    outline: 0;
+}
+QTreeWidget#hierarchyTree::item {
+    border-bottom: 1px solid $hierarchy_item_border;
+    border-radius: 0px;
+}
+QTreeWidget#hierarchyTree::item:selected {
+    background-color: $hierarchy_item_selected_bg;
+    border-bottom: 1px solid $hierarchy_item_selected_border;
+}
+QTreeWidget#hierarchyTree::item:hover:!selected {
+    background-color: $hierarchy_item_hover_bg;
+    border-bottom: 1px solid $hierarchy_item_hover_border;
+}
+
+/* ===== Hierarchy: node rows ===== */
+
+QLabel#hierarchyItemTitle {
+    color: $hierarchy_title_color;
+    font-weight: bold;
+    font-size: $hierarchy_title_font_size;
+    background: transparent;
+    border: none;
+}
+QLabel#hierarchyItemSubtitle {
+    color: $hierarchy_subtitle_color;
+    font-size: $hierarchy_subtitle_font_size;
+    background: transparent;
+    border: none;
+}
+
+/* ===== Inspector: chrome ===== */
+
+QScrollArea#inspectorScroll {
+    background-color: $inspector_background_color;
+    border: none;
+}
+QWidget#inspectorScrollViewport {
+    background-color: $inspector_background_color;
+}
+QWidget#inspectorContent {
+    background-color: $inspector_background_color;
+}
+QLabel#inspectorEmptyState {
+    color: $inspector_empty_state_fg;
+    font-style: italic;
+}
+
+/* ===== Inspector: node header ===== */
+
+QLabel#nodeNameIcon {
+    color: $inspector_name_icon_color;
+    font-size: $inspector_name_icon_size;
+}
+QLineEdit#nodeNameInput {
+    background-color: $inspector_input_bg;
+    color: $inspector_input_fg;
+    border: 1px solid $inspector_input_border;
+    border-radius: $inspector_input_radius;
+    padding: $inspector_input_padding;
+    font-weight: bold;
+    font-size: $inspector_name_input_font_size;
+}
+QLineEdit#nodeNameInput:focus {
+    border: 1px solid $inspector_input_focus;
+}
+QLabel#nodeErrorLabel {
+    color: $inspector_error_color;
+    font-size: $inspector_error_font_size;
+}
+QLabel#nodeClassLabel {
+    color: $inspector_class_label_color;
+    font-size: $inspector_class_label_font_size;
+    font-weight: bold;
+}
+QLabel#configTreeLabel {
+    color: $inspector_tree_label_color;
+    font-weight: bold;
+    font-size: $inspector_tree_label_font_size;
+}
+QPlainTextEdit#configTreeDisplay {
+    border: none;
+    background: transparent;
+    color: $inspector_tree_fg;
+    font-family: $inspector_tree_font_family;
+    font-size: $inspector_tree_font_size;
+    margin: 0px 0px 0px 8px;
+    padding: 0px;
+}
+QFrame#inspectorSeparator {
+    background-color: $inspector_separator_color;
+}
+
+/* ===== Inspector: collapsible blocks ===== */
+
+QWidget#inspectorBlock {
+    background-color: $inspector_block_bg;
+    border: 1px solid $inspector_block_border;
+    border-radius: $inspector_block_radius;
+}
+QPushButton#inspectorBlockHeader {
+    background-color: $inspector_header_bg;
+    color: $inspector_header_fg;
+    font-weight: bold;
+    font-size: $inspector_header_font_size;
+    text-align: left;
+    border: none;
+    border-radius: $inspector_block_radius;
+    padding: $inspector_header_padding;
+}
+QPushButton#inspectorBlockHeader[expanded="true"] {
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+QPushButton#inspectorBlockHeader:hover {
+    background-color: $inspector_header_hover_bg;
+}
+
+/* ===== Console: chrome ===== */
+
+QScrollArea#consoleScroll {
+    background: $console_background_color;
+    border: none;
+    border-top: 1px solid $console_border_color;
+}
+QWidget#consoleScrollViewport {
+    background: $console_background_color;
+}
+QWidget#consoleContent {
+    background: $console_background_color;
+}
+QWidget#consoleTopBar {
+    background-color: $console_btn_bg;
+}
+
+/* ===== Console: filter buttons ===== */
+
+ConsoleView QPushButton {
+    background-color: $console_btn_bg;
+    color: $console_btn_color;
+    border: 1px solid $console_border_color;
+    border-radius: $console_btn_radius;
+    padding: $console_btn_padding;
+    font-size: $console_btn_font_size;
+}
+ConsoleView QPushButton:hover {
+    background-color: $console_btn_hover;
+}
+ConsoleView QPushButton:checked {
+    background-color: $console_btn_checked;
+    color: $console_btn_checked_fg;
+    border: 1px solid $console_btn_checked;
+}
+
+/* ===== Console: message rows ===== */
+
+QLabel#consoleMessageText {
+    color: $console_text_color;
+    font-family: $console_font_family;
+    font-size: $console_font_size;
+    background: transparent;
+}
+
+/* ===== Preferences dialog ===== */
+
+QLabel#prefsPathLabel {
+    color: $preferences_path_label_color;
+    font-style: italic;
+}
+QPushButton#prefsSaveBtn {
+    font-weight: bold;
+}
+QPushButton#prefsColorBtn {
+    border: 1px solid $preferences_color_btn_border;
+    border-radius: $preferences_color_btn_radius;
+    height: $preferences_color_btn_height;
+}

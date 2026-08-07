@@ -11,7 +11,7 @@ import spark.core.utils as utils
 from math import prod
 from spark.core.specs import PortSpecs
 from spark.core.variables import Constant
-from spark.core.registry import register_module, register_config
+from spark.core.registry import register_interface, register_config
 from spark.core.payloads import SparkPayload
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceConfig, ControlInterfaceOutput, _build_signature_from_inputs
@@ -37,7 +37,7 @@ class SamplerConfig(ControlInterfaceConfig):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@register_module
+@register_interface
 class Sampler(ControlInterface):
     """
         Sample a single input streams of inputs of the same type into a single stream.

@@ -378,8 +378,9 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 		# Currently it can only be either a Module or a Initializer, so better check those two.
 		module_class_ref = REGISTRY.MODULES.get(obj.__class_ref__)
 		initializer_class_ref = REGISTRY.INITIALIZERS.get(obj.__class_ref__)
+		interface_class_ref = REGISTRY.INTERFACES.get(obj.__class_ref__)
 		# Check we only got one coincidence, otherwise throw an error to avoid headaches.
-		if module_class_ref and initializer_class_ref:
+		if module_class_ref and initializer_class_ref or module_class_ref and interface_class_ref:
 			raise AttributeError(
 				f'Configuration \"{obj.__class__.__name__}\" cannot resolve __class_ref__. '
 				f'A Module and an Initializer with the same reference were found. '
@@ -390,6 +391,8 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 			class_ref = module_class_ref.class_ref
 		elif initializer_class_ref: 
 			class_ref = initializer_class_ref.class_ref
+		elif interface_class_ref: 
+			class_ref = interface_class_ref.class_ref
 		else:
 			raise AttributeError(
 				f'Configuration \"{obj.__class__.__name__}\" cannot resolve __class_ref__. '

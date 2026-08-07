@@ -46,30 +46,39 @@ def normalize_str(s: str) -> str:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def to_human_readable(s: str, capitalize_all: bool = False) -> str:
+def to_human_readable(s: str, capitalize_all: bool = True) -> str:
     """
-        Converts a string from various programming cases into a human-readable format.
+    Converts a string from various programming cases into a human-readable format.
 
-        Input:
-            s: str, string to normalize
-            
-        Output:
-            str, human readable string
+    Input:
+        s: str, string to normalize
+        capitalize_all: bool, title-case every word instead of just the first
+    Output:
+        str, human readable string
     """
+
+    def _looks_like_acronym(w: str) -> bool:
+        return w.isupper() or any(c.isupper() for c in w[1:])
+
     # Sanity check
     if not isinstance(s, str) or not s:
         raise TypeError('\"s\" must be a non-empty string.')
-    # Insert underscores between acronyms and other words.
-    s = re.sub(r'([A-Z]+)([A-Z][a-z])', r'\1_\2', s)
-    # Insert underscores between lowercase letters and uppercase letters.
-    s = re.sub(r'([a-z])([A-Z])', r'\1_\2', s)
-    # Replace any spaces or hyphens with a single underscore.
-    s = re.sub(r'[-\s]+', '_', s)
-    # Replace all underscores with spaces.
+
+    # Last capital of a run starts the new word.
+    s = re.compile(r'([A-Z]+)([A-Z][a-z])').sub(r'\1_\2', s)
+    # Digits absorb into the preceding token.
+    s = re.compile(r'([0-9])([A-Z][a-z])').sub(r'\1_\2', s)
+    # Separate words
+    s = re.compile(r'([a-z])([A-Z])').sub(r'\1_\2', s)
+    words = [w for w in re.compile(r'[-_\s]+').split(s) if w]
+
     if capitalize_all:
-        return ' '.join([w.capitalize() for w in s.replace('_', ' ').split(' ')])
-    else:
-        return s.replace('_', ' ').capitalize()
+        # Uppercase the first char only; never touch the tail, so RD stays RD.
+        return ' '.join(w[:1].upper() + w[1:] for w in words)
+
+    head, *tail = words
+    return ' '.join([head[:1].upper() + head[1:]]
+                    + [w if _looks_like_acronym(w) else w.lower() for w in tail])
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -543,63 +552,65 @@ def ascii_tree(text: str) -> str:
 # NOTE: This is just a convinience class to simplify some code inside controllers and is equivalent to two nested dictionaries. 
 # Notably, this class produces the same XLA code as using nested dictionaries (after JIT). It's only purpose is to simply notaion.
 
-_KT = tp.TypeVar('_KT')
+_K1 = tp.TypeVar('_K1')
+_K2 = tp.TypeVar('_K2')
 _VT = tp.TypeVar('_VT')
 
 @jax.tree_util.register_pytree_with_keys_class
 @dc.dataclass(init=False)
-class TwoKeyDict(MutableMapping[_KT, _KT, _VT]):
+class TwoKeyDict(MutableMapping[tp.Generic[_K1, _K2, _VT]]):
 
-    def __init__(self, data: dict[_KT, dict[_KT, _VT]] | None = None) -> None:
+    def __init__(self, data: dict[_K1, dict[_K2, _VT]] | None = None) -> None:
         self._data = defaultdict(dict)
         if not data is None:
             for k, v in data.items():
                 self._data[k] = v
 
     @tp.overload
-    def __getitem__(self, keys: tuple[_KT, _KT] )-> _VT: ...
+    def __getitem__(self, keys: tuple[_K1, _K2] )-> _VT: ...
     @tp.overload
-    def __getitem__(self, keys: _KT)-> dict[_KT, _VT]: ...
+    def __getitem__(self, keys: _K1)-> dict[_K2, _VT]: ...
     def __getitem__(self, keys):
-        try:
-            if isinstance(keys, tuple):
-                return self._data[keys[0]][keys[1]]
-            else:
-                return self._data[keys]
-        except KeyError as e:
-            raise KeyError(f'Invalid key: {keys}')
+        if isinstance(keys, tuple):
+            k1, k2 = keys
+            if k1 not in self._data or k2 not in self._data[k1]:
+                raise KeyError(f'Invalid key pair: {keys}')
+            return self._data[k1][k2]
+        else:
+            if keys not in self._data:
+                raise KeyError(f'Invalid key: {keys}')
+            return self._data[keys]
 
     @tp.overload
-    def __setitem__(self, keys: _KT, value: dict[_KT, _VT]) -> None: ...
+    def __setitem__(self, keys: _K1, value: dict[_K2, _VT]) -> None: ...
     @tp.overload
-    def __setitem__(self, keys: tuple[_KT, _KT], value: _VT) -> None: ...
+    def __setitem__(self, keys: tuple[_K1, _K2], value: _VT) -> None: ...
     def __setitem__(self, keys, value) -> None:
         if isinstance(keys, tuple):
-            self._data[keys[0]][keys[1]] = value
-        elif isinstance(value, dict):
-            self._data[keys] = value
+            k1, k2 = keys
+            self._data[k1][k2] = value
         else:
-            raise ValueError(
-                f'Invalid keys: {keys} or value: {value}.'
-            )
+            self._data[keys] = value
 
     @tp.overload
-    def __delitem__(self, keys: _KT) -> None: ...
+    def __delitem__(self, keys: _K1) -> None: ...
     @tp.overload
-    def __delitem__(self, keys: tuple[_KT, _KT]) -> None: ...
+    def __delitem__(self, keys: tuple[_K1, _K2]) -> None: ...
     def __delitem__(self, keys) -> None:
-        try:
-            if isinstance(keys, tuple):
-                del self._data[keys[0]][keys[1]]
-            else:
-                del self._data[keys]
-        except KeyError as e:
-            raise KeyError(f'Invalid key: {keys}')
+        if isinstance(keys, tuple):
+            k1, k2 = keys
+            if k1 not in self._data or k2 not in self._data[k1]:
+                raise KeyError(f'Invalid key pair: {keys}')
+            del self._data[k1][k2]
+        else:
+            if keys not in self._data:
+                raise KeyError(f'Invalid key: {keys}')
+            del self._data[keys]
         
     def __len__(self,) -> int:
-        return len(self._data)
+        return sum([len(v) for v in self._data.values()])
 
-    def __iter__(self,) -> tp.Iterator[tuple[str, str]]:
+    def __iter__(self,) -> tp.Iterator[tuple[_K1, _K2]]:
         for key1, subdict in self._data.items():
             for key2 in subdict.keys():
                 yield (key1, key2)
@@ -628,20 +639,28 @@ class TwoKeyDict(MutableMapping[_KT, _KT, _VT]):
         return _str
 
     @tp.overload
-    def __contains__(self, keys: _KT) -> bool: ...
+    def __contains__(self, keys: _K1) -> bool: ...
     @tp.overload
-    def __contains__(self, keys: tuple[_KT, _KT]) -> bool: ...
+    def __contains__(self, keys: tuple[_K1, _K2]) -> bool: ...
     def __contains__(self, keys) -> bool:
-        try:
-            if isinstance(keys, tuple):
-                if keys[0] in self._data:
-                    return keys[1] in self._data[keys[0]]
-                else:
-                    return False
-            else:
-                return keys in self._data
-        except KeyError as e:
-            raise KeyError(f'Invalid key: {keys}')
+        if isinstance(keys, tuple):
+            k1, k2 = keys
+            if k1 not in self._data or k2 not in self._data[k1]:
+                return False
+            return True
+        else:
+            if keys not in self._data:
+                return False
+            return True
+
+    def keys(self) -> tp.KeysView[tp.Tuple[_K1, _K2]]:
+        return super().keys()
+
+    def values(self) -> tp.ValuesView[_VT]:
+        return super().values()
+
+    def items(self) -> tp.ItemsView[tp.Tuple[_K1, _K2], _VT]:
+        return super().items()
 
     def tree_flatten(self) -> tuple[tuple, tuple]:
         children = (self._data,)

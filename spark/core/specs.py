@@ -195,11 +195,11 @@ class ModuleSpecs:
         # since the registry is not necessarily built
         from spark.core.module import SparkModule
         from spark.nn.controllers.neuron import Neuron
-        if REGISTRY.MODULES.__built__ and issubclass(module_cls, SparkModule) and REGISTRY.MODULES.get(module_cls.__name__) is None:  
+        if REGISTRY.__built__ and issubclass(module_cls, SparkModule) and REGISTRY.Components.get(module_cls.__name__) is None:  
             raise ValueError(
                 f'Module class \"{module_cls.__name__}\" does not exists in the registry.'
             )
-        elif REGISTRY.NEURONS.__built__ and issubclass(module_cls, Neuron) and REGISTRY.NEURONS.get(module_cls.__name__) is None:  
+        elif REGISTRY.__built__ and issubclass(module_cls, Neuron) and REGISTRY.Neurons.get(module_cls.__name__) is None:  
             raise ValueError(
                 f'Neuron class \"{module_cls.__name__}\" does not exists in the registry.'
             )

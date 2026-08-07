@@ -14,7 +14,7 @@ from math import prod
 from spark.core.tracers import Tracer, RDTracer
 from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Variable
-from spark.core.registry import register_module
+from spark.core.registry import register_interface, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.interfaces.output.base import OutputInterface, OutputInterfaceConfig, OutputInterfaceOutput
 
@@ -22,6 +22,7 @@ from spark.nn.interfaces.output.base import OutputInterface, OutputInterfaceConf
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+@register_config
 class ExponentialIntegratorConfig(OutputInterfaceConfig):
     """
         ExponentialIntegrator configuration class.
@@ -84,7 +85,7 @@ class ExponentialIntegratorConfig(OutputInterfaceConfig):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@register_module
+@register_interface
 class ExponentialIntegrator(OutputInterface):
     """
         Transforms a discrete spike signal to a continuous signal.

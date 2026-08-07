@@ -12,7 +12,7 @@ import dataclasses as dc
 import spark.core.utils as utils
 from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Variable, Constant
-from spark.core.registry import register_module, register_config
+from spark.core.registry import register_interface, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.interfaces.input.base import InputInterface, InputInterfaceConfig, InputInterfaceOutput
 
@@ -59,7 +59,7 @@ class LinearSpikerConfig(InputInterfaceConfig):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@register_module
+@register_interface
 class LinearSpiker(InputInterface):
     """
         Transforms a continuous signal to a spiking signal.

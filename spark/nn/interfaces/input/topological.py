@@ -13,7 +13,7 @@ import dataclasses as dc
 import spark.core.utils as utils
 from spark.core.payloads import SpikeArray, FloatArray
 from spark.core.variables import Variable, Constant
-from spark.core.registry import register_module, register_config
+from spark.core.registry import register_interface, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator, BinaryValidator
 from spark.nn.interfaces.input.base import InputInterface, InputInterfaceConfig, InputInterfaceOutput
 from spark.nn.interfaces.input.poisson import PoissonSpikerConfig
@@ -90,7 +90,7 @@ class TopologicalPoissonSpikerConfig(TopologicalSpikerConfig, PoissonSpikerConfi
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@register_module
+@register_interface
 class TopologicalPoissonSpiker(InputInterface):
     """
         Transforms a continuous signal to a spiking signal.
@@ -165,7 +165,7 @@ class TopologicalLinearSpikerConfig(TopologicalSpikerConfig, LinearSpikerConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@register_module
+@register_interface
 class TopologicalLinearSpiker(InputInterface):
     """
         Transforms a continuous signal to a spiking signal.
