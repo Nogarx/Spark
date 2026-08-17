@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 import types
 import typing as tp
+from jax.typing import DTypeLike
 from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QComboBox, QSpinBox, QDoubleSpinBox,
     QLineEdit, QLabel, QFormLayout, QListView, QToolButton
@@ -24,6 +25,21 @@ from spark.nn.initializers import InitializerConfig
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
+
+import numpy as np
+DEFAULT_DTYPES = [                
+    np.uint8,
+    np.uint16,
+    np.uint32,
+    np.int8,
+    np.int16,
+    np.int32,
+    np.float16,
+    np.float32,
+    np.bool,
+]
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class QAttrControls(QWidget):
     """
@@ -236,9 +252,9 @@ class QAttribute(QWidget):
                 self.node.is_initializer_active = is_init
             elif is_init and self._init_combo:
                 # If already an initializer but the specific type changed (e.g., Constant -> Uniform)
-                if self._init_combo.currentData().get_config_spec() != type(value):
+                if self._init_combo.currentData() != type(value):
                     for i in range(self._init_combo.count()):
-                        if self._init_combo.itemData(i).get_config_spec() == type(value):
+                        if self._init_combo.itemData(i) == type(value):
                             self._init_combo.blockSignals(True)
                             self._init_combo.setCurrentIndex(i)
                             self._init_combo.blockSignals(False)
@@ -268,8 +284,10 @@ class QAttribute(QWidget):
         types_to_check = []
         if isinstance(t_hint, types.UnionType) or (hasattr(t_hint, '__origin__') and t_hint.__origin__ is tp.Union):
             types_to_check = list(tp.get_args(t_hint))
-        else: types_to_check = [t_hint]
-        if bool in types_to_check:
+        else: 
+            types_to_check = [t_hint]
+        print(self.node.name, types_to_check)
+        if bool in types_to_check or 'bool' in types_to_check:
             cb = QComboBox()
             cb.setView(QListView())
             cb.wheelEvent = lambda event: event.ignore()
@@ -278,7 +296,7 @@ class QAttribute(QWidget):
             cb.setCurrentIndex(0 if self.node.value else 1)
             cb.currentIndexChanged.connect(lambda idx: self._user_changed_value(cb.itemData(idx)))
             self._input_widget = cb
-        elif float in types_to_check:
+        elif float in types_to_check or 'float' in types_to_check:
             sb = QDoubleSpinBox(decimals=4)
             sb.wheelEvent = lambda event: event.ignore()
             try:
@@ -287,7 +305,7 @@ class QAttribute(QWidget):
             except (ValueError, TypeError): sb.setValue(0.0)
             sb.valueChanged.connect(lambda v: self._user_changed_value(v))
             self._input_widget = sb
-        elif int in types_to_check:
+        elif int in types_to_check or 'int' in types_to_check:
             sb = QDoubleSpinBox(decimals=0)
             sb.wheelEvent = lambda event: event.ignore()
             try:
@@ -296,6 +314,18 @@ class QAttribute(QWidget):
             except (ValueError, TypeError): sb.setValue(0)
             sb.valueChanged.connect(lambda v: self._user_changed_value(v))
             self._input_widget = sb
+        elif list(tp.get_args(DTypeLike)) == types_to_check or 'DTypeLike' in types_to_check:
+            cb = QComboBox()
+            cb.setView(QListView())
+            cb.wheelEvent = lambda event: event.ignore()
+            current_idx = 0
+            for idx, value in enumerate(self.node.metadata.get('value_options', DEFAULT_DTYPES)):
+                cb.addItem(value.__name__, value)
+                if value.__name__ == self.node.value.__name__:
+                    current_idx = idx
+            cb.setCurrentIndex(current_idx)
+            cb.currentIndexChanged.connect(lambda idx: self._user_changed_value(cb.itemData(idx)))
+            self._input_widget = cb
         else:
             le = QLineEdit(str(self.node.value))
             le.textChanged.connect(lambda v: self._user_changed_value(v))
@@ -308,12 +338,13 @@ class QAttribute(QWidget):
             self._init_combo.setView(QListView())
             self._init_combo.wheelEvent = lambda event: event.ignore()
             self._init_combo.setSizePolicy(self._init_combo.sizePolicy().Policy.Expanding, self._init_combo.sizePolicy().Policy.Fixed)
-            for name, init_cls in REGISTRY.INITIALIZERS.items(): self._init_combo.addItem(name, userData=init_cls)
+            for name, entry in REGISTRY.Initializers.items(): 
+                self._init_combo.addItem(name, userData=entry.get_cls().get_config_spec())
             self._init_combo.currentIndexChanged.connect(self._on_init_combo_changed)
 
     def _on_init_combo_changed(self, index: int) -> None:
         init_cls = self._init_combo.currentData()
-        new_config = init_cls.get_config_spec()()
+        new_config = init_cls()
         self._build_initializer_block(new_config)
         self._user_changed_value(new_config)
 
@@ -342,10 +373,11 @@ class QAttribute(QWidget):
             self._build_initializer_selector()
             self.top_row.layout().addWidget(self._init_combo)
             self._init_combo.setVisible(True)
-            if not isinstance(self.node.value, InitializerConfig): self._on_init_combo_changed(self._init_combo.currentIndex())
+            if not isinstance(self.node.value, InitializerConfig): 
+                self._on_init_combo_changed(self._init_combo.currentIndex())
             else:
                 for i in range(self._init_combo.count()):
-                    if self._init_combo.itemData(i).get_config_spec() == type(self.node.value):
+                    if self._init_combo.itemData(i) == type(self.node.value):
                         self._init_combo.setCurrentIndex(i); break
                 self._build_initializer_block(self.node.value)
         else:

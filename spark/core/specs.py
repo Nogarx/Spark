@@ -58,7 +58,7 @@ class PortSpecs:
         """
             Serialize PortSpecs to dictionary
         """
-        reg = REGISTRY.PAYLOADS.get_by_cls(self.payload_type)
+        reg = REGISTRY.Payloads.get_by_cls(self.payload_type)
         return {
             'payload_type': {
                 '__payload_type__': reg.name if reg else None,
@@ -225,11 +225,11 @@ class ModuleSpecs:
         from spark.core.module import SparkModule
         from spark.nn.controllers.neuron import Neuron
         if issubclass(self.module_cls, SparkModule):
-            reg = REGISTRY.MODULES.get_by_cls(self.module_cls)
-            subregistry = 'MODULES'
+            reg = REGISTRY.Components.get_by_cls(self.module_cls)
+            subregistry = 'Components'
         elif issubclass(self.module_cls, Neuron):
-            reg = REGISTRY.NEURONS.get_by_cls(self.module_cls)
-            subregistry = 'NEURONS'
+            reg = REGISTRY.Neurons.get_by_cls(self.module_cls)
+            subregistry = 'Neurons'
         else:
             raise RuntimeError(
                 f'Unable to find "{self.module_cls}" registry entry. Confirm that the class is a member of a registry.'

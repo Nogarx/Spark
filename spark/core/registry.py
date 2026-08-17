@@ -460,7 +460,7 @@ def register_neuron_from_config(cls_name: str, config: NeuronConfig) -> None:
         Generate a (Neuron, NeuronConfig) subclass pair programmatically from a NeuronConfig instance.
     """
     from spark.nn.controllers.neuron import NeuronConfig
-    if REGISTRY.NEURONS.exists(cls_name):
+    if REGISTRY.Neurons.exists(cls_name):
         raise KeyError(
             f'Unable to generate a (Neuron, NeuronConfig) subclass pair. The name {cls_name} is already in use by another class in the registry.'
         )

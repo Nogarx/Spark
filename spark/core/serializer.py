@@ -47,7 +47,7 @@ class SparkJSONEncoder(json.JSONEncoder):
 			# NOTE: Using the to_dict method will destroy all the metadata of nested classes.
 			# We need to let the encoder to naturally reach config leaves
 			return {
-				'__type__': REGISTRY.CONFIG.get_by_cls(obj.__class__).name,
+				'__type__': REGISTRY.Configs.get_by_cls(obj.__class__).name,
 				'__cfg__': {k: v for k,v in obj}
 			}
 		# Encode spark specs. 
@@ -127,7 +127,7 @@ class SparkJSONDecoder(json.JSONDecoder):
 		# Decode spark configs
 		if obj.get('__cfg__'):
 			config_type: str | None = obj.get('__type__')
-			reg = REGISTRY.CONFIG.get(config_type)
+			reg = REGISTRY.Configs.get(config_type)
 			if not reg:
 				raise KeyError(f'There is no registered configuration "{config_type}" in the registry.')
 			config_data = obj.get('__cfg__')

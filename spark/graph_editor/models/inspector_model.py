@@ -75,7 +75,6 @@ class ConfigValueNode(ConfigNode):
         Represents a primitive or simple value (int, float, str, bool, enum, etc.).
     """
     def __init__(self, name: str, value: tp.Any, type_hint: type, parent: QObject = None) -> None:
-        print(name, value, type_hint)
         super().__init__(name, parent)
         self._value = value
         self.type_hint = type_hint

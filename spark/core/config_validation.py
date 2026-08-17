@@ -11,7 +11,7 @@ import jax.numpy as jnp
 import jax.typing
 import dataclasses as dc
 import typing as tp
-from spark.core.registry import REGISTRY, register_cfg_validator
+from spark.core.registry import REGISTRY, register_cfg_validator, RegistryNamespace
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -103,18 +103,12 @@ class TypeValidator(ConfigurationValidator):
                     types_list.append(jnp.dtype)
                     types_list.append(jax.typing.DTypeLike)
             # Check if it is a spark class
-            if not t:
-                t = REGISTRY.MODULES.get(st)
-                if t:
-                    types_list.append(t.class_ref)
-            if not t:
-                t = REGISTRY.PAYLOADS.get(st)
-                if t:
-                    types_list.append(t.class_ref)
-            if not t:
-                t = REGISTRY.INITIALIZERS.get(st)
-                if t:
-                    types_list.append(t.class_ref)
+            
+            for subregistry_name in RegistryNamespace._member_names_:
+                if not t:
+                    t = getattr(REGISTRY, subregistry_name).get(st)
+                    if t:
+                        types_list.append(t.class_ref)
         return tuple(types_list)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

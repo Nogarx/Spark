@@ -21,7 +21,7 @@ import spark.core.utils as utils
 from math import prod
 from functools import partial, wraps
 from jax.typing import DTypeLike, ArrayLike
-from spark.core.validation import _is_config_instance
+from spark.core.validation import _is_config_instance, _is_initializer_type
 from spark.core.registry import REGISTRY, register_config
 from spark.core.signature_parser import normalize_typehint, is_instance
 from spark.core.config_validation import TypeValidator, PositiveValidator
@@ -142,6 +142,7 @@ class SparkConfigMeta(abc.ABCMeta):
 		'valid_types': None, 
 		'validators': None, 
 		'description': None,
+		'allows_init': False,
 	}
 
 	def __new__(cls, name: str, bases: tuple[type, ...], dct: dict[str, tp.Any]) -> 'SparkConfigMeta':
@@ -156,6 +157,13 @@ class SparkConfigMeta(abc.ABCMeta):
 			# Parse valid types.
 			attr_typehints = cls._valid_types(attr_type)
 			valid_types = {'valid_types': attr_typehints}
+			allows_init = False
+			for attr_type in attr_typehints:
+				if not isinstance(attr_type, str):
+					attr_type = str(attr_type)
+				if 'Initializer' in attr_type or 'jax.Array' in attr_type or 'PlasticityParamLike' in attr_type:
+					allows_init = True
+
 			# Get value
 			attr_value = dct.get(attr_name, dc.MISSING)
 			default, default_factory = cls._get_default_and_factory(attr_value, attr_typehints)
@@ -166,6 +174,7 @@ class SparkConfigMeta(abc.ABCMeta):
 				metadata={
 					**SparkConfigMeta.METADATA_TEMPLATE, 
 					**valid_types,
+					**{'allows_init': allows_init}
 				}
 			)
 			# Set field
@@ -376,9 +385,9 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 					f'Configuration \"{obj.__name__}\" does not define a __class_ref__.'
 				)
 		# Currently it can only be either a Module or a Initializer, so better check those two.
-		module_class_ref = REGISTRY.MODULES.get(obj.__class_ref__)
-		initializer_class_ref = REGISTRY.INITIALIZERS.get(obj.__class_ref__)
-		interface_class_ref = REGISTRY.INTERFACES.get(obj.__class_ref__)
+		module_class_ref = REGISTRY.Components.get(obj.__class_ref__)
+		initializer_class_ref = REGISTRY.Initializers.get(obj.__class_ref__)
+		interface_class_ref = REGISTRY.Interfaces.get(obj.__class_ref__)
 		# Check we only got one coincidence, otherwise throw an error to avoid headaches.
 		if module_class_ref and initializer_class_ref or module_class_ref and interface_class_ref:
 			raise AttributeError(
@@ -572,7 +581,7 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 		opener = lzma.open if compress else open
 		mode = 'wt' if compress else 'w'
 		with opener(path, mode, encoding='utf-8') as json_file:
-			reg = REGISTRY.CONFIG.get_by_cls(self.__class__)
+			reg = REGISTRY.Configs.get_by_cls(self.__class__)
 			if not reg:
 				raise RuntimeError(
 					f'Config class "{self.__class__}" is not in the registry.'
