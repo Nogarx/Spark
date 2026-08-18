@@ -26,12 +26,12 @@ class SparkJSONEncoder(json.JSONEncoder):
 	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
 
-	def encode(self, obj):
+	def iterencode(self, obj, _one_shot: bool = False):
 		wrapped = {
 			'__version__': self.__version__,
 			'__data__': obj
 		}
-		return super().encode(wrapped)
+		return super().iterencode(wrapped, _one_shot)
 
 	def default(self, obj) -> dict[str, tp.Any]:
 		# Encode arrays

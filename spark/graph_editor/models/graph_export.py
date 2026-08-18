@@ -264,7 +264,14 @@ def build_controller_config(
                     result.problems.append(str(error))
         for spec in specs:
             result.problems.extend(_unset_required_fields(spec.config, spec.name))
-        result.problems.extend(_unset_required_fields(result.config, profile.label.lower()))
+        # NOTE: The controller settings are shown by the inspector while nothing is selected, so the message
+        # says where to go rather than naming a field the user cannot find.
+        own = _unset_required_fields(result.config, profile.label)
+        if own:
+            result.problems.extend(own)
+            result.problems.append(
+                f'The {profile.label} settings are edited in the inspector, with no node selected.'
+            )
     return result
 
 #################################################################################################################################################

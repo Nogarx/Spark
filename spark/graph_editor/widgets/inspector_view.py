@@ -190,12 +190,56 @@ class NodeHeaderWidget(QWidget):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class ControllerHeaderWidget(QWidget):
+    """
+        Header of the controller settings, shown while no node is selected.
+    """
+
+    def __init__(self, profile, config, **kwargs) -> None:
+        super().__init__()
+        layout = QVBoxLayout(self)
+        hm = STYLES.get_val('inspector', 'header_margins')
+        layout.setContentsMargins(*hm)
+        layout.setSpacing(STYLES.get_val('inspector', 'header_spacing'))
+
+        title_row = QWidget()
+        row = QHBoxLayout(title_row)
+        row.setContentsMargins(0, 0, 0, 0)
+        icon = QLabel()
+        icon.setObjectName('nodeNameIcon')
+        icon_max = STYLES.get_val('inspector', 'name_icon_max')
+        icon.setPixmap(icons.get_pixmap(profile.icon, icon_max))
+        icon.setMaximumWidth(icon_max)
+        icon.setMaximumHeight(icon_max)
+        row.addWidget(icon)
+        name = QLabel(profile.label)
+        name.setObjectName('controllerTitle')
+        row.addWidget(name)
+        row.addStretch(1)
+        layout.addWidget(title_row)
+
+        subtitle = QLabel('Settings of the controller this graph describes.')
+        subtitle.setObjectName('nodeClassLabel')
+        subtitle.setWordWrap(True)
+        subtitle.setContentsMargins(QMargins(36, 0, 0, 8))
+        layout.addWidget(subtitle)
+        if config is not None:
+            tree_label = QLabel('Configuration Tree')
+            tree_label.setObjectName('configTreeLabel')
+            tree_label.setContentsMargins(QMargins(16, 8, 0, 4))
+            layout.addWidget(tree_label)
+            layout.addWidget(TreeDisplay(config._inspect(simplified=True)))
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class InspectorView(QWidget):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.current_node = None
         self.state_model = None
+        self.graph_model = None
+        self._is_built = False
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -223,19 +267,40 @@ class InspectorView(QWidget):
         # Initial empty state
         self._build_empty_state()
 
+    def invalidate(self) -> None:
+        """
+            Forces the next set_node() to rebuild, even when it names the same target.
+
+            NOTE: The panel is also the face of the controller, which can change under an unchanged target:
+            picking a profile, or loading settings from a file, both leave "no node selected" as true as it
+            was while showing something completely different.
+        """
+        self._is_built = False
+
     def set_node(self, node_model: NodeModel, graph_model: GraphModel | None = None) -> None:
         """
             Populate the inspector with the selected node's properties and config.
         """
+        # NOTE: Selection changes arrive one item at a time, so asking for the same target repeatedly is
+        # normal. Rebuilding the panel every time would churn through widgets for no reason.
+        if node_model is self.current_node and graph_model is self.graph_model and self._is_built:
+            return
         self.current_node = node_model
         self.graph_model = graph_model
+        self._is_built = True
         # Clear existing layout
         while self.content_layout.count():
             item = self.content_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
         if not self.current_node:
-            self._build_empty_state()
+            # NOTE: With nothing selected the inspector shows the controller itself. Its settings (the size
+            # of the pool, dt, the seed) belong to the graph rather than to any node, and they have to be
+            # reachable: the framework refuses to instantiate a model without them.
+            if self.graph_model is not None and self.graph_model.profile is not None:
+                self._build_controller_block(self.graph_model)
+            else:
+                self._build_empty_state()
             return
         # Base Node Properties Block
         self._build_base_block(self.current_node)
@@ -243,6 +308,31 @@ class InspectorView(QWidget):
         if self.current_node.config is not None:
             self.state_model = parse_object_to_state('Configuration', self.current_node.config)
             self._flatten_and_build_blocks(self.state_model, '', [self.current_node.id])
+
+    def _build_controller_block(self, graph_model: GraphModel) -> None:
+        """
+            Shows the settings of the controller the graph describes.
+        """
+        profile = graph_model.profile
+        config = graph_model.controller_config
+        header = ControllerHeaderWidget(profile, config)
+        header.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        self.content_layout.addWidget(header)
+        separator = QFrame()
+        separator.setObjectName('inspectorSeparator')
+        separator.setFrameShape(QFrame.Shape.HLine)
+        separator.setFrameShadow(QFrame.Shadow.Sunken)
+        separator.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.content_layout.addWidget(separator)
+        if config is None:
+            return
+        # NOTE: Only the settings of the controller itself belong here. Its modules live on the canvas, and
+        # showing a copy of them would be a second source of truth that no new component ever reaches.
+        self.state_model = parse_object_to_state(profile.label, config)
+        self.state_model.children = [
+            child for child in self.state_model.children if not isinstance(child, ConfigListNode)
+        ]
+        self._flatten_and_build_blocks(self.state_model, '', [graph_model.CONTROLLER_ID])
 
     def _build_empty_state(self) -> None:
         label = QLabel('No Node Selected')

@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import typing as tp
+import pathlib as pl
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QDialog, QSizePolicy, QFrame
 )
@@ -120,6 +121,34 @@ class ControllerChooser(QWidget):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+class RecentCard(QPushButton):
+    """
+        One remembered file, shown on the start screen.
+    """
+
+    def __init__(self, path: pl.Path, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.path = path
+        self.setObjectName('recentCard')
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setToolTip(str(path))
+        self.setMinimumHeight(STYLES.get_val('start', 'open_min_height', default=32))
+
+        layout = QHBoxLayout(self)
+        margins = STYLES.get_val('start', 'recent_margins', default=[10, 4, 10, 4])
+        layout.setContentsMargins(*margins)
+        layout.setSpacing(STYLES.get_val('start', 'card_spacing', default=12))
+        name = QLabel(path.stem)
+        name.setObjectName('recentCardName')
+        layout.addWidget(name)
+        layout.addStretch(1)
+        # NOTE: The suffix is the only thing that tells a session from a model, so it is what is shown.
+        kind = QLabel(path.suffix.lstrip('.'))
+        kind.setObjectName('recentCardKind')
+        layout.addWidget(kind)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class StartView(QWidget):
     """
         Placeholder shown on the canvas while no model is open.
@@ -127,6 +156,7 @@ class StartView(QWidget):
 
     model_requested = Signal(object)
     open_requested = Signal()
+    recent_requested = Signal(object)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -167,7 +197,40 @@ class StartView(QWidget):
         open_btn.clicked.connect(self.open_requested.emit)
         layout.addWidget(open_btn)
 
+        # Recent files. The section is only there while there is something to put in it.
+        self._recent_title = QLabel('Recent')
+        self._recent_title.setObjectName('startRecentTitle')
+        layout.addWidget(self._recent_title)
+        self._recent_box = QWidget()
+        self._recent_layout = QVBoxLayout(self._recent_box)
+        self._recent_layout.setContentsMargins(0, 0, 0, 0)
+        self._recent_layout.setSpacing(STYLES.get_val('start', 'recent_spacing', default=4))
+        layout.addWidget(self._recent_box)
+        self.set_recent_files([])
+
         outer.addWidget(panel)
+
+    #-------------------------------------------------------------------------------------------------------#
+
+    def set_recent_files(self, paths: tp.Sequence[pl.Path]) -> None:
+        """
+            Shows the files that can be picked up again, most recent first.
+        """
+        while self._recent_layout.count():
+            item = self._recent_layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                # NOTE: Detached before being destroyed. Deletion is deferred, and until it happens the old
+                # cards are still children of the panel.
+                widget.setParent(None)
+                widget.deleteLater()
+        shown = list(paths)[:STYLES.get_val('start', 'recent_max', default=5)]
+        for path in shown:
+            card = RecentCard(path)
+            card.clicked.connect(lambda _checked=False, target=path: self.recent_requested.emit(target))
+            self._recent_layout.addWidget(card)
+        self._recent_title.setVisible(bool(shown))
+        self._recent_box.setVisible(bool(shown))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

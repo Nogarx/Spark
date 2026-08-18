@@ -294,8 +294,8 @@ class NodeItem(QGraphicsItem):
             return super().itemChange(change, value)
         scene: GraphScene | None = self.scene()
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange and scene:
-            if STYLES.get_val('snapping', 'enabled'):
-                grid = float(STYLES.get_val('snapping', 'node_grid'))
+            if STYLES.get_val('graph', 'snapping', 'enabled'):
+                grid = float(STYLES.get_val('graph', 'snapping', 'node_grid'))
                 x = round(value.x() / grid) * grid
                 y = round(value.y() / grid) * grid
                 value = QPointF(x, y)

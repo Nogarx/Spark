@@ -26,6 +26,11 @@ logger = logging.getLogger('spark')
 
 class GraphModel(BaseModel):
 
+    # NOTE: The controller has settings of its own (the size of a neuron pool, dt, the seed) that belong to
+    # no node. They are addressed through this reserved id, so the inspector, the undo stack and the
+    # inheritance trees can treat them exactly like any other configuration.
+    CONTROLLER_ID = '__controller__'
+
     node_added = Signal(NodeModel)
     node_removed = Signal(NodeModel)
     edge_added = Signal(EdgeModel)
@@ -112,6 +117,29 @@ class GraphModel(BaseModel):
         self._controller_config = config
         self.rebuild_inheritance_tree()
 
+    def adopt_controller_config(self, config: tp.Any) -> bool:
+        """
+            Takes the controller settings of an existing configuration, and only those.
+
+            NOTE: The modules are deliberately dropped. The canvas is the single source of truth for what the
+            controller contains; a module list copied from a file would be a second, stale one, and anything
+            added afterwards would never appear in it.
+
+            Returns:
+                bool, True if the settings were adopted.
+        """
+        if config is None or self._profile is None:
+            return False
+        config_cls = self._profile.config_cls
+        if config_cls is None or not isinstance(config, config_cls):
+            return False
+        own_fields = {
+            field.name: getattr(config, field.name, None)
+            for field in dc.fields(config) if field.name != 'modules_specs'
+        }
+        self.controller_config = config_cls.partial(modules_specs=(), **own_fields)
+        return True
+
     def can_change_profile(self) -> bool:
         """
             True if the controller profile may still be changed.
@@ -184,13 +212,14 @@ class GraphModel(BaseModel):
         """
         old_paths = {node_id: self._collect_inheriting_paths(tree) for node_id, tree in self.inheritance_trees.items()}
         self.inheritance_trees = {}
-        for node in self.nodes:
-            config = getattr(node, 'config', None)
+        owners: list[tuple[str, tp.Any]] = [(self.CONTROLLER_ID, self._controller_config)]
+        owners += [(node.id, getattr(node, 'config', None)) for node in self.nodes]
+        for node_id, config in owners:
             if config is None:
                 continue
             tree = self._build_node_tree(config)
             # Restore the cascading state of the leaves that survived the rebuild.
-            for path in old_paths.get(node.id, []):
+            for path in old_paths.get(node_id, []):
                 try:
                     leaf = tree.get_leaf(path)
                 except KeyError:
@@ -199,7 +228,7 @@ class GraphModel(BaseModel):
                     leaf.flags |= InheritanceFlags.IS_INHERITING
             tree.invalidate()
             tree.validate()
-            self.inheritance_trees[node.id] = tree
+            self.inheritance_trees[node_id] = tree
         self.inheritance_updated.emit()
 
     def get_inheritance_tree(self, node_id: str) -> InheritanceTree | None:
@@ -260,10 +289,15 @@ class GraphModel(BaseModel):
         """
         if len(path) < 2:
             return None
-        node = self.get_node_by_id(path[0])
-        if not node or not getattr(node, 'config', None):
-            return None
-        current = node.config
+        if path[0] == self.CONTROLLER_ID:
+            current = self.controller_config
+            if current is None:
+                return None
+        else:
+            node = self.get_node_by_id(path[0])
+            if not node or not getattr(node, 'config', None):
+                return None
+            current = node.config
         for part in path[1:-1]:
             # Initializer blocks are a UI grouping, they do not exist in the configuration object.
             if part == 'init_config':

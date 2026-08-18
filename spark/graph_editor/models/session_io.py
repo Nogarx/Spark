@@ -134,6 +134,18 @@ def load_session(path: str | pl.Path) -> LoadedSession:
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+def check_model(graph_model: GraphModel) -> list[str]:
+    """
+        Reports what keeps the graph from being a model, without writing anything.
+
+        Returns:
+            list[str], every problem found. Empty when the graph can be exported as it stands.
+    """
+    exported = build_controller_config(graph_model, strict=True)
+    return [] if exported.is_complete else list(exported.problems)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def export_model(graph_model: GraphModel, path: str | pl.Path) -> pl.Path:
     """
         Writes the graph as a model the framework can instantiate.

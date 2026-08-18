@@ -13,7 +13,7 @@ import itertools
 from shiboken6 import isValid
 from PySide6.QtWidgets import QGraphicsPathItem, QGraphicsItem, QWidget, QStyleOption, QGraphicsSceneMouseEvent
 from PySide6.QtCore import Qt, QPointF, QRectF, QLineF
-from PySide6.QtGui import QPainterPath, QPen, QPainter, QPainterPathStroker, QBrush, QPolygonF
+from PySide6.QtGui import QPainterPath, QPen, QPainter, QPainterPathStroker, QBrush, QPolygonF, QColor
 from spark.graph_editor.styles.manager import STYLES
 from spark.graph_editor.view.node_item import NodeItem
 from spark.graph_editor.commands.graph_commands import ChangeEdgeWaypointsCommand, RemoveEdgeCommand
@@ -145,7 +145,7 @@ class PipeItem(QGraphicsPathItem):
         self.source_port = source_port_item
         self.target_port = target_port_item
         self.model = model
-        self.setPen(QPen(STYLES.get_color('pipe', 'color'), STYLES.get_val('pipe', 'width')))
+        self.setPen(QPen(self.pipe_color(), STYLES.get_val('pipe', 'width')))
         self.setZValue(-1)
         self.setFlag(QGraphicsItem.ItemIsSelectable)
         self.setAcceptHoverEvents(True)
@@ -243,6 +243,34 @@ class PipeItem(QGraphicsPathItem):
     # NOTE: Pipes are routed around the nodes instead of through them, and never along a lane another pipe is
     # already using. Only the automatic route is affected: a pipe the user has edited keeps its waypoints,
     # overlaps included.
+
+    def pipe_color(self, active: bool = False) -> QColor:
+        """
+            Colour of the payload the pipe carries.
+
+            NOTE: A connection is drawn in the colour of the ports it joins, so a payload type can be followed
+            across the graph without reading a single label. Both ends always share a type, connections
+            between different payloads are rejected.
+        """
+        port = self.source_port if self.source_port is not None else self.target_port
+        color = None
+        if port is not None and isValid(port):
+            color = QColor(STYLES.get_port_style(port.model.port_type).get('color'))
+        if color is None or not color.isValid():
+            color = STYLES.get_color('pipe', 'color')
+        factor = int(STYLES.get_val('pipe', 'brightness', default=100))
+        if factor != 100:
+            color = color.lighter(factor)
+        if not active:
+            return color
+        # NOTE: The active colour must stay recognisable as the same payload. Plain lightening cannot do it:
+        # it scales the HSV value and clamps, so anything already bright ends up white. Lifting the value and
+        # trimming the saturation keeps the hue while reading as highlighted (the pen also gets wider).
+        hue, saturation, value, alpha = color.getHsv()
+        if hue < 0:
+            return color.lighter(120)
+        boost = int(STYLES.get_val('pipe', 'active_boost', default=45))
+        return QColor.fromHsv(hue, int(saturation * 0.85), min(255, value + boost), alpha)
 
     def _end_nodes(self) -> tuple[NodeItem | None, NodeItem | None]:
         def _node_of(port) -> NodeItem | None:
@@ -504,8 +532,8 @@ class PipeItem(QGraphicsPathItem):
     def split_segment(self, idx: int, scene_pos: QPointF) -> None:
         self._auto_routed = False
         if self.model: old_waypoints = list(self.model.waypoints)
-        if STYLES.get_val('snapping', 'enabled', True):
-            grid = float(STYLES.get_val('snapping', 'pipe_grid'))
+        if STYLES.get_val('graph', 'snapping', 'enabled', default=True):
+            grid = float(STYLES.get_val('graph', 'snapping', 'pipe_grid'))
             scene_pos = QPointF(round(scene_pos.x() / grid) * grid, round(scene_pos.y() / grid) * grid)
         self.pivots.insert(idx, QPointF(scene_pos))
         self.pivots.insert(idx, QPointF(scene_pos))
@@ -589,8 +617,8 @@ class PipeItem(QGraphicsPathItem):
             self._auto_routed = False
         if self._dragging_segment_idx != -1:
             pos = event.scenePos()
-            if STYLES.get_val('snapping', 'enabled'):
-                grid = float(STYLES.get_val('snapping', 'pipe_grid'))
+            if STYLES.get_val('graph', 'snapping', 'enabled'):
+                grid = float(STYLES.get_val('graph', 'snapping', 'pipe_grid'))
                 pos.setX(round(pos.x() / grid) * grid)
                 pos.setY(round(pos.y() / grid) * grid)
             idx = self._dragging_segment_idx
@@ -625,7 +653,7 @@ class PipeItem(QGraphicsPathItem):
 
     def paint(self, painter: QPainter, option: QStyleOption, widget: QWidget) -> None:
         is_active = self.isSelected() or getattr(self, '_hovered', False)
-        pen = QPen(STYLES.get_color('pipe', 'active_color') if is_active else STYLES.get_color('pipe', 'color'))
+        pen = QPen(self.pipe_color(active=is_active))
         pen.setWidth(STYLES.get_val('pipe', 'active_width') if is_active else STYLES.get_val('pipe', 'width'))
         painter.setPen(pen)
         painter.drawPath(self.path())

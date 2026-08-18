@@ -14,7 +14,7 @@ import typing as tp
 import pathlib as pl
 from string import Template
 from PySide6.QtGui import QColor
-from PySide6.QtCore import QSettings, Signal, QObject
+from PySide6.QtCore import QSettings, Signal, QObject, QCoreApplication
 from PySide6.QtWidgets import QApplication
 logger = logging.getLogger('spark')
 
@@ -33,7 +33,25 @@ class StyleManager(QObject):
         self._active_path = self._default_path
 
     def init(self) -> None:
+        self._ensure_app_identity()
         self._load_config()
+
+    @staticmethod
+    def _ensure_app_identity() -> None:
+        """
+            Gives QSettings somewhere to write.
+
+            NOTE: Without an organisation and an application name, QSettings falls back to
+            "Unknown Organization/PySideApp" and reports an access error, so a chosen style was applied for
+            the session and silently forgotten on the next launch.
+
+            NOTE: The name is set rather than defaulted. Qt derives it from the program that was started, so
+            leaving it alone files the settings under whatever launched the editor ("test.ipynb", "-c", a
+            script name), and a style or a recent file chosen from one launcher would be invisible from
+            another. The editor is one application wherever it is started from.
+        """
+        QCoreApplication.setOrganizationName('Spark')
+        QCoreApplication.setApplicationName('SparkGraphEditor')
 
     def _flatten_tokens(self) -> dict[str, str]:
 
@@ -76,7 +94,9 @@ class StyleManager(QObject):
 
     def stylesheet(self) -> str:
         if self._qss is None:
-            path = self._active_path.parent / 'app.qss'
+            # NOTE: The stylesheet ships with the editor, only its values are configurable. Looking for it
+            # next to the active configuration broke as soon as a custom style was saved anywhere else.
+            path = self._default_path.parent / 'app.qss'
             self._qss = Template(path.read_text()).safe_substitute(self._flatten_tokens())
         return self._qss
 

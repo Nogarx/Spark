@@ -52,7 +52,7 @@ class Cache(TwoKeyDict):
         for (key1, key2), spec in data.items():
             # Skip optional
             if spec.shape is not None:
-                obj[key1][key2] = spec.payload_type._from_spec(spec)
+                obj[key1, key2] = spec.payload_type._from_spec(spec)
         return obj
     
     @classmethod
@@ -61,7 +61,7 @@ class Cache(TwoKeyDict):
         for (key1, key2), payload in data.items():
             # Skip optional
             if payload.shape is not None:
-                obj[key1][key2] = type(payload)(jnp.zeros_like(payload.value))
+                obj[key1, key2] = type(payload)(jnp.zeros_like(payload.value))
         return obj
     
 #################################################################################################################################################

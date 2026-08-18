@@ -22,7 +22,7 @@ from math import prod
 from functools import partial, wraps
 from jax.typing import DTypeLike, ArrayLike
 from spark.core.validation import _is_config_instance, _is_initializer_type
-from spark.core.registry import REGISTRY, register_config
+from spark.core.registry import REGISTRY, RegistryNamespace, register_config
 from spark.core.signature_parser import normalize_typehint, is_instance
 from spark.core.config_validation import TypeValidator, PositiveValidator
 
@@ -102,7 +102,7 @@ class _InitNamespace:
 				valid_config_fields = [f.name for f in dc.fields(raw_attribute)]
 				init_config_kwargs = raw_attribute.to_dict() | {k:v for k,v in kwargs.items() if k in valid_config_fields}
 				# Create initializer
-				initializer = raw_attribute.get_cls()(**init_config_kwargs)
+				initializer = raw_attribute.class_ref(**init_config_kwargs)
 				# Filter call kwargs
 				valid_init_kwargs = [k for k in inspect.signature(initializer).parameters]
 				init_call_kwargs = {k:v for k,v in kwargs.items() if k in valid_init_kwargs}
@@ -356,6 +356,8 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 	def init(self,):
 		return _InitNamespace(self,)
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 	# TODO: This method is not ideal. It solves the module association problem in a very brittle way. 
 	# There should be another better pattern for this problem.
 	@property
@@ -385,8 +387,10 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 					f'Configuration \"{obj.__name__}\" does not define a __class_ref__.'
 				)
 		# Currently it can only be either a Module or a Initializer, so better check those two.
+		# NOTE: A subregistry raises when a name is absent, but resolving a class_ref means asking several
+		# namespaces until one answers, so a miss has to be a value rather than an error here.
 		module_class_ref = REGISTRY.Components.get(obj.__class_ref__)
-		initializer_class_ref = REGISTRY.Initializers.get(obj.__class_ref__)
+		initializer_class_ref =REGISTRY.Initializers.get(obj.__class_ref__)
 		interface_class_ref = REGISTRY.Interfaces.get(obj.__class_ref__)
 		# Check we only got one coincidence, otherwise throw an error to avoid headaches.
 		if module_class_ref and initializer_class_ref or module_class_ref and interface_class_ref:

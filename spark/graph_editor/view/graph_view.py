@@ -36,10 +36,17 @@ class TempPipeItem(QGraphicsPathItem):
         Visual feedback for dragging a new connection or a disconnected one.
     """
 
-    def __init__(self, start_pos, is_disconnecting=False) -> None:
+    def __init__(self, start_pos, is_disconnecting=False, port_type=None) -> None:
         super().__init__()
-        color = QColor(255, 255, 100, 150) if is_disconnecting else QColor(255, 255, 255, 150)
-        self.setPen(QPen(color, 2, Qt.PenStyle.DashLine))
+        if is_disconnecting:
+            color = QColor(STYLES.get_color('temp_pipe', 'color_disconnecting'))
+        elif port_type is not None:
+            # NOTE: Dragging shows the colour of the payload being connected, like the finished pipe will.
+            color = QColor(STYLES.get_port_style(port_type).get('color'))
+        else:
+            color = QColor(255, 255, 255)
+        color.setAlpha(STYLES.get_val('temp_pipe', 'alpha', default=200))
+        self.setPen(QPen(color, STYLES.get_val('temp_pipe', 'width', default=2), Qt.PenStyle.DashLine))
         self.start_pos = start_pos
         self.update_path(start_pos)
 
@@ -151,7 +158,7 @@ class GraphScene(QGraphicsScene):
             self.is_disconnecting = False
             self.active_port = item
             self.drag_source_port = item
-            self.temp_pipe = TempPipeItem(item.scenePos())
+            self.temp_pipe = TempPipeItem(item.scenePos(), port_type=item.model.port_type)
             self.addItem(self.temp_pipe)
             return
         if isinstance(item, PipeItem) and event.button() == Qt.MouseButton.LeftButton:
@@ -385,6 +392,10 @@ class GraphView(QGraphicsView):
                     reopened, since a configuration cannot carry the layout by itself.
         """
         model = self.scene().model
+        # NOTE: Importing pre-populates the controller with reasonable data, it does not add a second model.
+        # The controller keeps a single set of settings, so those are only taken from the file when there is
+        # nothing on the canvas yet; a later import only contributes modules.
+        adopt_settings = not model.nodes
         try:
             imported = expand_controller_config(config, model, model.profile, layout=layout)
         except Exception as error:
@@ -404,6 +415,8 @@ class GraphView(QGraphicsView):
                 stack.push(AddEdgeCommand(model, edge))
         finally:
             stack.endMacro()
+        if adopt_settings:
+            model.adopt_controller_config(config)
         # NOTE: Pipes route themselves as they are created, so the first ones are laid out before the last
         # nodes of the import exist. One pass over the finished scene gives every pipe the same information.
         self.scene().update_all_pipes()

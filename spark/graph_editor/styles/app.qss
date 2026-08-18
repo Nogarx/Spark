@@ -323,6 +323,12 @@ QLabel#nodeErrorLabel {
     color: $inspector_error_color;
     font-size: $inspector_error_font_size;
 }
+QLabel#controllerTitle {
+    color: $inspector_input_fg;
+    font-size: $inspector_name_input_font_size;
+    background: transparent;
+    border: none;
+}
 QLabel#nodeClassLabel {
     color: $inspector_class_label_color;
     font-size: $inspector_class_label_font_size;
@@ -416,7 +422,77 @@ QLabel#consoleMessageText {
     background: transparent;
 }
 
+/* ===== Document tabs ===== */
+
+QTabWidget#documentTabs::pane {
+    border: none;
+    background: $graph_background_color;
+}
+QTabWidget#documentTabs > QTabBar {
+    background: $node_section_header_bg;
+}
+QTabWidget#documentTabs > QTabBar::tab {
+    background: $menu_background_color;
+    color: $menu_color;
+    border: 1px solid $main_background_color_separator;
+    border-bottom: none;
+    border-top-left-radius: $inspector_input_radius;
+    border-top-right-radius: $inspector_input_radius;
+    padding: 6px 12px;
+    margin-right: 2px;
+}
+QTabWidget#documentTabs > QTabBar::tab:selected {
+    background: $graph_background_color;
+    color: $inspector_input_fg;
+}
+QTabWidget#documentTabs > QTabBar::tab:hover:!selected {
+    background: $inspector_header_hover_bg;
+}
+QTabWidget#documentTabs > QTabBar::close-button {
+    subcontrol-position: right;
+}
+
 /* ===== Preferences dialog ===== */
+
+QLineEdit#prefsSearch {
+    background-color: $inspector_input_bg;
+    color: $inspector_input_fg;
+    border: 1px solid $inspector_input_border;
+    border-radius: $inspector_input_radius;
+    padding: 5px 8px;
+}
+QLineEdit#prefsSearch:focus {
+    border: 1px solid $inspector_input_focus;
+}
+QListWidget#prefsSidebar {
+    background-color: $hierarchy_background_color;
+    color: $hierarchy_tree_fg;
+    border: 1px solid $inspector_block_border;
+    border-radius: $inspector_block_radius;
+    outline: none;
+    padding: 4px;
+}
+QListWidget#prefsSidebar::item {
+    padding: 7px 10px;
+    border-radius: $inspector_input_radius;
+}
+QListWidget#prefsSidebar::item:selected {
+    background-color: $hierarchy_item_selected_bg;
+    color: $inspector_input_fg;
+}
+QListWidget#prefsSidebar::item:hover:!selected {
+    background-color: $hierarchy_item_hover_bg;
+}
+QLabel#prefsSectionCaption {
+    color: $preferences_caption_color;
+    padding: 2px 2px 6px 2px;
+}
+QLabel#prefsGroupLabel {
+    color: $preferences_group_color;
+    font-weight: bold;
+    padding-top: 10px;
+}
+
 
 QLabel#prefsPathLabel {
     color: $preferences_path_label_color;
@@ -492,6 +568,35 @@ QLabel#controllerCardTitle {
 QLabel#controllerCardSummary {
     color: $start_card_summary_color;
     font-size: $start_card_summary_font_size;
+}
+QLabel#startRecentTitle {
+    color: $start_recent_title_color;
+    font-size: $start_recent_title_font_size;
+    background: transparent;
+    border: none;
+}
+QPushButton#recentCard {
+    background-color: $start_card_bg;
+    border: 1px solid $start_card_border;
+    border-radius: $start_card_radius;
+    text-align: left;
+    padding: 0px;
+}
+QPushButton#recentCard:hover {
+    background-color: $start_card_hover_bg;
+    border: 1px solid $start_card_hover_border;
+}
+QPushButton#recentCard QLabel {
+    background: transparent;
+    border: none;
+}
+QLabel#recentCardName {
+    color: $start_recent_name_color;
+    font-size: $start_recent_name_font_size;
+}
+QLabel#recentCardKind {
+    color: $start_recent_kind_color;
+    font-size: $start_recent_kind_font_size;
 }
 QLabel#statusControllerLabel {
     color: $start_card_summary_color;
