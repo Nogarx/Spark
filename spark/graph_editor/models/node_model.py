@@ -194,6 +194,28 @@ class SinkNodeModel(NodeModel):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class SelfPropertyNodeModel(NodeModel):
+    """
+        Stands for a property the controller itself exposes to its modules.
+
+        NOTE: These are the "__self__" origins of a PortMap (e.g. the inhibition mask a Neuron shares with its
+        somas). They are not modules: the node only exists so the dependency is visible and editable on the
+        canvas. Its name is the name of the property.
+    """
+
+    def __init__(self, name: str | None = None, type_name: str = 'Controller Property', pos=(0, 0), parent=None,
+                 payload_type: type | None = None) -> None:
+        if name is None:
+            name = 'property'
+        super().__init__(name=name, type_name=type_name, pos=pos, parent=parent)
+        self.value_port = PortModel(
+            'value', is_input=False, port_type=payload_type or FloatArray, is_optional=False,
+            multi_connection=True, parent=self,
+        )
+        self.call_section.add_port(self.value_port)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class InterfaceNodeModel(NodeModel):
     """
         Abstract Interface node model.
@@ -253,6 +275,59 @@ class InterfaceNodeModel(NodeModel):
                 port_type=spec.payload_type
             )
             self.props_section.add_port(port)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class ControllerNodeModel(NodeModel):
+    """
+        Abstract node model for a nested controller (a Neuron placed inside a Brain).
+
+        NOTE: A Controller is not a SparkModule: its ports are not read from a __call__ signature but derived
+        from the modules it contains, so its introspection differs from a Component/Interface node.
+    """
+
+    _cls: type
+
+    def __init__(self, name: str | None = None, type_name: str | None = None, pos=(0, 0), parent=None) -> None:
+        if name is None:
+            name = self._cls.__name__
+        if type_name is None:
+            type_name = utils.to_human_readable(self._cls.__name__)
+        super().__init__(name=name, type_name=type_name, pos=pos, parent=parent)
+        # Instantiate the configuration first, the ports of a controller are derived from its modules.
+        config_cls: type[SparkConfig] = self._cls.get_config_spec()
+        self.config = config_cls.partial()
+        self._setup_ports()
+
+    def _setup_ports(self) -> None:
+        # Get port info
+        try:
+            modules_specs = getattr(self.config, 'modules_specs', ())
+            input_specs = self._cls._get_controller_input_specs(modules_specs)
+            output_specs = {k: v['spec'] for k, v in self._cls._get_controller_output_specs(modules_specs).items()}
+            property_specs = self._cls._get_controller_property_specs()
+        except Exception as e:
+            logger.warning(f'Could not fully introspect {self._cls.__name__}: {e}')
+            input_specs = {}
+            output_specs = {}
+            property_specs = {}
+        # Populate Call
+        for port_name, spec in input_specs.items():
+            self.call_section.add_port(
+                PortModel(name=port_name, is_input=True, port_type=spec.payload_type, is_optional=False)
+            )
+        for port_name, spec in output_specs.items():
+            self.call_section.add_port(
+                PortModel(name=port_name, is_input=False, port_type=spec.payload_type)
+            )
+        # Populate Properties
+        for port_name, spec in property_specs.items():
+            self.props_section.add_port(
+                PortModel(name=port_name, is_input=True, port_type=spec.payload_type)
+            )
+            self.props_section.add_port(
+                PortModel(name=port_name, is_input=False, multi_connection=True, port_type=spec.payload_type)
+            )
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

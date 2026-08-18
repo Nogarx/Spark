@@ -83,6 +83,19 @@ class SubRegistry:
         self._instance = instance
         self._namespace = namespace
 
+    def get(self, key: str) -> dict[str, RegistryEntry]:
+        return self.__getitem__(utils.normalize_str(key))
+
+    def get_by_cls(self, cls: type) -> dict[str, RegistryEntry]:
+        if isinstance(cls, type(None)):
+            return None
+        # TODO: I think it is not possible to get here without the __built__ set to True but better check.
+        normalized_name = utils.normalize_str(cls.__name__)
+        for _, key in self._instance._registry.keys():
+            if normalized_name == key:
+                return self.get(key)
+        return None
+
     def __getitem__(self, key: str) -> dict[str, RegistryEntry]:
         return self._instance._registry[self._namespace].__getitem__(key)
 

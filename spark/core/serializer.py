@@ -123,7 +123,7 @@ class SparkJSONDecoder(json.JSONDecoder):
 			reg = getattr(REGISTRY, subregistry).get(module_type)
 			if not reg:
 				raise KeyError(f'There is no module with name "{module_type}" in the registry.')
-			return reg.class_ref
+			return reg.get_cls()
 		# Decode spark configs
 		if obj.get('__cfg__'):
 			config_type: str | None = obj.get('__type__')
@@ -131,7 +131,7 @@ class SparkJSONDecoder(json.JSONDecoder):
 			if not reg:
 				raise KeyError(f'There is no registered configuration "{config_type}" in the registry.')
 			config_data = obj.get('__cfg__')
-			return reg.class_ref.partial(**config_data)
+			return reg.get_cls().partial(**config_data)
 		# Decode spark specs
 		if obj.get('__type__') == 'port_specs':
 			return self._decode_spec(PortSpecs, obj)

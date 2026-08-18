@@ -617,7 +617,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
             config_path = pathlib.Path(os.path.join(temp_dir, 'model.scfg'))
             config = SparkConfig.from_file(config_path.absolute())
             # Get model class
-            model_cls: type[SparkModule] = config.class_ref
+            model_cls: type[SparkModule] = config.get_cls()
             # Initialize the module.
             model = model_cls(config=config)
             dummy_input = {

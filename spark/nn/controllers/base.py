@@ -152,9 +152,9 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         for spec in self.config.modules_specs:
             from spark.nn.controllers.neuron import Neuron
             if issubclass(spec.module_cls, Neuron):
-                setattr(self, spec.name, REGISTRY.Neurons.get(spec.module_cls.__name__).class_ref(config=spec.config))
+                setattr(self, spec.name, REGISTRY.Neurons.get(spec.module_cls.__name__).get_cls()(config=spec.config))
             else:
-                setattr(self, spec.name, REGISTRY.Components.get(spec.module_cls.__name__).class_ref(config=spec.config))
+                setattr(self, spec.name, REGISTRY.Components.get(spec.module_cls.__name__).get_cls()(config=spec.config))
 
 
 

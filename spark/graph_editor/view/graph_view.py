@@ -13,9 +13,12 @@ from shiboken6 import isValid
 from spark.graph_editor.styles.manager import STYLES
 from spark.graph_editor.view.node_item import PortItem
 from spark.graph_editor.view.node_item import NodeItem, PropertyRowItem
-from spark.graph_editor.view.pipe_item import PipeItem, SegmentGizmo
+from spark.graph_editor.view.pipe_item import PipeItem, SegmentGizmo, PipeRouteContext
 from spark.graph_editor.models import GraphModel, PortModel, EdgeModel, NodeModel
 from spark.graph_editor.models.node_factory import NodeFactory
+from spark.graph_editor.models.model_import import expand_controller_config
+from spark.graph_editor.widgets.console_view import MessageLevel
+import spark.core.utils as utils
 from spark.graph_editor.view.graph_context_menu_view import GraphContextMenu
 from spark.graph_editor.commands.graph_commands import (
     AddNodeCommand, AddEdgeCommand, RemoveNodeCommand, RemoveEdgeCommand, MoveNodeCommand, ChangeEdgeWaypointsCommand
@@ -162,9 +165,12 @@ class GraphScene(QGraphicsScene):
         super().mousePressEvent(event)
 
     def update_all_pipes(self) -> None:
-        for item in self.items():
-            if isinstance(item, PipeItem) and isValid(item):
-                item.update_path()
+        # NOTE: Pipes are routed oldest first: each one avoids the lanes the previous ones already claimed, so
+        # the result is stable instead of depending on the order the scene happens to return its items in.
+        pipes = [item for item in self.items() if isinstance(item, PipeItem) and isValid(item)]
+        context = PipeRouteContext.for_scene(self)
+        for item in sorted(pipes, key=lambda pipe: pipe._route_priority):
+            item.update_path(context)
 
     def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         if hasattr(self, '_pending_disconnect_item') and self._pending_disconnect_item:
@@ -299,7 +305,9 @@ class GraphView(QGraphicsView):
         self._last_mouse_pos = QPointF()
         self._clipboard = GraphClipboard()
         self._move_start_positions: dict[NodeItem, QPointF] = {}
-        self._context_menu = GraphContextMenu(self)
+        # The palette is dictated by the controller being built.
+        self._context_menu = GraphContextMenu(self.scene().model.profile, self)
+        self.scene().model.profile_changed.connect(self._context_menu.set_profile)
 
     # Signature overwrite
     def scene(self) -> GraphScene:
@@ -326,7 +334,11 @@ class GraphView(QGraphicsView):
             action_data: ActionData = action.data()
             if action_data.command == ContextMenuCommand.Create:
                 # Instantiate node
-                new_node: NodeModel = action_data.cls()
+                try:
+                    new_node: NodeModel = action_data.cls()
+                except Exception as error:
+                    logger.error(f'Unable to create a "{action_data.cls.__name__}" node: {error}')
+                    return
                 # Rename to prevent collisions
                 name = self.scene().model.get_next_free_name(new_node.name)
                 new_node.name = name
@@ -340,6 +352,8 @@ class GraphView(QGraphicsView):
                 new_node.pos = (pos_x, pos_y)
                 # Push action to undo stack
                 self.scene().model.undo_stack.push(AddNodeCommand(self.scene().model, new_node))
+            elif action_data.command == ContextMenuCommand.Import:
+                self.import_model(action_data.entry)
             elif action_data.command == ContextMenuCommand.Copy:
                 self.copy_selected()
             elif action_data.command == ContextMenuCommand.Paste:
@@ -350,6 +364,58 @@ class GraphView(QGraphicsView):
                 logger.warning(f'Action: {action_data.command} is not tied to any action.')
 
 
+
+    def import_model(self, entry) -> None:
+        """
+            Expands a registered model into the graph.
+        """
+        try:
+            config = entry.get_cls().get_config_spec().partial()
+        except Exception as error:
+            logger.error(f'Unable to read the configuration of "{entry.name}": {error}')
+            return
+        self.import_config(config, label=utils.to_human_readable(entry.get_cls().__name__))
+
+    def import_config(self, config, label: str = 'Model', layout: dict | None = None) -> None:
+        """
+            Expands a controller configuration into nodes and edges, as a single undoable step.
+
+            Input:
+                layout: dict[str, tuple[float, float]], node positions by name. Supplied when a session is
+                    reopened, since a configuration cannot carry the layout by itself.
+        """
+        model = self.scene().model
+        try:
+            imported = expand_controller_config(config, model, model.profile, layout=layout)
+        except Exception as error:
+            logger.error(f'Unable to import "{label}": {error}')
+            return
+        for message in imported.warnings:
+            logger.warning(message)
+        if not imported.nodes:
+            logger.warning(f'"{label}" produced no node, nothing was imported.')
+            return
+        stack = model.undo_stack
+        stack.beginMacro(f'Import {label}')
+        try:
+            for node in imported.nodes:
+                stack.push(AddNodeCommand(model, node))
+            for edge in imported.edges:
+                stack.push(AddEdgeCommand(model, edge))
+        finally:
+            stack.endMacro()
+        # NOTE: Pipes route themselves as they are created, so the first ones are laid out before the last
+        # nodes of the import exist. One pass over the finished scene gives every pipe the same information.
+        self.scene().update_all_pipes()
+        # Select what was just added, so it is obvious where it landed.
+        self.scene().clearSelection()
+        for item in self.scene().items():
+            if isinstance(item, NodeItem) and item.model in imported.nodes:
+                item.setSelected(True)
+        logger.log(
+            MessageLevel.SUCCESS.value,
+            f'Imported "{label}": {len(imported.nodes)} nodes and {len(imported.edges)} connections.',
+        )
 
     def delete_selected(self) -> None:
         stack = self.scene().model.undo_stack

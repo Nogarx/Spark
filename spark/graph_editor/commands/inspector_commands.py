@@ -107,8 +107,9 @@ class ToggleInheritanceCommand(QUndoCommand):
         if self.new_state:
             for child_path_tuple, old_val in self.old_child_values.items():
                 child_path = list(child_path_tuple)
-                self.graph_model.set_node_config_value(child_path, old_val)
-                
+                self.graph_model.set_node_config_value(child_path, old_val, force=True)
+
+
         logger.info(f'Undo inheritance toggle at {self.path}')
 
     def redo(self) -> None:
@@ -117,16 +118,12 @@ class ToggleInheritanceCommand(QUndoCommand):
         self.graph_model.toggle_inheritance(self.path, self.new_state)
         
         if self.new_state:
-            try:
-                leaf = self.graph_model.inheritance_tree.get_leaf(self.path)
-                if leaf and leaf.is_inheriting():
-                    for child_path in leaf.inheritance_childs:
-                        path_key = tuple(child_path)
-                        if path_key not in self.old_child_values:
-                            old_val = self.graph_model.get_node_config_value(child_path)
-                            self.old_child_values[path_key] = copy.deepcopy(old_val)
-            except KeyError:
-                pass
+            # Snapshot the values that are about to be overwritten by the cascade.
+            for child_path in self.graph_model.get_inheritance_children(self.path):
+                path_key = tuple(child_path)
+                if path_key not in self.old_child_values:
+                    old_val = self.graph_model.get_node_config_value(child_path)
+                    self.old_child_values[path_key] = copy.deepcopy(old_val)
             if isValid(self.node):
                 self.graph_model.update_inherited_value(self.path, self.node.value)
         logger.info(f'Redo inheritance toggle at {self.path}')

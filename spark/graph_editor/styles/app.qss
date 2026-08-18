@@ -133,6 +133,31 @@ QAttribute QLineEdit:focus {
     border: 1px solid $inspector_input_focus;
 }
 
+/* ===== Inspector: read-only fields ===== */
+
+QAttribute QLineEdit#readonlyInput {
+    color: $inspector_readonly_fg;
+    font-style: italic;
+}
+
+/* ===== Inspector: tuple/shape editor ===== */
+
+QDimsEdit QToolButton {
+    background-color: $inspector_dims_btn_bg;
+    color: $inspector_dims_btn_fg;
+    border: 1px solid $inspector_input_border;
+    border-radius: $inspector_input_radius;
+    padding: 0px;
+    min-width: $inspector_dims_btn_width;
+    max-width: $inspector_dims_btn_width;
+}
+QDimsEdit QToolButton:hover {
+    background-color: $inspector_dims_btn_hover_bg;
+}
+QDimsEdit QToolButton:disabled {
+    color: $inspector_dims_btn_disabled_fg;
+}
+
 /* ===== Inspector: combo popup ===== */
 
 QComboBox QAbstractItemView {
@@ -404,4 +429,71 @@ QPushButton#prefsColorBtn {
     border: 1px solid $preferences_color_btn_border;
     border-radius: $preferences_color_btn_radius;
     height: $preferences_color_btn_height;
+}
+/* ===== Start screen: controller selection ===== */
+
+QWidget#startView {
+    background-color: $start_background_color;
+}
+QWidget#startPanel {
+    background-color: $start_panel_bg;
+    border: 1px solid $start_panel_border;
+    border-radius: $start_panel_radius;
+}
+QLabel#startTitle {
+    color: $start_title_color;
+    font-size: $start_title_font_size;
+    font-weight: bold;
+    background: transparent;
+    border: none;
+}
+QLabel#startSubtitle {
+    color: $start_subtitle_color;
+    font-size: $start_subtitle_font_size;
+    background: transparent;
+    border: none;
+}
+QFrame#startSeparator {
+    color: $start_separator_color;
+    background-color: $start_separator_color;
+    max-height: 1px;
+    border: none;
+}
+QPushButton#startOpenButton {
+    color: $start_open_fg;
+    background: transparent;
+    border: none;
+    padding: 6px;
+    text-align: left;
+}
+QPushButton#startOpenButton:hover {
+    color: $start_open_hover_fg;
+}
+QPushButton#controllerCard {
+    background-color: $start_card_bg;
+    border: 1px solid $start_card_border;
+    border-radius: $start_card_radius;
+    text-align: left;
+    padding: 0px;
+}
+QPushButton#controllerCard:hover {
+    background-color: $start_card_hover_bg;
+    border: 1px solid $start_card_hover_border;
+}
+QPushButton#controllerCard QLabel {
+    background: transparent;
+    border: none;
+}
+QLabel#controllerCardTitle {
+    color: $start_card_title_color;
+    font-size: $start_card_title_font_size;
+    font-weight: bold;
+}
+QLabel#controllerCardSummary {
+    color: $start_card_summary_color;
+    font-size: $start_card_summary_font_size;
+}
+QLabel#statusControllerLabel {
+    color: $start_card_summary_color;
+    padding-right: 8px;
 }

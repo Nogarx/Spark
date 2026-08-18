@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QApplication, QAbstractItemView, QToolButton, QSizePolicy
 )
 from spark.graph_editor.styles.manager import STYLES
+from spark.graph_editor.widgets.scroll_utils import ScrollMarginBalancer
 from spark.graph_editor.models.node_model import NodeModel
 
 #################################################################################################################################################
@@ -33,7 +34,6 @@ class HierarchyView(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         bg_color = STYLES.get_val('hierarchy', 'background_color')
-        right_pad = STYLES.get_val('hierarchy', 'right_padding')
         min_width = STYLES.get_val('hierarchy', 'min_width')
         self.setMinimumWidth(min_width)
         # Search bar Container
@@ -41,7 +41,7 @@ class HierarchyView(QWidget):
         search_container.setObjectName('hierarchySearchContainer')
         search_layout = QVBoxLayout(search_container)
         sm = STYLES.get_val('hierarchy', 'search_margins')
-        search_layout.setContentsMargins(sm[0], sm[1], sm[2] + right_pad, sm[3])
+        search_layout.setContentsMargins(*sm)
         # Search bar
         self.search_bar = QLineEdit()
         self.search_bar.setObjectName('hierarchySearch')
@@ -60,10 +60,12 @@ class HierarchyView(QWidget):
         self.content_widget.setObjectName('hierarchyContent')
         self.content_layout = QVBoxLayout(self.content_widget)
         cm = STYLES.get_val('hierarchy', 'content_margins')
-        self.content_layout.setContentsMargins(cm[0], cm[1], cm[2] + right_pad, cm[3])
+        self.content_layout.setContentsMargins(*cm)
         self.content_layout.setSpacing(STYLES.get_val('hierarchy', 'content_spacing'))
         self._scroll.setWidget(self.content_widget)
         layout.addWidget(self._scroll)
+        # Both gutters stay equal, with or without the vertical scroll bar.
+        self._margin_balancer = ScrollMarginBalancer(self._scroll, self.content_layout, cm)
         # Categories
         cat_names = {
             'SourceNodeModel': 'SOURCES',

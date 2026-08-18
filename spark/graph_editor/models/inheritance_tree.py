@@ -6,9 +6,10 @@ from __future__ import annotations
 
 import enum
 import typing as tp
-import copy 
+import copy
 import dataclasses as dc
 from spark.core.utils import ascii_tree
+from spark.graph_editor.models.config_types import type_tokens
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -34,13 +35,27 @@ class InheritanceLeaf:
     flags: InheritanceFlags = 0b0000
     break_inheritance: bool = False
     parent: InheritanceTree = None
+    type_key: frozenset[str] = dc.field(init=False, default_factory=frozenset)
 
     def __post_init__(self,) -> None:
-        if isinstance(self.type_string, tp.Iterable):
-            type_string = set(self.type_string)
-            self.type_string = [t.__name__ if isinstance(t, type) else str(t) for t in type_string if t is not None]
-        elif isinstance(self.type_string, type):
-            self.type_string = self.type_string.__name__
+        # NOTE: A type_string may arrive as a plain annotation string, a type, or the "valid_types" metadata
+        # tuple. Strings are iterable, so they must be handled before the generic iterable branch.
+        raw = self.type_string
+        if raw is None:
+            names = []
+        elif isinstance(raw, str):
+            names = [raw]
+        elif isinstance(raw, type):
+            names = [raw.__name__]
+        elif isinstance(raw, tp.Iterable):
+            names = [t.__name__ if isinstance(t, type) else str(t) for t in raw if t is not None]
+        else:
+            names = [str(raw)]
+        self.type_string = names[0] if len(names) == 1 else names
+        # Cascading is only allowed between fields that describe the same type.
+        self.type_key = type_tokens(valid_types=tuple(names))
+        # Normalize flags so that raw integers are always usable as InheritanceFlags.
+        self.flags = InheritanceFlags(self.flags)
 
     def __repr__(self,) -> str:
         rep = f'{self.name}\n'
@@ -125,11 +140,13 @@ class InheritanceTree:
             Parses the tree with to produce a string with the appropiate format for the ascii_tree method.
         """
 
-        rep = current_depth * ' ' + f'{self._current_path[-1]}\n' if len(self._current_path) > 0 else ''
+        # NOTE: The root of a tree has an empty path, but ascii_tree still requires a depth 0 header.
+        name = self._current_path[-1] if len(self._current_path) > 0 else 'config'
+        rep = current_depth * ' ' + f'{name}\n'
         for l, s in self._leaves.items():
             rep += (current_depth + 1) * ' ' + f'{l}: {s.flags}\n'
         for _, t in self._branches.items():
-            rep += t._parse_tree_with_spaces(current_depth+1 if len(self._current_path) > 0 else 0)
+            rep += t._parse_tree_with_spaces(current_depth + 1)
         return rep
 
     def add_leaf(
@@ -198,63 +215,59 @@ class InheritanceTree:
             branch = path.pop(0)
             # Allow adding branches recursively to simplify usage.
             if branch not in self._branches:
-                self._branches[branch] = InheritanceTree(self._current_path + branch)
+                self._branches[branch] = InheritanceTree(self._current_path + [branch])
             self._branches[branch].add_branch(path)
         else: 
             raise ValueError(
                 f'Invalid path, got: {path}. Path must point to final branch.'
             )
         
-    def validate(self, inheriting_labels: dict = {}) -> None:
+    def invalidate(self,) -> None:
+        """
+            Marks the whole subtree as invalid, forcing a full recomputation on the next validate() call.
+        """
+        self._is_valid = False
+        for branch in self._branches.values():
+            branch.invalidate()
+
+    def validate(self, inheriting_labels: dict | None = None) -> None:
         """
             Validates the flags and the inheritance childs of the tree.
+
+            Input:
+                inheriting_labels: dict, {(leaf name, leaf type): is_inheriting} entries contributed by the
+                    ancestors of this subtree. Leaves matching an entry are marked as receiving.
         """
-        inheriting_labels = copy.deepcopy(inheriting_labels)
+        # NOTE: Labels are keyed by (name, type) so that same-named fields of different types never cascade
+        # into each other.
+        inheriting_labels = dict(inheriting_labels) if inheriting_labels else {}
         if self._is_valid:
             return
-        if len(self._branches) == 0:
-            # If there are no branches, leaves cannot inherit.
-            can_inherit = InheritanceFlags(0)
-            is_inheriting = InheritanceFlags(0)
-            for l in self._leaves.keys():
-                # If label is not in inheriting_labels, leaf cannot receive.
-                if l not in inheriting_labels:
-                    can_receive = InheritanceFlags(0)
-                    is_receiving = InheritanceFlags(0)
-                else:
-                    can_receive = InheritanceFlags.CAN_RECEIVE
-                    is_receiving = InheritanceFlags.IS_RECEIVING if inheriting_labels[l] else InheritanceFlags(0)
-                # Set leaf attributes
-                if self._leaves[l].break_inheritance:
-                    self._leaves[l].flags = InheritanceFlags(0)
-                else:
-                    self._leaves[l].flags = can_inherit | is_inheriting | can_receive | is_receiving
-                self._leaves[l].inheritance_childs = []
-        else:
-            for l, il in self._leaves.items():
-                # Get leaf inheritance_childs
-                inheritance_childs = self._compute_leaf_childs(l)
-                # Check if can inherit its value
-                can_inherit = InheritanceFlags.CAN_INHERIT if len(inheritance_childs) > 0 else InheritanceFlags(0)
-                # Preseve is_inheriting flag unless it is set on by error.
-                is_inheriting = il.flags & InheritanceFlags.IS_INHERITING if can_inherit else InheritanceFlags(0)
-                # If label is not in inheriting_labels, leaf cannot receive.
-                if l not in inheriting_labels:
-                    can_receive = InheritanceFlags(0)
-                    is_receiving = InheritanceFlags(0)
-                else:
-                    can_receive = InheritanceFlags.CAN_RECEIVE
-                    is_receiving = InheritanceFlags.IS_RECEIVING if inheriting_labels[l] else InheritanceFlags(0)
-                # Set leaf attributes
-                if self._leaves[l].break_inheritance:
-                    self._leaves[l].flags = InheritanceFlags(0)
-                else:
-                    self._leaves[l].flags = can_inherit | is_inheriting | can_receive | is_receiving
-                self._leaves[l].inheritance_childs = inheritance_childs
-
-                # Add leaf to inheriting labels
-                if len(inheritance_childs) > 0:
-                    inheriting_labels[l] = inheriting_labels.get(l, None) or bool(is_inheriting)
+        for name, leaf in self._leaves.items():
+            key = (name, leaf.type_key)
+            # Get leaf inheritance_childs
+            inheritance_childs = self._compute_leaf_childs(name, leaf.type_key)
+            # Check if can inherit its value
+            can_inherit = InheritanceFlags.CAN_INHERIT if len(inheritance_childs) > 0 else InheritanceFlags(0)
+            # Preserve is_inheriting flag unless it is set on by error.
+            is_inheriting = leaf.flags & InheritanceFlags.IS_INHERITING if can_inherit else InheritanceFlags(0)
+            # If label is not in inheriting_labels, leaf cannot receive.
+            if key not in inheriting_labels:
+                can_receive = InheritanceFlags(0)
+                is_receiving = InheritanceFlags(0)
+            else:
+                can_receive = InheritanceFlags.CAN_RECEIVE
+                is_receiving = InheritanceFlags.IS_RECEIVING if inheriting_labels[key] else InheritanceFlags(0)
+            # Set leaf attributes
+            if leaf.break_inheritance:
+                leaf.flags = InheritanceFlags(0)
+                leaf.inheritance_childs = []
+                continue
+            leaf.flags = can_inherit | is_inheriting | can_receive | is_receiving
+            leaf.inheritance_childs = inheritance_childs
+            # Add leaf to inheriting labels
+            if len(inheritance_childs) > 0:
+                inheriting_labels[key] = inheriting_labels.get(key, False) or bool(is_inheriting)
 
         # Validate branches:
         for b in self._branches.keys():
@@ -264,27 +277,30 @@ class InheritanceTree:
 
     # NOTE: This method should be computed from deeper branches to shallow for efficiency. However, in practice Inheritance
     # trees will not have more than a few levels and a couple dozens of parameters which makes forward search acceptable.
-    def _compute_leaf_childs(self, name: str, path: list[str] = []) -> list[list[str]]:
+    def _compute_leaf_childs(self, name: str, type_key: frozenset[str], path: list[str] | None = None) -> list[list[str]]:
         """
             Collects the inheritance childs of a tree, relative to the current leaf.
 
             Input:
                 name: str, leaf node name to search
+                type_key: frozenset[str], normalized type of the leaf node. Only childs describing the same
+                    type are considered valid cascade targets.
 
             Returns:
                 list[list[str]], list of inheritance childs of the leaf node
         """
+        path = [] if path is None else path
         inheritance_childs = []
         # Search in subtrees only.
         if len(path) > 0:
             for l, lo in self._leaves.items():
-                if l == name:
+                if l == name and lo.type_key == type_key:
                     # Check if leaf has the break_inheritance flag
                     if not lo.break_inheritance:
                         inheritance_childs.append(path + [name])
                     break
         for b in self._branches.keys():
-            inheritance_childs += self._branches[b]._compute_leaf_childs(name, [b])
+            inheritance_childs += self._branches[b]._compute_leaf_childs(name, type_key, path + [b])
         return inheritance_childs
 
     def get_leaf(self, path: list[str]) -> InheritanceLeaf:

@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QS
 from PySide6.QtCore import Qt, QMargins
 from PySide6.QtGui import QColor, QPixmap, QPainter
 from spark.graph_editor.styles.manager import STYLES
+from spark.graph_editor.widgets.scroll_utils import ScrollMarginBalancer
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -119,9 +120,9 @@ class ConsoleView(QWidget):
             MessageLevel.ERROR: True,
         }
         self._messages: list[_MessageWidget] = []
-        right_pad = STYLES.get_val('hierarchy', 'right_padding')
         min_width = STYLES.get_val('console', 'min_width')
         self.setMinimumWidth(min_width)
+        self.setMinimumHeight(STYLES.get_val('console', 'min_height', default=185))
         # Widget layout
         layout = QVBoxLayout()
         layout.setContentsMargins(QMargins(0, 0, 0, 0))
@@ -138,8 +139,10 @@ class ConsoleView(QWidget):
         scroll_area.setWidget(self.content)
         cm = STYLES.get_val('console', 'content_margins')
         content_layout = QVBoxLayout(self.content)
-        content_layout.setContentsMargins(QMargins(cm[0], cm[1], cm[2] + right_pad, cm[3]))
+        content_layout.setContentsMargins(QMargins(*cm))
         content_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        # Both gutters stay equal, with or without the vertical scroll bar.
+        self._margin_balancer = ScrollMarginBalancer(scroll_area, content_layout, cm)
         content_layout.setSpacing(0)
         # Top button bar
         self._btn_info = self._make_filter_button('Info', MessageLevel.INFO)

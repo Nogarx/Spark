@@ -102,7 +102,7 @@ class _InitNamespace:
 				valid_config_fields = [f.name for f in dc.fields(raw_attribute)]
 				init_config_kwargs = raw_attribute.to_dict() | {k:v for k,v in kwargs.items() if k in valid_config_fields}
 				# Create initializer
-				initializer = raw_attribute.class_ref(**init_config_kwargs)
+				initializer = raw_attribute.get_cls()(**init_config_kwargs)
 				# Filter call kwargs
 				valid_init_kwargs = [k for k in inspect.signature(initializer).parameters]
 				init_call_kwargs = {k:v for k,v in kwargs.items() if k in valid_init_kwargs}
@@ -397,11 +397,11 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 				f'of one of the classes to avoid overlappings.'
 			)
 		if module_class_ref:
-			class_ref = module_class_ref.class_ref
+			class_ref = module_class_ref.get_cls()
 		elif initializer_class_ref: 
-			class_ref = initializer_class_ref.class_ref
+			class_ref = initializer_class_ref.get_cls()
 		elif interface_class_ref: 
-			class_ref = interface_class_ref.class_ref
+			class_ref = interface_class_ref.get_cls()
 		else:
 			raise AttributeError(
 				f'Configuration \"{obj.__class__.__name__}\" cannot resolve __class_ref__. '

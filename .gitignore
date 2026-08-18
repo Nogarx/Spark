@@ -1,6 +1,7 @@
 _run_tests.py
 .env/
 .env_docs/
+OLD_SPARK*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

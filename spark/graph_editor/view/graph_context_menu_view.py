@@ -9,10 +9,14 @@ from PySide6.QtWidgets import QMenu
 from PySide6.QtGui import QAction
 from PySide6.QtCore import Signal, QPoint
 
+import logging
 import spark.core.utils as utils
-from spark.core.registry import REGISTRY, RegistryEntry
+from spark.core.registry import REGISTRY, RegistryEntry, RegistryNamespace
 from spark.graph_editor.models.node_model import SourceNodeModel, SinkNodeModel
 from spark.graph_editor.models.node_factory import NODE_REGISTRY
+from spark.graph_editor.models.controller_profile import ControllerProfile
+
+logger = logging.getLogger('spark')
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -25,6 +29,7 @@ class ContextMenuCommand(enum.Enum):
     Delete = enum.auto()
     Copy = enum.auto()
     Paste = enum.auto()
+    Import = enum.auto()
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -32,6 +37,7 @@ class ContextMenuCommand(enum.Enum):
 class ActionData:
     command: ContextMenuCommand
     cls: type | None = None
+    entry: RegistryEntry | None = None
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -41,8 +47,19 @@ class GraphContextMenu(QMenu):
     """
     node_selected = Signal(RegistryEntry)
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, profile: ControllerProfile | None = None, parent=None) -> None:
         super().__init__(parent=parent)
+        self._profile = profile
+        self._build_menu()
+
+    def set_profile(self, profile: ControllerProfile | None) -> None:
+        """
+            Rebuilds the palette for a controller profile.
+        """
+        if profile is self._profile:
+            return
+        self._profile = profile
+        self.clear()
         self._build_menu()
 
     def update_menu_state(self, has_selection: bool, can_undo: bool, can_redo: bool, can_paste: bool):
@@ -72,29 +89,42 @@ class GraphContextMenu(QMenu):
         # Separator
         interfaces_submenu.addSeparator()
 
-        # Populate components submenu
+        # Populate the palette declared by the active controller profile.
+        # NOTE: Which modules can be placed depends on the controller being built: a Brain hosts neurons and
+        # interfaces, a Neuron hosts the components a neuron is made of.
         SUBMENU_MAX_DEPTH = 2
-        for key, entry in REGISTRY.Components.items():
-            # NOTE: Skip controllers. Need to be done more gracefully.
-            if entry.path[0].lower() == 'controller':
-                continue
-            path = entry.path[:SUBMENU_MAX_DEPTH]
-            # Get submenu
-            submenu = self._get_submenu(path)
-            # Add action to submenu
-            action = QAction(utils.to_human_readable(entry.get_cls().__name__), submenu)
-            action.setData(ActionData(command=ContextMenuCommand.Create, cls=NODE_REGISTRY.get(entry.get_cls())))
-            submenu.addAction(action)
+        namespaces = self._profile.palette_namespaces if self._profile else ()
+        for namespace in namespaces:
+            for key, entry in getattr(REGISTRY, namespace.name).items():
+                # NOTE: Controllers are the graph itself, they are never placed as a module.
+                if len(entry.path) > 0 and entry.path[0].lower() == 'controller':
+                    continue
+                node_cls = NODE_REGISTRY.get(entry.get_cls())
+                if node_cls is None:
+                    logger.warning(f'No node model available for "{entry.name}", it will not be offered.')
+                    continue
+                path = entry.path[:SUBMENU_MAX_DEPTH]
+                # Get submenu
+                submenu = self._get_submenu(path)
+                # Add action to submenu
+                action = QAction(utils.to_human_readable(entry.get_cls().__name__), submenu)
+                action.setData(ActionData(command=ContextMenuCommand.Create, cls=node_cls))
+                submenu.addAction(action)
 
-        # Populate interfaces submenu
-        for key, entry in REGISTRY.Interfaces.items():
-            path = entry.path[:SUBMENU_MAX_DEPTH]
-            # Get submenu
-            submenu = self._get_submenu(path)
-            # Add action to submenu
-            action = QAction(utils.to_human_readable(entry.get_cls().__name__), submenu)
-            action.setData(ActionData(command=ContextMenuCommand.Create, cls=NODE_REGISTRY.get(entry.get_cls())))
-            submenu.addAction(action)
+        # Models that are expanded instead of placed.
+        # NOTE: A registered model is a controller of its own. Under a profile that hosts it (a Neuron inside
+        # a Brain) it belongs to the palette above and is placed as a single node. Under a profile that *is*
+        # that controller, it cannot be a node: importing it means adding the modules it is made of.
+        import_namespaces = self._profile.import_namespaces if self._profile else ()
+        if import_namespaces:
+            import_submenu = QMenu('Import Model', self)
+            self.addMenu(import_submenu)
+            for namespace in import_namespaces:
+                for key, entry in getattr(REGISTRY, namespace.name).items():
+                    action = QAction(utils.to_human_readable(entry.get_cls().__name__), import_submenu)
+                    action.setData(ActionData(command=ContextMenuCommand.Import, entry=entry))
+                    import_submenu.addAction(action)
+            self.addSeparator()
 
         # Common actions
         # Undo
@@ -126,6 +156,7 @@ class GraphContextMenu(QMenu):
         """
         # Start on root
         submenu = self
+        target_menu = self
         for name in path:
             submenu_name = utils.to_human_readable(name)
             # Check if submenu exists

@@ -9,8 +9,8 @@ import enum
 import importlib
 import spark.core.utils as utils
 from spark.core.module import SparkModule
-from spark.core.registry import RegistryEntry, Registry, REGISTRY
-from spark.graph_editor.models.node_model import NodeModel, ComponentNodeModel, InterfaceNodeModel
+from spark.core.registry import RegistryEntry, Registry, REGISTRY, RegistryNamespace
+from spark.graph_editor.models.node_model import NodeModel, ComponentNodeModel, InterfaceNodeModel, ControllerNodeModel
 from spark.graph_editor.models.port_model import PortModel
 from spark.core.config import SparkConfig
 
@@ -48,21 +48,36 @@ class NodeRegistry:
         Graph Editor Registry for node models.
     """
 
+    # Node model base class used for each registry namespace.
+    NAMESPACE_BASE_MODEL = {
+        RegistryNamespace.Components: ComponentNodeModel,
+        RegistryNamespace.Interfaces: InterfaceNodeModel,
+        RegistryNamespace.Neurons: ControllerNodeModel,
+    }
+
     def __init__(self,) -> None:
         super().__init__()
-        self._registry = {}
+        self._registry: dict[type, type[NodeModel]] = {}
+        self._namespaces: dict[type, RegistryNamespace] = {}
 
-        # Map available models 
-        for _, entry in REGISTRY.Components.items():
-            # NOTE: Skip controllers. Need to be done more gracefully.
-            if entry.path[0].lower() == 'controller':
-                continue
-            self._registry[entry.get_cls()] = NodeFactory.create_node_from_registry(entry, ComponentNodeModel)
-        for _, entry in REGISTRY.Interfaces.items():
-            self._registry[entry.get_cls()] = NodeFactory.create_node_from_registry(entry, InterfaceNodeModel)
+        # Map available models
+        for namespace, base_model in self.NAMESPACE_BASE_MODEL.items():
+            for _, entry in getattr(REGISTRY, namespace.name).items():
+                # NOTE: Controllers are not placed as plain modules, they are the graph itself.
+                if len(entry.path) > 0 and entry.path[0].lower() == 'controller':
+                    continue
+                cls = entry.get_cls()
+                self._registry[cls] = NodeFactory.create_node_from_registry(entry, base_model)
+                self._namespaces[cls] = namespace
 
     def get(self, node_cls: type) -> type[NodeModel] | None:
         return self._registry.get(node_cls, None)
+
+    def get_namespace(self, node_cls: type) -> RegistryNamespace | None:
+        """
+            Registry namespace a node class was created from.
+        """
+        return self._namespaces.get(node_cls, None)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

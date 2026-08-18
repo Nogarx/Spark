@@ -108,7 +108,7 @@ class TypeValidator(ConfigurationValidator):
                 if not t:
                     t = getattr(REGISTRY, subregistry_name).get(st)
                     if t:
-                        types_list.append(t.class_ref)
+                        types_list.append(t.get_cls())
         return tuple(types_list)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

@@ -15,12 +15,14 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QScrollArea, QFormLayout, 
     QLineEdit, QLabel, QHBoxLayout, QPushButton, QPlainTextEdit, QFrame, QSizePolicy
 )
-from PySide6.QtCore import Qt, QSize, QMargins, Signal
+from PySide6.QtCore import Qt, QSize, QMargins, QEvent, Signal
 from spark.graph_editor.styles.manager import STYLES
+from spark.graph_editor.styles import resources as icons
 from spark.graph_editor.widgets.attribute_view import QAttribute, QAttrControls
 from spark.graph_editor.models.inspector_model import (
     ConfigNode, ConfigValueNode, ConfigGroupNode, ConfigListNode, parse_object_to_state
 )
+from spark.graph_editor.widgets.scroll_utils import ScrollMarginBalancer
 from spark.graph_editor.commands.graph_commands import RenameNodeCommand
 from spark.core.specs import ModuleSpecs
 logger = logging.getLogger('spark')
@@ -37,9 +39,10 @@ class NodeNameWidget(QWidget):
         super().__init__()
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        self._icon_label = QLabel('◆')
+        self._icon_label = QLabel()
         self._icon_label.setObjectName('nodeNameIcon')
         icon_max = STYLES.get_val('inspector', 'name_icon_max')
+        self._icon_label.setPixmap(icons.get_pixmap(icons.NODE, icon_max))
         self._icon_label.setMaximumWidth(icon_max)
         self._icon_label.setMaximumHeight(icon_max)
         layout.addWidget(self._icon_label)
@@ -60,18 +63,50 @@ class TreeDisplay(QPlainTextEdit):
 
     def __init__(self, tree: str) -> None:
         super().__init__()
-        self.setPlainText(tree)
+        # NOTE: Trailing newlines would count as extra blocks and show up as empty rows.
+        self.setPlainText(tree.rstrip('\n'))
         self.setReadOnly(True)
         self.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.setObjectName('configTreeDisplay')
-        rows_space = len(tree.split('\n')) * self.fontMetrics().boundingRect('M').height() * 1.2
-        line_space = len(tree.split('\n')) * 2
-        self._target_height = int(rows_space + line_space + 20)
-        self.setFixedHeight(self._target_height)
         self.setContentsMargins(QMargins(16, 0, 0, 4))
+        self._update_height()
+
+    def _content_height(self) -> int:
+        """
+            Height required to show every line of the tree.
+
+            NOTE: This cannot be computed once in the constructor. The stylesheet font is applied when the
+            widget is polished, so the metrics available here are still the ones of the default application
+            font. The chrome (frame plus the horizontal scroll bar, which only appears for wide trees) is
+            measured from the widget itself rather than estimated.
+        """
+        lines = max(1, self.document().blockCount())
+        text_height = lines * self.fontMetrics().lineSpacing() + 2 * self.document().documentMargin()
+        chrome = max(0, self.height() - self.viewport().height())
+        return int(text_height + chrome)
+
+    def _update_height(self) -> None:
+        height = self._content_height()
+        # Guarded so that the resize triggered by setFixedHeight settles instead of looping.
+        if height != self.maximumHeight():
+            self.setFixedHeight(height)
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        self._update_height()
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        # A narrow inspector brings up the horizontal scroll bar, which needs room of its own.
+        self._update_height()
+
+    def changeEvent(self, event) -> None:
+        super().changeEvent(event)
+        if event.type() in (QEvent.Type.FontChange, QEvent.Type.StyleChange):
+            self._update_height()
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -85,7 +120,9 @@ class NodeHeaderWidget(QWidget):
         
         layout = QVBoxLayout(self)
         hm = STYLES.get_val('inspector', 'header_margins')
-        layout.setContentsMargins(*hm)
+        # NOTE: The separator belongs to the inspector layout, not to the header, so that the space above and
+        # below it is governed by a single spacing value. The header therefore adds no bottom margin.
+        layout.setContentsMargins(hm[0], hm[1], hm[2], 0)
         layout.setSpacing(STYLES.get_val('inspector', 'header_spacing'))
         
         self.name_widget = NodeNameWidget(node_model.name, **kwargs)
@@ -109,12 +146,6 @@ class NodeHeaderWidget(QWidget):
             layout.addWidget(self.config_tree_label)
             self.tree_label = TreeDisplay(config_tree)
             layout.addWidget(self.tree_label)
-        line = QFrame()
-        line.setObjectName('inspectorSeparator')
-        line.setFrameShape(QFrame.Shape.HLine)
-        line.setFrameShadow(QFrame.Shadow.Sunken)
-        line.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        layout.addWidget(line)
 
     def _is_name_taken(self, new_name: str) -> bool:
         if not new_name.strip():
@@ -175,17 +206,20 @@ class InspectorView(QWidget):
         self._scroll.setObjectName('inspectorScroll')
         self._scroll.viewport().setObjectName('inspectorScrollViewport')
         self._scroll.setWidgetResizable(True)
-        self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # NOTE: The content shrinks to fit the viewport, but it still has a hard floor (the toggle buttons and
+        # a wrapped label). Past that point scrolling is the only honest option, clipping the fields is not.
+        self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.content_widget = QWidget()
         self.content_widget.setObjectName('inspectorContent')
         self.content_layout = QVBoxLayout(self.content_widget)
-        right_pad = STYLES.get_val('hierarchy', 'right_padding')
         cm = STYLES.get_val('inspector', 'content_margins')
-        self.content_layout.setContentsMargins(cm[0], cm[1], cm[2] + right_pad, cm[3])
+        self.content_layout.setContentsMargins(*cm)
         self.content_layout.setSpacing(STYLES.get_val('inspector', 'content_spacing'))
         self.content_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self._scroll.setWidget(self.content_widget)
         layout.addWidget(self._scroll)
+        # Both gutters stay equal, with or without the vertical scroll bar.
+        self._margin_balancer = ScrollMarginBalancer(self._scroll, self.content_layout, cm)
         # Initial empty state
         self._build_empty_state()
 
@@ -247,6 +281,10 @@ class InspectorView(QWidget):
         form.setContentsMargins(*fm)
         form.setSpacing(STYLES.get_val('inspector', 'form_spacing'))
         form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft)
+        # NOTE: Side by side rows cannot be narrower than label + field. Wrapping the field under its label
+        # keeps the inspector usable at small widths instead of letting the rows overflow.
+        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         layout.addWidget(form_container)
         
         def _toggle_block(checked) -> None:
@@ -266,6 +304,18 @@ class InspectorView(QWidget):
         header_widget = NodeHeaderWidget(node_model, self.graph_model, config_tree_str)
         header_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.content_layout.addWidget(header_widget)
+        # Separator between the header and the configuration blocks. Both sides get the same spacing, so the
+        # rule sits centered between the last line of the tree and the first block.
+        gap = STYLES.get_val('inspector', 'separator_spacing', default=12)
+        content_spacing = self.content_layout.spacing()
+        self.content_layout.addSpacing(max(0, gap - content_spacing))
+        separator = QFrame()
+        separator.setObjectName('inspectorSeparator')
+        separator.setFrameShape(QFrame.Shape.HLine)
+        separator.setFrameShadow(QFrame.Shadow.Sunken)
+        separator.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.content_layout.addWidget(separator)
+        self.content_layout.addSpacing(max(0, gap - content_spacing))
         # Link external name updates to the name widget
         node_model.name_changed.connect(
             lambda text, widget=header_widget.name_widget._line_edit: widget.setText(text) if isValid(widget) and widget.text() != text else None
@@ -279,7 +329,7 @@ class InspectorView(QWidget):
         if isinstance(node, ConfigGroupNode):
             # Process ModuleSpecs specially to extract the name for the title
             title = node.name
-            if isinstance(node.class_ref, ModuleSpecs):
+            if issubclass(node.class_ref, ModuleSpecs):
                 name_child = next((c for c in node.children if c.name == 'name'), None)
                 if name_child:
                     title = str(name_child.value)
@@ -287,7 +337,7 @@ class InspectorView(QWidget):
             # Gather primitives for this block
             primitives = [c for c in node.children if isinstance(c, ConfigValueNode)]
             # Special case: don't render the 'name' primitive again if this is a ModuleSpec
-            if isinstance(node.class_ref, ModuleSpecs):
+            if issubclass(node.class_ref, ModuleSpecs):
                 primitives = [p for p in primitives if p.name != 'name']
             # Build block if there are primitives
             if primitives:
@@ -302,6 +352,11 @@ class InspectorView(QWidget):
                     lbl_layout.addWidget(controls)
                     lbl = QLabel(prim.name.replace('_', ' ').title())
                     lbl.setObjectName('attrLabel')
+                    # A label reports its full text as its minimum width, so it has to be allowed to wrap.
+                    lbl.setWordWrap(True)
+                    description = prim.metadata.get('description', None)
+                    if description:
+                        lbl.setToolTip(description)
                     lbl_layout.addWidget(lbl)
                     lbl_layout.addStretch(1)
                     inp = QAttribute(prim, prim_path, self.graph_model)
