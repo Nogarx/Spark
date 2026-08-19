@@ -63,13 +63,26 @@ class ControllerConfig(SparkConfig):
             'description': 'Deltatime integration constant.',
         })
     
+    def _synchronize(self, **shared_kwargs) -> None:
+        """
+            Hands values of this configuration down to every configuration it contains.
+        """
+        # A value that was never set has nothing to say to anyone below.
+        shared_kwargs = {k:v for k,v in shared_kwargs.items() if v is not None}
+        if not shared_kwargs:
+            return
+        merged = self.merge(**shared_kwargs)
+        for field in dc.fields(self):
+            setattr(self, field.name, getattr(merged, field.name))
+
     # TODO: Manual override to synchronize all time integration constants across the controller.
     # This solution is probably good enough but it is not clear that will not clash with other user intentions.
     # A similar situation is present in Neuron.__post_init__
+    # NOTE: Recursion limit prevents this from running forever.
     @limit_recursion(limit=1)
     def __post_init__(self,) -> None:
-        # Synchronize dt's. NOTE: Skip validation, otherwise will fall into an infinite loop.
-        self = self.merge(_s_dt=self.dt)
+        # Every module of a controller integrates on the same clock.
+        self._synchronize(_s_dt=self.dt)
 
 ConfigT = tp.TypeVar("ConfigT", bound=ControllerConfig)
 

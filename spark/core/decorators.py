@@ -5,6 +5,8 @@
 from __future__ import annotations
 import typing as tp
 import inspect
+import threading
+from functools import wraps
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -62,20 +64,21 @@ def limit_recursion(limit) -> tp.Callable[..., tp.Callable[..., tp.Any]]:
 		Decorator to limit recursion depth, used in some post config validation.
 	"""
     def decorator(func):
-        func.current_depth = 0 
+        state = threading.local()
+
+        @wraps(func)
         def wrapper(*args, **kwargs):
-            if wrapper.current_depth >= limit:
-                return args[0] 
-            wrapper.current_depth += 1
+            depth = getattr(state, 'depth', 0)
+            if depth >= limit:
+                return args[0] if args else None
+            state.depth = depth + 1
             try:
                 # Standard recursion
                 result = func(*args, **kwargs)
             finally:
                 # Decrease stack counter
-                wrapper.current_depth -= 1
+                state.depth = depth
             return result
-        # Initialize the depth tracker on the wrapper
-        wrapper.current_depth = 0
         return wrapper
     return decorator
 

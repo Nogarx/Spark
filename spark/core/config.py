@@ -3,6 +3,7 @@
 #################################################################################################################################################
 
 import os
+import re
 import abc
 import jax
 import copy
@@ -47,6 +48,70 @@ SHARED_DELIMITER = '_s_'
 """
 	Prefix marking an argument that is handed down to every configuration below ("_s_units").
 """
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+_MODULE_SPECS_ANNOTATION = re.compile(r'\b(?:list|tuple|set|frozenset|Sequence|Iterable|Collection)\s*\[\s*([\w\.]+)')
+"""
+	Reads the element of a collection annotation, whatever container and import alias it was written with.
+"""
+
+_COLLECTION_ANNOTATION = re.compile(r'^\s*(?:[\w\.]+\.)?(list|tuple|set|frozenset|Sequence|Iterable|Collection)\b')
+"""
+	Recognizes an annotation that promises a collection, whatever it is a collection of.
+"""
+
+_COLLECTION_NAMES = frozenset({'list', 'tuple', 'set', 'frozenset', 'Sequence', 'Iterable', 'Collection'})
+
+def holds_a_collection(field: dc.Field) -> bool:
+	"""
+		True if the annotation of a field says that it holds a collection.
+
+		Args:
+			field: dc.Field, the field to judge.
+
+		Returns:
+			bool, True when the field holds a collection.
+	"""
+	annotation = field.type
+	if isinstance(annotation, str):
+		return _COLLECTION_ANNOTATION.match(annotation) is not None
+	origin = tp.get_origin(annotation) or annotation
+	return getattr(origin, '__name__', None) in _COLLECTION_NAMES
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def is_module_specs_field(field: dc.Field, value: tp.Any = None) -> bool:
+	"""
+		True if a field holds a collection of module specifications.
+
+		Args:
+			field: dc.Field, the field to judge.
+			value: tp.Any, what the field is about to hold, consulted when the annotation says nothing.
+
+		Returns:
+			bool, True when the field holds module specifications.
+	"""
+	from spark.core.specs import ModuleSpecs
+	annotation = field.type
+	if isinstance(annotation, str):
+		# Postponed annotation.
+		match = _MODULE_SPECS_ANNOTATION.search(annotation)
+		if match is not None and match.group(1).split('.')[-1] == ModuleSpecs.__name__:
+			return True
+	elif tp.get_origin(annotation) is not None:
+		for arg in tp.get_args(annotation):
+			# NOTE: A typehint can either by a class (type) or a reference that was never resolved (str)
+			name = getattr(arg, '__forward_arg__', None) or getattr(arg, '__name__', None)
+			if isinstance(name, str) and name.split('.')[-1] == ModuleSpecs.__name__:
+				return True
+	if isinstance(value, (list, tuple)) and len(value) > 0:
+		if all(isinstance(v, ModuleSpecs) for v in value):
+			return True
+		# A configuration that came back from a file carries its specifications as dictionaries.
+		if all(isinstance(v, dict) and {'name', 'module_cls'} <= v.keys() for v in value):
+			return True
+	return False
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -227,14 +292,17 @@ class SparkConfigMeta(abc.ABCMeta):
 				key = field.name
 
 				# Check for module specs
-				# TODO: field.type is str, so we re we need to check for 'tuple[ModuleSpecs, ...]', which is not ideal 
-				if field.type in ['tuple[ModuleSpecs, ...]', 'tuple[ModuleSpecs]']:
+				default_specs_list = _kwargs.get(field.name, None)
+				# NOTE: Reaching for the default of every field would call factories that stand for nested 
+				# configurations and instantiating one without proper arguments is likely to fail.
+				if default_specs_list is None and holds_a_collection(field):
+					if not field.default is dc.MISSING:
+						default_specs_list = field.default
+					elif not field.default_factory is dc.MISSING:
+						default_specs_list = field.default_factory()
+				if is_module_specs_field(field, default_specs_list):
 					module_specs_list = []
-					# Get specs_list
-					default_specs_list = _kwargs.get(field.name, None)
-					if default_specs_list is None:
-						default_specs_list = field.default if not field.default is dc.MISSING else field.default_factory()
-					for module_spec in default_specs_list:
+					for module_spec in (default_specs_list or ()):
 						module_spec = copy.deepcopy(module_spec)
 						if isinstance(module_spec, dict):
 							module_spec = ModuleSpecs.from_dict(module_spec)
@@ -244,7 +312,10 @@ class SparkConfigMeta(abc.ABCMeta):
 						# the configuration of the module unfolds it under the very same rules.
 						prefix = f'{module_spec.name}{NESTED_DELIMITER}'
 						module_kwargs = {k[len(prefix):]:v for k,v in kwargs.items() if k.startswith(prefix)}
-						spec_kwargs = raw_shared | module_kwargs
+						# NOTE: A shared argument is handed over twice: under its own name, so that it outranks
+						# what the module carries, and prefixed, so that it keeps travelling further down.
+						plain_shared = {k[len(SHARED_DELIMITER):]:v for k,v in raw_shared.items()}
+						spec_kwargs = raw_shared | plain_shared | module_kwargs
 						# Update spec config
 						if dc.is_dataclass(module_spec.config):
 							module_spec.config = module_spec.config.merge(**spec_kwargs)

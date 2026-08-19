@@ -58,11 +58,9 @@ class NeuronConfig(ControllerConfig):
 
 	@limit_recursion(limit=1)
 	def __post_init__(self,) -> None:
-		pass
-		# Synchronize units. NOTE: Skip validation, otherwise will fall into an infinite loop.
-		#self = self.merge(_s_dt=self.dt, _s_units=self.units)
-        # Synchronize dt's. NOTE: Skip validation, otherwise will fall into an infinite loop.
-		self = self.merge(_s_dt=self.dt)
+		# NOTE: Convinience controller synchronization of dt's and unit's. 
+		# Both are 'reserved' names to denote integration times and the number of neurons in the pool.
+		self._synchronize(_s_dt=self.dt, _s_units=self.units)
 	
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
