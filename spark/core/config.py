@@ -802,7 +802,7 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 					new_seed = int(subkey._base_array[0])
 					# Rebuild nested config with new seed
 					setattr(_config, field.name, _with_new_seeds(getattr(_config, field.name), new_seed)) 
-				elif field.type is tuple[ModuleSpecs, ...]:
+				elif is_module_specs_field(field, getattr(_config, field.name, None)):
 					module_specs_list = []
 					for module_spec in getattr(_config, field.name, []):
 						module_spec: ModuleSpecs = copy.deepcopy(module_spec)

@@ -312,6 +312,57 @@ class TestPartialAndMerge:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class TestNewSeeds:
+    """
+        Reseeding a configuration, which is what makes a run repeatable.
+    """
+
+    @staticmethod
+    def _seeds(config):
+        return {spec.name: spec.config.seed for spec in config.modules_specs}
+
+    def test_the_modules_are_reseeded(self) -> None:
+        config = spark.nn.neurons.ALIFNeuronConfig(units=(8,))
+        before, after = self._seeds(config), self._seeds(config.with_new_seeds(seed=42))
+        assert all(before[name] != after[name] for name in before)
+
+    def test_the_controller_is_reseeded(self) -> None:
+        config = spark.nn.neurons.ALIFNeuronConfig(units=(8,))
+        assert config.with_new_seeds(seed=42).seed != config.seed
+
+    def test_the_same_seed_gives_the_same_model(self) -> None:
+        config = spark.nn.neurons.ALIFNeuronConfig(units=(8,))
+        first, second = config.with_new_seeds(seed=42), config.with_new_seeds(seed=42)
+        assert first.seed == second.seed
+        assert self._seeds(first) == self._seeds(second)
+
+    def test_another_seed_gives_another_model(self) -> None:
+        config = spark.nn.neurons.ALIFNeuronConfig(units=(8,))
+        first, second = config.with_new_seeds(seed=42), config.with_new_seeds(seed=7)
+        assert self._seeds(first) != self._seeds(second)
+
+    def test_the_original_is_left_alone(self) -> None:
+        config = spark.nn.neurons.ALIFNeuronConfig(units=(8,))
+        before = self._seeds(config)
+        config.with_new_seeds(seed=42)
+        assert self._seeds(config) == before
+
+    def test_it_reaches_every_level(self) -> None:
+        pool = lambda name: spark.ModuleSpecs(
+            name=name, module_cls=spark.nn.neurons.ALIFNeuron,
+            inputs={'in_spikes': [spark.PortMap(origin='__call__', port='in_spikes')]},
+            config=spark.nn.neurons.ALIFNeuronConfig(units=(8,)))
+        brain = spark.nn.BrainConfig(modules_specs=[pool('a'), pool('b')])
+        reseeded = brain.with_new_seeds(seed=42)
+        for before_spec, after_spec in zip(brain.modules_specs, reseeded.modules_specs):
+            assert before_spec.config.seed != after_spec.config.seed
+            assert all(b.config.seed != a.config.seed
+                       for b, a in zip(before_spec.config.modules_specs, after_spec.config.modules_specs))
+        # NOTE: Two pools reseeded from one seed must not end up identical to each other.
+        assert reseeded.modules_specs[0].config.seed != reseeded.modules_specs[1].config.seed
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class TestControllerSharedFields:
     """
         A controller hands its own shape and its own clock to every module it holds.
