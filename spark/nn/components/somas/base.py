@@ -11,7 +11,7 @@ import abc
 import jax.numpy as jnp
 import typing as tp
 import spark.core.utils as utils
-from spark.core.variables import Variable
+from spark.core.backend import Variable
 from spark.nn.components.base import Component, ComponentConfig
 from spark.core.payloads import SpikeArray, CurrentArray, PotentialArray, BooleanMask
 from spark.core.decorators import spark_property

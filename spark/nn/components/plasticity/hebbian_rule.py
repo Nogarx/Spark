@@ -14,7 +14,7 @@ import dataclasses as dc
 import jax.numpy as jnp
 from spark.core.tracers import Tracer
 from spark.core.payloads import SpikeArray, FloatArray
-from spark.core.variables import Constant
+from spark.core.backend import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.utils import get_einsum_dot_exp_string
 from spark.core.config_validation import TypeValidator, PositiveValidator
@@ -127,7 +127,7 @@ class HebbianRule(Plasticity):
         pre_trace = self.pre_trace(_pre_spikes)
         post_trace = self.post_trace(_post_spikes)
         # Compute rule
-        dK = self.eta * (
+        dK = self.eta.value * (
             + post_trace * _pre_spikes
             + pre_trace * _post_spikes
         )
@@ -229,7 +229,7 @@ class OjaRule(Plasticity):
         # Update and get current trace value
         post_trace = self.post_trace(_post_spikes)
         # Compute rule
-        dK = self.eta * (
+        dK = self.eta.value * (
             + post_trace * _pre_spikes
             - _kernel * jnp.square(post_trace)
         )

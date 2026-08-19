@@ -11,7 +11,7 @@ import jax.numpy as jnp
 import dataclasses as dc
 import spark.core.utils as utils
 from spark.core.payloads import SpikeArray, FloatArray
-from spark.core.variables import Variable, Constant
+from spark.core.backend import Variable, Constant
 from spark.core.registry import register_interface, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.interfaces.input.base import InputInterface, InputInterfaceConfig, InputInterfaceOutput
@@ -91,7 +91,7 @@ class LinearSpiker(InputInterface):
         self._tau = Constant(self.tau, dtype=self._dtype)
         self._scale = Constant(scale, dtype=self._dtype)
         self._decay = Constant(jnp.exp(-self._dt / self.tau), dtype=self._dtype)
-        self._gain = Constant(1 - self._decay, dtype=self._dtype)
+        self._gain = Constant(1 - self._decay.value, dtype=self._dtype)
 
     def build(self, signal: FloatArray) -> None:
         # Initialize shapes
@@ -119,10 +119,10 @@ class LinearSpiker(InputInterface):
         """
         # Update potential
         is_ready = jnp.greater_equal(self._refractory.value, self._cooldown).astype(self._dtype)
-        dV = is_ready * self._tau * self._gain * self._scale * signal.value
-        self.potential.value = self._decay * self.potential.value + self._dt * dV
+        dV = is_ready * self._tau.value * self._gain.value * self._scale.value * signal.value
+        self.potential.value = self._decay.value * self.potential.value + self._dt * dV
         # Spike
-        spikes = (self.potential.value > self._tau).astype(self._dtype)
+        spikes = (self.potential.value > self._tau.value).astype(self._dtype)
         # Reset neuron 
         self.potential.value = (1 - spikes) * self.potential.value
         # Set neuron refractory period.

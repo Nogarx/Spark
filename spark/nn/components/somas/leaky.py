@@ -12,11 +12,11 @@ import jax.numpy as jnp
 import dataclasses as dc
 from spark.core.tracers import Tracer
 from spark.core.payloads import SpikeArray, CurrentArray, SparkPayload
-from spark.core.variables import Variable, Constant
+from spark.core.backend import Variable, Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.somas.base import Soma, SomaConfig
-from spark.core.flax_imports import data
+from spark.core.backend import data
 from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
@@ -133,8 +133,8 @@ class LeakySoma(Soma):
             Update neuron's soma states variables.
         """
         self._potential.value = \
-            + self.potential_decay * self._potential.value \
-            + self.potential_gain * self.resistance * current.value
+            + self.potential_decay.value * self._potential.value \
+            + self.potential_gain.value * self.resistance.value * current.value
 
     def _compute_spikes(self,) -> SpikeArray:
         """
@@ -143,7 +143,7 @@ class LeakySoma(Soma):
         # Compute spikes.
         spikes = jnp.greater(self._potential.value, self.threshold.value).astype(self._dtype)
         # Reset neurons.
-        self._potential.value = spikes * self.potential_reset + (1 - spikes) * self._potential.value
+        self._potential.value = spikes * self.potential_reset.value + (1 - spikes) * self._potential.value
         return SpikeArray(spikes)
     
 #################################################################################################################################################
@@ -207,7 +207,7 @@ class RefractoryLeakySoma(LeakySoma):
         _cooldown = self.config.init.cooldown(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
         # Refractory period.
         self.cooldown = Constant(jnp.round(_cooldown / self._dt).astype(jnp.uint16), dtype=jnp.uint16)
-        self.refractory = Variable(self.cooldown * jnp.ones(self.units), dtype=jnp.uint16)
+        self.refractory = Variable(self.cooldown.value * jnp.ones(self.units), dtype=jnp.uint16)
         self.is_ready = Variable(jnp.ones(self.units), dtype=jnp.bool)
 
     def reset(self) -> None:
@@ -215,7 +215,7 @@ class RefractoryLeakySoma(LeakySoma):
             Resets component state.
         """
         super().reset()
-        self.refractory.value = jnp.array(self.cooldown * jnp.ones(self.units), dtype=jnp.uint16)
+        self.refractory.value = jnp.array(self.cooldown.value * jnp.ones(self.units), dtype=jnp.uint16)
 
     def _update_states(self, current: CurrentArray) -> None:
         """
@@ -224,8 +224,8 @@ class RefractoryLeakySoma(LeakySoma):
         self.is_ready.value = jnp.greater(self.refractory.value, self.cooldown)
         is_ready = self.is_ready.value.astype(self._dtype)
         self._potential.value = \
-            + self.potential_decay * self._potential.value \
-            + is_ready * self.potential_gain * self.resistance * current.value
+            + self.potential_decay.value * self._potential.value \
+            + is_ready * self.potential_gain.value * self.resistance.value * current.value
 
     def _compute_spikes(self,) -> SpikeArray:
         """
@@ -237,7 +237,7 @@ class RefractoryLeakySoma(LeakySoma):
             self.is_ready.value
         ).astype(self._dtype)
         # Reset neurons.
-        self._potential.value = spikes * self.potential_reset + (1 - spikes) * self._potential.value
+        self._potential.value = spikes * self.potential_reset.value + (1 - spikes) * self._potential.value
         # Set neuron refractory period.
         self.refractory.value = (1 - spikes).astype(jnp.uint16) * (self.refractory.value + 1)
         return SpikeArray(spikes)
@@ -291,9 +291,9 @@ class StrictRefractoryLeakySoma(RefractoryLeakySoma):
         self.is_ready.value = jnp.greater_equal(self.refractory.value, self.cooldown)
         is_ready = self.is_ready.value.astype(self._dtype)
         self._potential.value = \
-            + is_ready * self.potential_decay * self._potential.value \
-            + is_ready * self.potential_gain * self.resistance * current.value \
-            + (1 - is_ready) * self.potential_reset
+            + is_ready * self.potential_decay.value * self._potential.value \
+            + is_ready * self.potential_gain.value * self.resistance.value * current.value \
+            + (1 - is_ready) * self.potential_reset.value
     
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

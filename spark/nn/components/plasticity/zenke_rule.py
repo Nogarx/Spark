@@ -12,7 +12,7 @@ import dataclasses as dc
 import jax.numpy as jnp
 from spark.core.tracers import Tracer
 from spark.core.payloads import SpikeArray, FloatArray
-from spark.core.variables import Constant
+from spark.core.backend import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.plasticity.base import Plasticity, PlasticityConfig, PlasticityOutput
@@ -206,15 +206,15 @@ class ZenkeRule(Plasticity):
         delta_target = _kernel - self.config.p * target_trace * (1/4 - target_trace) * (1/2 - target_trace)
         target_trace = self.target_trace(delta_target)
         # Triplet LTP
-        a = self.a * pre_trace * post_slow_trace * _post_spikes
+        a = self.a.value * pre_trace * post_slow_trace * _post_spikes
         # Doublet LTD
-        b = self.b * post_trace * _pre_spikes
+        b = self.b.value * post_trace * _pre_spikes
         # Heterosynaptic plasticity.
-        c = self.c * (_kernel - target_trace) * (post_trace**3) * _post_spikes
+        c = self.c.value * (_kernel - target_trace) * (post_trace**3) * _post_spikes
         # Transmitter induced.
-        d = self.d * _pre_spikes
+        d = self.d.value * _pre_spikes
         # Compute rule
-        dK = self.eta * (a + b + c + d)
+        dK = self.eta.value * (a + b + c + d)
         return jnp.clip(_kernel + self._dt * dK, min=0.0)
         
     def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> PlasticityOutput:

@@ -10,13 +10,13 @@ import abc
 import jax
 import copy
 import inspect
-import flax.nnx as nnx
 import jax.numpy as jnp
 import dataclasses as dc
 
 import spark.core.utils as utils
 import spark.core.signature_parser as sig_parser
-from spark.core.variables import Variable
+from spark.core.backend import Module
+from spark.core.backend import Variable
 from spark.core.registry import REGISTRY
 from spark.core.config import SparkConfig
 from spark.core.module import SparkModule, SparkMeta
@@ -88,7 +88,7 @@ ConfigT = tp.TypeVar("ConfigT", bound=ControllerConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerMeta):
+class Controller(Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerMeta):
     """
         Controller model.
 

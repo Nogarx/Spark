@@ -13,7 +13,7 @@ import dataclasses as dc
 from math import prod
 from spark.core.tracers import Tracer, RDTracer
 from spark.core.payloads import SpikeArray, FloatArray
-from spark.core.variables import Variable
+from spark.core.backend import Variable
 from spark.core.registry import register_interface, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.interfaces.output.base import OutputInterface, OutputInterfaceConfig, OutputInterfaceOutput

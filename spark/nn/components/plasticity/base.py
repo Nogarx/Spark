@@ -9,7 +9,7 @@ import jax
 import jax.numpy as jnp
 from jax.typing import ArrayLike
 from spark.core.specs import PortSpecs
-from spark.core.variables import Constant
+from spark.core.backend import Constant
 from spark.core.utils import get_einsum_dot_exp_string
 from spark.core.payloads import FloatArray, IntegerMask, SpikeArray, SparkPayload
 from spark.nn.components.base import Component, ComponentConfig

@@ -12,7 +12,7 @@ import jax.numpy as jnp
 import dataclasses as dc
 from spark.core.tracers import Tracer
 from spark.core.payloads import SpikeArray, CurrentArray, SparkPayload
-from spark.core.variables import Variable, Constant
+from spark.core.backend import Variable, Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.somas.base import Soma, SomaConfig
@@ -167,15 +167,15 @@ class IzhikevichSoma(Soma):
             Update neuron's soma states variables.
         """
         potential_delta = (
-            0.04 * (self._potential.value - self.potential_rest)**2
-            + 5 * (self._potential.value - self.potential_rest)
+            0.04 * (self._potential.value - self.potential_rest.value)**2
+            + 5 * (self._potential.value - self.potential_rest.value)
             + 140 
-            - self.resistance * self.recovery.value 
-            + self.resistance * current.value
+            - self.resistance.value * self.recovery.value 
+            + self.resistance.value * current.value
         )
         self._potential.value += self._dt * potential_delta
-        recovery_delta = self.recovery_timescale * (
-            self.recovery_sensitivity * (self._potential.value - self.potential_rest) 
+        recovery_delta = self.recovery_timescale.value * (
+            self.recovery_sensitivity.value * (self._potential.value - self.potential_rest.value) 
             - self.recovery.value
         )
         self.recovery.value += self._dt * recovery_delta
@@ -187,9 +187,9 @@ class IzhikevichSoma(Soma):
         # Compute spikes.
         spikes = jnp.greater(self._potential.value, self.threshold.value).astype(self._dtype)
         # Reset neurons.
-        self._potential.value = spikes * self.potential_reset + (1 - spikes) * self._potential.value
+        self._potential.value = spikes * self.potential_reset.value + (1 - spikes) * self._potential.value
         # Update recovery.
-        self.recovery.value = spikes * (self.recovery.value + self.recovery_update) + (1 - spikes) * self.recovery.value
+        self.recovery.value = spikes * (self.recovery.value + self.recovery_update.value) + (1 - spikes) * self.recovery.value
         return SpikeArray(spikes)
     
 #################################################################################################################################################

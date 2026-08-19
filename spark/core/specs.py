@@ -16,7 +16,7 @@ import typing as tp
 import dataclasses as dc
 import spark.core.utils as utils
 import spark.core.validation as validation
-from spark.core.variables import Constant
+from spark.core.backend import Constant
 from jax.typing import DTypeLike
 from spark.core.registry import REGISTRY, RegistryNamespace
 from math import prod

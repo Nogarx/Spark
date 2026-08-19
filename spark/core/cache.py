@@ -14,7 +14,7 @@ from jax.typing import DTypeLike
 import typing as tp
 import dataclasses as dc
 import spark.core.validation as validation
-from spark.core.variables import Variable
+from spark.core.backend import Variable
 from spark.core.utils import TwoKeyDict
 from collections import defaultdict
 from collections.abc import MutableMapping

@@ -14,7 +14,7 @@ import dataclasses as dc
 import jax.numpy as jnp
 from spark.core.tracers import Tracer
 from spark.core.payloads import SpikeArray, FloatArray
-from spark.core.variables import Constant
+from spark.core.backend import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.utils import get_einsum_dot_exp_string
 from spark.core.config_validation import TypeValidator, PositiveValidator
@@ -193,11 +193,11 @@ class QuadrupletRule(Plasticity):
         pre_trace = self.pre_trace(_pre_spikes)
         post_trace = self.post_trace(_post_spikes)
         # Compute rule
-        dK = self.eta * modulation.value * (
-            + self.q_alpha * _pre_spikes
-            + self.q_beta * post_trace * _pre_spikes
-            + self.q_gamma * _post_spikes
-            + self.q_delta * pre_trace * _post_spikes
+        dK = self.eta.value * modulation.value * (
+            + self.q_alpha.value * _pre_spikes
+            + self.q_beta.value * post_trace * _pre_spikes
+            + self.q_gamma.value * _post_spikes
+            + self.q_delta.value * pre_trace * _post_spikes
         )
         new_kernel = jnp.clip(_kernel + self._dt * dK, min=0.0, max=self.max_clip.value)
         return new_kernel

@@ -14,7 +14,7 @@ import dataclasses as dc
 import jax.numpy as jnp
 from spark.core.tracers import Tracer
 from spark.core.payloads import SpikeArray, FloatArray, CurrentArray
-from spark.core.variables import Constant
+from spark.core.backend import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.utils import get_einsum_dot_exp_string
 from spark.core.config_validation import TypeValidator, PositiveValidator

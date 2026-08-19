@@ -10,7 +10,7 @@ import dataclasses as dc
 import spark.core.utils as utils
 from math import prod
 from spark.core.specs import PortSpecs
-from spark.core.variables import Constant
+from spark.core.backend import Constant
 from spark.core.registry import register_interface, register_config
 from spark.core.payloads import SparkPayload
 from spark.core.config_validation import TypeValidator, PositiveValidator

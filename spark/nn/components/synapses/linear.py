@@ -14,7 +14,7 @@ from math import prod
 import typing as tp
 import spark.core.utils as utils
 from spark.core.payloads import SpikeArray, CurrentArray, FloatArray
-from spark.core.variables import Variable
+from spark.core.backend import Variable
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator
 from spark.nn.initializers.common import SparseUniformInitializerConfig

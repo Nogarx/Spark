@@ -11,7 +11,7 @@ import dataclasses as dc
 from math import prod
 
 import spark.core.utils as utils
-from spark.core.variables import Constant
+from spark.core.backend import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.decorators import spark_property, limit_recursion
 from spark.core.specs import PortSpecs, PortMap
@@ -107,7 +107,7 @@ class Neuron(Controller, metaclass=NeuronMeta):
 			)
 			_mock: SparkPayload = spec._create_mock_payload()
 			if isinstance(_mock, SpikeArray):
-				_mock = SpikeArray(spikes=_mock.spikes, inhibition_mask=self._inhibition_mask)
+				_mock = SpikeArray(spikes=_mock.spikes, inhibition_mask=self._inhibition_mask.value)
 			output_contract_specs[output_name] = _mock
 		# Property specs. Properties should be defined inside __init__, so it is safe to inspect them.
 		property_contract_specs = self._get_controller_property_specs()
@@ -124,7 +124,7 @@ class Neuron(Controller, metaclass=NeuronMeta):
 				)
 				_property: SparkPayload = spec._create_mock_payload()
 				if isinstance(_property, SpikeArray):
-					_property  = SpikeArray(spikes=_mock.spikes, inhibition_mask=self._inhibition_mask)
+					_property  = SpikeArray(spikes=_mock.spikes, inhibition_mask=self._inhibition_mask.value)
 			property_contract_specs[property_name] = _property
 		return output_contract_specs, property_contract_specs
 

@@ -8,10 +8,10 @@ import os
 import abc
 import jax
 import jax.numpy as jnp
-import flax.nnx as nnx
 import typing as tp
 from jax.typing import DTypeLike
-from spark.core.variables import Variable, Constant
+from spark.core.backend import Variable, Constant
+from spark.core.backend import Module
 
 # TODO: Base constant for the rise-decay and the rise-fast-slow models are not properly set up.
 # This is probably not important since practically every case is used with scale and base set to 
@@ -28,7 +28,7 @@ from spark.core.variables import Variable, Constant
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class BaseTracer(nnx.Module, abc.ABC):
+class BaseTracer(Module, abc.ABC):
 	"""
 		Base Tracer class
 	"""
@@ -99,13 +99,13 @@ class Tracer(BaseTracer):
 		self.trace = Variable(base * jnp.ones(self.shape), dtype=self._dtype)
 
 	def reset(self,) -> None:
-		self.trace.value = self.base * jnp.ones(self.shape, dtype=self._dtype)
+		self.trace.value = self.base.value * jnp.ones(self.shape, dtype=self._dtype)
 
 	def masked_reset(self, mask) -> None:
-		self.trace.value = self.base * jnp.ones(self.shape, dtype=self._dtype) * mask + (1 - mask) * self.trace.value
+		self.trace.value = self.base.value * jnp.ones(self.shape, dtype=self._dtype) * mask + (1 - mask) * self.trace.value
 
 	def _update(self, x: jax.Array) -> jax.Array:
-		self.trace.value = self.base + self.decay * (self.trace.value - self.base) + self.scale * x.astype(self._dtype)
+		self.trace.value = self.base.value + self.decay.value * (self.trace.value - self.base.value) + self.scale.value * x.astype(self._dtype)
 		return self.trace.value
 
 	@property

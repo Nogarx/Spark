@@ -14,7 +14,7 @@ import typing as tp
 import spark.core.utils as utils
 from math import prod, ceil
 from spark.core.payloads import SpikeArray
-from spark.core.variables import Variable, Constant
+from spark.core.backend import Variable, Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator
 from spark.nn.components.delays.base import Delays, DelaysOutput

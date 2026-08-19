@@ -10,9 +10,7 @@ if tp.TYPE_CHECKING:
 import os
 import abc
 import jax
-import copy
 import inspect
-import flax.nnx as nnx
 import jax.numpy as jnp
 import dataclasses as dc
 from functools import wraps
@@ -21,9 +19,9 @@ import spark.core.utils as utils
 import spark.core.signature_parser as sig_parser
 from spark.core.specs import PortSpecs
 from spark.core.config import SparkConfig
-from spark.core.variables import Variable
+from spark.core.backend import Variable
 from spark.core.decorators import spark_property
-from spark.core.flax_imports import data as set_data_fn
+from spark.core.backend import data as set_data_fn, Module, ModuleMeta
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -40,7 +38,7 @@ class ModuleOutput(tp.TypedDict):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class SparkMeta(nnx.module.ModuleMeta):
+class SparkMeta(ModuleMeta):
     """
         Metaclass for Spark Modules.
     """
@@ -86,7 +84,7 @@ class SparkMeta(nnx.module.ModuleMeta):
             
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkMeta):
+class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkMeta):
     """
         Base class for Spark Modules
     """
@@ -190,7 +188,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         # Additionally, the current random generator mutates the object which is not allowed in eval_shape:
         #   -> Cannot mutate {type(self).__name__} from a different trace level
         # This probably requires handling both cases manually to tell them what to do with ShapeDtypeStruct / eval_shape
-        #abc_output = nnx.eval_shape(self.__call__, **abc_kwargs)
+        #abc_output = eval_shape(self.__call__, **abc_kwargs)
         # NOTE: workaround, just use the __call__ directly with the arg inputs and reset the module. 
         abc_output = self.__call__(**abc_kwargs)
         self.reset()
@@ -519,7 +517,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         import pathlib
         import datetime
         import orbax.checkpoint as ocp
-        from spark.core.flax_imports import split
+        from spark.core.backend import split
 
         try:
             # Check if file exists
@@ -568,7 +566,7 @@ class SparkModule(nnx.Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=Sp
         import datetime
         import orbax.checkpoint as ocp
         from spark.core.config import SparkConfig
-        from spark.core.flax_imports import split, merge
+        from spark.core.backend import split, merge
 
         def is_child(member_name: str, parent: str) -> bool:
             m = pathlib.PurePosixPath(member_name)
