@@ -22,7 +22,7 @@ import spark.core.utils as utils
 from math import prod
 from functools import partial, wraps
 from jax.typing import DTypeLike, ArrayLike
-from spark.core.validation import _is_config_instance, _is_initializer_type
+from spark.core.validation import _is_config_instance
 from spark.core.registry import REGISTRY, RegistryNamespace, register_config
 from spark.core.signature_parser import normalize_typehint, is_instance
 from spark.core.config_validation import TypeValidator, PositiveValidator
@@ -252,6 +252,109 @@ class _InitNamespace:
 	
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+VALIDATE_CONFIGS = True
+"""
+	Whether a configuration checks its values against the validators its fields declare.
+"""
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class NoValidation:
+	"""
+		Context manager suspending the validators, for the cases where a configuration is knowingly built out
+		of values that do not stand on their own yet.
+	"""
+
+	def __enter__(self) -> 'NoValidation':
+		global VALIDATE_CONFIGS
+		self._previous = VALIDATE_CONFIGS
+		VALIDATE_CONFIGS = False
+		return self
+
+	def __exit__(self, *exception) -> None:
+		global VALIDATE_CONFIGS
+		VALIDATE_CONFIGS = self._previous
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _resolved_valid_types(cls: type) -> dict[str, tuple]:
+	"""
+		The types every field of a configuration class accepts, as classes rather than as text.
+
+		Args:
+			cls: type, the configuration class.
+
+		Returns:
+			dict[str, tuple], the types by field name. A field whose annotation could not be read is absent.
+	"""
+	resolved = cls.__dict__.get('__resolved_valid_types__', None)
+	if resolved is not None:
+		return resolved
+	resolved = {}
+	try:
+		hints = tp.get_type_hints(cls)
+	except Exception as error:
+		logger.debug(f'The annotations of "{cls.__name__}" could not be resolved: {error}')
+		hints = {}
+	for name, hint in hints.items():
+		try:
+			types = normalize_typehint(hint)
+		except Exception:
+			continue
+		if types and not any(isinstance(t, str) for t in types):
+			resolved[name] = types
+	setattr(cls, '__resolved_valid_types__', resolved)
+	return resolved
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _holds_a_tracer(value: tp.Any) -> bool:
+	"""
+		True if a value is being traced, or holds something that is.
+	"""
+	if isinstance(value, jax.core.Tracer):
+		return True
+	if isinstance(value, (tuple, list, set, frozenset)):
+		return any(isinstance(entry, jax.core.Tracer) for entry in value)
+	return False
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _validate_fields(cls: type, values: dict[str, tp.Any]) -> None:
+	"""
+		Runs the validators every field declares against the values a configuration is about to hold.
+
+		Args:
+			cls: type, the configuration class being built.
+			values: dict, the values by field name.
+	"""
+	if not VALIDATE_CONFIGS:
+		return
+	resolved = _resolved_valid_types(cls)
+	for field in dc.fields(cls):
+		validators = field.metadata.get('validators') or ()
+		if not validators:
+			continue
+		value = StaticValue.unwrap(values.get(field.name, None))
+		if value is None:
+			continue
+		# NOTE: A configuration built while a function is being traced cannot be validated.
+		if _holds_a_tracer(value):
+			continue
+		# TODO: An initializer holds an abstract representation of an array and cannot be validated.
+		if field.metadata.get('allows_init', False):
+			from spark.nn.initializers import Initializer, InitializerConfig
+			if isinstance(value, (Initializer, InitializerConfig)):
+				continue
+		for validator_cls in validators:
+			try:
+				validator = validator_cls(field, valid_types=resolved.get(field.name, None))
+			except TypeError:
+				validator = validator_cls(field)
+			validator.validate(value)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class SparkConfigMeta(abc.ABCMeta):
 	"""
 		Spark Configuration Metaclass
@@ -435,6 +538,8 @@ class SparkConfigMeta(abc.ABCMeta):
 					clean_kwargs[key] = tuple(value)
 				elif isinstance(value, (dict, jax.Array, np.ndarray)):
 					clean_kwargs[key] = StaticValue(copy.deepcopy(value))
+			# Check the values against what each field declared it accepts.
+			_validate_fields(cls, clean_kwargs)
 			# Call init with clean args
 			return init_method(self, **clean_kwargs)
 		setattr(cls, '__init__', wrapped_init)

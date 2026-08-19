@@ -114,12 +114,10 @@ class TestValidation:
         Validators and metadata carried by a field.
     """
 
-    @pytest.mark.xfail(reason='the framework does not run the validators of a field', strict=False)
     def test_a_validator_refuses_a_bad_value(self) -> None:
         with pytest.raises((TypeError, ValueError)):
             ValidatedConfig(foo=1, bar=-1)
 
-    @pytest.mark.xfail(reason='the framework does not run the validators of a field', strict=False)
     def test_a_value_that_cannot_be_promoted_is_refused(self) -> None:
         with pytest.raises((TypeError, ValueError)):
             ValidatedConfig(foo=1, bar=[2.0])
@@ -145,6 +143,51 @@ class TestValidation:
         assert field.metadata['units'] == 'nA'
         assert field.metadata['description'] == 'A bar that has to be positive.'
         assert spark.validation.PositiveValidator in field.metadata['validators']
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TestWhatIsNotValidated:
+    """
+        What the validators deliberately stay quiet about.
+    """
+
+    def test_a_value_that_is_not_set_yet(self) -> None:
+        partial = spark.nn.synapses.LinearSynapsesConfig.partial()
+        assert partial.units is None
+        assert spark.nn.NeuronConfig.partial().units is None
+
+    def test_a_field_holding_an_initializer(self) -> None:
+        from spark.nn.initializers import ConstantInitializerConfig
+        config = spark.nn.synapses.LinearSynapsesConfig(units=(4,), kernel=ConstantInitializerConfig(scale=2.0))
+        assert isinstance(config.kernel, ConstantInitializerConfig)
+
+    def test_an_annotation_that_cannot_be_read(self) -> None:
+        field = {f.name: f for f in dc.fields(spark.nn.somas.LeakySomaConfig)}['threshold']
+        validator = spark.validation.TypeValidator(field, valid_types=('float', 'Initializer'))
+        validator.validate('not a number at all')
+
+    def test_a_value_that_is_still_being_traced(self) -> None:
+        import jax
+        @jax.jit
+        def build(dt):
+            return spark.nn.somas.LeakySomaConfig(dt=dt).threshold
+        assert float(build(jnp.asarray(1.0))) == pytest.approx(-40.0)
+
+    def test_a_numpy_array_where_a_device_array_is_declared(self) -> None:
+        from spark.nn.interfaces.input.topological import TopologicalLinearSpikerConfig
+        config = TopologicalLinearSpikerConfig(glue=np.array(0), mins=np.array(-1), maxs=np.array(1))
+        assert np.asarray(config.glue).tolist() == 0
+
+    def test_an_integer_where_a_float_is_declared(self) -> None:
+        assert spark.nn.somas.LeakySomaConfig(dt=1).dt == 1
+
+    def test_validation_can_be_suspended(self) -> None:
+        from spark.core.config import no_validation
+        with no_validation():
+            config = ValidatedConfig(foo=1, bar=-1)
+        assert config.bar == -1
+        with pytest.raises((TypeError, ValueError)):
+            ValidatedConfig(foo=1, bar=-1)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
