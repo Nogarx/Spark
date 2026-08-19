@@ -287,12 +287,19 @@ class SparkConfigMeta(abc.ABCMeta):
 			# Get value
 			attr_value = dct.get(attr_name, dc.MISSING)
 			default, default_factory = cls._get_default_and_factory(attr_value, attr_typehints)
+			# NOTE: Every attribute is promoted to a field, which means building a new one. What the user
+			# wrote on their own field comes along: the validators that guard the value, the units it is
+			# measured in and the description of what it is for are theirs to declare, and a promotion that
+			# silently dropped them left the value unguarded and undocumented.
+			declared_metadata = dict(attr_value.metadata) if isinstance(attr_value, dc.Field) else {}
 			# Construct field
 			field = dc.field(
 				default=default,
 				default_factory=default_factory,
 				metadata={
 					**SparkConfigMeta.METADATA_TEMPLATE, 
+					**declared_metadata,
+					# NOTE: These two are read off the annotation, which is the authority on them.
 					**valid_types,
 					**{'allows_init': allows_init}
 				}
@@ -327,6 +334,12 @@ class SparkConfigMeta(abc.ABCMeta):
 			raw_shared = {k:v for k,v in kwargs.items() if k.startswith('_s_')}
 			clean_shared_kwargs = {k[len('_s_'):]:v for k,v in kwargs.items() if k.startswith('_s_')}
 			_kwargs = unflatten_kwargs(kwargs)
+			# NOTE: A shared argument travels twice from here on: prefixed, so that it keeps travelling
+			# further down, and under its own name, so that it outranks the default a configuration below
+			# carries. Crossing into one, every field arrives explicitly set (its own defaults among them)
+			# and an explicit value wins over a shared one, so without the plain form a shared argument
+			# could only ever reach a field that has no default at all.
+			plain_shared = {k[len(SHARED_DELIMITER):]:v for k,v in raw_shared.items()}
 			clean_kwargs = {}
 			# Filter invalid fields
 			for field in dc.fields(cls):
@@ -353,9 +366,6 @@ class SparkConfigMeta(abc.ABCMeta):
 						# the configuration of the module unfolds it under the very same rules.
 						prefix = f'{module_spec.name}{NESTED_DELIMITER}'
 						module_kwargs = {k[len(prefix):]:v for k,v in kwargs.items() if k.startswith(prefix)}
-						# NOTE: A shared argument is handed over twice: under its own name, so that it outranks
-						# what the module carries, and prefixed, so that it keeps travelling further down.
-						plain_shared = {k[len(SHARED_DELIMITER):]:v for k,v in raw_shared.items()}
 						spec_kwargs = raw_shared | plain_shared | module_kwargs
 						# Update spec config
 						if dc.is_dataclass(module_spec.config):
@@ -374,14 +384,28 @@ class SparkConfigMeta(abc.ABCMeta):
 					if dc.is_dataclass(field.default) and (isinstance(value, dict) or dc.is_dataclass(value)) :
 						value_dict = dc.asdict(value) if dc.is_dataclass(value) else value
 						value_dict = {k:v for k,v in value_dict.items() if not v is None}
-						clean_kwargs[key] = type(field.default)(**(dc.asdict(field.default) | raw_shared | value_dict))
+						# NOTE: A configuration handed over as a value brings its own class, and that class is
+						# the answer. Rebuilding it as the class of the default turns a chosen initializer
+						# back into the one the field started with, quietly and with the chosen values on it.
+						value_cls = type(value) if dc.is_dataclass(value) and not isinstance(value, type) else type(field.default)
+						base = dc.asdict(field.default) if value_cls is type(field.default) else {}
+						clean_kwargs[key] = value_cls(**(base | raw_shared | plain_shared | value_dict))
 					# Attribute defines factory, forward kwargs and rebuild it
 					elif (not field.default_factory is dc.MISSING) and (isinstance(value, dict) or dc.is_dataclass(value)):
+						# NOTE: A configuration handed over as a value brings its own class, and the factory
+						# of the field only knows how to build the one it declares. Building that one instead
+						# turns a chosen initializer back into the default, keeping the values that were meant
+						# for another class. A plain dictionary says nothing about its class, so there the
+						# factory remains the answer.
+						if dc.is_dataclass(value) and not isinstance(value, type):
+							own_fields = {f.name: getattr(value, f.name) for f in dc.fields(value)}
+							clean_kwargs[key] = type(value)(**(own_fields | raw_shared | plain_shared))
+							continue
 						value_dict = dc.asdict(value) if dc.is_dataclass(value) else value
 						value_dict = {k:v for k,v in value_dict.items() if not v is None}
 						try:
 							# Is this a Config factory?
-							clean_kwargs[key] = field.default_factory(**(raw_shared | value_dict))
+							clean_kwargs[key] = field.default_factory(**(raw_shared | plain_shared | value_dict))
 						except:
 							# Or a simple factory? ¯\_(ツ)_/¯
 							valid_fn_kwargs = [k for k in inspect.signature(field.default_factory).parameters]
@@ -396,12 +420,12 @@ class SparkConfigMeta(abc.ABCMeta):
 				else:
 					# Attribute is a config, forward kwargs and rebuild it
 					if dc.is_dataclass(field.default):
-						clean_kwargs[key] = type(field.default)(**(dc.asdict(field.default) | raw_shared))
+						clean_kwargs[key] = type(field.default)(**(dc.asdict(field.default) | raw_shared | plain_shared))
 					# Attribute defines factory, forward kwargs and rebuild it
 					elif (not field.default_factory is dc.MISSING):
 						try:
 							# Is this a Config factory?
-							clean_kwargs[key] = field.default_factory(**raw_shared)
+							clean_kwargs[key] = field.default_factory(**(raw_shared | plain_shared))
 						except:
 							# Or a simple factory? ¯\_(ツ)_/¯
 							clean_kwargs[key] = field.default_factory()
@@ -447,7 +471,15 @@ class SparkConfigMeta(abc.ABCMeta):
 			if not dc.is_dataclass(factory):
 				# Create a simple kwargs around the factory
 				def _clean_factory(fn, **kwargs) -> tp.Callable[..., tp.Any]:
-					valid_fn_kwargs = [k for k in inspect.signature(factory).parameters]
+					# NOTE: The factory itself is asked what it accepts. Asking the name in the enclosing
+					# scope reads the wrapper built below instead, whose parameters are "fn" and "kwargs",
+					# so every argument was filtered out and every factory ran on its own defaults.
+					parameters = inspect.signature(fn).parameters.values()
+					# NOTE: A factory that declares "**kwargs" accepts anything, and filtering by name would
+					# keep only an argument literally called "kwargs".
+					if any(p.kind is inspect.Parameter.VAR_KEYWORD for p in parameters):
+						return fn(**kwargs)
+					valid_fn_kwargs = [p.name for p in parameters]
 					fn_call_kwargs = {k:v for k,v in kwargs.items() if k in valid_fn_kwargs}
 					return fn(**fn_call_kwargs)
 				factory = lambda fn=factory, **kwargs: _clean_factory(fn, **kwargs)
@@ -481,7 +513,15 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 		return cls(**kwargs)
 
 	def merge(self, **kwargs) -> 'SparkConfig':
-		_self = self.to_dict()
+		"""
+			Answers with a new configuration, this one with the given values written over it.
+
+			NOTE: The fields are read as they are rather than through to_dict(). Flattening them first turns
+			every configuration below into a plain dictionary, and a dictionary no longer says which class it
+			came from: what came back was rebuilt as whatever the field declares by default, so an initializer
+			chosen by hand quietly reverted on the first merge.
+		"""
+		_self = {field.name: getattr(self, field.name) for field in dc.fields(self)}
 		return type(self)(**(_self | kwargs))
 
 	@property

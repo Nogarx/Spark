@@ -356,7 +356,7 @@ data_test_success = [
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @pytest.mark.parametrize('name, method, x, y, side, expected', data_test_success)
-def test_spark_config_success(name, method, x, y, side, expected) -> None:
+def test_einsum_success(name, method, x, y, side, expected) -> None:
     """
         Einsum methods success validation.
     """
@@ -625,7 +625,7 @@ data_test_failure = [
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @pytest.mark.parametrize('name, method, x, y, side', data_test_failure)
-def test_spark_config_success(name, method, x, y, side) -> None:
+def test_einsum_failure(name, method, x, y, side) -> None:
     """
         Einsum methods success validation.
     """

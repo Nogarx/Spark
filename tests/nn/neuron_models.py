@@ -51,7 +51,7 @@ def run_module_simplified(
     return s, module
 
 @pytest.mark.parametrize('module_cls, module_inputs, module_config_kwargs', data_test)
-def run_jax_jit_simplified(
+def test_jax_jit_simplified(
         module_cls: type[spark.nn.Module], 
         module_inputs: dict[str, spark.SparkPayload], 
         module_config_kwargs: dict[str, tp.Any]

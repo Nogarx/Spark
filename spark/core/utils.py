@@ -241,7 +241,7 @@ def get_einsum_dot_red_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def get_einsum_dot_exp_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one_dims: bool = False, side: str = 'right') -> str:
+def get_einsum_dot_exp_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one_dims: bool = True, side: str = 'right') -> str:
     """
         Generates labels for a generalized dot expansion product using Einstein notation.
             right:	(a,b)•(a,b,c,d)=(a,b,c,d) - ab,abcd->abcd   |   (a,b,c,d)•(a,b)=(a,b,c,d) - abcd,ab->abcd
