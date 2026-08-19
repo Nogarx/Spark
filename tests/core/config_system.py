@@ -182,8 +182,7 @@ class TestWhatIsNotValidated:
         assert spark.nn.somas.LeakySomaConfig(dt=1).dt == 1
 
     def test_validation_can_be_suspended(self) -> None:
-        from spark.core.config import no_validation
-        with no_validation():
+        with spark.validation.NoValidation():
             config = ValidatedConfig(foo=1, bar=-1)
         assert config.bar == -1
         with pytest.raises((TypeError, ValueError)):

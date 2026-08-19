@@ -49,8 +49,6 @@ SHARED_DELIMITER = '_s_'
 	Prefix marking an argument that is handed down to every configuration below ("_s_units").
 """
 
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
 _MODULE_SPECS_ANNOTATION = re.compile(r'\b(?:list|tuple|set|frozenset|Sequence|Iterable|Collection)\s*\[\s*([\w\.]+)')
 """
 	Reads the element of a collection annotation, whatever container and import alias it was written with.
@@ -62,6 +60,38 @@ _COLLECTION_ANNOTATION = re.compile(r'^\s*(?:[\w\.]+\.)?(list|tuple|set|frozense
 """
 
 _COLLECTION_NAMES = frozenset({'list', 'tuple', 'set', 'frozenset', 'Sequence', 'Iterable', 'Collection'})
+
+VALIDATE_CONFIGS = True
+"""
+	Whether a configuration checks its values against the validators its fields declare.
+"""
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def validation_enabled() -> bool:
+	"""
+		Whether the validators of a field are being run.
+	"""
+	return VALIDATE_CONFIGS
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def set_validation(enabled: bool) -> bool:
+	"""
+		Turns the validators on or off.
+
+		Args:
+			enabled: bool, True to run the validators of every field.
+
+		Returns:
+			bool, what the setting was before, which is what puts it back.
+	"""
+	global VALIDATE_CONFIGS
+	previous = VALIDATE_CONFIGS
+	VALIDATE_CONFIGS = bool(enabled)
+	return previous
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 def holds_a_collection(field: dc.Field) -> bool:
 	"""
@@ -249,31 +279,6 @@ class _InitNamespace:
 			field_init = wraps(raw_attribute)(field_init)
 
 		return field_init
-	
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-VALIDATE_CONFIGS = True
-"""
-	Whether a configuration checks its values against the validators its fields declare.
-"""
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-class NoValidation:
-	"""
-		Context manager suspending the validators, for the cases where a configuration is knowingly built out
-		of values that do not stand on their own yet.
-	"""
-
-	def __enter__(self) -> 'NoValidation':
-		global VALIDATE_CONFIGS
-		self._previous = VALIDATE_CONFIGS
-		VALIDATE_CONFIGS = False
-		return self
-
-	def __exit__(self, *exception) -> None:
-		global VALIDATE_CONFIGS
-		VALIDATE_CONFIGS = self._previous
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -328,7 +333,7 @@ def _validate_fields(cls: type, values: dict[str, tp.Any]) -> None:
 			cls: type, the configuration class being built.
 			values: dict, the values by field name.
 	"""
-	if not VALIDATE_CONFIGS:
+	if not validation_enabled():
 		return
 	resolved = _resolved_valid_types(cls)
 	for field in dc.fields(cls):

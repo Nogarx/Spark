@@ -18,30 +18,23 @@ from spark.core.signature_parser import is_instance, normalize_typehint
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-def _try_promotion(method: tp.Callable, value: tp.Any):
-    try:
-        return method(value)
-    except:
-        return None
+class NoValidation:
+    """
+        Context manager suspending the validators, for the cases where a configuration is knowingly built out
+        of values that do not stand on their own yet.
+    """
 
-DEFAULT_TYPE_PROMOTIONS = {
-    int: {
-        float: lambda value: _try_promotion(int, value),
-        bool: lambda value: _try_promotion(int, value),
-    },
-    float : {
-        int: lambda value: _try_promotion(float, value),
-        bool: lambda value: _try_promotion(float, value),
-    },
-    bool : {
-        int: lambda value: _try_promotion(bool, value),
-        float: lambda value: _try_promotion(bool, value),
-    }
-}
+    def __enter__(self) -> 'NoValidation':
+        from spark.core.config import validation_enabled, set_validation
+        self._previous = validation_enabled()
+        set_validation(False)
+        return self
 
-#################################################################################################################################################
+    def __exit__(self, *exception) -> None:
+        from spark.core.config import set_validation
+        set_validation(self._previous)
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
-#################################################################################################################################################
 
 class ConfigurationValidator:
     """
