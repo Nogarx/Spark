@@ -18,7 +18,7 @@ import spark.core.utils as utils
 import spark.core.validation as validation
 from spark.core.variables import Constant
 from jax.typing import DTypeLike
-from spark.core.registry import REGISTRY
+from spark.core.registry import REGISTRY, RegistryNamespace
 from math import prod
 
 #################################################################################################################################################
@@ -227,22 +227,24 @@ class ModuleSpecs:
         """
             Serialize ModuleSpecs to dictionary
         """
-        from spark.core.module import SparkModule
-        from spark.nn.controllers.neuron import Neuron
-        if issubclass(self.module_cls, SparkModule):
-            reg = REGISTRY.Components.get_by_cls(self.module_cls)
-            subregistry = 'Components'
-        elif issubclass(self.module_cls, Neuron):
-            reg = REGISTRY.Neurons.get_by_cls(self.module_cls)
-            subregistry = 'Neurons'
-        else:
+        # NOTE: The namespace comes from the registry rather than from what the class inherits from. An
+        # interface is a SparkModule too, so reading the namespace off the base class filed every interface
+        # under "Components", where it is not registered: the name was written as null and the model could
+        # never be read back.
+        reg, subregistry = None, None
+        for namespace in (RegistryNamespace.Components, RegistryNamespace.Interfaces, RegistryNamespace.Neurons):
+            reg = getattr(REGISTRY, namespace.name).get_by_cls(self.module_cls)
+            if reg is not None:
+                subregistry = namespace.name
+                break
+        if reg is None:
             raise RuntimeError(
                 f'Unable to find "{self.module_cls}" registry entry. Confirm that the class is a member of a registry.'
             )
         return {
             'name': self.name,
             'module_cls': {
-                '__module_type__': reg.name if reg else None,
+                '__module_type__': reg.name,
                 '__subregistry__': subregistry,
             },
             'inputs': self.inputs,

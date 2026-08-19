@@ -10,7 +10,7 @@ import warnings
 import typing as tp
 import spark.core.utils as utils
 from spark.core.registry import REGISTRY
-from spark.core.config import SparkConfig
+from spark.core.config import SparkConfig, StaticValue
 from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
 
 #################################################################################################################################################
@@ -34,6 +34,10 @@ class SparkJSONEncoder(json.JSONEncoder):
 		return super().iterencode(wrapped, _one_shot)
 
 	def default(self, obj) -> dict[str, tp.Any]:
+		# Unwrap configuration values
+		if isinstance(obj, StaticValue):
+			value = obj.value
+			return self.default(value) if isinstance(value, (jax.Array, np.ndarray)) else value
 		# Encode arrays
 		if isinstance(obj, (jax.Array, np.ndarray)):
 			return {

@@ -152,6 +152,47 @@ def unflatten_kwargs(kwargs: dict[str, tp.Any], __nested_delimiter__: str = NEST
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+# NOTE: Pytree does not work with mutable values.
+class StaticValue:
+	"""
+		Wrapper to freeze values. 
+	"""
+
+	__slots__ = ('value',)
+
+	def __init__(self, value: tp.Any) -> None:
+		self.value = value
+
+	def __call__(self, **kwargs) -> tp.Any:
+		return self.value
+
+	def __array__(self, dtype=None, copy=None) -> np.ndarray:
+		array = np.asarray(self.value, dtype=dtype)
+		return array.copy() if copy else array
+
+	def __repr__(self) -> str:
+		return repr(self.value)
+
+	def __len__(self) -> int:
+		return len(self.value)
+
+	def __getitem__(self, key) -> tp.Any:
+		return self.value[key]
+
+	@property
+	def shape(self) -> tuple[int, ...]:
+		return np.shape(self.value)
+
+	@property
+	def dtype(self):
+		return np.asarray(self.value).dtype
+
+	@staticmethod
+	def unwrap(value: tp.Any) -> tp.Any:
+		return value.value if isinstance(value, StaticValue) else value
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class _InitNamespace:
 	"""
 		Proxy namespace to handle dynamic parameter injection.
@@ -364,13 +405,12 @@ class SparkConfigMeta(abc.ABCMeta):
 						except:
 							# Or a simple factory? ¯\_(ツ)_/¯
 							clean_kwargs[key] = field.default_factory()
-			# Map mutable to lambdas
+			# Freeze mutable values
 			for key, value in clean_kwargs.items():
-				# NOTE: We need to crystalize iterables of ModuleSpecs
 				if isinstance(value, (list, set)):
 					clean_kwargs[key] = tuple(value)
-				if isinstance(value, (dict, jax.Array, np.ndarray)):
-					clean_kwargs[key] = lambda v=value, **kwargs: copy.deepcopy(v)
+				elif isinstance(value, (dict, jax.Array, np.ndarray)):
+					clean_kwargs[key] = StaticValue(copy.deepcopy(value))
 			# Call init with clean args
 			return init_method(self, **clean_kwargs)
 		setattr(cls, '__init__', wrapped_init)
@@ -643,12 +683,20 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 			Serialize config to dictionary
 		"""
 
+		def _clean_value(value: tp.Any):
+			value = StaticValue.unwrap(value)
+			if isinstance(value, dict):
+				return _clean_dict(value)
+			if isinstance(value, (list, tuple)):
+				return type(value)(_clean_value(v) for v in value)
+			return value
+
 		def _clean_dict(dct: dict[str, tp.Any]):
 			for k in list(dct.keys()):
 				if k.startswith('__'):
 					dct.pop(k)
-				elif isinstance(dct[k], dict):
-					dct[k] = _clean_dict(dct[k])
+				else:
+					dct[k] = _clean_value(dct[k])
 			return dct
 
 		return _clean_dict(dc.asdict(self))
@@ -674,18 +722,23 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 		path.parent.mkdir(parents=True, exist_ok=True)
 		# Write to file.
 		from spark.core.serializer import SparkJSONEncoder
+		reg = REGISTRY.Configs.get_by_cls(self.__class__)
+		if not reg:
+			raise RuntimeError(
+				f'Config class "{self.__class__}" is not in the registry.'
+				f'Reconstruction from unregistered classes is not currently possible.'
+				f'Use the "register_config" decorator to add the class to the registry.'
+			)
+		payload = json.dumps(self, cls=SparkJSONEncoder, indent=4)
 		opener = lzma.open if compress else open
 		mode = 'wt' if compress else 'w'
-		with opener(path, mode, encoding='utf-8') as json_file:
-			reg = REGISTRY.Configs.get_by_cls(self.__class__)
-			if not reg:
-				raise RuntimeError(
-					f'Config class "{self.__class__}" is not in the registry.'
-					f'Reconstruction from unregistered classes is not currently possible.'
-					f'Use the "register_config" decorator to add the class to the registry.'
-				)
-			# Add top config metadata
-			json.dump(self, json_file, cls=SparkJSONEncoder, indent=4)
+		temp_path = path.with_name(f'{path.name}.partial')
+		try:
+			with opener(temp_path, mode, encoding='utf-8') as json_file:
+				json_file.write(payload)
+			os.replace(temp_path, path)
+		finally:
+			temp_path.unlink(missing_ok=True)
 		if verbose:
 			print(f'Configuration saved to "{path}".')
 
