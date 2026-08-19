@@ -24,7 +24,7 @@ from collections.abc import MutableMapping
 #################################################################################################################################################
 
 @jax.tree_util.register_pytree_with_keys_class
-@dc.dataclass(init=False)
+@dc.dataclass(init=False, eq=False)
 class Cache(TwoKeyDict):
 
     @tp.overload

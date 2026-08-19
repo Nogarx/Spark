@@ -150,12 +150,17 @@ class Controller(nnx.Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerM
         self._modules_names = tuple([spec.name for spec in self.config.modules_specs])
         # Create modules.
         for spec in self.config.modules_specs:
+            from spark.nn.components.base import Component
+            from spark.nn.interfaces.base import Interface
             from spark.nn.controllers.neuron import Neuron
             if issubclass(spec.module_cls, Neuron):
                 setattr(self, spec.name, REGISTRY.Neurons.get(spec.module_cls.__name__).get_cls()(config=spec.config))
-            else:
+            elif issubclass(spec.module_cls, Component):
                 setattr(self, spec.name, REGISTRY.Components.get(spec.module_cls.__name__).get_cls()(config=spec.config))
-
+            elif issubclass(spec.module_cls, Interface):
+                setattr(self, spec.name, REGISTRY.Interfaces.get(spec.module_cls.__name__).get_cls()(config=spec.config))
+            else:
+                raise TypeError(f'Invalid type for "module_cls", got "{spec.module_cls}".')
 
 
     @classmethod

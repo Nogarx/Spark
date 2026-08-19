@@ -557,8 +557,8 @@ _K2 = tp.TypeVar('_K2')
 _VT = tp.TypeVar('_VT')
 
 @jax.tree_util.register_pytree_with_keys_class
-@dc.dataclass(init=False)
-class TwoKeyDict(MutableMapping[tp.Generic[_K1, _K2, _VT]]):
+@dc.dataclass(init=False, eq=False)
+class TwoKeyDict(MutableMapping[tuple[_K1, _K2], _VT], tp.Generic[_K1, _K2, _VT]):
 
     def __init__(self, data: dict[_K1, dict[_K2, _VT]] | None = None) -> None:
         self._data = defaultdict(dict)
@@ -662,27 +662,26 @@ class TwoKeyDict(MutableMapping[tp.Generic[_K1, _K2, _VT]]):
     def items(self) -> tp.ItemsView[tp.Tuple[_K1, _K2], _VT]:
         return super().items()
 
+    def _ordered_keys(self) -> list[_K1]:
+        """
+            First level keys, in a deterministic order.
+        """
+        try:
+            return sorted(self._data.keys())
+        except TypeError:
+            return list(self._data.keys())
+
     def tree_flatten(self) -> tuple[tuple, tuple]:
-        children = (self._data,)
-        aux_data = ()
-        return (children, aux_data)
+        keys = self._ordered_keys()
+        return tuple(self._data[key] for key in keys), tuple(keys)
+
+    def tree_flatten_with_keys(self) -> tuple[list, tuple]:
+        keys = self._ordered_keys()
+        return [(jax.tree_util.DictKey(key), self._data[key]) for key in keys], tuple(keys)
 
     @classmethod
     def tree_unflatten(cls, aux_data, children) -> tp.Self:
-        return cls(children[0])
-
-    def tree_flatten_with_keys(self):
-        # Sort keys to ensure deterministic flattening
-        keys = sorted(self._data.keys())
-        children_with_keys = [(jax.tree_util.DictKey(k), self._data[k]) for k in keys]
-        aux_data = keys 
-        return children_with_keys, aux_data
-
-    @classmethod
-    def tree_unflatten(cls, aux_data, children) -> tp.Self:
-        keys = aux_data
-        reconstructed_data = dict(zip(keys, children))
-        return cls(reconstructed_data)
+        return cls(dict(zip(aux_data, children)))
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

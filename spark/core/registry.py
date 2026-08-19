@@ -67,7 +67,7 @@ class RegistryEntry:
     name: str
     module: str
     qualname: str
-    namespace: str
+    namespace: RegistryNamespace
     path: list[str]
     metadata: dict[str, tp.Any]
 
@@ -78,46 +78,91 @@ class RegistryEntry:
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class SubRegistry:
+    """
+        One namespace of a registry, as its own mapping of name to entry.
+
+        NOTE: This is the query surface: "REGISTRY.<Namespace>.get(name)" and "REGISTRY.<Namespace>.get_by_cls(cls)".
+        Both answer with an entry or with the default, and both stay inside their own namespace.
+    """
 
     def __init__(self, instance: Registry,  namespace: RegistryNamespace) -> None:
         self._instance = instance
         self._namespace = namespace
 
-    def get(self, key: str) -> dict[str, RegistryEntry]:
-        return self.__getitem__(utils.normalize_str(key))
+    def _entries(self) -> dict[str, RegistryEntry]:
+        """
+            Entries of this namespace, keyed by their normalized name.
+        """
+        return self._instance._registry[self._namespace]
 
-    def get_by_cls(self, cls: type) -> dict[str, RegistryEntry]:
-        if isinstance(cls, type(None)):
-            return None
-        # TODO: I think it is not possible to get here without the __built__ set to True but better check.
-        normalized_name = utils.normalize_str(cls.__name__)
-        for _, key in self._instance._registry.keys():
-            if normalized_name == key:
-                return self.get(key)
-        return None
+    def get(self, key: str | None, default: tp.Any = None) -> RegistryEntry | None:
+        """
+            Entry registered under a name.
 
-    def __getitem__(self, key: str) -> dict[str, RegistryEntry]:
-        return self._instance._registry[self._namespace].__getitem__(key)
+            NOTE: The name is normalized on the way in, so "LIFNeuron", "lif_neuron" and "LIF Neuron" all
+            reach the entry that was stored as "lif_neuron". A name that is not registered is answered with
+            the default rather than raised over: a lookup that misses is an answer.
 
-    def __setitem__(self, key: str) -> None:
-        return self._instance._registry[self._namespace].__setitem__(key)
+            Args:
+                key: str | None, name to look up.
+                default: tp.Any, what to answer with when the name is not registered.
+
+            Returns:
+                RegistryEntry | None, the entry, or the default.
+        """
+        self._instance._require_built()
+        if not isinstance(key, str) or not key:
+            return default
+        return self._entries().get(utils.normalize_str(key), default)
+
+    def get_by_cls(self, cls: type, default: tp.Any = None) -> RegistryEntry | None:
+        """
+            Entry a class is registered under.
+
+            Args:
+                cls: type, the registered class.
+                default: tp.Any, what to answer with when the class is not registered.
+
+            Returns:
+                RegistryEntry | None, the entry, or the default.
+        """
+        self._instance._require_built()
+        if not isinstance(cls, type):
+            return default
+        # NOTE: A class is matched by where it is defined, not by its name. Namespaces are independent, and
+        # two of them may well hold the same name, so a name alone is no proof of identity.
+        for entry in self._entries().values():
+            if entry.module == cls.__module__ and entry.qualname == cls.__qualname__:
+                return entry
+        # NOTE: A class built at runtime carries the module it was assigned rather than one it can be found
+        # in, which leaves its name as the only thing to go by.
+        return self.get(cls.__name__, default)
+
+    def __getitem__(self, key: str) -> RegistryEntry:
+        return self._entries()[utils.normalize_str(key)]
+
+    def __setitem__(self, key: str, value: RegistryEntry) -> None:
+        self._entries()[utils.normalize_str(key)] = value
+
+    def __contains__(self, key: str) -> bool:
+        return isinstance(key, str) and bool(key) and utils.normalize_str(key) in self._entries()
 
     def __iter__(self) -> tp.Iterator[str]:
-        return self._instance._registry[self._namespace].__iter__()
+        return iter(self._entries())
 
     def __len__(self) -> int:
-        return len(self._instance._registry)
+        return len(self._entries())
 
-    def values(self) -> ItemsView[str, RegistryEntry]:
-        return self._instance._registry[self._namespace].values()
+    def values(self) -> tp.ValuesView[RegistryEntry]:
+        return self._entries().values()
     
-    def keys(self) -> ItemsView[str, RegistryEntry]:
-        return self._instance._registry[self._namespace].keys()
+    def keys(self) -> tp.KeysView[str]:
+        return self._entries().keys()
     
     def items(self) -> ItemsView[str, RegistryEntry]:
-        return self._instance._registry[self._namespace].items()
+        return self._entries().items()
 
-    def register(self, name: str, cls: type[object], path: tuple[str,...] | None = None) -> None:
+    def register(self, name: str, cls: type[object], path: list[str] | None = None) -> None:
         self._instance.register(self._namespace, name, cls, path)
 
     def exists(self, name: str) -> bool:
@@ -139,22 +184,40 @@ class Registry:
         self._registry = utils.TwoKeyDict({r: {} for r in RegistryNamespace._member_map_.values()})
         self.__built__ = False
 
-    def __getattribute__(self, name: str) -> None:
+    def __getattr__(self, name: str) -> SubRegistry:
+        """
+            Serves "REGISTRY.<Namespace>" as a view of that namespace.
+
+            NOTE: __getattr__, not __getattribute__. It runs only when normal attribute lookup finds nothing,
+            so it costs nothing on every other attribute and cannot swallow an error raised by a real one.
+        """
         try:
-            if isinstance(name, str):
-                namespace = RegistryNamespace[name]
-            if getattr(self, f'_{namespace.name}', None) is None:
-                setattr(self, f'_{namespace.name}', SubRegistry(self, namespace))
-            return getattr(self, f'_{namespace.name}')
-        except:
-            return super().__getattribute__(name)
+            namespace = RegistryNamespace[name]
+        except KeyError:
+            raise AttributeError(f'"{type(self).__name__}" has no attribute "{name}".') from None
+        attribute = f'_{namespace.name}'
+        # NOTE: Read straight out of the instance dictionary. Going through getattr would land back here.
+        subregistry = self.__dict__.get(attribute, None)
+        if subregistry is None:
+            subregistry = SubRegistry(self, namespace)
+            setattr(self, attribute, subregistry)
+        return subregistry
+
+    def _require_built(self) -> None:
+        """
+            Raises unless the registry is built.
+        """
+        if not self.__built__:
+            raise RuntimeError(
+                f'Registry is not yet built. Registry must be built first before trying to access it.'
+            )
 
     def __iter__(self) -> tp.Iterator[tuple[RegistryNamespace, SubRegistry]]:
         if not self.__built__:
             raise RuntimeError('Registry is not build yet.')
         def iterator() -> tp.Generator[tuple[RegistryNamespace, SubRegistry], tp.Any, None]:
             for namespace in RegistryNamespace._member_map_.values():
-                yield namespace, getattr(self, namespace)
+                yield namespace, getattr(self, namespace.name)
         return iterator()
     
     def __len__(self) -> int:
@@ -172,7 +235,7 @@ class Registry:
             Register new registry_base_type.
         """
         if self.__built__:
-            self._register(name, cls, path)
+            self._register(namespace, name, cls, path)
         else:
             # Delay registration until all default objects were identified.
             if (namespace, name) in self._raw_registry:
@@ -185,17 +248,25 @@ class Registry:
         """
             Validate and register new item.
         """
+        # NOTE: Namespaces are the first key of the registry, so a name and its enum are not interchangeable
+        # there: registering under one and asking under the other would quietly build two separate namespaces.
+        if isinstance(namespace, str):
+            namespace = RegistryNamespace[namespace]
+        # NOTE: Normalized before the check, not after it. The name is stored normalized, so checking the raw
+        # one lets "LIFNeuron" pass a check against a registered "lif_neuron" and then overwrite it.
+        name = utils.normalize_str(name)
         if self.exists(namespace, name):
             raise ValueError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
                             f'name "{name}" is already registered to another class.')
         if not path is None:
+            if isinstance(path, tuple):
+                path = list(path)
             if not isinstance(path, list):
                 raise TypeError(f'Expect path to be a list of str but got {type(path).__name__}.')
             for p in path:
                 if not isinstance(p, str):
                     raise TypeError(f'Expect path to be a list of str but found item of type {type(p).__name__}.')
         # Register
-        name = utils.normalize_str(name)
         path = self._get_default_path(namespace, cls) if path is None else path
         self._registry[namespace, name] = RegistryEntry(
             name=name, 
@@ -225,19 +296,22 @@ class Registry:
         """
             Safely retrieves a component entry by name.
         """
-        if self.__built__:
-            if isinstance(namespace, str):
-                namespace = RegistryNamespace[namespace]
-            return self._registry.get(namespace, name, default)
-        else: 
-            raise RuntimeError(
-                f'Registry is not yet built. Registry must be built first before trying to access it.'
-            )
+        self._require_built()
+        if isinstance(namespace, str):
+            namespace = RegistryNamespace[namespace]
+        if not isinstance(name, str) or not name:
+            return default
+        # NOTE: The two keys are one key. Passing them as two arguments reaches Mapping.get, which takes a
+        # single key and a default.
+        return self._registry.get((namespace, utils.normalize_str(name)), default)
         
     def exists(self, namespace: RegistryNamespace | str, name: str) -> bool:
         if isinstance(namespace, str):
             namespace = RegistryNamespace[namespace]
-        if (namespace, name) in self._registry:
+        if not isinstance(name, str) or not name:
+            return False
+        # NOTE: Normalized, since that is the form every name is stored under.
+        if (namespace, utils.normalize_str(name)) in self._registry:
             return True
         return False
 
@@ -254,7 +328,10 @@ class Registry:
                     continue
                 # Stop at registry_base_type
                 base_type_name = RegistryNamespace.base_module(namespace).split('.')[-1]
-                if base.__name__ in base_type_name:
+                # NOTE: The base is the one class the walk stops at, so this is an identity check. Asking
+                # whether the name is contained in it also stops at anything named after a piece of it
+                # ("Module" inside "SparkModule"), which truncates the path of everything below.
+                if base.__name__ == base_type_name:
                     break
                 name = base.__name__
                 name_map = MRO_PATH_ALIAS_MAP.get(name, name)
@@ -424,6 +501,34 @@ INITIALIZERS_ALIAS_MAP = {
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+def _bind_to_spark(cls: type) -> type:
+    """
+        Publishes a class built at runtime under the "spark" namespace.
+
+        NOTE: A registry entry records where a class lives (its module and its qualified name) rather than the
+        class itself, so that it stays cheap and serializable. A class generated at runtime has no module to
+        be found in, which is why it is given one: without this, its entry names an attribute of "spark" that
+        does not exist and get_cls() fails.
+
+        Args:
+            cls: type, the class to publish.
+
+        Returns:
+            type, the same class.
+    """
+    import spark as spark_module
+    name = cls.__name__
+    existing = getattr(spark_module, name, None)
+    if existing is not None and existing is not cls:
+        raise NameError(
+            f'Unable to publish "{name}" under "spark": the name is already taken by another object.'
+        )
+    cls.__module__ = spark_module.__name__
+    setattr(spark_module, name, cls)
+    return cls
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def _construct_neuron_config_cls(cls_name: str, config: NeuronConfig) -> type[NeuronConfig]:
     """
         Generate a NeuronConfig subclass programmatically from a NeuronConfig instance.
@@ -445,8 +550,7 @@ def _construct_neuron_config_cls(cls_name: str, config: NeuronConfig) -> type[Ne
     namespace['__annotations__'] = ns_annotations
     # Create class and link it to spark
     neuron_config_cls = type(cls_name, (NeuronConfig,), namespace)
-    neuron_config_cls.__module__ = 'spark'
-    return neuron_config_cls
+    return _bind_to_spark(neuron_config_cls)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -462,8 +566,7 @@ def _construct_neuron_cls(cls_name: str, config_cls: type[NeuronConfig]) -> type
     namespace['__annotations__'] = ns_annotations
     # Create class and link it to spark
     neuron_cls = type(cls_name, (Neuron,), namespace)
-    neuron_cls.__module__ = 'spark'
-    return neuron_cls
+    return _bind_to_spark(neuron_cls)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

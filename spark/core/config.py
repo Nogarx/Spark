@@ -37,7 +37,20 @@ class AnnotationWarning(Warning):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def unflatten_kwargs(kwargs: dict[str, tp.Any], __nested_delimiter__: str = '__', __shared_delimiter__: str = '_s_') -> dict[str, tp.Any]:
+NESTED_DELIMITER = '__'
+"""
+	Separator addressing something inside a configuration: a nested configuration ("kernel__scale"), or one
+	module of a "modules_specs" list, by its name ("synapses__kernel__scale").
+"""
+
+SHARED_DELIMITER = '_s_'
+"""
+	Prefix marking an argument that is handed down to every configuration below ("_s_units").
+"""
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def unflatten_kwargs(kwargs: dict[str, tp.Any], __nested_delimiter__: str = NESTED_DELIMITER, __shared_delimiter__: str = SHARED_DELIMITER) -> dict[str, tp.Any]:
 	
 	def _unflatten_kwargs_recursive(kwargs: dict[str, tp.Any], shared_args: dict[str, tp.Any]) -> dict[str, tp.Any]:
 		unflatten_dict = {k:v for k,v in shared_args.items()}
@@ -224,11 +237,18 @@ class SparkConfigMeta(abc.ABCMeta):
 						module_spec = copy.deepcopy(module_spec)
 						if isinstance(module_spec, dict):
 							module_spec = ModuleSpecs.from_dict(module_spec)
+						# NOTE: A module of the list is addressed by its name, exactly as a nested configuration
+						# is addressed by its field: "synapses__kernel__scale" is "kernel__scale" for the module
+						# named "synapses". What is left after the name is handed over still flattened, so that
+						# the configuration of the module unfolds it under the very same rules.
+						prefix = f'{module_spec.name}{NESTED_DELIMITER}'
+						module_kwargs = {k[len(prefix):]:v for k,v in kwargs.items() if k.startswith(prefix)}
+						spec_kwargs = raw_shared | module_kwargs
 						# Update spec config
 						if dc.is_dataclass(module_spec.config):
-							module_spec.config = module_spec.config.merge(**raw_shared)
+							module_spec.config = module_spec.config.merge(**spec_kwargs)
 						elif callable(module_spec.config):
-							module_spec.config = module_spec.config(**raw_shared)
+							module_spec.config = module_spec.config(**spec_kwargs)
 						module_specs_list.append(module_spec)
 					# Update spec list
 					clean_kwargs[key] = module_specs_list

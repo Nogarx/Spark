@@ -193,11 +193,16 @@ class ModuleSpecs:
         # TODO: In order to add controllers to the registry they need to build the ModuleSpecs,
         # this currently access the REGISTRY to validate the spec, which crashes with the controllers
         # since the registry is not necessarily built
-        from spark.core.module import SparkModule
+        from spark.nn.components.base import Component
+        from spark.nn.interfaces.base import Interface
         from spark.nn.controllers.neuron import Neuron
-        if REGISTRY.__built__ and issubclass(module_cls, SparkModule) and REGISTRY.Components.get(module_cls.__name__) is None:  
+        if REGISTRY.__built__ and issubclass(module_cls, Component) and REGISTRY.Components.get_by_cls(module_cls) is None:  
             raise ValueError(
-                f'Module class \"{module_cls.__name__}\" does not exists in the registry.'
+                f'Component class \"{module_cls.__name__}\" does not exists in the registry.'
+            )
+        if REGISTRY.__built__ and issubclass(module_cls, Interface) and REGISTRY.Interfaces.get_by_cls(module_cls) is None:  
+            raise ValueError(
+                f'Interface class \"{module_cls.__name__}\" does not exists in the registry.'
             )
         elif REGISTRY.__built__ and issubclass(module_cls, Neuron) and REGISTRY.Neurons.get(module_cls.__name__) is None:  
             raise ValueError(
