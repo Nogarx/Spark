@@ -57,17 +57,18 @@ def unflatten_kwargs(kwargs: dict[str, tp.Any], __nested_delimiter__: str = NEST
 		# Set simple arguments and discover nested kwargs
 		nested_dicts = set()
 		for key, value in kwargs.items():
-			if __nested_delimiter__ in key:
+			if __nested_delimiter__ in key and not key.startswith(__nested_delimiter__):
 				nested_dicts.add(key.split(__nested_delimiter__)[0]) 
 			else:
 				unflatten_dict[key] = kwargs[key]
 		# Unflatten nested kwargs
 		for nested_key in nested_dicts:
+			nested_prefix = nested_key + __nested_delimiter__
 			nested_dict = {}
 			# Gather associated values
 			for key, value in kwargs.items():
-				if key.startswith(nested_key):
-					nested_dict[key[len(nested_key+__nested_delimiter__):]] = value
+				if key.startswith(nested_prefix):
+					nested_dict[key[len(nested_prefix):]] = value
 			# Unflatten dict
 			unflatten_dict[nested_key] = _unflatten_kwargs_recursive(nested_dict, shared_args)
 		return unflatten_dict
