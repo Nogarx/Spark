@@ -573,6 +573,60 @@ def register_neuron_from_config(cls_name: str, config: NeuronConfig) -> None:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+def register_models_from_payload(payload: tp.Any) -> list[str]:
+    """
+        Registers a collection of models from decoded json documents.
+
+        Args:
+            payload: tp.Any, a decoded json document, before the spark decoder has read it.
+
+        Returns:
+            list[str], names of the models that were registered.
+    """
+    import json
+    from spark.core.serializer import SparkJSONDecoder
+    from spark.nn.controllers.neuron import NeuronConfig
+
+    definable = {'Neurons': NeuronConfig}
+    missing: dict[str, tuple[str, tp.Any]] = {}
+
+    def collect(node: tp.Any) -> None:
+        if isinstance(node, dict):
+            data = node.get('__data__') if node.get('__type__') == 'module_specs' else None
+            if isinstance(data, dict):
+                reference = data.get('module_cls') or {}
+                name = reference.get('__module_type__')
+                namespace = reference.get('__subregistry__')
+                subregistry = getattr(REGISTRY, namespace, None) if namespace else None
+                if name and namespace in definable and subregistry and not subregistry.get(name):
+                    if data.get('config') is not None:
+                        missing[name] = (namespace, data['config'])
+            for value in node.values():
+                collect(value)
+        elif isinstance(node, list):
+            for value in node:
+                collect(value)
+
+    collect(payload)
+    registered = []
+    for name, (namespace, config_payload) in missing.items():
+        base_cls = definable[namespace]
+        base_entry = REGISTRY.Configs.get_by_cls(base_cls)
+        if not base_entry:
+            continue
+        generic = dict(config_payload)
+        generic['__type__'] = base_entry.name
+        try:
+            config = json.loads(json.dumps(generic), cls=SparkJSONDecoder)
+            register_neuron_from_config(name, config)
+        except Exception as error:
+            logger.warning(f'Unable to build the model "{name}" from the definition in the file. Error: {error}.')
+            continue
+        registered.append(name)
+    return registered
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def register_neuron_from_config_file(cls_name: str, path: pl.Path) -> None:
     """
         Generate a (Neuron, NeuronConfig) subclass pair programmatically from a NeuronConfig file.

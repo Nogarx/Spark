@@ -1,8 +1,4 @@
-_run_tests.py
 .env/
-.env_docs/
-.test_env/
-OLD_SPARK*
 _test*
 spark/core/kernels
 

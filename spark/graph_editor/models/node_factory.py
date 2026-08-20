@@ -63,20 +63,42 @@ class NodeRegistry:
         # Map available models
         for namespace, base_model in self.NAMESPACE_BASE_MODEL.items():
             for _, entry in getattr(REGISTRY, namespace.name).items():
-                # NOTE: Controllers are not placed as plain modules, they are the graph itself.
-                if len(entry.path) > 0 and entry.path[0].lower() == 'controller':
-                    continue
-                cls = entry.get_cls()
-                self._registry[cls] = NodeFactory.create_node_from_registry(entry, base_model)
-                self._namespaces[cls] = namespace
+                self._map(entry, namespace, base_model)
+
+    def _map(self, entry: RegistryEntry, namespace: RegistryNamespace, base_model: type[NodeModel]) -> type[NodeModel] | None:
+        """
+            Builds the node model of an entry and keeps it.
+
+            Answers with nothing for a controller: those are not placed as plain modules, they are the
+            graph itself.
+        """
+        if len(entry.path) > 0 and entry.path[0].lower() == 'controller':
+            return None
+        cls = entry.get_cls()
+        self._registry[cls] = NodeFactory.create_node_from_registry(entry, base_model)
+        self._namespaces[cls] = namespace
+        return self._registry[cls]
+
+    def _adopt(self, node_cls: type) -> type[NodeModel] | None:
+        """
+            Builds the node model of a class the framework came to know after this registry was built.
+        """
+        for namespace, base_model in self.NAMESPACE_BASE_MODEL.items():
+            entry = getattr(REGISTRY, namespace.name).get_by_cls(node_cls)
+            if entry:
+                return self._map(entry, namespace, base_model)
+        return None
 
     def get(self, node_cls: type) -> type[NodeModel] | None:
-        return self._registry.get(node_cls, None)
+        node_model_cls = self._registry.get(node_cls, None)
+        return node_model_cls if node_model_cls is not None else self._adopt(node_cls)
 
     def get_namespace(self, node_cls: type) -> RegistryNamespace | None:
         """
             Registry namespace a node class was created from.
         """
+        if node_cls not in self._namespaces:
+            self._adopt(node_cls)
         return self._namespaces.get(node_cls, None)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

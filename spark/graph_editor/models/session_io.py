@@ -17,6 +17,7 @@ import dataclasses as dc
 
 from spark.core.config import SparkConfig
 from spark.core.serializer import SparkJSONEncoder, SparkJSONDecoder
+from spark.core.registry import register_models_from_payload
 from spark.graph_editor.models.controller_profile import get_controller_profile, profile_for_config
 from spark.graph_editor.models.graph_export import build_controller_config
 
@@ -25,15 +26,6 @@ logger = logging.getLogger('spark')
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
-
-# NOTE: Two file kinds, on purpose.
-#   .scfg  a model: a finished controller configuration the framework can instantiate. Written by the core
-#          serializer, so it is exactly what SparkConfig.from_file expects and carries nothing else.
-#   .sge   a session: work in progress. Same encoding, but the editor owns the layout, and the configuration
-#          inside is allowed to be incomplete. Instantiating one is expected to fail.
-# The editor state (which controller, where the nodes are) lives in the session only. It cannot travel inside
-# the configuration itself: SparkConfig serializes its dataclass fields, so an attribute such as
-# __graph_editor_metadata__ is silently dropped by to_file/from_file.
 
 SESSION_SUFFIX = '.sge'
 MODEL_SUFFIX = '.scfg'
@@ -67,7 +59,9 @@ def _read_json(path: pl.Path) -> tp.Any:
         compressed = raw.read(6) == _LZMA_MAGIC
     opener = lzma.open if compressed else open
     with opener(path, 'rt', encoding='utf-8') as handle:
-        return json.load(handle, cls=SparkJSONDecoder)
+        payload = handle.read()
+    register_models_from_payload(json.loads(payload))
+    return json.loads(payload, cls=SparkJSONDecoder)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -124,11 +118,19 @@ def load_session(path: str | pl.Path) -> LoadedSession:
         raise ValueError(f'"{path.name}" does not contain a controller configuration.')
     # The controller comes from the file, the user is never asked when opening a session.
     profile = get_controller_profile(payload.get('profile', None)) or profile_for_config(config)
+    return LoadedSession(profile=profile, config=config, layout=_read_layout(payload.get('layout')))
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _read_layout(stored: tp.Any) -> dict[str, tuple[float, float]]:
+    """
+        Reads a set of positions as it was written, keeping only what still reads as one.
+    """
     layout = {}
-    for name, pos in (payload.get('layout', None) or {}).items():
+    for name, pos in (stored or {}).items():
         if isinstance(pos, (list, tuple)) and len(pos) == 2:
             layout[name] = (float(pos[0]), float(pos[1]))
-    return LoadedSession(profile=profile, config=config, layout=layout)
+    return layout
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -157,8 +159,38 @@ def export_model(graph_model: GraphModel, path: str | pl.Path) -> pl.Path:
     exported = build_controller_config(graph_model, strict=True)
     if not exported.is_complete:
         raise ValueError('\n'.join(exported.problems))
-    exported.config.to_file(path, verbose=False)
+    exported.config.to_file(path, verbose=False, metadata=_layout_metadata(exported.layout))
     return path
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _layout_metadata(layout: dict[str, tuple[float, float]]) -> dict[str, tp.Any]:
+    """
+        What is written beside the configuration of a model.
+    """
+    return {'layout': {name: [pos[0], pos[1]] for name, pos in layout.items()}}
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def model_layout(path: str | pl.Path) -> dict[str, tuple[float, float]]:
+    """
+        Answers with where a model file was left, by node name.
+
+        A file written by something other than the editor says nothing about it, and is answered with
+        nothing, which is what asks for the model to be laid out as it is read.
+
+        Args:
+            path: str | pl.Path, the file to read.
+
+        Returns:
+            dict[str, tuple[float, float]], the positions, empty when the file carries none.
+    """
+    try:
+        metadata = SparkConfig.metadata_from_file(pl.Path(path))
+    except Exception as error:
+        logger.debug(f'"{path}" was read without a layout: {error}')
+        return {}
+    return _read_layout(metadata.get('layout'))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

@@ -825,9 +825,23 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 
 
 
-	def to_file(self, file_path: str, compress: bool = True, verbose: bool = True) -> None:
+	def to_file(
+			self,
+			file_path: str,
+			compress: bool = True,
+			verbose: bool = True,
+			metadata: dict[str, tp.Any] | None = None,
+		) -> None:
 		"""
 			Export a config instance from a .scfg file.
+
+			Args:
+				file_path: str, where to write.
+				compress: bool, whether the file is compressed.
+				verbose: bool, whether to announce where it was written.
+				metadata: dict[str, tp.Any] | None, what the writer has to say about the file that the
+					configuration has no place for. It is written beside the configuration and is not read
+					back by from_file, which answers the configuration alone. metadata_from_file answers it.
 		"""
 		# Validate path
 		path = pl.Path(file_path)
@@ -842,7 +856,7 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 				f'Reconstruction from unregistered classes is not currently possible.'
 				f'Use the "register_config" decorator to add the class to the registry.'
 			)
-		payload = json.dumps(self, cls=SparkJSONEncoder, indent=4)
+		payload = json.dumps(self, cls=SparkJSONEncoder, indent=4, metadata=metadata)
 		opener = lzma.open if compress else open
 		mode = 'wt' if compress else 'w'
 		temp_path = path.with_name(f'{path.name}.partial')
@@ -856,6 +870,33 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 			print(f'Configuration saved to "{path}".')
 
 
+
+	@classmethod
+	def metadata_from_file(cls, file_path: str) -> dict[str, tp.Any]:
+		"""
+			Answers with what was written beside the configuration of a file.
+
+			The configuration is not decoded, so this answers for a file naming models that are nowhere to
+			be found as readily as for any other.
+
+			Args:
+				file_path: str, the file to read.
+
+			Returns:
+				dict[str, tp.Any], what the writer left, empty when it left nothing.
+		"""
+		from spark.core.serializer import METADATA_KEY
+		path = pl.Path(file_path)
+		if not path.is_file():
+			raise FileNotFoundError(f'No file found at the specified path: "{path}".')
+		with open(path, 'rb') as f:
+			is_compressed = (f.read(6) == b'\xfd7zXZ\x00')
+		opener = lzma.open if is_compressed else open
+		mode = 'rt' if is_compressed else 'r'
+		with opener(path, mode, encoding='utf-8') as json_file:
+			document = json.load(json_file)
+		metadata = document.get(METADATA_KEY) if isinstance(document, dict) else None
+		return metadata if isinstance(metadata, dict) else {}
 
 	@classmethod
 	def from_file(cls: type['SparkConfig'], file_path: str) -> 'SparkConfig':
@@ -874,14 +915,16 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 		opener = lzma.open if is_compressed else open
 		mode = 'rt' if is_compressed else 'r'
 		with opener(path, mode, encoding='utf-8') as json_file:
-			# Try to decode
-			from spark.core.serializer import SparkJSONDecoder
-			obj = json.load(json_file, cls=SparkJSONDecoder) 
-			if not _is_config_instance(obj):
-				raise TypeError(
-					f'Expected final object to be of type "SparkConfig" but after decoding the final object was of type "{obj.__class__}".'
-				)
-			return obj
+			payload = json_file.read()
+		from spark.core.serializer import SparkJSONDecoder
+		from spark.core.registry import register_models_from_payload
+		register_models_from_payload(json.loads(payload))
+		obj = json.loads(payload, cls=SparkJSONDecoder)
+		if not _is_config_instance(obj):
+			raise TypeError(
+				f'Expected final object to be of type "SparkConfig" but after decoding the final object was of type "{obj.__class__}".'
+			)
+		return obj
 		
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

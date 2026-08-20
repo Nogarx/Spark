@@ -1,17 +1,21 @@
 # ⚡ Spark: Modular Spiking Neural Networks
-
+<!--
 <div align="center"><img src="./images/spark_logo.png" width="500" alt="Spark Logo"></div>
+-->
+
+<div align="center"  alt="Spark Summary">
+    <img src="https://raw.githubusercontent.com/nogarx/Spark/main/docs/images/spark_summary.png" width="1000" alt="Spark Graph Editor"></div>
+</div>
+
 
 <p align="center">
     <strong>
         Build, train, and deploy state-of-the-art Spiking Neural Networks with a powerful visual interface and JAX.
     </strong>
     <br/><br/>
-	<!--
     <a href="#">
         <img src="https://img.shields.io/badge/build-passing-brightgreen?style=for-the-badge" alt="Build Status">
     </a>
-	-->
     <a href="#">
         <img src="https://img.shields.io/badge/license-APACHE 2.0-blue?style=for-the-badge" alt="License">
     </a>
@@ -43,11 +47,6 @@ Spiking neural networks are not special, why should they require special data?!.
 Design complex SNN architectures by dragging, dropping, and connecting pre-built neural components. 
 No coding required for model design.
 
-<!--
-<div align="center"  alt="Spark Summary">
-    <img src="./images/spark_summary.png" width="1000" alt="Spark Graph Editor"></div>
-</div>
--->
 ## Getting Started
 
 

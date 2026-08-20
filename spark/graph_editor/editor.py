@@ -26,9 +26,11 @@ from spark.graph_editor.widgets.console_view import ConsoleView, MessageLevel
 from spark.graph_editor.widgets.preferences_dialog import PreferencesDialog
 from spark.graph_editor.widgets.controller_selection import StartView, NewModelDialog
 from spark.graph_editor.models.controller_profile import ControllerProfile, profile_for_config
-from spark.graph_editor.models import session_io, recent_files
+from spark.graph_editor.models import session_io, recent_files, model_library
 from spark.graph_editor.styles.manager import STYLES
 from spark.graph_editor.styles import resources as icons
+
+logger = logging.getLogger('spark')
 
 #from debug import register_debug_port_types, populate_debug_graph
 
@@ -206,7 +208,7 @@ class GraphEditorWindow(QMainWindow):
         # Setup menus (must be after docks so they can be toggled)
         self._setup_menus()
         self._update_document_state()
-        logger = logging.getLogger('spark')
+        self._register_library()
         logger.info('Editor Initialized...')
 
 
@@ -498,6 +500,9 @@ class GraphEditorWindow(QMainWindow):
         import_action = QAction('Import Model...', self)
         import_action.triggered.connect(lambda _checked=False: self.import_model_file())
         file_menu.addAction(import_action)
+        library_action = QAction('Add Model to Library...', self)
+        library_action.triggered.connect(lambda _checked=False: self.add_model_to_library())
+        file_menu.addAction(library_action)
         check_action = QAction('Check Model', self)
         check_action.setShortcut('F7')
         check_action.triggered.connect(lambda _checked=False: self.check_model())
@@ -798,7 +803,7 @@ class GraphEditorWindow(QMainWindow):
         if source_profile is None:
             self._report_error('Unable to open the model', f'The controller of "{path.name}" is not registered.')
             return False
-        self._open_model_as_session(config, path, source_profile)
+        self._open_model_as_session(config, path, source_profile, layout=session_io.model_layout(path))
         return True
 
     def export_model(self) -> bool:
@@ -867,18 +872,16 @@ class GraphEditorWindow(QMainWindow):
         if source_profile is None:
             self._report_error('Unable to import the model', f'The controller of "{path.name}" is not registered.')
             return
-        # NOTE: The question is only skipped when there is nothing to lose and nothing to decide: an empty
-        # session for the very controller the file describes. A model of another controller always asks,
-        # since opening it changes what the document is building.
+        layout = session_io.model_layout(path)
         same_controller = source_profile is model.profile
         if same_controller and not model.nodes:
-            self._open_model_as_session(config, path, source_profile)
+            self._open_model_as_session(config, path, source_profile, layout=layout)
             return
         choice = self._ask_import_mode(path, source_profile, allow_merge=same_controller)
         if choice == 'new':
-            self._open_model_as_session(config, path, source_profile)
+            self._open_model_as_session(config, path, source_profile, layout=layout)
         elif choice == 'merge':
-            self.view.import_config(config, label=path.stem)
+            self.view.import_config(config, label=path.stem, layout=layout)
 
     def _ask_import_mode(self, path: pathlib.Path, source_profile: ControllerProfile, allow_merge: bool) -> str | None:
         """
@@ -907,7 +910,13 @@ class GraphEditorWindow(QMainWindow):
             return 'merge'
         return None
 
-    def _open_model_as_session(self, config, path: pathlib.Path, source_profile: ControllerProfile) -> None:
+    def _open_model_as_session(
+            self,
+            config,
+            path: pathlib.Path,
+            source_profile: ControllerProfile,
+            layout: dict[str, tuple[float, float]] | None = None,
+        ) -> None:
         """
             Replaces the document with a model, as if the file had been opened.
         """
@@ -917,7 +926,7 @@ class GraphEditorWindow(QMainWindow):
         # The controller comes from the file, the user is never asked for it.
         model.set_profile(source_profile, force=True)
         model.adopt_controller_config(config)
-        document.view.import_config(config, label=path.stem)
+        document.view.import_config(config, label=path.stem, layout=layout)
         model.undo_stack.clear()
         model.undo_stack.setClean()
         document.session_path = None
@@ -928,6 +937,50 @@ class GraphEditorWindow(QMainWindow):
         self._refresh_inspector()
         self._statusBar.showMessage(f'Model opened from {path}')
         logging.getLogger('spark').log(MessageLevel.SUCCESS.value, f'Model opened from "{path}".')
+
+    def _register_library(self) -> None:
+        """
+            Makes the models of the library available.
+        """
+        registered, failed = model_library.register_library()
+        if registered:
+            logger.info(f'Model library: {", ".join(sorted(registered))}.')
+        for path, error in failed:
+            logger.warning(f'Model library: unable to read "{path.name}". {error}')
+
+    def add_model_to_library(self) -> None:
+        """
+            Takes a model file into the library, so that it is available to every model built from now on.
+        """
+        # Passing None as parent forces the OS native dialog.
+        file_name, _ = QFileDialog.getOpenFileName(
+            None, 'Add Model to Library', '', session_io.MODEL_FILTER,
+        )
+        if not file_name:
+            return
+        try:
+            destination = model_library.import_model(file_name)
+        except FileExistsError:
+            answer = QMessageBox.question(
+                self,
+                'Add Model to Library',
+                f'The library already holds a model named "{model_library.model_name(file_name)}".\n'
+                f'Replace it?',
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+            try:
+                destination = model_library.import_model(file_name, overwrite=True)
+            except Exception as error:
+                QMessageBox.warning(self, 'Add Model to Library', f'Unable to take the model in.\n\n{error}')
+                return
+        except Exception as error:
+            QMessageBox.warning(self, 'Add Model to Library', f'Unable to take the model in.\n\n{error}')
+            return
+        logger.info(f'Model "{model_library.model_name(destination)}" added to the library.')
+        self._statusBar.showMessage(f'Added "{destination.name}" to the model library.', 4000)
 
     def open_preferences(self) -> None:
         dialog = PreferencesDialog(self)

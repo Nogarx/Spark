@@ -233,8 +233,6 @@ class PreferencesDialog(QDialog):
         self.sidebar = QListWidget()
         self.sidebar.setObjectName('prefsSidebar')
         self.sidebar.setFixedWidth(STYLES.get_val('preferences', 'sidebar_width', default=170))
-        # NOTE: Rounded highlights that touch read as bleeding into the neighbouring entry, and a row must
-        # never be shorter than the text plus the padding the stylesheet asks for.
         self.sidebar.setSpacing(STYLES.get_val('preferences', 'sidebar_spacing', default=3))
         self.pages = QStackedWidget()
         self.sidebar.currentRowChanged.connect(self.pages.setCurrentIndex)
@@ -243,6 +241,7 @@ class PreferencesDialog(QDialog):
         layout.addLayout(body, 1)
 
         self._build_pages()
+        self._build_library_page()
 
         controls = QHBoxLayout()
         self.path_label = QLabel()
@@ -313,6 +312,79 @@ class PreferencesDialog(QDialog):
             padding = STYLES.get_val('preferences', 'sidebar_item_padding', default=14)
             item.setSizeHint(QSize(0, self.sidebar.fontMetrics().height() + padding))
         self.sidebar.setCurrentRow(0)
+
+    def _build_library_page(self) -> None:
+        """
+            Page for the model library.
+        """
+        from spark.graph_editor.models import model_library
+
+        index = self.pages.count()
+        page = QWidget()
+        page_layout = QVBoxLayout(page)
+        page_layout.setContentsMargins(0, 0, 0, 0)
+        page_layout.setSpacing(4)
+        caption = QLabel(
+            'Models kept in this folder are available to every model you build. A model saved to a file '
+            'already carries the models it is built on, so the library is only for reaching for one that '
+            'no open file mentions.'
+        )
+        caption.setObjectName('prefsSectionCaption')
+        caption.setWordWrap(True)
+        page_layout.addWidget(caption)
+
+        container = QWidget()
+        form = QFormLayout(container)
+        form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        form.setSpacing(STYLES.get_val('preferences', 'form_spacing', default=10))
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+
+        field = QWidget()
+        field_layout = QHBoxLayout(field)
+        field_layout.setContentsMargins(0, 0, 0, 0)
+        self.library_path_edit = QLineEdit(str(model_library.library_path()))
+        self.library_path_edit.setPlaceholderText(str(model_library.default_path()))
+        browse_button = QPushButton('Browse...')
+        browse_button.clicked.connect(self._browse_library)
+        default_button = QPushButton('Default')
+        default_button.clicked.connect(
+            lambda: self.library_path_edit.setText(str(model_library.default_path()))
+        )
+        field_layout.addWidget(self.library_path_edit, 1)
+        field_layout.addWidget(browse_button)
+        field_layout.addWidget(default_button)
+
+        label = QLabel('Library Folder')
+        hint = 'Where the editor reads models from when it starts, and where an imported model is copied to.'
+        label.setToolTip(hint)
+        field.setToolTip(hint)
+        form.addRow(label, field)
+        self._rows.append((index, form, form.rowCount() - 1, 'model library folder path models neuron custom'))
+
+        page_layout.addWidget(container)
+        page_layout.addStretch(1)
+        self.pages.addWidget(page)
+        item = QListWidgetItem('Model Library', self.sidebar)
+        padding = STYLES.get_val('preferences', 'sidebar_item_padding', default=14)
+        item.setSizeHint(QSize(0, self.sidebar.fontMetrics().height() + padding))
+
+    def _browse_library(self) -> None:
+        """
+            Chooses the folder the library sits in.
+        """
+        directory = QFileDialog.getExistingDirectory(
+            self, 'Model Library Folder', self.library_path_edit.text(),
+        )
+        if directory:
+            self.library_path_edit.setText(directory)
+
+    def _commit_library(self) -> None:
+        """
+            Writes the location of the library, which is settled the moment it is applied.
+        """
+        from spark.graph_editor.models import model_library
+        chosen = self.library_path_edit.text().strip()
+        model_library.set_library_path(chosen or None)
 
     def _build_form(self, page: int, form: QFormLayout, items: dict[str, tp.Any], current_path: list[str], section: str) -> None:
         for key, value in items.items():
@@ -469,12 +541,14 @@ class PreferencesDialog(QDialog):
         return file_path
 
     def _apply_now(self) -> None:
+        self._commit_library()
         path = self._target_path()
         if path and self._write(path):
             self._apply_styles()
             self._update_path_label()
 
     def _save_and_close(self) -> None:
+        self._commit_library()
         path = self._target_path()
         if path and self._write(path):
             self._apply_styles()

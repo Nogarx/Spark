@@ -17,13 +17,22 @@ from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+METADATA_KEY = '__metadata__'
+"""
+    Where a file keeps what was written beside the configuration. It sits next to it rather than in it, so
+    that decoding answers the configuration alone and a reader that knows nothing of it reads the file.
+"""
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class SparkJSONEncoder(json.JSONEncoder):
 	"""
 		Custom JSON encoder to handle common types encounter in Spark.
 	"""
 	__version__ = '1.0'
 
-	def __init__(self, *args, **kwargs) -> None:
+	def __init__(self, *args, metadata: dict[str, tp.Any] | None = None, **kwargs) -> None:
+		self._metadata = metadata
 		super().__init__(*args, **kwargs)
 
 	def iterencode(self, obj, _one_shot: bool = False):
@@ -31,6 +40,8 @@ class SparkJSONEncoder(json.JSONEncoder):
 			'__version__': self.__version__,
 			'__data__': obj
 		}
+		if self._metadata is not None:
+			wrapped[METADATA_KEY] = self._metadata
 		return super().iterencode(wrapped, _one_shot)
 
 	def default(self, obj) -> dict[str, tp.Any]:
@@ -48,8 +59,6 @@ class SparkJSONEncoder(json.JSONEncoder):
 			}
 		# Encode spark configs
 		if isinstance(obj, SparkConfig):
-			# NOTE: Using the to_dict method will destroy all the metadata of nested classes.
-			# We need to let the encoder to naturally reach config leaves
 			return {
 				'__type__': REGISTRY.Configs.get_by_cls(obj.__class__).name,
 				'__cfg__': {k: v for k,v in obj}
