@@ -10,7 +10,8 @@ if TYPE_CHECKING:
 import jax
 import jax.numpy as jnp
 import dataclasses as dc
-from spark.core.tracers import Tracer, RDTracer, RFSTracer
+import spark.core.utils as utils
+from spark.core.tracers import Tracer, RDTracer, RFSTracer, contract_tracer_args
 from spark.core.payloads import SpikeArray, CurrentArray, SparkPayload
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator, ZeroOneValidator
@@ -91,11 +92,18 @@ class TracedSynapses(LinearSynapses):
         # Initialize variables.
         _tau = self.config.init.tau(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
         # Current tracer.
+        tracer_args = {
+            'tau': _tau, 
+            'scale': self.config.scale, 
+            'base': self.config.base
+        }
+        reduced_args, self._contracted_tracer = contract_tracer_args(
+            self._sum_axes, self._kernel.value.shape, **tracer_args,
+        )
         self.current_tracer = Tracer(
-            shape=self._kernel.value.shape,
-            tau=_tau,
-            scale=self.config.scale,
-            base=self.config.base,
+            shape=utils.contracted_shape(self._kernel.value.shape, self._sum_axes)
+                  if self._contracted_tracer else self._kernel.value.shape,
+            **(reduced_args if self._contracted_tracer else tracer_args),
             dt=self.config.dt,
             dtype=self.config.dtype
         )
@@ -107,8 +115,11 @@ class TracedSynapses(LinearSynapses):
         self.current_tracer.reset()
 
     def _dot(self, spikes: SpikeArray) -> CurrentArray:
-        trace = self.current_tracer(self._kernel.value * spikes.value)
-        return CurrentArray(jnp.sum(trace, axis=self._sum_axes))
+        currents = self._kernel.value * spikes.value
+        if self._contracted_tracer:
+            trace = self.current_tracer(jnp.sum(currents, axis=self._sum_axes, keepdims=True))
+            return CurrentArray(trace.reshape(self._output_shape))
+        return CurrentArray(jnp.sum(self.current_tracer(currents), axis=self._sum_axes))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -213,14 +224,21 @@ class RDTracedSynapses(LinearSynapses):
         _tau_rise = self.config.init.tau_rise(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
         _tau_decay = self.config.init.tau_decay(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
         # Current tracer.
+        tracer_args = {
+            'tau_rise': _tau_rise, 
+            'tau_decay': _tau_decay,
+            'scale_rise': self.config.scale_rise, 
+            'scale_decay': self.config.scale_decay,
+            'base_rise': self.config.base_rise, 
+            'base_decay': self.config.base_decay,
+        }
+        reduced_args, self._contracted_tracer = contract_tracer_args(
+            self._sum_axes, self._kernel.value.shape, **tracer_args,
+        )
         self.current_tracer = RDTracer(
-            shape=self._kernel.value.shape,
-            tau_rise=_tau_rise,
-            tau_decay=_tau_decay,
-            scale_rise=self.config.scale_rise,
-            scale_decay=self.config.scale_decay,
-            base_rise=self.config.base_rise,
-            base_decay=self.config.base_decay,
+            shape=utils.contracted_shape(self._kernel.value.shape, self._sum_axes)
+                  if self._contracted_tracer else self._kernel.value.shape,
+            **(reduced_args if self._contracted_tracer else tracer_args),
             dt=self.config.dt,
             dtype=self.config.dtype
         )
@@ -232,8 +250,11 @@ class RDTracedSynapses(LinearSynapses):
         self.current_tracer.reset()
 
     def _dot(self, spikes: SpikeArray) -> CurrentArray:
-        trace = self.current_tracer(self._kernel.value * spikes.value)
-        return CurrentArray(jnp.sum(trace, axis=self._sum_axes))
+        currents = self._kernel.value * spikes.value
+        if self._contracted_tracer:
+            trace = self.current_tracer(jnp.sum(currents, axis=self._sum_axes, keepdims=True))
+            return CurrentArray(trace.reshape(self._output_shape))
+        return CurrentArray(jnp.sum(self.current_tracer(currents), axis=self._sum_axes))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -378,18 +399,25 @@ class RFSTracedSynapses(LinearSynapses):
         _tau_fast_decay = self.config.init.tau_fast_decay(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
         _tau_slow_decay = self.config.init.tau_slow_decay(key=self.get_rng_keys(1), shape=self._kernel.value.shape, dtype=self._dtype)
         # Current tracer.
+        tracer_args = {
+            'alpha': self.config.alpha,
+            'tau_rise': _tau_rise, 
+            'tau_fast_decay': _tau_fast_decay, 
+            'tau_slow_decay': _tau_slow_decay,
+            'scale_rise': self.config.scale_rise,
+            'scale_fast_decay': self.config.scale_fast_decay,
+            'scale_slow_decay': self.config.scale_slow_decay,
+            'base_rise': self.config.base_rise,
+            'base_fast_decay': self.config.base_fast_decay,
+            'base_slow_decay': self.config.base_slow_decay,
+        }
+        reduced_args, self._contracted_tracer = contract_tracer_args(
+            self._sum_axes, self._kernel.value.shape, **tracer_args,
+        )
         self.current_tracer = RFSTracer(
-            shape=self._kernel.value.shape,
-            alpha=self.config.alpha,
-            tau_rise=_tau_rise,
-            tau_fast_decay=_tau_fast_decay,
-            tau_slow_decay=_tau_slow_decay,
-            scale_rise=self.config.scale_rise,
-            scale_fast_decay=self.config.scale_fast_decay,
-            scale_slow_decay=self.config.scale_slow_decay,
-            base_rise=self.config.base_rise,
-            base_fast_decay=self.config.base_fast_decay,
-            base_slow_decay=self.config.base_slow_decay,
+            shape=utils.contracted_shape(self._kernel.value.shape, self._sum_axes)
+                  if self._contracted_tracer else self._kernel.value.shape,
+            **(reduced_args if self._contracted_tracer else tracer_args),
             dt=self.config.dt,
             dtype=self.config.dtype
         )
@@ -401,8 +429,11 @@ class RFSTracedSynapses(LinearSynapses):
         self.current_tracer.reset()
 
     def _dot(self, spikes: SpikeArray) -> CurrentArray:
-        trace = self.current_tracer(self._kernel.value * spikes.value)
-        return CurrentArray(jnp.sum(trace, axis=self._sum_axes))
+        currents = self._kernel.value * spikes.value
+        if self._contracted_tracer:
+            trace = self.current_tracer(jnp.sum(currents, axis=self._sum_axes, keepdims=True))
+            return CurrentArray(trace.reshape(self._output_shape))
+        return CurrentArray(jnp.sum(self.current_tracer(currents), axis=self._sum_axes))
     
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

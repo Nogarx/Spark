@@ -9,7 +9,9 @@ import abc
 import jax
 import jax.numpy as jnp
 import typing as tp
+from math import prod
 from jax.typing import DTypeLike
+import spark.core.utils as utils
 from spark.core.backend import Variable, Constant
 from spark.core.backend import Module
 
@@ -23,6 +25,31 @@ from spark.core.backend import Module
 # Org: (1−exp(−t/tau_rise)​) * exp(−t/tau_decay)​
 # Diff: exp(−t/tau_decay)​−exp(−t/((tau_rise * tau_decay) / (tau_rise + tau_decay)))
 # Simiarly the RFSTracer can be implemented as the sum of two RSTracers.
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+def contract_tracer_args(axes: tuple[int, ...], shape: tuple[int, ...], **values: tp.Any) -> tuple[dict[str, tp.Any], bool]:
+	"""
+		Tries to contract tracer arguments in order to save memory.
+
+		Args:
+			axes: tuple[int, ...], axes of shape the trace is summed over.
+			shape: tuple[int, ...], shape of the trace before reducing.
+			values: tp.Any, arguments of the tracer.
+
+		Returns:
+			tuple[dict[str, tp.Any], bool], the arguments and whether they were reduced.
+	"""
+	count = prod(shape[axis] for axis in axes)
+	contracted_values = {}
+	for name, value in values.items():
+		value, is_constant = utils.contract_axes(value, axes, shape)
+		if not is_constant:
+			return dict(values), False
+		contracted_values[name] = value * count if name.startswith('base') else value
+	return contracted_values, True
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -95,7 +122,10 @@ class Tracer(BaseTracer):
 		# Main attributes
 		self.scale = Constant(scale, dtype=self._dtype)
 		self.base = Constant(base, dtype=self._dtype)
-		self.decay = Constant(jnp.exp(-self._dt / tau), dtype=self._dtype)
+		rate_dtype = jnp.promote_types(self._dtype, jnp.float32)
+		self.decay_rate = Constant(
+			-jnp.expm1(-self._dt / jnp.asarray(tau, dtype=rate_dtype)), dtype=self._dtype,
+		)
 		self.trace = Variable(base * jnp.ones(self.shape), dtype=self._dtype)
 
 	def reset(self,) -> None:
@@ -105,7 +135,8 @@ class Tracer(BaseTracer):
 		self.trace.value = self.base.value * jnp.ones(self.shape, dtype=self._dtype) * mask + (1 - mask) * self.trace.value
 
 	def _update(self, x: jax.Array) -> jax.Array:
-		self.trace.value = self.base.value + self.decay.value * (self.trace.value - self.base.value) + self.scale.value * x.astype(self._dtype)
+		trace = self.trace.value
+		self.trace.value = trace + self.decay_rate.value * (self.base.value - trace) + self.scale.value * x.astype(self._dtype)
 		return self.trace.value
 
 	@property

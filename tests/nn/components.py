@@ -257,3 +257,48 @@ def test_jax_jit_split(
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
+
+traced_synapses_test = [
+    (spark.nn.synapses.TracedSynapses, {'tau': 5.0}, True),
+    (spark.nn.synapses.TracedSynapses, {'tau': jnp.full((8, 1), 5.0, dtype=jnp.float16)}, True),
+    (spark.nn.synapses.TracedSynapses, {'tau': jnp.linspace(3, 20, 8 * 12, dtype=jnp.float16).reshape(8, 12)}, False),
+    (spark.nn.synapses.RDTracedSynapses, {'tau_rise': 1.0, 'tau_decay': 5.0}, True),
+    (spark.nn.synapses.RDTracedSynapses,
+        {'tau_rise': jnp.linspace(1, 3, 8 * 12, dtype=jnp.float16).reshape(8, 12), 'tau_decay': 5.0}, False),
+    (spark.nn.synapses.RFSTracedSynapses, {'tau_rise': 1.0, 'tau_fast_decay': 5.0, 'tau_slow_decay': 50.0}, True),
+]
+
+def run_traced_synapses(module_cls, config_kwargs, force_full: bool) -> tuple[spark.nn.Module, np.ndarray]:
+    """
+        Runs a traced synapse over a fixed spike train, optionally forcing the untouched tracer.
+    """
+    import spark.core.utils as utils
+    original = utils.contract_axes
+    if force_full:
+        utils.contract_axes = lambda array, axes, shape: (array, False)
+    try:
+        module = module_cls(units=(8,), seed=7, dtype=jnp.float16, dt=1.0, **config_kwargs)
+        spikes = np.random.RandomState(0).rand(16, 12) < 0.2
+        outputs = [list(module(spikes=spark.SpikeArray(jnp.array(s))).values())[0].value for s in spikes]
+    finally:
+        utils.contract_axes = original
+    return module, np.stack([np.asarray(o, dtype=np.float32) for o in outputs])
+
+@pytest.mark.parametrize('module_cls, config_kwargs, contractible', traced_synapses_test)
+def test_traced_synapses_contraction(
+        module_cls: type[spark.nn.Module],
+        config_kwargs: dict[str, tp.Any],
+        contractible: bool
+    ) -> None:
+    """
+        Validate that a traced synapse holds one trace per postsynaptic neuron exactly when nothing its
+        tracer is made of varies per synapse, and that it answers the same either way.
+    """
+    module, contracted = run_traced_synapses(module_cls, config_kwargs, force_full=False)
+    _, full = run_traced_synapses(module_cls, config_kwargs, force_full=True)
+    assert module._contracted_tracer is contractible
+    assert np.max(np.abs(contracted - full)) <= 1e-2 * max(np.max(np.abs(full)), 1e-6)
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################

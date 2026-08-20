@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import re
 import jax
+import jax.numpy as jnp
 import enum
 import string
 import numpy as np
@@ -376,6 +377,48 @@ def merge_shape_list(shape_list: list[tuple[int, ...]]) -> tuple[int, ...]:
     """
     shape_list = validate_list_shape(shape_list)
     return tuple([sum([prod(s) for s in shape_list])])
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def contract_axes(array: tp.Any, axes: tuple[int, ...], shape: tuple[int, ...]) -> tuple[tp.Any, bool]:
+    """
+        Tries to contract an array over the given axes. 
+        Contraction is only sucessful if the array is constant along the given axes.
+
+        Args:
+            array: tp.Any, the array to reduce
+            axes: tuple[int, ...], axes of shape to reduce over.
+            shape: tuple[int, ...], shape the array is read against.
+
+        Returns:
+            tuple[tp.Any, bool], the contracted array, whether it was a constant contraction
+    """
+    if not isinstance(array, jax.Array) or len(axes) == 0:
+        return array, True
+    aligned = array.reshape((1,) * (len(shape) - array.ndim) + array.shape)
+    reduced = aligned
+    for axis in axes:
+        reduced = jax.lax.index_in_dim(reduced, 0, axis=axis, keepdims=True)
+    try:
+        is_constant = bool(jnp.all(aligned == reduced))
+    except Exception:
+        return array, False
+    return (reduced, True) if is_constant else (array, False)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def contracted_shape(shape: tuple[int, ...], axes: tuple[int, ...]) -> tuple[int, ...]:
+    """
+        Returns the expected shape after contract_axes
+
+        Args:
+            shape: tuple[int, ...], the shape to reduce.
+            axes: tuple[int, ...], axes to reduce over.
+
+        Returns:
+            tuple[int, ...]
+    """
+    return tuple(1 if axis in axes else size for axis, size in enumerate(shape))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
