@@ -40,9 +40,6 @@ from spark.graph_editor.styles import resources as icons
 class EditorDocument:
     """
         One model open in the editor.
-
-        NOTE: Everything that belongs to a document rather than to the window lives here: its graph, its view,
-        and the two files it is attached to. The window only ever works on the current one.
     """
 
     scene: GraphScene

@@ -80,9 +80,6 @@ class RegistryEntry:
 class SubRegistry:
     """
         One namespace of a registry, as its own mapping of name to entry.
-
-        NOTE: This is the query surface: "REGISTRY.<Namespace>.get(name)" and "REGISTRY.<Namespace>.get_by_cls(cls)".
-        Both answer with an entry or with the default, and both stay inside their own namespace.
     """
 
     def __init__(self, instance: Registry,  namespace: RegistryNamespace) -> None:
@@ -98,10 +95,6 @@ class SubRegistry:
     def get(self, key: str | None, default: tp.Any = None) -> RegistryEntry | None:
         """
             Entry registered under a name.
-
-            NOTE: The name is normalized on the way in, so "LIFNeuron", "lif_neuron" and "LIF Neuron" all
-            reach the entry that was stored as "lif_neuron". A name that is not registered is answered with
-            the default rather than raised over: a lookup that misses is an answer.
 
             Args:
                 key: str | None, name to look up.
@@ -129,13 +122,9 @@ class SubRegistry:
         self._instance._require_built()
         if not isinstance(cls, type):
             return default
-        # NOTE: A class is matched by where it is defined, not by its name. Namespaces are independent, and
-        # two of them may well hold the same name, so a name alone is no proof of identity.
         for entry in self._entries().values():
             if entry.module == cls.__module__ and entry.qualname == cls.__qualname__:
                 return entry
-        # NOTE: A class built at runtime carries the module it was assigned rather than one it can be found
-        # in, which leaves its name as the only thing to go by.
         return self.get(cls.__name__, default)
 
     def __getitem__(self, key: str) -> RegistryEntry:
@@ -187,16 +176,12 @@ class Registry:
     def __getattr__(self, name: str) -> SubRegistry:
         """
             Serves "REGISTRY.<Namespace>" as a view of that namespace.
-
-            NOTE: __getattr__, not __getattribute__. It runs only when normal attribute lookup finds nothing,
-            so it costs nothing on every other attribute and cannot swallow an error raised by a real one.
         """
         try:
             namespace = RegistryNamespace[name]
         except KeyError:
             raise AttributeError(f'"{type(self).__name__}" has no attribute "{name}".') from None
         attribute = f'_{namespace.name}'
-        # NOTE: Read straight out of the instance dictionary. Going through getattr would land back here.
         subregistry = self.__dict__.get(attribute, None)
         if subregistry is None:
             subregistry = SubRegistry(self, namespace)
@@ -248,12 +233,8 @@ class Registry:
         """
             Validate and register new item.
         """
-        # NOTE: Namespaces are the first key of the registry, so a name and its enum are not interchangeable
-        # there: registering under one and asking under the other would quietly build two separate namespaces.
         if isinstance(namespace, str):
             namespace = RegistryNamespace[namespace]
-        # NOTE: Normalized before the check, not after it. The name is stored normalized, so checking the raw
-        # one lets "LIFNeuron" pass a check against a registered "lif_neuron" and then overwrite it.
         name = utils.normalize_str(name)
         if self.exists(namespace, name):
             raise ValueError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
@@ -301,8 +282,6 @@ class Registry:
             namespace = RegistryNamespace[namespace]
         if not isinstance(name, str) or not name:
             return default
-        # NOTE: The two keys are one key. Passing them as two arguments reaches Mapping.get, which takes a
-        # single key and a default.
         return self._registry.get((namespace, utils.normalize_str(name)), default)
         
     def exists(self, namespace: RegistryNamespace | str, name: str) -> bool:
@@ -310,7 +289,6 @@ class Registry:
             namespace = RegistryNamespace[namespace]
         if not isinstance(name, str) or not name:
             return False
-        # NOTE: Normalized, since that is the form every name is stored under.
         if (namespace, utils.normalize_str(name)) in self._registry:
             return True
         return False
@@ -328,9 +306,6 @@ class Registry:
                     continue
                 # Stop at registry_base_type
                 base_type_name = RegistryNamespace.base_module(namespace).split('.')[-1]
-                # NOTE: The base is the one class the walk stops at, so this is an identity check. Asking
-                # whether the name is contained in it also stops at anything named after a piece of it
-                # ("Module" inside "SparkModule"), which truncates the path of everything below.
                 if base.__name__ == base_type_name:
                     break
                 name = base.__name__
@@ -504,11 +479,6 @@ INITIALIZERS_ALIAS_MAP = {
 def _bind_to_spark(cls: type) -> type:
     """
         Publishes a class built at runtime under the "spark" namespace.
-
-        NOTE: A registry entry records where a class lives (its module and its qualified name) rather than the
-        class itself, so that it stays cheap and serializable. A class generated at runtime has no module to
-        be found in, which is why it is given one: without this, its entry names an attribute of "spark" that
-        does not exist and get_cls() fails.
 
         Args:
             cls: type, the class to publish.

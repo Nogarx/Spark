@@ -55,10 +55,6 @@ class Brain(Controller, metaclass=BrainMeta):
 		# Instantiate modules
 		modules_outputs = self._instantiate_modules(abc_args, execution_order)
 		# Build cache.
-		# NOTE: The cache is declared as data. It holds the arrays every module reads from and writes to, so
-		# it has to travel with the state rather than with the graph. Flax only infers that for what is set
-		# while the object is being built; this one is set on the first call, once the shapes are known, and
-		# anything assigned that late is taken as static unless it says otherwise.
 		self._cache = data(Cache.from_payloads(modules_outputs))
 
 	def __call__(self, **inputs: SparkPayload) -> dict[str, SparkPayload]:

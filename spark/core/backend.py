@@ -108,7 +108,11 @@ def _as_array(value: tp.Any, dtype: tp.Any = None) -> jax.Array:
     elif isinstance(value, np.ndarray):
         array = jnp.asarray(value, dtype=dtype if dtype else value.dtype)
     elif isinstance(value, (bool, int, float, complex)):
-        array = jnp.asarray(value, dtype=dtype if dtype else type(value))
+        # NOTE: Asked for no dtype, a python scalar is left weakly typed, which is what keeps it from
+        # deciding the dtype of everything it touches. Naming its python type instead ("dtype=float") makes
+        # it a strong float32, and one such scalar promotes every array it multiplies: a float16 kernel of
+        # N by N becomes float32 for the rest of the expression, and is converted back afterwards.
+        array = jnp.asarray(value, dtype=dtype) if dtype else jnp.asarray(value)
     elif isinstance(value, str):
         # NOTE: A string is iterable, and letting it reach the branch below fails inside jax with a message
         # about converting characters to floats.

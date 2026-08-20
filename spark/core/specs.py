@@ -227,10 +227,6 @@ class ModuleSpecs:
         """
             Serialize ModuleSpecs to dictionary
         """
-        # NOTE: The namespace comes from the registry rather than from what the class inherits from. An
-        # interface is a SparkModule too, so reading the namespace off the base class filed every interface
-        # under "Components", where it is not registered: the name was written as null and the model could
-        # never be read back.
         reg, subregistry = None, None
         for namespace in (RegistryNamespace.Components, RegistryNamespace.Interfaces, RegistryNamespace.Neurons):
             reg = getattr(REGISTRY, namespace.name).get_by_cls(self.module_cls)
