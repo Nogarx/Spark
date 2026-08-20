@@ -4,6 +4,7 @@ _run_tests.py
 .test_env/
 OLD_SPARK*
 _test*
+spark/core/kernels
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
