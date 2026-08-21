@@ -1,19 +1,19 @@
 [project]
 name = "spark_snn"
-version = "1.0.0"
+version = "1.1.0"
 authors = [
     {name="Mario Franco"},
 ]
 description = "Spark: Modular Spiking Neural Networks"
 readme = "README.md"
 license = "Apache-2.0"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     # flax requirements
     "numpy>=1.23.2; python_version>='3.11'",
     "numpy>=1.26.0; python_version>='3.12'",
     # keep in sync with jax-version in .github/workflows/build.yml
-    "jax==0.8.0",
+    "jax==0.11.1",
     "msgpack",
     "optax",
     "orbax-checkpoint",
@@ -23,21 +23,26 @@ dependencies = [
     "PyYAML>=5.4.1",
     "treescope>=0.1.7",
     # flax
-    "flax==0.12.0",
+    "flax==0.12.9",
     # other requirements
     "networkx>=3.5",
-    "PySide6>=6.9.1",
-    "PySide6-QtAds>=4.4.1",
-    "NodeGraphQt>=0.6.39",
     "setuptools>=75.8.0",
 ]
 classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Operating System :: OS Independent",
 ]
+[project.optional-dependencies]
+editor = [
+    "PySide6>=6.9.1",
+    "PySide6-QtAds>=4.4.1",
+]
+
 [project.urls]
 Homepage = "https://github.com/Nogarx/Spark"
 Issues = "https://github.com/Nogarx/Spark/issues"
@@ -49,4 +54,7 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["spark*"]
+exclude = ["spark.core.kernels*"]
 namespaces = false
+[tool.setuptools.package-data]
+"spark.graph_editor.styles" = ["*.qss", "*.json", "*.qrc", "icons/*.png"]

@@ -10,11 +10,11 @@ import dataclasses as dc
 import spark.core.utils as utils
 from math import prod
 from spark.core.specs import PortSpecs
-from spark.core.variables import Constant
-from spark.core.registry import register_module, register_config
+from spark.core.backend import Constant
+from spark.core.registry import register_interface, register_config
 from spark.core.payloads import SparkPayload
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceConfig, ControlInterfaceOutput
+from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceConfig, ControlInterfaceOutput, _build_signature_from_inputs
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -37,7 +37,7 @@ class SamplerConfig(ControlInterfaceConfig):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@register_module
+@register_interface
 class Sampler(ControlInterface):
     """
         Sample a single input streams of inputs of the same type into a single stream.
@@ -60,9 +60,19 @@ class Sampler(ControlInterface):
         # Initialize variables
         self.sample_size = self.config.sample_size
 
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
+    def build(self, **abc_args: SparkPayload) -> None:
+        # Validate payloads types.
+        payload_type = None
+        for key, value in abc_args.items():
+            payload_type = type(value) if payload_type is None else payload_type
+            if payload_type != type(value):
+                raise TypeError(
+                    f'Expected all payload types to be of same type \"{payload_type}\" '
+                    f'but input spec \"{key}\" is of type "{type(value)}".'
+                )
+        self._payload_type = payload_type
         # Initialize shapes
-        input_shape = utils.validate_shape(input_specs['inputs'].shape)
+        input_shape = utils.merge_shape_list([spec.shape for spec in abc_args.values()])
         # Initialize variables
         self._indices = Constant(
             jax.random.randint(
@@ -78,16 +88,21 @@ class Sampler(ControlInterface):
     def indices(self,) -> jax.Array:
         return self._indices.value
 
-    def __call__(self, inputs: SparkPayload) -> ControlInterfaceOutput:
+    def _overwrite_call_signature(self, raw_kwargs: dict[str, SparkPayload]) -> None:
+        # Create the new Signature object and assign it to the __call__ method
+        self.__call__.__func__.__signature__ = _build_signature_from_inputs(raw_kwargs)
+
+    def __call__(self, **inputs: SparkPayload) -> ControlInterfaceOutput:
         """
             Sub/Super-sample the input stream to get the pre-specified number of samples.
         """
-        # Sample
-        sample = type(inputs)(inputs.value.reshape(-1)[self.indices])
+        # Control flow operation
         return {
-            'output': sample
+            'output': self._payload_type(
+                jnp.concatenate([x.value.reshape(-1) for x in inputs.values()])[self.indices]
+            )
         }
-
+    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

@@ -9,7 +9,7 @@ import typing as tp
 from spark.core.payloads import SpikeArray, IntegerArray
 from spark.nn.components.base import Component, ComponentConfig
 from spark.core.decorators import spark_property
-from spark.core.variables import Variable
+from spark.core.backend import Variable
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

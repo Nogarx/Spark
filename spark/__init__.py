@@ -1,15 +1,15 @@
-version = '0.1'
+version = '1.0'
 
 # Core
-from spark.core.variables import Constant, Variable
+from spark.core.backend import Constant, Variable
 from spark.core.payloads import SparkPayload, SpikeArray, CurrentArray, PotentialArray, FloatArray, IntegerArray, BooleanMask
 from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
 from spark.core.decorators import spark_property as property
 from spark.core import tracers
 from spark.core import config_validation as validation
-from spark.core.flax_imports import jit, eval_shape, split, merge
+from spark.core.backend import jit, eval_shape, split, merge
 from spark.core.registry import (
-    register_module, register_neuron, register_initializer, register_payload, register_config, register_cfg_validator,
+    register_module, register_neuron, register_initializer, register_payload, register_config, register_cfg_validator, register_interface,
     register_neuron_from_config, register_neuron_from_config_file
 )
 
@@ -21,7 +21,21 @@ from spark.core.registry import REGISTRY
 REGISTRY._build()
 
 # Editor
-from spark.graph_editor.editor import SparkGraphEditor as GraphEditor
+def __getattr__(name: str):
+    if name == 'GraphEditor':
+        try:
+            from spark.graph_editor.editor import SparkGraphEditor
+        except ImportError as error:
+            raise ImportError(
+                'The graph editor is built on PySide6, which this installation does not have. It is asked '
+                'for by name: pip install "spark_snn[editor]".'
+            ) from error
+        globals()['GraphEditor'] = SparkGraphEditor
+        return SparkGraphEditor
+    raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
+
+def __dir__() -> list[str]:
+    return sorted(set(globals()) | {'GraphEditor'})
 
 __all__ = [
     'nn', 
@@ -33,6 +47,7 @@ __all__ = [
     'validation',
     'jit', 'eval_shape', 'split', 'merge',
     'GraphEditor',
-    'register_module', 'register_neuron', 'register_initializer', 'register_payload', 'register_config', 'register_cfg_validator',
+    'register_module', 'register_neuron', 'register_initializer', 'register_payload', 'register_config', 'register_cfg_validator', 'register_interface',
+    'register_neuron_from_config', 'register_neuron_from_config_file',
     'REGISTRY',
 ]

@@ -2,16 +2,20 @@
 
 <div align="center"><img src="https://raw.githubusercontent.com/nogarx/Spark/main/docs/images/spark_logo.png" width="500" alt="Spark Logo"></div>
 
+<!--
+<div align="center"  alt="Spark Summary">
+    <img src="https://raw.githubusercontent.com/nogarx/Spark/main/docs/images/spark_summary.png" width="1000" alt="Spark Summary"></div>
+</div>
+-->
+
 <p align="center">
     <strong>
         Build, train, and deploy state-of-the-art Spiking Neural Networks with a powerful visual interface and JAX.
     </strong>
     <br/><br/>
-	<!--
     <a href="#">
         <img src="https://img.shields.io/badge/build-passing-brightgreen?style=for-the-badge" alt="Build Status">
     </a>
-	-->
     <a href="#">
         <img src="https://img.shields.io/badge/license-APACHE 2.0-blue?style=for-the-badge" alt="License">
     </a>
@@ -43,21 +47,21 @@ Spiking neural networks are not special, why should they require special data?!.
 Design complex SNN architectures by dragging, dropping, and connecting pre-built neural components. 
 No coding required for model design.
 
-<!--
-<div align="center"  alt="Spark Summary">
-    <img src="./images/spark_summary.png" width="1000" alt="Spark Graph Editor"></div>
-</div>
--->
 ## Getting Started
 
-Spark builds on top of JAX, which needs to be installed first. Click [here](https://docs.jax.dev/en/latest/installation.html) to go to JAX's installation guide.
 
 Spark is available on PyPI, so it can be installed with:
 
-
+Lightweight version,
 ```
 pip install spark-snn
 ```
+
+Full version,
+```
+pip install spark-snn[editor]
+```
+
 
 Or, for the latest development version, clone this repository:
 
@@ -67,14 +71,14 @@ cd spark
 pip install -e .
 ```
 
-Do not know what to do next? The [tutorials](https://nogarx.github.io/Spark/tutorials.html) are here to help you! 
+Do not know what to do next? The [tutorials](https://github.com/Nogarx/Spark/tree/main/tutorials) are here to help you! 
 
 ## The Spark Graph Editor
 
 Design your network's structure, set parameters for each component, and connect them to create a model.
 
 <div align="center">
-    <img src="https://raw.githubusercontent.com/nogarx/Spark/main/docs/images/spark_graph_editor.png" width="1200" alt="Spark Graph Editor"></div>
+    <img src="./images/spark_graph_editor.png" width="1200" alt="Spark Graph Editor"></div>
     <p>
         <em>The Spark visual interface for building SNNs.</em>
     </p>
@@ -148,7 +152,7 @@ out, state = run_model(graph, state, **my_awesome_inputs)
 # State now contains the updated state of the model!.
 ```
 
-There is much more to Spark that what we can show here, if you are ready to learn more you can go to the [tutorial section](https://nogarx.github.io/Spark/tutorials.html)! 
+There is much more to Spark that what we can show here, if you are ready to learn more you can go to the [tutorial section](https://github.com/Nogarx/Spark/tree/main/tutorials)! 
 
 
 ## Roadmap
@@ -173,26 +177,23 @@ Want to contribute but you do not know where to start? The [discussion forum](ht
 
 ## Citing Spark
 
-You can use the following references to cite this repository, 
+You can use the following reference to cite this repository, 
 
-```
-@misc{spark_snn,
-      title={Spark: Modular Spiking Neural Networks}, 
-      author={Mario Franco and Carlos Gershenson},
-      year={2026},
-      eprint={2602.02306},
-      archivePrefix={arXiv},
-      primaryClass={cs.NE},
-      url={https://arxiv.org/abs/2602.02306}, 
+<!--
+@article{spark_snn_github,
+  author = {Mario Franco, Carlos Gershenson},
+  title = {Spark: Modular Spiking Neural Networks},
+  url = {},
+  year = {2025},
 }
-```
+--->
 
 ```
 @software{spark_snn_github,
   author = {Mario Franco, Carlos Gershenson},
   title = {Spark: Modular Spiking Neural Networks},
   url = {https://github.com/nogarx/spark/},
-  version = {1.0.0},
-  year = {2026},
+  version = {0.1.0},
+  year = {2025},
 }
 ```

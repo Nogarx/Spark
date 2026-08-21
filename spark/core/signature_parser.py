@@ -17,9 +17,6 @@ import spark.core.validation as validation
 import itertools
 import types
 
-# TODO: Currently we only accept a single payload type per port. It may be worth it to accept multiple types. 
-# However accepting multiple types will drastically increase the already difficult problem of model validation.
-
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
@@ -176,7 +173,6 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
     signature = inspect.signature(module.__call__)
     signature_type_hints = tp.get_type_hints(module.__call__)
     
-    
     # Create signatures.
     input_specs = {}
     for parameter in signature.parameters.values():
@@ -185,14 +181,24 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
         if parameter.name in ['self', 'cls']: 
             continue
 
-        # Scrap parameter.
-        payload_types = normalize_typehint(signature_type_hints[parameter.name])
-        # Remove optional 
-        payload_types = tuple([t for t in payload_types if not (isinstance(t, type) and issubclass(t, type(None)))])
+        # NOTE: Dynamic input workaround (Concat & friends >:c )
+        if hasattr(module, '_overwrite_call_signature'):
+            # Scrap parameter.
+            payload_types = normalize_typehint(parameter.annotation)
+        else:
+            # Scrap parameter.
+            payload_types = normalize_typehint(signature_type_hints[parameter.name])
+        # Remove optional
+        payload_types = tuple(t for t in payload_types if not (isinstance(t, type) and issubclass(t, type(None))))
         # Extract Payloads from lists
-        payload_types = [
-            tp.get_args(t)[0] if isinstance(t, tp.GenericAlias) and issubclass(tp.get_origin(t), list) else t for t in payload_types
-        ] 
+        payload_types = tuple(
+            tp.get_args(t)[0] if isinstance(t, tp.GenericAlias) and issubclass(tp.get_origin(t), list) else t
+            for t in payload_types
+        )
+        # NOTE: A signature is allowed to accept more than the port carries: a soma takes a mask or a plain
+        # bool, and only the first of them is a payload. The port is the first, the rest is for the caller.
+        payload_types = payload_types[:1] if len(payload_types) > 1 else payload_types
+
         # Check if the payload_type is a valid class and a subclass of SparkPayload
         if any([not validation._is_payload_type(pt) for pt in payload_types]):
             # Raise error, payload is not fully compatible with the framework.

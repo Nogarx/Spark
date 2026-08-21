@@ -11,7 +11,7 @@ import jax
 import dataclasses as dc
 import spark.core.utils as utils
 from spark.core.payloads import SpikeArray, FloatArray
-from spark.core.registry import register_module, register_config
+from spark.core.registry import register_interface, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.interfaces.input.base import InputInterface, InputInterfaceConfig, InputInterfaceOutput
 
@@ -38,7 +38,7 @@ class PoissonSpikerConfig(InputInterfaceConfig):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@register_module
+@register_interface
 class PoissonSpiker(InputInterface):
     """
         Transforms a continuous signal to a spiking signal.
@@ -62,9 +62,9 @@ class PoissonSpiker(InputInterface):
         self.max_freq = self.config.max_freq
         self._scale = self._dt * (self.max_freq / 1000)
 
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
+    def build(self, signal: FloatArray) -> None:
         # Initialize shapes
-        self._shape = utils.validate_shape(input_specs['signal'].shape)
+        self._shape = utils.validate_shape(signal.shape)
 
     def __call__(self, signal: FloatArray) -> InputInterfaceOutput:
         """

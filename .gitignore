@@ -1,8 +1,7 @@
-_run_tests.py
 .env/
-.env_docs/
-.env_benchmarks/
-test.ipynb
+_test*
+spark/core/kernels
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

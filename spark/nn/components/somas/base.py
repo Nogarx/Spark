@@ -11,7 +11,7 @@ import abc
 import jax.numpy as jnp
 import typing as tp
 import spark.core.utils as utils
-from spark.core.variables import Variable
+from spark.core.backend import Variable
 from spark.nn.components.base import Component, ComponentConfig
 from spark.core.payloads import SpikeArray, CurrentArray, PotentialArray, BooleanMask
 from spark.core.decorators import spark_property
@@ -47,9 +47,9 @@ class Soma(Component, tp.Generic[ConfigT]):
         # Initialize super.
         super().__init__(config = config, **kwargs)
     
-    def build(self, input_specs: dict[str, PortSpecs]):
+    def build(self, current: CurrentArray, inhibition_mask: BooleanMask | None = None):
         # Initialize shapes
-        self.units = utils.validate_shape(input_specs['current'].shape)
+        self.units = utils.validate_shape(current.shape)
         # Initialize variables
         self._potential = Variable(jnp.zeros(self.units, dtype=self._dtype), dtype=self._dtype)
 
@@ -77,15 +77,14 @@ class Soma(Component, tp.Generic[ConfigT]):
         """
         pass
 
-    def __call__(self, current: CurrentArray, inhibition_mask: BooleanMask | None = None) -> SomaOutput:
+    def __call__(self, current: CurrentArray, inhibition_mask: BooleanMask | bool | None = None) -> SomaOutput:
         """
             Update neuron's states and compute spikes.
         """
         self._update_states(current)
         return {
             'spikes': SpikeArray(
-                spikes=self._compute_spikes(), 
-                inhibition_mask=inhibition_mask if inhibition_mask is not None else False
+                spikes=self._compute_spikes(), inhibition_mask=inhibition_mask,
             )
         }
     

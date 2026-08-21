@@ -12,107 +12,252 @@ import logging
 import dataclasses as dc
 import typing as tp
 import copy
+import enum
+import importlib
 from collections.abc import Mapping, ItemsView
+from types import MappingProxyType
 import spark.core.utils as utils
 import spark.core.validation as validation
+
+logger = logging.getLogger('spark')
+
+# TODO: Reintroduce register validations.
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-@dc.dataclass
+class RegistryNamespace(enum.Enum):
+    Components = enum.auto()
+    Initializers = enum.auto()
+    Payloads = enum.auto()
+    Interfaces = enum.auto()
+    Neurons = enum.auto()
+    Configs = enum.auto()
+    Validators = enum.auto()
+
+    @classmethod
+    def base_module(cls, namespace: RegistryNamespace) -> str:
+        if namespace == RegistryNamespace.Components:
+            return 'spark.core.module.SparkModule'
+        elif namespace == RegistryNamespace.Initializers:
+            return 'spark.nn.initializers.base.Initializer'
+        elif namespace == RegistryNamespace.Payloads:
+            return 'spark.core.payloads.SparkPayload'
+        elif namespace == RegistryNamespace.Interfaces:
+            return 'spark.nn.interfaces.base.Interface'
+        elif namespace == RegistryNamespace.Neurons:
+            return 'spark.nn.controllers.neuron.Neuron'
+        elif namespace == RegistryNamespace.Configs:
+            return 'spark.core.config.SparkConfig'
+        elif namespace == RegistryNamespace.Validators:
+            return 'spark.core.config_validation.ConfigurationValidator'
+        else:
+            raise RuntimeError(
+                f'"{namespace}" is not a valid RegistryNamespace.'
+            )
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@dc.dataclass(frozen=True)
 class RegistryEntry:
     """
         Structured entry for the registry.
     """
     name: str
-    class_ref: type
+    module: str
+    qualname: str
+    namespace: RegistryNamespace
     path: list[str]
+    metadata: dict[str, tp.Any]
+
+    def get_cls(self,) -> type:
+        module = importlib.import_module(self.module)
+        return getattr(module, self.qualname)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class SubRegistry(Mapping):
+class SubRegistry:
     """
-        Registry for registry_base_type.
+        One namespace of a registry, as its own mapping of name to entry.
     """
 
-    def __init__(self, registry_base_type: str) -> None:
-        self._raw_registry: dict[str, type[object]] = {}
-        self._registry: dict[str, RegistryEntry] = {}
-        self._leaf_class = set()
-        self.__built__ = False
-        self._registry_base_type = registry_base_type
-        self._registry_base_type_name = registry_base_type.split('.')[-1]
+    def __init__(self, instance: Registry,  namespace: RegistryNamespace) -> None:
+        self._instance = instance
+        self._namespace = namespace
+
+    def _entries(self) -> dict[str, RegistryEntry]:
+        """
+            Entries of this namespace, keyed by their normalized name.
+        """
+        return self._instance._registry[self._namespace]
+
+    def get(self, key: str | None, default: tp.Any = None) -> RegistryEntry | None:
+        """
+            Entry registered under a name.
+
+            Args:
+                key: str | None, name to look up.
+                default: tp.Any, what to answer with when the name is not registered.
+
+            Returns:
+                RegistryEntry | None, the entry, or the default.
+        """
+        self._instance._require_built()
+        if not isinstance(key, str) or not key:
+            return default
+        return self._entries().get(utils.normalize_str(key), default)
+
+    def get_by_cls(self, cls: type, default: tp.Any = None) -> RegistryEntry | None:
+        """
+            Entry a class is registered under.
+
+            Args:
+                cls: type, the registered class.
+                default: tp.Any, what to answer with when the class is not registered.
+
+            Returns:
+                RegistryEntry | None, the entry, or the default.
+        """
+        self._instance._require_built()
+        if not isinstance(cls, type):
+            return default
+        for entry in self._entries().values():
+            if entry.module == cls.__module__ and entry.qualname == cls.__qualname__:
+                return entry
+        return self.get(cls.__name__, default)
 
     def __getitem__(self, key: str) -> RegistryEntry:
-        if not self.__built__:
-            raise RuntimeError('Registry is not build yet.')
-        return copy.deepcopy(self._registry[key])
+        return self._entries()[utils.normalize_str(key)]
+
+    def __setitem__(self, key: str, value: RegistryEntry) -> None:
+        self._entries()[utils.normalize_str(key)] = value
+
+    def __contains__(self, key: str) -> bool:
+        return isinstance(key, str) and bool(key) and utils.normalize_str(key) in self._entries()
 
     def __iter__(self) -> tp.Iterator[str]:
+        return iter(self._entries())
+
+    def __len__(self) -> int:
+        return len(self._entries())
+
+    def values(self) -> tp.ValuesView[RegistryEntry]:
+        return self._entries().values()
+    
+    def keys(self) -> tp.KeysView[str]:
+        return self._entries().keys()
+    
+    def items(self) -> ItemsView[str, RegistryEntry]:
+        return self._entries().items()
+
+    def register(self, name: str, cls: type[object], path: list[str] | None = None) -> None:
+        self._instance.register(self._namespace, name, cls, path)
+
+    def exists(self, name: str) -> bool:
+        return self._instance.exists(self._namespace, name)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class Registry:
+    """
+        Generic registry implementation.
+    """
+
+    if tp.TYPE_CHECKING:
+        _raw_registry: utils.TwoKeyDict[RegistryNamespace, str, type[object]]
+        _registry: utils.TwoKeyDict[RegistryNamespace, str, RegistryEntry]
+
+    def __init__(self,) -> None:
+        self._raw_registry = utils.TwoKeyDict({r: {} for r in RegistryNamespace._member_map_.values()})
+        self._registry = utils.TwoKeyDict({r: {} for r in RegistryNamespace._member_map_.values()})
+        self.__built__ = False
+
+    def __getattr__(self, name: str) -> SubRegistry:
+        """
+            Serves "REGISTRY.<Namespace>" as a view of that namespace.
+        """
+        try:
+            namespace = RegistryNamespace[name]
+        except KeyError:
+            raise AttributeError(f'"{type(self).__name__}" has no attribute "{name}".') from None
+        attribute = f'_{namespace.name}'
+        subregistry = self.__dict__.get(attribute, None)
+        if subregistry is None:
+            subregistry = SubRegistry(self, namespace)
+            setattr(self, attribute, subregistry)
+        return subregistry
+
+    def _require_built(self) -> None:
+        """
+            Raises unless the registry is built.
+        """
+        if not self.__built__:
+            raise RuntimeError(
+                f'Registry is not yet built. Registry must be built first before trying to access it.'
+            )
+
+    def __iter__(self) -> tp.Iterator[tuple[RegistryNamespace, SubRegistry]]:
         if not self.__built__:
             raise RuntimeError('Registry is not build yet.')
-        return iter(self._registry)
-
+        def iterator() -> tp.Generator[tuple[RegistryNamespace, SubRegistry], tp.Any, None]:
+            for namespace in RegistryNamespace._member_map_.values():
+                yield namespace, getattr(self, namespace.name)
+        return iterator()
+    
     def __len__(self) -> int:
         if not self.__built__:
             raise RuntimeError('Registry is not build yet.')
         return len(self._registry)
 
-    def items(self) -> ItemsView[str, RegistryEntry]:
-        return ItemsView(self)
+    def entries(self) -> ItemsView[tuple[RegistryNamespace, str], SubRegistry]:
+        if not self.__built__:
+            raise RuntimeError('Registry is not build yet.')
+        return self._registry.items()
 
-    def register(self, name: str, cls: type[object], path: list[str] | None = None):
+    def register(self, namespace: RegistryNamespace, name: str, cls: type[object], path: list[str] | None = None) -> None:
         """
             Register new registry_base_type.
         """
         if self.__built__:
-            self._register(name, cls, path)
+            self._register(namespace, name, cls, path)
         else:
             # Delay registration until all default objects were identified.
-            if name in self._raw_registry:
+            if (namespace, name) in self._raw_registry:
                 raise NameError(
-                    f'{self._registry_base_type} name \"{name}\" is already queued to be register.'
+                    f'{namespace.name} \"{name}\" is already queued to be register.'
                 )
-            self._raw_registry[name] = cls
+            self._raw_registry[namespace, name] = cls
 
-    def _register(self, name: str, cls: type[object], path: list[str] | None = None):
+    def _register(self, namespace: RegistryNamespace | str, name: str, cls: type[object], path: list[str] | None = None, metadata: dict[str, tp.Any] | None = None) -> None:
         """
             Validate and register new item.
         """
-        # Special case for initializers
-        if self._registry_base_type == validation.DEFAULT_INITIALIZER_PATH:
-            if not validation._is_initializer_type(cls):
-                raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
-                                f'"{cls.__name__}" is not a valid Initializer.')
-        # Special case for modules + controllers
-        elif self._registry_base_type == validation.DEFAULT_SPARK_MODULE_PATH:
-            if not (
-                validation._is_spark_type(cls, self._registry_base_type) or 
-                validation._is_spark_type(cls, validation.DEFAULT_SPARK_CONTROLLER_PATH)
-                ):
-                raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
-                                f'"{cls.__name__}" does not inherit from {self._registry_base_type}.')
-        # Everything else
-        else:
-            if not validation._is_spark_type(cls, self._registry_base_type):
-                raise TypeError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
-                                f'"{cls.__name__}" does not inherit from {self._registry_base_type}.')
-        if self._exists(name):
+        if isinstance(namespace, str):
+            namespace = RegistryNamespace[namespace]
+        name = utils.normalize_str(name)
+        if self.exists(namespace, name):
             raise ValueError(f'Tried to register "{cls.__name__}" under the label "{name}", but '
                             f'name "{name}" is already registered to another class.')
         if not path is None:
+            if isinstance(path, tuple):
+                path = list(path)
             if not isinstance(path, list):
                 raise TypeError(f'Expect path to be a list of str but got {type(path).__name__}.')
             for p in path:
                 if not isinstance(p, str):
                     raise TypeError(f'Expect path to be a list of str but found item of type {type(p).__name__}.')
         # Register
-        name = utils.normalize_str(name)
-        path = self._get_default_path(cls) if path is None else path
-        self._leaf_class.add(cls.__name__)
-        self._registry[name] = RegistryEntry(name=name, class_ref=cls, path=path)
-        logging.info(f'Registered "{name}" to class "{cls.__name__}" with path "{path}".')
+        path = self._get_default_path(namespace, cls) if path is None else path
+        self._registry[namespace, name] = RegistryEntry(
+            name=name, 
+            module=cls.__module__, 
+            qualname=cls.__qualname__,
+            namespace=namespace,
+            path=path,
+            metadata={} if metadata is None else metadata,
+        )
+        logger.info(f'Registered "{name}" to class "{cls.__name__}" with path "{path}".')
 
     def _build(self) -> None:
         """
@@ -122,103 +267,85 @@ class SubRegistry(Mapping):
             return
         # NOTE: This code is only be accessible to internal classes. 
         # User definitions are routed to the register method.
-        for name, cls in self._raw_registry.items():
-            self._register(name, cls)
+        for (namespace, name), cls in self._raw_registry.items():
+            self._register(namespace, name, cls)
         self.__built__ = True
         del self._raw_registry
-        logging.info(f'Register built successfully.')
+        logger.info(f'Register built successfully.')
 
-    def get(self, name: str, default: tp.Any = None) -> RegistryEntry | None:
+    def get(self, namespace: RegistryNamespace | str, name: str, default: tp.Any = None) -> RegistryEntry | None:
         """
             Safely retrieves a component entry by name.
         """
-        if self.__built__:
-            return self._registry.get(utils.normalize_str(name), default)
-        else: 
-            raise RuntimeError(f'Registry is not yet built. Registry must be built first before trying to access it.')
-
-    def get_by_cls(self, cls: type | None) -> RegistryEntry | None:
-        """
-            Safely retrieves a component entry by name.
-        """
-        # Accepting None's avoids a lot of extra type checks.
-        if isinstance(cls, type(None)):
-            return None
-        if self.__built__:
-            for value in self._registry.values():
-                if value.class_ref == cls:
-                    return value
-            return None
-        else: 
-            raise RuntimeError(f'Registry is not yet built. Registry must be built first before trying to access it.')
-
-    def _exists(self, name) -> bool:
-        if name in self._registry:
+        self._require_built()
+        if isinstance(namespace, str):
+            namespace = RegistryNamespace[namespace]
+        if not isinstance(name, str) or not name:
+            return default
+        return self._registry.get((namespace, utils.normalize_str(name)), default)
+        
+    def exists(self, namespace: RegistryNamespace | str, name: str) -> bool:
+        if isinstance(namespace, str):
+            namespace = RegistryNamespace[namespace]
+        if not isinstance(name, str) or not name:
+            return False
+        if (namespace, utils.normalize_str(name)) in self._registry:
             return True
         return False
 
-    def exists(self, name) -> bool:
-        if utils.normalize_str(name) in self._registry:
-            return True
-        return False
-
-    def _get_default_path(self, cls: tp.Any):
-        if self._registry_base_type == validation.DEFAULT_INITIALIZER_PATH:
-            name = cls.__module__.split('.')[-1]
-            name_map = INITIALIZERS_ALIAS_MAP.get(name, name)
-            path = ['Initializers', name_map]
-            return path
-        elif self._registry_base_type == validation.DEFAULT_SPARK_NEURON_PATH:
-            name = cls.__module__.split('.')[-1]
-            path = ['Neurons']
-            return path
+    def _get_default_path(self, namespace: RegistryNamespace, cls: tp.Any) -> tuple[str, ...]:
+        if namespace == RegistryNamespace.Initializers:
+            return ['Initializers']
+        elif namespace == RegistryNamespace.Neurons:
+            return ['Neurons']
         else:
             path = []
             for base in cls.__mro__:
                 # Start from the class
                 if base in [cls]:
                     continue
-                # Skip inheritance chains of classes that are leaves
-                if base.__name__ in self._leaf_class:
-                    continue
                 # Stop at registry_base_type
-                if base.__name__ in [self._registry_base_type_name]:
+                base_type_name = RegistryNamespace.base_module(namespace).split('.')[-1]
+                if base.__name__ == base_type_name:
                     break
                 name = base.__name__
                 name_map = MRO_PATH_ALIAS_MAP.get(name, name)
-                if name_map:
+                # Check if is a simple name map or a tuple name map
+                if isinstance(name_map, str):
                     path.append(name_map)
+                elif isinstance(name_map, tuple):
+                    path += list(name_map)
             return path[::-1]
 
     @property
-    def is_finalized(self) -> bool:
+    def is_built(self) -> bool:
         return self.__built__
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class Registry():
+class SparkRegistry(Registry):
     """
-        Registry object.
+        Generic registry implementation.
     """
-    
-    def __init__(self):
-        self.MODULES = SubRegistry(registry_base_type=validation.DEFAULT_SPARK_MODULE_PATH)
-        self.NEURONS = SubRegistry(registry_base_type=validation.DEFAULT_SPARK_NEURON_PATH)
-        self.PAYLOADS = SubRegistry(registry_base_type=validation.DEFAULT_PAYLOAD_PATH)
-        self.INITIALIZERS = SubRegistry(registry_base_type=validation.DEFAULT_INITIALIZER_PATH)
-        self.CONFIG = SubRegistry(registry_base_type=validation.DEFAULT_CONFIG_PATH)
-        self.CFG_VALIDATORS = SubRegistry(registry_base_type=validation.DEFAULT_CFG_VALIDATOR_PATH)
 
-    def _build(self,):
-        self.MODULES._build()
-        self.NEURONS._build()
-        self.PAYLOADS._build()
-        self.INITIALIZERS._build()
-        self.CONFIG._build()
-        self.CFG_VALIDATORS._build()
+    if tp.TYPE_CHECKING:
+        Components: SubRegistry
+        Initializers: SubRegistry
+        Payloads: SubRegistry
+        Interfaces: SubRegistry
+        Neurons: SubRegistry
+        Configs: SubRegistry
+        Validators: SubRegistry
+
+    def __init__(self,) -> None:
+        super().__init__()
+        self._raw_registry = utils.TwoKeyDict({r: {} for r in RegistryNamespace._member_map_.values()})
+        self._registry = utils.TwoKeyDict({r: {} for r in RegistryNamespace._member_map_.values()})
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 # Default Instance
-REGISTRY = Registry()
+REGISTRY = SparkRegistry()
 """
     Registry singleton.
 """
@@ -226,10 +353,7 @@ REGISTRY = Registry()
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 def create_registry_decorator(
-        sub_registry: SubRegistry,
-        base_class_name: str,
-        base_class_path: str,
-        base_class_abr: str | None = None
+        namespace: RegistryNamespace,
     ):
 
     T = tp.TypeVar("T")
@@ -245,7 +369,8 @@ def create_registry_decorator(
     def register(arg: type[T] | str | None = None) -> tp.Callable[[type[T]], type[T]] | type[T]:
         def decorator(cls: type[T]) -> type[T]:
             name = arg if isinstance(arg, str) else cls.__name__
-            sub_registry.register(cls=cls, name=name)
+            subregistry: SubRegistry = getattr(REGISTRY, namespace.name)
+            subregistry.register(cls=cls, name=name)
             return cls
         if callable(arg):
             # Called as @register_module, arg is the class itself
@@ -253,11 +378,10 @@ def create_registry_decorator(
         else:
             # Called as @register_module('name') or @register_module, arg is str or None
             return decorator
-        
-    abbreviation = f'{base_class_abr} ({base_class_path})' if base_class_abr else base_class_path
+
+    base_module = RegistryNamespace.base_module(namespace)
     docstring = f"""
-        Decorator used to register a new {base_class_name}. 
-        Note that module must inherit from {abbreviation}
+        Decorator used to register a new {base_module}. 
     """
 
     register.__doc__ = docstring
@@ -267,10 +391,7 @@ def create_registry_decorator(
 
 
 register_module = create_registry_decorator(
-    sub_registry=REGISTRY.MODULES, 
-    base_class_name='SparkModule', 
-    base_class_path='spark.core.module.SparkModule',
-    base_class_abr='spark.nn.Module'
+    namespace=RegistryNamespace.Components, 
 )
 """
     Decorator used to register a new SparkModule. 
@@ -278,10 +399,7 @@ register_module = create_registry_decorator(
 """
 
 register_neuron = create_registry_decorator(
-    sub_registry=REGISTRY.NEURONS, 
-    base_class_name='Neuron', 
-    base_class_path='spark.nn.controllers.neuron.Neuron',
-    base_class_abr='spark.nn.Neuron'
+    namespace=RegistryNamespace.Neurons, 
 )
 """
     Decorator used to register a new Neuron model. 
@@ -289,20 +407,23 @@ register_neuron = create_registry_decorator(
 """
 
 register_payload = create_registry_decorator(
-    sub_registry=REGISTRY.PAYLOADS, 
-    base_class_name='SparkPayload', 
-    base_class_path='spark.core.payloads.SparkPayload',
-    base_class_abr='spark.SparkPayload'
+    namespace=RegistryNamespace.Payloads, 
 )
 """
     Decorator used to register a new SparkPayload. 
     Note that module must inherit from spark.SparkPayload (spark.core.payloads.SparkPayload)
 """
 
+register_interface = create_registry_decorator(
+    namespace=RegistryNamespace.Interfaces, 
+)
+"""
+    Decorator used to register a new Interface. 
+    Note that module must inherit from spark.nn.interfaces.base.Interface
+"""
+
 register_initializer = create_registry_decorator(
-    sub_registry=REGISTRY.INITIALIZERS, 
-    base_class_name='Initializer', 
-    base_class_path='spark.nn.initializers.base.Initializer',
+    namespace=RegistryNamespace.Initializers, 
 )
 """
     Decorator used to register a new Initializer. 
@@ -310,10 +431,7 @@ register_initializer = create_registry_decorator(
 """
 
 register_config = create_registry_decorator(
-    sub_registry=REGISTRY.CONFIG, 
-    base_class_name='SparkConfig', 
-    base_class_path='spark.core.config.SparkConfig',
-    base_class_abr='spark.nn.BaseConfig'
+    namespace=RegistryNamespace.Configs, 
 )
 """
     Decorator used to register a new SparkConfig. 
@@ -321,9 +439,7 @@ register_config = create_registry_decorator(
 """
 
 register_cfg_validator = create_registry_decorator(
-    sub_registry=REGISTRY.CFG_VALIDATORS, 
-    base_class_name='ConfigurationValidator', 
-    base_class_path='spark.core.config_validation.ConfigurationValidator',
+    namespace=RegistryNamespace.Validators, 
 )
 """
     Decorator used to register a new ConfigurationValidator. 
@@ -337,9 +453,9 @@ register_cfg_validator = create_registry_decorator(
 MRO_PATH_ALIAS_MAP = {
     # Aliases
     'Interface': 'Interfaces',
-    'InputInterface': 'Input',
-    'OutputInterface': 'Output',
-    'ControlFlowInterface': 'Control',
+    'InputInterface': ('Input', 'Interfaces'),
+    'OutputInterface': ('Output', 'Interfaces'),
+    'ControlInterface': ('Control', 'Interfaces'),
     'Component': 'Components',
     'Delays': 'Delays',
     'Plasticity': 'Plasticity Rules',
@@ -360,6 +476,29 @@ INITIALIZERS_ALIAS_MAP = {
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+def _bind_to_spark(cls: type) -> type:
+    """
+        Publishes a class built at runtime under the "spark" namespace.
+
+        Args:
+            cls: type, the class to publish.
+
+        Returns:
+            type, the same class.
+    """
+    import spark as spark_module
+    name = cls.__name__
+    existing = getattr(spark_module, name, None)
+    if existing is not None and existing is not cls:
+        raise NameError(
+            f'Unable to publish "{name}" under "spark": the name is already taken by another object.'
+        )
+    cls.__module__ = spark_module.__name__
+    setattr(spark_module, name, cls)
+    return cls
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def _construct_neuron_config_cls(cls_name: str, config: NeuronConfig) -> type[NeuronConfig]:
     """
         Generate a NeuronConfig subclass programmatically from a NeuronConfig instance.
@@ -372,17 +511,16 @@ def _construct_neuron_config_cls(cls_name: str, config: NeuronConfig) -> type[Ne
     ns_annotations: dict[str, tp.Any] = {}
     namespace: dict[str, tp.Any] = {}
     # Grab config fields
-    for name, field, value in config:
-        namespace[name] = value
-        ns_annotations[name] = field.type
+    for field in dc.fields(config):
+        namespace[field.name] = getattr(config, field.name, None)
+        ns_annotations[field.name] = field.type
     # Copy metadata
-    namespace['__metadata__'] = config.__metadata__
-    namespace['__graph_editor_metadata__'] = config.__graph_editor_metadata__
+    namespace['__metadata__'] = getattr(config, '__metadata__', {})
+    namespace['__graph_editor_metadata__'] = getattr(config, '__graph_editor_metadata__', {})
     namespace['__annotations__'] = ns_annotations
     # Create class and link it to spark
     neuron_config_cls = type(cls_name, (NeuronConfig,), namespace)
-    neuron_config_cls.__module__ = 'spark'
-    return neuron_config_cls
+    return _bind_to_spark(neuron_config_cls)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -398,8 +536,7 @@ def _construct_neuron_cls(cls_name: str, config_cls: type[NeuronConfig]) -> type
     namespace['__annotations__'] = ns_annotations
     # Create class and link it to spark
     neuron_cls = type(cls_name, (Neuron,), namespace)
-    neuron_cls.__module__ = 'spark'
-    return neuron_cls
+    return _bind_to_spark(neuron_cls)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -409,7 +546,7 @@ def register_neuron_from_config(cls_name: str, config: NeuronConfig) -> None:
         Generate a (Neuron, NeuronConfig) subclass pair programmatically from a NeuronConfig instance.
     """
     from spark.nn.controllers.neuron import NeuronConfig
-    if REGISTRY.NEURONS.exists(cls_name):
+    if REGISTRY.Neurons.exists(cls_name):
         raise KeyError(
             f'Unable to generate a (Neuron, NeuronConfig) subclass pair. The name {cls_name} is already in use by another class in the registry.'
         )
@@ -433,6 +570,60 @@ def register_neuron_from_config(cls_name: str, config: NeuronConfig) -> None:
         raise RuntimeError(
             f'Unable to generate a configuration class from "config". Error: {e}.'
         )
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def register_models_from_payload(payload: tp.Any) -> list[str]:
+    """
+        Registers a collection of models from decoded json documents.
+
+        Args:
+            payload: tp.Any, a decoded json document, before the spark decoder has read it.
+
+        Returns:
+            list[str], names of the models that were registered.
+    """
+    import json
+    from spark.core.serializer import SparkJSONDecoder
+    from spark.nn.controllers.neuron import NeuronConfig
+
+    definable = {'Neurons': NeuronConfig}
+    missing: dict[str, tuple[str, tp.Any]] = {}
+
+    def collect(node: tp.Any) -> None:
+        if isinstance(node, dict):
+            data = node.get('__data__') if node.get('__type__') == 'module_specs' else None
+            if isinstance(data, dict):
+                reference = data.get('module_cls') or {}
+                name = reference.get('__module_type__')
+                namespace = reference.get('__subregistry__')
+                subregistry = getattr(REGISTRY, namespace, None) if namespace else None
+                if name and namespace in definable and subregistry and not subregistry.get(name):
+                    if data.get('config') is not None:
+                        missing[name] = (namespace, data['config'])
+            for value in node.values():
+                collect(value)
+        elif isinstance(node, list):
+            for value in node:
+                collect(value)
+
+    collect(payload)
+    registered = []
+    for name, (namespace, config_payload) in missing.items():
+        base_cls = definable[namespace]
+        base_entry = REGISTRY.Configs.get_by_cls(base_cls)
+        if not base_entry:
+            continue
+        generic = dict(config_payload)
+        generic['__type__'] = base_entry.name
+        try:
+            config = json.loads(json.dumps(generic), cls=SparkJSONDecoder)
+            register_neuron_from_config(name, config)
+        except Exception as error:
+            logger.warning(f'Unable to build the model "{name}" from the definition in the file. Error: {error}.')
+            continue
+        registered.append(name)
+    return registered
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

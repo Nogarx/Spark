@@ -12,8 +12,8 @@ import jax.numpy as jnp
 import dataclasses as dc
 import spark.core.utils as utils
 from spark.core.payloads import SpikeArray, FloatArray
-from spark.core.variables import Variable, Constant
-from spark.core.registry import register_module, register_config
+from spark.core.backend import Variable, Constant
+from spark.core.registry import register_interface, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator, BinaryValidator
 from spark.nn.interfaces.input.base import InputInterface, InputInterfaceConfig, InputInterfaceOutput
 from spark.nn.interfaces.input.poisson import PoissonSpikerConfig
@@ -30,8 +30,8 @@ class TopologicalSpikerConfig(InputInterfaceConfig):
         Base TopologicalSpiker configuration class.
     """
     
-    glue: jax.Array | Initializer = dc.field(
-        default_factory = lambda: jnp.array(0), 
+    glue: int | jax.Array | Initializer = dc.field(
+        default = 0, 
         metadata = {
             'validators': [
                 TypeValidator,
@@ -42,8 +42,8 @@ class TopologicalSpikerConfig(InputInterfaceConfig):
                             It may be either an array with a single element or \
                             an array with the same dimensionality as the input vector.',
         })
-    mins: jax.Array | Initializer = dc.field(
-        default_factory = lambda: jnp.array(0), 
+    mins: int | jax.Array | Initializer = dc.field(
+        default = 0, 
         metadata = {
             'validators': [
                 TypeValidator,
@@ -51,8 +51,8 @@ class TopologicalSpikerConfig(InputInterfaceConfig):
             'description': 'Minimum value for the rescaling factor. It may be either an array with a single element or \
                             an array with the same dimensionality as the input vector.',
         })
-    maxs: jax.Array | Initializer = dc.field(
-        default_factory = lambda: jnp.array(1), 
+    maxs: int | jax.Array | Initializer = dc.field(
+        default = 1, 
         metadata = {
             'validators': [
                 TypeValidator,
@@ -90,7 +90,7 @@ class TopologicalPoissonSpikerConfig(TopologicalSpikerConfig, PoissonSpikerConfi
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@register_module
+@register_interface
 class TopologicalPoissonSpiker(InputInterface):
     """
         Transforms a continuous signal to a spiking signal.
@@ -121,16 +121,16 @@ class TopologicalPoissonSpiker(InputInterface):
         self.max_freq = self.config.max_freq
         self.sigma = self.config.sigma
         self._scale = self._dt * (self.max_freq / 1000)
-        self._glue = Constant(self.config.glue, dtype=jnp.bool_)
-        self._mins = Constant(self.config.mins, dtype=self._dtype)
-        self._maxs = Constant(self.config.maxs, dtype=self._dtype)
+        self._glue = Constant(self.config.init.glue(), dtype=jnp.bool_)
+        self._mins = Constant(self.config.init.mins(), dtype=self._dtype)
+        self._maxs = Constant(self.config.init.maxs(), dtype=self._dtype)
         self._sigma = Constant(self.sigma, dtype=self._dtype)
 
 
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
+    def build(self, signal: FloatArray) -> None:
         # Initialize shapes
-        input_shape = utils.validate_shape(input_specs['signal'].shape)
-        self._output_shape = utils.validate_shape(input_specs['signal'].shape + (self.resolution,))
+        input_shape = utils.validate_shape(signal.shape)
+        self._output_shape = utils.validate_shape(signal.shape + (self.resolution,))
         # Initialize variables
         self._space = Constant(jnp.linspace(jnp.zeros(input_shape), 
                                                  jnp.pi*jnp.ones(input_shape), 
@@ -145,9 +145,9 @@ class TopologicalPoissonSpiker(InputInterface):
             Output: A SpikeArray of the same shape as the input.
         """
         # Transform input to [0, 1]
-        x = (signal.value - self._mins) / (self._maxs - self._mins)
-        x = jnp.where(self._glue.value, jnp.sin(self._space + x*jnp.pi), jnp.tanh(self._space - x*jnp.pi))
-        x = jnp.exp( -(0.5 / self._sigma) * (x**2) ).T
+        x = (signal.value - self._mins.value) / (self._maxs.value - self._mins.value)
+        x = jnp.where(self._glue.value, jnp.sin(self._space.value + x*jnp.pi), jnp.tanh(self._space.value - x*jnp.pi))
+        x = jnp.exp( -(0.5 / self._sigma.value) * (x**2) ).T
         # Poisson process
         spikes = (jax.random.uniform(self.get_rng_keys(1), shape=self._output_shape) < self._scale * x).astype(self._dtype)
         return {
@@ -165,7 +165,7 @@ class TopologicalLinearSpikerConfig(TopologicalSpikerConfig, LinearSpikerConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@register_module
+@register_interface
 class TopologicalLinearSpiker(InputInterface):
     """
         Transforms a continuous signal to a spiking signal.
@@ -199,21 +199,21 @@ class TopologicalLinearSpiker(InputInterface):
         self.cd = self.config.cd
         self.max_freq = self.config.max_freq
         self.sigma = self.config.sigma
-        self._glue = Constant(self.config.glue, dtype=jnp.bool_)
-        self._mins = Constant(self.config.mins, dtype=self._dtype)
-        self._maxs = Constant(self.config.maxs, dtype=self._dtype)
+        self._glue = Constant(self.config.init.glue(), dtype=jnp.bool_)
+        self._mins = Constant(self.config.init.mins(), dtype=self._dtype)
+        self._maxs = Constant(self.config.init.maxs(), dtype=self._dtype)
         self._sigma = Constant(self.sigma, dtype=self._dtype)
         exp_term = jnp.exp((1/self.tau) * ((1000-self.cd*self.max_freq) / self.max_freq)) # dt cancels out
         scale = ((1 / (exp_term - 1)) + 1)
         self._scale = Constant(scale, dtype=self._dtype)
         self._tau = Constant(self.tau, dtype=self._dtype)
-        self._decay = Constant(jnp.exp(-self._dt / self._tau), dtype=self._dtype)
-        self._gain = Constant(1 - self._decay, dtype=self._dtype)
+        self._decay = Constant(jnp.exp(-self._dt / self._tau.value), dtype=self._dtype)
+        self._gain = Constant(1 - self._decay.value, dtype=self._dtype)
 
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
+    def build(self, signal: FloatArray) -> None:
         # Initialize shapes
-        input_shape = utils.validate_shape(input_specs['signal'].shape)
-        self._output_shape = utils.validate_shape(input_specs['signal'].shape + (self.resolution,))
+        input_shape = utils.validate_shape(signal.shape)
+        self._output_shape = utils.validate_shape(signal.shape + (self.resolution,))
         # Initialize variables
         self._space = Constant(jnp.linspace(jnp.zeros(input_shape), 
                                                  jnp.pi*jnp.ones(input_shape), 
@@ -238,13 +238,13 @@ class TopologicalLinearSpiker(InputInterface):
             Output: A SpikeArray of the same shape as the input.
         """
         # Transform input to [0, 1]
-        x = (signal.value - self._mins) / (self._maxs - self._mins)
-        x = jnp.where(self._glue.value, jnp.sin(self._space + x*jnp.pi), jnp.tanh(self._space - x*jnp.pi))
-        x = jnp.exp( -(0.5 / self._sigma) * (x**2) ).T
+        x = (signal.value - self._mins.value) / (self._maxs.value - self._mins.value)
+        x = jnp.where(self._glue.value, jnp.sin(self._space.value + x*jnp.pi), jnp.tanh(self._space.value - x*jnp.pi))
+        x = jnp.exp( -(0.5 / self._sigma.value) * (x**2) ).T
         # Update potential. Note: dt cancels out.
         is_ready = jnp.greater_equal(self._refractory.value, self._cooldown).astype(self._dtype)
-        dV = is_ready * self._tau * self._gain * self._scale * x
-        self.potential.value = self._decay * self.potential.value + dV
+        dV = is_ready * self._tau.value * self._gain.value * self._scale.value * x
+        self.potential.value = self._decay.value * self.potential.value + dV
         # Spike
         spikes = jnp.greater(self.potential.value, self._tau).astype(self._dtype)
         # Reset neuron 

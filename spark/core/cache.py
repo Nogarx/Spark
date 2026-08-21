@@ -14,7 +14,7 @@ from jax.typing import DTypeLike
 import typing as tp
 import dataclasses as dc
 import spark.core.validation as validation
-from spark.core.variables import Variable
+from spark.core.backend import Variable
 from spark.core.utils import TwoKeyDict
 from collections import defaultdict
 from collections.abc import MutableMapping
@@ -24,7 +24,7 @@ from collections.abc import MutableMapping
 #################################################################################################################################################
 
 @jax.tree_util.register_pytree_with_keys_class
-@dc.dataclass(init=False)
+@dc.dataclass(init=False, eq=False)
 class Cache(TwoKeyDict):
 
     @tp.overload
@@ -52,7 +52,16 @@ class Cache(TwoKeyDict):
         for (key1, key2), spec in data.items():
             # Skip optional
             if spec.shape is not None:
-                obj[key1][key2] = spec.payload_type._from_spec(spec)
+                obj[key1, key2] = spec.payload_type._from_spec(spec)
+        return obj
+    
+    @classmethod
+    def from_payloads(cls, data: TwoKeyDict[str, str, SparkPayload]) -> tp.Self:
+        obj = cls()
+        for (key1, key2), payload in data.items():
+            # Skip optional
+            if payload.shape is not None:
+                obj[key1, key2] = type(payload)(jnp.zeros_like(payload.value))
         return obj
     
 #################################################################################################################################################

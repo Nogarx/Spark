@@ -11,8 +11,8 @@ import jax
 import jax.numpy as jnp
 import dataclasses as dc
 from spark.core.tracers import Tracer
-from spark.core.payloads import SpikeArray, CurrentArray
-from spark.core.variables import Variable, Constant
+from spark.core.payloads import SpikeArray, CurrentArray, SparkPayload
+from spark.core.backend import Variable, Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.somas.base import Soma, SomaConfig
@@ -132,16 +132,16 @@ class IzhikevichSoma(Soma):
         super().__init__(config=config, **kwargs)
 
     # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
-        super().build(input_specs)
+    def build(self, **abc_args: SparkPayload) -> None:
+        super().build(**abc_args)
         # Initialize variables.
-        _potential_rest = self.config.potential_rest.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        _potential_reset = self.config.potential_reset.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        _recovery_update = self.config.recovery_update.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        _recovery_timescale = self.config.recovery_timescale.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        _recovery_sensitivity = self.config.recovery_sensitivity.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        _resistance = self.config.resistance.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        _threshold = self.config.threshold.init(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _potential_rest = self.config.init.potential_rest(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _potential_reset = self.config.init.potential_reset(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _recovery_update = self.config.init.recovery_update(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _recovery_timescale = self.config.init.recovery_timescale(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _recovery_sensitivity = self.config.init.recovery_sensitivity(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _resistance = self.config.init.resistance(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
+        _threshold = self.config.init.threshold(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
         # Membrane. Substract potential_rest to potential related terms to rebase potential at zero.
         self.potential_rest = Constant(_potential_reset, dtype=self._dtype)
         self.potential_reset = Constant(_potential_reset - _potential_rest, dtype=self._dtype)
@@ -167,15 +167,15 @@ class IzhikevichSoma(Soma):
             Update neuron's soma states variables.
         """
         potential_delta = (
-            0.04 * (self._potential.value - self.potential_rest)**2
-            + 5 * (self._potential.value - self.potential_rest)
+            0.04 * (self._potential.value - self.potential_rest.value)**2
+            + 5 * (self._potential.value - self.potential_rest.value)
             + 140 
-            - self.resistance * self.recovery.value 
-            + self.resistance * current.value
+            - self.resistance.value * self.recovery.value 
+            + self.resistance.value * current.value
         )
         self._potential.value += self._dt * potential_delta
-        recovery_delta = self.recovery_timescale * (
-            self.recovery_sensitivity * (self._potential.value - self.potential_rest) 
+        recovery_delta = self.recovery_timescale.value * (
+            self.recovery_sensitivity.value * (self._potential.value - self.potential_rest.value) 
             - self.recovery.value
         )
         self.recovery.value += self._dt * recovery_delta
@@ -187,9 +187,9 @@ class IzhikevichSoma(Soma):
         # Compute spikes.
         spikes = jnp.greater(self._potential.value, self.threshold.value).astype(self._dtype)
         # Reset neurons.
-        self._potential.value = spikes * self.potential_reset + (1 - spikes) * self._potential.value
+        self._potential.value = spikes * self.potential_reset.value + (1 - spikes) * self._potential.value
         # Update recovery.
-        self.recovery.value = spikes * (self.recovery.value + self.recovery_update) + (1 - spikes) * self.recovery.value
+        self.recovery.value = spikes * (self.recovery.value + self.recovery_update.value) + (1 - spikes) * self.recovery.value
         return SpikeArray(spikes)
     
 #################################################################################################################################################

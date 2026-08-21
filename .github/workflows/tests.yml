@@ -1,0 +1,42 @@
+name: "Tests"
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - development
+
+jobs:
+  tests:
+    name: "pytest (cpu)"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.13"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: pip
+
+    - name: Install the libraries Qt needs to start
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libegl1 libgl1 libxkbcommon-x11-0 libdbus-1-3 \
+                                libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+                                libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-cursor0
+
+    - name: Install Spark
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -e ".[editor]"
+        python -m pip install pytest
+
+    # NOTE: A test that needs a GPU to pass is a test may need a revision.
+    - name: Run the tests
+      run: pytest -q --device=cpu

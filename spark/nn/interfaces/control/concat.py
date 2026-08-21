@@ -8,10 +8,10 @@ import jax.numpy as jnp
 import dataclasses as dc
 import spark.core.utils as utils
 from spark.core.specs import PortSpecs
-from spark.core.registry import register_module, register_config
+from spark.core.registry import register_interface, register_config
 from spark.core.payloads import SparkPayload
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceConfig, ControlInterfaceOutput
+from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceConfig, ControlInterfaceOutput, _build_signature_from_inputs
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -26,7 +26,7 @@ class ConcatConfig(ControlInterfaceConfig):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@register_module
+@register_interface
 class Concat(ControlInterface):
     """
         Combines several streams of inputs of the same type into a single stream.
@@ -46,25 +46,29 @@ class Concat(ControlInterface):
 		# Initialize super.
         super().__init__(config=config, **kwargs)
 
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
+    def build(self, **abc_args: SparkPayload) -> None:
         # Validate payloads types.
         payload_type = None
-        for key, value in input_specs.items():
-            payload_type = value.payload_type if payload_type is None else payload_type
-            if payload_type != value.payload_type:
+        for key, value in abc_args.items():
+            payload_type = type(value) if payload_type is None else payload_type
+            if payload_type != type(value):
                 raise TypeError(
                     f'Expected all payload types to be of same type \"{payload_type}\" '
-                    f'but input spec \"{key}\" is of type "{value.payload_type}".'
+                    f'but input spec \"{key}\" is of type "{type(value)}".'
                 )
-        self.payload_type = payload_type
+        self._payload_type = payload_type
 
-    def __call__(self, inputs: list[SparkPayload]) -> ControlInterfaceOutput:
+    def _overwrite_call_signature(self, raw_kwargs: dict[str, SparkPayload]) -> None:
+        # Create the new Signature object and assign it to the __call__ method
+        self.__call__.__func__.__signature__ = _build_signature_from_inputs(raw_kwargs)
+
+    def __call__(self, **inputs: SparkPayload) -> ControlInterfaceOutput:
         """
             Merge all input streams into a single data output stream.
         """
         # Control flow operation
         return {
-            'output': self.payload_type(jnp.concatenate([x.value.reshape(-1) for x in inputs]))
+            'output': self._payload_type(jnp.concatenate([x.value.reshape(-1) for x in inputs.values()]))
         }
 
 #################################################################################################################################################
@@ -87,7 +91,7 @@ class ConcatReshapeConfig(ConcatConfig):
     
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@register_module
+@register_interface
 class ConcatReshape(ControlInterface):
     """
         Combines several streams of inputs of the same type into a single stream.
@@ -110,31 +114,34 @@ class ConcatReshape(ControlInterface):
         # Intialize variables.
         self.reshape = utils.validate_shape(self.config.reshape)
 
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
+    def build(self, **abc_args: SparkPayload) -> None:
         # Validate payloads types.
         payload_type = None
-        for key, value in input_specs.items():
-            payload_type = value.payload_type if payload_type is None else payload_type
-            if payload_type != value.payload_type:
+        for key, value in abc_args.items():
+            payload_type = type(value) if payload_type is None else payload_type
+            if payload_type !=type(value):
                 raise TypeError(
                     f'Expected all payload types to be of same type \"{payload_type}\" '
-                    f'but input spec \"{key}\" is of type "{value.payload_type}".'
+                    f'but input spec \"{key}\" is of type "{type(value)}".'
                 )
         self.payload_type = payload_type
         # Validate final shape.
         try:
-            jnp.concatenate([jnp.zeros(s).reshape(-1) for s in input_specs['inputs'].shape]).reshape(self.reshape)
+            jnp.concatenate([jnp.zeros(s.shape).reshape(-1) for s in abc_args.values()]).reshape(self.reshape)
         except:
-            raise ValueError(f'Shapes {input_specs['inputs'].shape} are not broadcastable to {self.reshape}')
+            raise ValueError(f'Shapes {[s.shape for s in abc_args.values()]} are not broadcastable to {self.reshape}')
 
+    def _overwrite_call_signature(self, raw_kwargs: dict[str, SparkPayload]) -> None:
+        # Create the new Signature object and assign it to the __call__ method
+        self.__call__.__func__.__signature__ = _build_signature_from_inputs(raw_kwargs)
 
-    def __call__(self, inputs: list[SparkPayload]) -> ControlInterfaceOutput:
+    def __call__(self, **inputs: SparkPayload) -> ControlInterfaceOutput:
         """
             Merge all input streams into a single data output stream. Output stream is reshape to match the pre-specified shape.
         """
         # Control flow operation
         return {
-            'output': self.payload_type(jnp.concatenate([x.value.reshape(-1) for x in inputs]).reshape(self.reshape))
+            'output': self.payload_type(jnp.concatenate([x.value.reshape(-1) for x in inputs.values()]).reshape(self.reshape))
         }
 
 #################################################################################################################################################

@@ -19,6 +19,7 @@ import jax.numpy as jnp
 DEFAULT_SPARK_MODULE_PATH = 'spark.core.module.SparkModule'
 DEFAULT_SPARK_CONTROLLER_PATH = 'spark.nn.controllers.base.Controller'
 DEFAULT_SPARK_NEURON_PATH = 'spark.nn.controllers.neuron.Neuron'
+DEFAULT_INTERFACE_PATH = 'spark.nn.interfaces.base.Interface'
 DEFAULT_PAYLOAD_PATH = 'spark.core.payloads.SparkPayload'
 DEFAULT_CONFIG_PATH = 'spark.core.config.SparkConfig'
 DEFAULT_INITIALIZER_PATH = 'spark.nn.initializers.base.Initializer'

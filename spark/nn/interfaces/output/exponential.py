@@ -13,8 +13,8 @@ import dataclasses as dc
 from math import prod
 from spark.core.tracers import Tracer, RDTracer
 from spark.core.payloads import SpikeArray, FloatArray
-from spark.core.variables import Variable
-from spark.core.registry import register_module
+from spark.core.backend import Variable
+from spark.core.registry import register_interface, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.interfaces.output.base import OutputInterface, OutputInterfaceConfig, OutputInterfaceOutput
 
@@ -22,6 +22,7 @@ from spark.nn.interfaces.output.base import OutputInterface, OutputInterfaceConf
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+@register_config
 class ExponentialIntegratorConfig(OutputInterfaceConfig):
     """
         ExponentialIntegrator configuration class.
@@ -84,7 +85,7 @@ class ExponentialIntegratorConfig(OutputInterfaceConfig):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-@register_module
+@register_interface
 class ExponentialIntegrator(OutputInterface):
     """
         Transforms a discrete spike signal to a continuous signal.
@@ -116,9 +117,9 @@ class ExponentialIntegrator(OutputInterface):
         self.shuffle = self.config.shuffle
         self.smooth_trace = self.config.smooth_trace
 
-    def build(self, input_specs: dict[str, PortSpecs]) -> None:
+    def build(self, spikes: SpikeArray) -> None:
         # Output mapping.
-        in_dim = prod(input_specs['spikes'].shape)
+        in_dim = prod(spikes.shape)
         out_dim = self.num_outputs
         base = in_dim // out_dim
         remainder = in_dim % out_dim

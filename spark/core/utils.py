@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import re
 import jax
+import jax.numpy as jnp
 import enum
 import string
 import numpy as np
@@ -46,30 +47,39 @@ def normalize_str(s: str) -> str:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def to_human_readable(s: str, capitalize_all: bool = False) -> str:
+def to_human_readable(s: str, capitalize_all: bool = True) -> str:
     """
-        Converts a string from various programming cases into a human-readable format.
+    Converts a string from various programming cases into a human-readable format.
 
-        Input:
-            s: str, string to normalize
-            
-        Output:
-            str, human readable string
+    Input:
+        s: str, string to normalize
+        capitalize_all: bool, title-case every word instead of just the first
+    Output:
+        str, human readable string
     """
+
+    def _looks_like_acronym(w: str) -> bool:
+        return w.isupper() or any(c.isupper() for c in w[1:])
+
     # Sanity check
     if not isinstance(s, str) or not s:
         raise TypeError('\"s\" must be a non-empty string.')
-    # Insert underscores between acronyms and other words.
-    s = re.sub(r'([A-Z]+)([A-Z][a-z])', r'\1_\2', s)
-    # Insert underscores between lowercase letters and uppercase letters.
-    s = re.sub(r'([a-z])([A-Z])', r'\1_\2', s)
-    # Replace any spaces or hyphens with a single underscore.
-    s = re.sub(r'[-\s]+', '_', s)
-    # Replace all underscores with spaces.
+
+    # Last capital of a run starts the new word.
+    s = re.compile(r'([A-Z]+)([A-Z][a-z])').sub(r'\1_\2', s)
+    # Digits absorb into the preceding token.
+    s = re.compile(r'([0-9])([A-Z][a-z])').sub(r'\1_\2', s)
+    # Separate words
+    s = re.compile(r'([a-z])([A-Z])').sub(r'\1_\2', s)
+    words = [w for w in re.compile(r'[-_\s]+').split(s) if w]
+
     if capitalize_all:
-        return ' '.join([w.capitalize() for w in s.replace('_', ' ').split(' ')])
-    else:
-        return s.replace('_', ' ').capitalize()
+        # Uppercase the first char only; never touch the tail, so RD stays RD.
+        return ' '.join(w[:1].upper() + w[1:] for w in words)
+
+    head, *tail = words
+    return ' '.join([head[:1].upper() + head[1:]]
+                    + [w if _looks_like_acronym(w) else w.lower() for w in tail])
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -232,13 +242,13 @@ def get_einsum_dot_red_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def get_einsum_dot_exp_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one_dims: bool = False, side: str = 'right') -> str:
+def get_einsum_dot_exp_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one_dims: bool = True, side: str = 'right') -> str:
     """
         Generates labels for a generalized dot expansion product using Einstein notation.
             right:	(a,b)•(a,b,c,d)=(a,b,c,d) - ab,abcd->abcd   |   (a,b,c,d)•(a,b)=(a,b,c,d) - abcd,ab->abcd
             left:	(c,d)•(a,b,c,d)=(a,b,c,d) - cd,abcd->abcd	|	(c,d)•(a,b,c,d)=(a,b,c,d) - abcd,cd->abcd
-            none: 	(a,b)•(c,d)=(a,b,c,d) - ab,cd->abcd		    | 	(a)•(b,c,d)=(a,b,c,d) - a,bcde->abcde
-
+            none: 	(a,b)•(c,d)=(a,b,c,d) - ab,cd->abcd		    | 	(a)•(b,c,d)=(a,b,c,d) - a,bcd->abcd
+            flip:   (a,b)•(c,d)=(c,d,a,b) - cd,ab->abcd		    | 	(a)•(b,c,d)=(b,c,d,a) - bcd,a->abcd
         Args:
             x: tuple[int, ...], shape for the first variable of the dot product
             y: tuple[int, ...], shape for the second variable of the dot product
@@ -283,6 +293,11 @@ def get_einsum_dot_exp_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one
     elif side == 'none' or side == 'n':
         x_indices = get_einsum_labels(len(x), offset=0)
         y_indices = get_einsum_labels(len(y), offset=len(x))
+        z_size = len(x) + len(y)
+        z_indices = get_einsum_labels(z_size, offset=0)
+    elif side == 'flip' or side == 'f':
+        y_indices = get_einsum_labels(len(x), offset=0)
+        x_indices = get_einsum_labels(len(y), offset=len(x))
         z_size = len(x) + len(y)
         z_indices = get_einsum_labels(z_size, offset=0)
     else:
@@ -350,7 +365,6 @@ def validate_list_shape(obj: tp.Any) -> list[tuple[int, ...]]:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# TODO: Extend shape promotion to allow some sensible shape blends like stacks.
 def merge_shape_list(shape_list: list[tuple[int, ...]]) -> tuple[int, ...]:
     """
         Merges a list of shapes into a single shape.
@@ -363,6 +377,48 @@ def merge_shape_list(shape_list: list[tuple[int, ...]]) -> tuple[int, ...]:
     """
     shape_list = validate_list_shape(shape_list)
     return tuple([sum([prod(s) for s in shape_list])])
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def contract_axes(array: tp.Any, axes: tuple[int, ...], shape: tuple[int, ...]) -> tuple[tp.Any, bool]:
+    """
+        Tries to contract an array over the given axes. 
+        Contraction is only sucessful if the array is constant along the given axes.
+
+        Args:
+            array: tp.Any, the array to reduce
+            axes: tuple[int, ...], axes of shape to reduce over.
+            shape: tuple[int, ...], shape the array is read against.
+
+        Returns:
+            tuple[tp.Any, bool], the contracted array, whether it was a constant contraction
+    """
+    if not isinstance(array, jax.Array) or len(axes) == 0:
+        return array, True
+    aligned = array.reshape((1,) * (len(shape) - array.ndim) + array.shape)
+    reduced = aligned
+    for axis in axes:
+        reduced = jax.lax.index_in_dim(reduced, 0, axis=axis, keepdims=True)
+    try:
+        is_constant = bool(jnp.all(aligned == reduced))
+    except Exception:
+        return array, False
+    return (reduced, True) if is_constant else (array, False)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def contracted_shape(shape: tuple[int, ...], axes: tuple[int, ...]) -> tuple[int, ...]:
+    """
+        Returns the expected shape after contract_axes
+
+        Args:
+            shape: tuple[int, ...], the shape to reduce.
+            axes: tuple[int, ...], axes to reduce over.
+
+        Returns:
+            tuple[int, ...]
+    """
+    return tuple(1 if axis in axes else size for axis, size in enumerate(shape))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -539,61 +595,65 @@ def ascii_tree(text: str) -> str:
 # NOTE: This is just a convinience class to simplify some code inside controllers and is equivalent to two nested dictionaries. 
 # Notably, this class produces the same XLA code as using nested dictionaries (after JIT). It's only purpose is to simply notaion.
 
-_KT = tp.TypeVar('_KT')
+_K1 = tp.TypeVar('_K1')
+_K2 = tp.TypeVar('_K2')
 _VT = tp.TypeVar('_VT')
 
 @jax.tree_util.register_pytree_with_keys_class
-@dc.dataclass(init=False)
-class TwoKeyDict(MutableMapping[_KT, _KT, _VT]):
+@dc.dataclass(init=False, eq=False)
+class TwoKeyDict(MutableMapping[tuple[_K1, _K2], _VT], tp.Generic[_K1, _K2, _VT]):
 
-    def __init__(self, data: dict[_KT, dict[_KT, _VT]] | None = None) -> None:
+    def __init__(self, data: dict[_K1, dict[_K2, _VT]] | None = None) -> None:
         self._data = defaultdict(dict)
         if not data is None:
             for k, v in data.items():
                 self._data[k] = v
 
     @tp.overload
-    def __getitem__(self, keys: tuple[_KT, _KT] )-> _VT: ...
+    def __getitem__(self, keys: tuple[_K1, _K2] )-> _VT: ...
     @tp.overload
-    def __getitem__(self, keys: _KT)-> dict[_KT, _VT]: ...
+    def __getitem__(self, keys: _K1)-> dict[_K2, _VT]: ...
     def __getitem__(self, keys):
-        try:
-            if isinstance(keys, tuple):
-                return self._data[keys[0]][keys[1]]
-            else:
-                return self._data[keys]
-        except KeyError as e:
-            raise KeyError(f'Invalid key: {keys}')
+        if isinstance(keys, tuple):
+            k1, k2 = keys
+            if k1 not in self._data or k2 not in self._data[k1]:
+                raise KeyError(f'Invalid key pair: {keys}')
+            return self._data[k1][k2]
+        else:
+            if keys not in self._data:
+                raise KeyError(f'Invalid key: {keys}')
+            return self._data[keys]
 
     @tp.overload
-    def __setitem__(self, keys: _KT, value: dict[_KT, _VT]) -> None: ...
+    def __setitem__(self, keys: _K1, value: dict[_K2, _VT]) -> None: ...
     @tp.overload
-    def __setitem__(self, keys: tuple[_KT, _KT], value: _VT) -> None: ...
+    def __setitem__(self, keys: tuple[_K1, _K2], value: _VT) -> None: ...
     def __setitem__(self, keys, value) -> None:
         if isinstance(keys, tuple):
-            self._data[keys[0]][keys[1]] = value
-        elif isinstance(value, dict):
-            self._data[keys] = value
+            k1, k2 = keys
+            self._data[k1][k2] = value
         else:
-            raise ValueError(f'Invalid keys: {keys} or value: {value}.')
+            self._data[keys] = value
 
     @tp.overload
-    def __delitem__(self, keys: _KT) -> None: ...
+    def __delitem__(self, keys: _K1) -> None: ...
     @tp.overload
-    def __delitem__(self, keys: tuple[_KT, _KT]) -> None: ...
+    def __delitem__(self, keys: tuple[_K1, _K2]) -> None: ...
     def __delitem__(self, keys) -> None:
-        try:
-            if isinstance(keys, tuple):
-                del self._data[keys[0]][keys[1]]
-            else:
-                del self._data[keys]
-        except KeyError as e:
-            raise KeyError(f'Invalid key: {keys}')
+        if isinstance(keys, tuple):
+            k1, k2 = keys
+            if k1 not in self._data or k2 not in self._data[k1]:
+                raise KeyError(f'Invalid key pair: {keys}')
+            del self._data[k1][k2]
+        else:
+            if keys not in self._data:
+                raise KeyError(f'Invalid key: {keys}')
+            del self._data[keys]
         
     def __len__(self,) -> int:
-        return len(self._data)
+        return sum([len(v) for v in self._data.values()])
 
-    def __iter__(self,) -> tp.Iterator[tuple[str, str]]:
+    def __iter__(self,) -> tp.Iterator[tuple[_K1, _K2]]:
         for key1, subdict in self._data.items():
             for key2 in subdict.keys():
                 yield (key1, key2)
@@ -622,420 +682,49 @@ class TwoKeyDict(MutableMapping[_KT, _KT, _VT]):
         return _str
 
     @tp.overload
-    def __contains__(self, keys: _KT) -> bool: ...
+    def __contains__(self, keys: _K1) -> bool: ...
     @tp.overload
-    def __contains__(self, keys: tuple[_KT, _KT]) -> bool: ...
+    def __contains__(self, keys: tuple[_K1, _K2]) -> bool: ...
     def __contains__(self, keys) -> bool:
+        if isinstance(keys, tuple):
+            k1, k2 = keys
+            if k1 not in self._data or k2 not in self._data[k1]:
+                return False
+            return True
+        else:
+            if keys not in self._data:
+                return False
+            return True
+
+    def keys(self) -> tp.KeysView[tp.Tuple[_K1, _K2]]:
+        return super().keys()
+
+    def values(self) -> tp.ValuesView[_VT]:
+        return super().values()
+
+    def items(self) -> tp.ItemsView[tp.Tuple[_K1, _K2], _VT]:
+        return super().items()
+
+    def _ordered_keys(self) -> list[_K1]:
+        """
+            First level keys, in a deterministic order.
+        """
         try:
-            if isinstance(keys, tuple):
-                if keys[0] in self._data:
-                    return keys[1] in self._data[keys[0]]
-                else:
-                    return False
-            else:
-                return keys in self._data
-        except KeyError as e:
-            raise KeyError(f'Invalid key: {keys}')
+            return sorted(self._data.keys())
+        except TypeError:
+            return list(self._data.keys())
 
     def tree_flatten(self) -> tuple[tuple, tuple]:
-        children = (self._data,)
-        aux_data = ()
-        return (children, aux_data)
+        keys = self._ordered_keys()
+        return tuple(self._data[key] for key in keys), tuple(keys)
+
+    def tree_flatten_with_keys(self) -> tuple[list, tuple]:
+        keys = self._ordered_keys()
+        return [(jax.tree_util.DictKey(key), self._data[key]) for key in keys], tuple(keys)
 
     @classmethod
     def tree_unflatten(cls, aux_data, children) -> tp.Self:
-        return cls(children[0])
-
-    def tree_flatten_with_keys(self):
-        # Sort keys to ensure deterministic flattening
-        keys = sorted(self._data.keys())
-        children_with_keys = [(jax.tree_util.DictKey(k), self._data[k]) for k in keys]
-        aux_data = keys 
-        return children_with_keys, aux_data
-
-    @classmethod
-    def tree_unflatten(cls, aux_data, children) -> tp.Self:
-        keys = aux_data
-        reconstructed_data = dict(zip(keys, children))
-        return cls(reconstructed_data)
-
-#################################################################################################################################################
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-#################################################################################################################################################
-
-class InheritanceFlags(enum.IntFlag):
-    CAN_INHERIT = 0b1000
-    IS_INHERITING = 0b0100
-    CAN_RECEIVE = 0b0010
-    IS_RECEIVING = 0b0001
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-@dc.dataclass
-class InheritanceLeaf:
-    """
-        Leaf object for the InheritanceTree data structure.
-    """
-
-    name: str
-    type_string: str
-    inheritance_childs: list[list[str]]
-    flags: InheritanceFlags = 0b0000
-    break_inheritance: bool = False
-    parent: InheritanceTree = None
-
-    def __post_init__(self,) -> None:
-        if isinstance(self.type_string, tp.Iterable):
-            type_string = set(self.type_string)
-            self.type_string = [t.__name__ if isinstance(t, type) else str(t) for t in type_string if t is not None]
-        elif isinstance(self.type_string, type):
-            self.type_string = self.type_string.__name__
-
-    def __repr__(self,) -> str:
-        rep = f'{self.name}\n'
-        rep += ' ' + f'type_string: {self.type_string}\n'
-        rep += ' ' + f'flags: {self.flags}\n'
-        rep += ' ' + f'break_inheritance: {self.break_inheritance}\n'
-        rep += ' ' + f'inheritance_childs:\n'
-        for c in self.inheritance_childs:
-            rep += 2*' ' + f'{c}\n' 
-        return ascii_tree(rep)
-
-
-    def to_dict(self,) -> dict:
-        return {
-            'name': self.name,
-            'type_string': self.type_string,
-            'inheritance_childs': self.inheritance_childs,
-            'break_inheritance': self.break_inheritance,
-            'flags': self.flags.value
-        }
-    
-    @classmethod
-    def from_dict(cls, d: dict) -> 'InheritanceLeaf':
-        d = copy.deepcopy(d)
-        d['flags'] = InheritanceFlags(d['flags'])
-        return cls(**d)
-
-    def can_inherit(self,) -> bool:
-        """
-            Cheks the leaf node can inherit.
-        """
-        return bool(self.flags & InheritanceFlags.CAN_INHERIT)
-    
-    def is_inheriting(self,) -> bool:
-        """
-            Cheks the leaf node is inheriting.
-        """
-        return bool(self.flags & InheritanceFlags.IS_INHERITING)
-
-    def can_receive(self,) -> bool:
-        """
-            Cheks the leaf node can receive.
-        """
-        return bool(self.flags & InheritanceFlags.CAN_RECEIVE)
-    
-    def is_receiving(self,) -> bool:
-        """
-            Cheks the leaf node is receiving.
-        """
-        return bool(self.flags & InheritanceFlags.IS_RECEIVING)
-
-    @property
-    def path(self,) -> list[str]:
-        """
-            Returns the path of the leaf node.
-        """
-        return self.parent.path + [self.name]
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-class InheritanceTree:
-    """
-        Tree-like data structure to manage the inheritance status of variables in the Spark Graph Editor. 
-
-        This data structure is used to link variables with the same names and types for simultaneous updates within the GUI. 
-    """
-
-    def __init__(self, path: list[str] = []) -> None:
-        self._is_valid = False
-        self._current_path = path
-        self._leaves: dict[str, InheritanceLeaf] = {}
-        self._branches: dict[str, InheritanceTree] = {}
-
-    def __repr__(self,) -> str:
-        if not self._is_valid:
-            self.validate()
-        r = self._parse_tree_with_spaces(0)
-        return ascii_tree(r)
-
-    def _parse_tree_with_spaces(self, current_depth: int) -> str:
-        """
-            Parses the tree with to produce a string with the appropiate format for the ascii_tree method.
-        """
-
-        rep = current_depth * ' ' + f'{self._current_path[-1]}\n' if len(self._current_path) > 0 else ''
-        for l, s in self._leaves.items():
-            rep += (current_depth + 1) * ' ' + f'{l}: {s.flags}\n'
-        for _, t in self._branches.items():
-            rep += t._parse_tree_with_spaces(current_depth+1 if len(self._current_path) > 0 else 0)
-        return rep
-
-    def add_leaf(
-            self, 
-            path: list[str], 
-            type_string: str = '', 
-            inheritance_childs: list[list[str]]=[], 
-            flags: InheritanceFlags = 0b0000,
-            break_inheritance: bool = False,
-            **kwargs,
-        ) -> None:
-        """
-            Adds a new leaf to the tree.
-
-            Input:
-                path: list[str], path to the new leaf node, with the last entry the name of the leaf
-                type_string: str, string representation of the types this variable manages
-                inheritance_childs: list[list[str]]=[], list of children that can inherit from this variable (Note: do not set by hand)
-                flags: InheritanceFlags, 4-bit flags that represent inheritance possibilities (Note: do not set by hand)
-                break_inheritance: bool, boolean flag to disconnect this variable from the inheritance dynamics
-        """
-        # Make a copy of the path to prevent overrides
-        path = copy.deepcopy(path if isinstance(path, list) else list(path))
-        if len(path) == 1:
-            # Add leave to current level.
-            self._leaves[path[0]] = InheritanceLeaf(
-                name=path[0], 
-                type_string=type_string,
-                inheritance_childs=inheritance_childs,
-                flags=flags, 
-                break_inheritance=break_inheritance,
-                parent=self,
-            )
-        elif len(path) > 1:
-            # Consume leading path string.
-            branch = path.pop(0)
-            # Allow adding branches to simplify usage.
-            if branch not in self._branches:
-                self.add_branch([branch])
-            self._branches[branch].add_leaf(
-                path, 
-                type_string=type_string, 
-                flags=flags, 
-                break_inheritance=break_inheritance
-            )
-        else: 
-            raise ValueError(
-                f'Invalid path, got: {path}. Path must point to final leaf.'
-            )
-        self._is_valid = False
-        
-    def add_branch(self, path: list[str]) -> None:
-        """
-            Adds a new branch to the tree.
-
-            Input:
-                path: list[str], path to the new branch, with the last entry the name of the branch
-        """
-        # Make a copy of the path to prevent overrides
-        path = copy.deepcopy(path if isinstance(path, list) else list(path))
-        if len(path) == 1:
-            # Add branch to current level.
-            self._branches[path[0]] = InheritanceTree(self._current_path + path)
-        elif len(path) > 1:
-            # Consume leading path string.
-            branch = path.pop(0)
-            # Allow adding branches recursively to simplify usage.
-            if branch not in self._branches:
-                self._branches[branch] = InheritanceTree(self._current_path + branch)
-            self._branches[branch].add_branch(path)
-        else: 
-            raise ValueError(
-                f'Invalid path, got: {path}. Path must point to final branch.'
-            )
-        
-    def validate(self, inheriting_labels: dict = {}) -> None:
-        """
-            Validates the flags and the inheritance childs of the tree.
-        """
-        inheriting_labels = copy.deepcopy(inheriting_labels)
-        if self._is_valid:
-            return
-        if len(self._branches) == 0:
-            # If there are no branches, leaves cannot inherit.
-            can_inherit = InheritanceFlags(0)
-            is_inheriting = InheritanceFlags(0)
-            for l in self._leaves.keys():
-                # If label is not in inheriting_labels, leaf cannot receive.
-                if l not in inheriting_labels:
-                    can_receive = InheritanceFlags(0)
-                    is_receiving = InheritanceFlags(0)
-                else:
-                    can_receive = InheritanceFlags.CAN_RECEIVE
-                    is_receiving = InheritanceFlags.IS_RECEIVING if inheriting_labels[l] else InheritanceFlags(0)
-                # Set leaf attributes
-                if self._leaves[l].break_inheritance:
-                    self._leaves[l].flags = InheritanceFlags(0)
-                else:
-                    self._leaves[l].flags = can_inherit | is_inheriting | can_receive | is_receiving
-                self._leaves[l].inheritance_childs = []
-        else:
-            for l, il in self._leaves.items():
-                # Get leaf inheritance_childs
-                inheritance_childs = self._compute_leaf_childs(l)
-                # Check if can inherit its value
-                can_inherit = InheritanceFlags.CAN_INHERIT if len(inheritance_childs) > 0 else InheritanceFlags(0)
-                # Preseve is_inheriting flag unless it is set on by error.
-                is_inheriting = il.flags & InheritanceFlags.IS_INHERITING if can_inherit else InheritanceFlags(0)
-                # If label is not in inheriting_labels, leaf cannot receive.
-                if l not in inheriting_labels:
-                    can_receive = InheritanceFlags(0)
-                    is_receiving = InheritanceFlags(0)
-                else:
-                    can_receive = InheritanceFlags.CAN_RECEIVE
-                    is_receiving = InheritanceFlags.IS_RECEIVING if inheriting_labels[l] else InheritanceFlags(0)
-                # Set leaf attributes
-                if self._leaves[l].break_inheritance:
-                    self._leaves[l].flags = InheritanceFlags(0)
-                else:
-                    self._leaves[l].flags = can_inherit | is_inheriting | can_receive | is_receiving
-                self._leaves[l].inheritance_childs = inheritance_childs
-
-                # Add leaf to inheriting labels
-                if len(inheritance_childs) > 0:
-                    inheriting_labels[l] = inheriting_labels.get(l, None) or bool(is_inheriting)
-
-        # Validate branches:
-        for b in self._branches.keys():
-            self._branches[b].validate(inheriting_labels)
-        # Flag
-        self._is_valid = True
-
-    # NOTE: This method should be computed from deeper branches to shallow for efficiency. However, in practice Inheritance
-    # trees will not have more than a few levels and a couple dozens of parameters which makes forward search acceptable.
-    def _compute_leaf_childs(self, name: str, path: list[str] = []) -> list[list[str]]:
-        """
-            Collects the inheritance childs of a tree, relative to the current leaf.
-
-            Input:
-                name: str, leaf node name to search
-
-            Returns:
-                list[list[str]], list of inheritance childs of the leaf node
-        """
-        inheritance_childs = []
-        # Search in subtrees only.
-        if len(path) > 0:
-            for l, lo in self._leaves.items():
-                if l == name:
-                    # Check if leaf has the break_inheritance flag
-                    if not lo.break_inheritance:
-                        inheritance_childs.append(path + [name])
-                    break
-        for b in self._branches.keys():
-            inheritance_childs += self._branches[b]._compute_leaf_childs(name, [b])
-        return inheritance_childs
-
-    def get_leaf(self, path: list[str]) -> InheritanceLeaf:
-        """
-            Returns the status of the leaf node.
-
-            Input:
-                path: list[str], path to the leaf node, with the last entry the name of the leaf
-
-            Returns:
-                InheritanceLeaf, returns the leaf node instance.
-        """
-        if not self._is_valid:
-            self.validate()
-        # Make a copy of the path to prevent overrides
-        path = copy.deepcopy(path if isinstance(path, list) else list(path))
-        if len(path) == 1:
-            # Add branch to current level.
-            node = self._leaves.get(path[0], None)
-            if node:
-                return node
-            else:
-                raise KeyError(
-                    f'Node \"{path}\" not found.'
-                )
-        elif len(path) > 1:
-            branch = path.pop(0)
-            subtree = self._branches.get(branch, None)
-            if subtree is None:
-                raise KeyError(
-                    f'Subtree \"{path}\" not found.'
-                )
-            else:
-                return subtree.get_leaf(path)
-    
-    def get_subtree(self, path: list[str]) -> InheritanceTree:
-        """
-            Returns a subtree of the leaf node.
-
-            Input:
-                path: list[str], path to the subtree node, with the last entry the name of the branch
-
-            Returns:
-                InheritanceTree, returns the branch node instance.
-        """
-        if not self._is_valid:
-            self.validate()
-        # Make a copy of the path to prevent overrides
-        path = copy.deepcopy(path if isinstance(path, list) else list(path))
-        if len(path) == 1:
-            # Add branch to current level.
-            subtree = self._branches.get(path[0], None)
-            if subtree is None:
-                raise KeyError(
-                    f'Subtree \"{path}\" not found.'
-                )
-        elif len(path) > 1:
-            branch = path.pop(0)
-            subtree = self._branches.get(branch, None)
-            if subtree is None:
-                raise KeyError(
-                    f'Subtree \"{path}\" not found.'
-                )
-            return subtree.get_subtree(path) if subtree else None
-        
-    def to_dict(self,) -> dict:
-        """
-            InheritanceTree dict serializer.
-        """
-        if not self._is_valid:
-            self.validate()
-        # Collect leaves
-        return {
-            **{l: il.to_dict() for l, il in self._leaves.items()},
-            **{b: t.to_dict() for b, t in self._branches.items()}
-        }
-    
-    @classmethod
-    def from_dict(cls, d: dict, path: list[str] = []) -> 'InheritanceTree':
-        """
-            InheritanceTree dict deserializer.
-        """
-        tree = cls(path)
-        for k, v in d.items():
-            if isinstance(v, dict):
-                if v.get('flags', None) is not None:
-                    tree.add_leaf([k], **v)
-                else:
-                    tree.add_branch([k])
-                    tree._branches[k] = cls.from_dict(v, path=path+[k])
-            else:
-                raise TypeError(
-                    f'Expected \"v\" to be a dict, but got \"{v}\".'
-                )
-        return tree
-
-    @property
-    def path(self,) -> list[str]:
-        """
-            Returns the path of the branch node.
-        """
-        return self._current_path
+        return cls(dict(zip(aux_data, children)))
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

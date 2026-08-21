@@ -8,14 +8,16 @@ import os
 import abc
 import jax
 import jax.numpy as jnp
-import flax.nnx as nnx
 import typing as tp
+from math import prod
 from jax.typing import DTypeLike
-from spark.core.variables import Variable, Constant
+import spark.core.utils as utils
+from spark.core.backend import Variable, Constant
+from spark.core.backend import Module
 
 # TODO: Base constant for the rise-decay and the rise-fast-slow models are not properly set up.
 # This is probably not important since practically every case is used with scale and base set to 
-# one and zero, respectively. However, it would be ideal to make this tracers as general as possible.
+# one and zero, respectively. However, it would be ideal to make these tracers as general as possible.
 # On the other hand, this may be important optimization for the RFSTracer, which may be used to implement
 # semi-realistic synaptic models and currently uses more memory and operations that may be required.
 
@@ -28,7 +30,32 @@ from spark.core.variables import Variable, Constant
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-class BaseTracer(nnx.Module, abc.ABC):
+def contract_tracer_args(axes: tuple[int, ...], shape: tuple[int, ...], **values: tp.Any) -> tuple[dict[str, tp.Any], bool]:
+	"""
+		Tries to contract tracer arguments in order to save memory.
+
+		Args:
+			axes: tuple[int, ...], axes of shape the trace is summed over.
+			shape: tuple[int, ...], shape of the trace before reducing.
+			values: tp.Any, arguments of the tracer.
+
+		Returns:
+			tuple[dict[str, tp.Any], bool], the arguments and whether they were reduced.
+	"""
+	count = prod(shape[axis] for axis in axes)
+	contracted_values = {}
+	for name, value in values.items():
+		value, is_constant = utils.contract_axes(value, axes, shape)
+		if not is_constant:
+			return dict(values), False
+		contracted_values[name] = value * count if name.startswith('base') else value
+	return contracted_values, True
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+class BaseTracer(Module, abc.ABC):
 	"""
 		Base Tracer class
 	"""
@@ -95,17 +122,21 @@ class Tracer(BaseTracer):
 		# Main attributes
 		self.scale = Constant(scale, dtype=self._dtype)
 		self.base = Constant(base, dtype=self._dtype)
-		self.decay = Constant(jnp.exp(-self._dt / tau), dtype=self._dtype)
+		rate_dtype = jnp.promote_types(self._dtype, jnp.float32)
+		self.decay_rate = Constant(
+			-jnp.expm1(-self._dt / jnp.asarray(tau, dtype=rate_dtype)), dtype=self._dtype,
+		)
 		self.trace = Variable(base * jnp.ones(self.shape), dtype=self._dtype)
 
 	def reset(self,) -> None:
-		self.trace.value = self.base * jnp.ones(self.shape, dtype=self._dtype)
+		self.trace.value = self.base.value * jnp.ones(self.shape, dtype=self._dtype)
 
 	def masked_reset(self, mask) -> None:
-		self.trace.value = self.base * jnp.ones(self.shape, dtype=self._dtype) * mask + (1 - mask) * self.trace.value
+		self.trace.value = self.base.value * jnp.ones(self.shape, dtype=self._dtype) * mask + (1 - mask) * self.trace.value
 
 	def _update(self, x: jax.Array) -> jax.Array:
-		self.trace.value = self.base + self.decay * (self.trace.value - self.base) + self.scale * x.astype(self._dtype)
+		trace = self.trace.value
+		self.trace.value = trace + self.decay_rate.value * (self.base.value - trace) + self.scale.value * x.astype(self._dtype)
 		return self.trace.value
 
 	@property
@@ -227,52 +258,6 @@ class RFSTracer(BaseTracer):
 	@property
 	def value(self, ) -> jax.Array:
 		return self.alpha.value * self.tracer_rise_fast.value + (1 - self.alpha.value) * self.tracer_rise_slow.value
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-# TODO: Validate tracer
-class RUTracer(BaseTracer):
-	"""
-		Resource-Usage tracer for STP (Short Term Plasticity).
-	"""
-	
-	def __init__(
-			self, 
-			shape: tuple[int, ...], 
-			r_tau: jax.Array | float, 
-			u_tau: jax.Array | float, 
-			u_scale: jax.Array | float, 
-			**kwargs
-		):
-		# Initialize super.
-		super().__init__(shape, **kwargs)
-		# Main attributes
-		self.r_tracer = Tracer(shape=shape, tau=r_tau, scale=-1.0, base=1.0, **kwargs)
-		self.u_tracer = Tracer(shape=shape, tau=u_tau, scale=u_scale, base=0.0, **kwargs)
-
-	def reset(self,) -> None:
-		self.r_tracer.reset()
-		self.u_tracer.reset()
-
-	def masked_reset(self, mask) -> None:
-		self.r_tracer.masked_reset(mask)
-		self.u_tracer.masked_reset(mask)
-
-	def _update(self, x:jax.Array) -> jax.Array:
-		# Update usage
-		u_trace = self.u_tracer(x)
-		# Compute RU
-		trace_RU = u_trace * self.r_tracer.value
-		# Update resources
-		self.r_tracer.update(u_trace * self.r_tracer.value * x)
-		return trace_RU
-
-	# NOTE: Technically, this is not correct since RU is U(t) * R(t-1). 
-	# This is implemented just to fullfill the specifications of a Tracer and is not intended to be used.
-	# However this trace is so common in the literature that it is okay to break the rules.
-	@property
-	def value(self, ) -> jax.Array:
-		return self.r_tracer.value * self.u_tracer.value
 	
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

@@ -14,7 +14,7 @@ from math import prod
 import typing as tp
 import spark.core.utils as utils
 from spark.core.payloads import SpikeArray, CurrentArray, FloatArray
-from spark.core.variables import Variable
+from spark.core.backend import Variable
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator
 from spark.nn.initializers.common import SparseUniformInitializerConfig
@@ -82,14 +82,14 @@ class LinearSynapses(Synapses):
         self._output_shape = utils.validate_shape(self.config.units)
         
 
-    def build(self, input_specs: dict[str, PortSpecs]):
+    def build(self, spikes: SpikeArray):
         # Initialize shapes
-        self.async_spikes = input_specs['spikes'].async_spikes
-        self._input_shape = utils.validate_shape(input_specs['spikes'].shape)
+        self.async_spikes = spikes.async_spikes
+        self._input_shape = utils.validate_shape(spikes.shape)
         self._real_input_shape = self._input_shape[len(self._output_shape):] if self.async_spikes else self._input_shape
         self._sum_axes = tuple(range(len(self._output_shape), len(self._output_shape)+len(self._real_input_shape)))
         # Initialize kernel
-        kernel = self.config.kernel.init(
+        kernel = self.config.init.kernel(
             init_kwargs = {'norm_axes': tuple(s for s in range(len(self._output_shape))),},
             key=self.get_rng_keys(1), shape=self._output_shape+self._real_input_shape, dtype=self._dtype,
         )

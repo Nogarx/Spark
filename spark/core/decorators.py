@@ -5,6 +5,8 @@
 from __future__ import annotations
 import typing as tp
 import inspect
+import threading
+from functools import wraps
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -55,6 +57,31 @@ class spark_property:
     def deleter(self, fdel) -> tp.Self:
         return type(self)(self.fget, self.fset, fdel, self.__doc__)
     
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def limit_recursion(limit) -> tp.Callable[..., tp.Callable[..., tp.Any]]:
+    """
+		Decorator to limit recursion depth, used in some post config validation.
+	"""
+    def decorator(func):
+        state = threading.local()
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            depth = getattr(state, 'depth', 0)
+            if depth >= limit:
+                return args[0] if args else None
+            state.depth = depth + 1
+            try:
+                # Standard recursion
+                result = func(*args, **kwargs)
+            finally:
+                # Decrease stack counter
+                state.depth = depth
+            return result
+        return wrapper
+    return decorator
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

@@ -7,7 +7,7 @@ from __future__ import annotations
 import abc
 import typing as tp
 from spark.nn.components.base import Component, ComponentConfig
-from spark.core.variables import Variable
+from spark.core.backend import Variable
 from spark.core.payloads import SpikeArray, CurrentArray, FloatArray
 from spark.core.decorators import spark_property
 

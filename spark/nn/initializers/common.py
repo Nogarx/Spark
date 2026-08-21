@@ -22,7 +22,7 @@ class ConstantInitializerConfig(InitializerConfig):
     """
         ConstantInitializer configuration class.
     """
-    __class_ref__: str = 'ConstantInitializer'
+    __class_ref__: tp.ClassVar[str] = 'ConstantInitializer'
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -51,7 +51,7 @@ class UniformInitializerConfig(InitializerConfig):
     """
         UniformInitializer configuration class.
     """
-    __class_ref__: str = 'UniformInitializer'
+    __class_ref__: tp.ClassVar[str] = 'UniformInitializer'
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -84,7 +84,7 @@ class SparseUniformInitializerConfig(UniformInitializerConfig):
     """
         SparseUniformInitializer configuration class.
     """
-    __class_ref__: str = 'SparseUniformInitializer'
+    __class_ref__: tp.ClassVar[str] = 'SparseUniformInitializer'
 
     density: float = dc.field(
         default = 0.2, 
@@ -135,7 +135,7 @@ class NormalizedSparseUniformInitializerConfig(SparseUniformInitializerConfig):
     """
         NormalizedSparseUniformInitializer configuration class.
     """
-    __class_ref__: str = 'NormalizedSparseUniformInitializer'
+    __class_ref__: tp.ClassVar[str] = 'NormalizedSparseUniformInitializer'
 
     norm_axes: tuple[int, ...] | None = dc.field(
         default = (0,), 

@@ -2,8 +2,6 @@
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-from __future__ import annotations
-
 import json
 import numpy as np
 import jax
@@ -12,14 +10,20 @@ import warnings
 import typing as tp
 import spark.core.utils as utils
 from spark.core.registry import REGISTRY
-from spark.core.config import SparkConfig
+from spark.core.config import SparkConfig, StaticValue
 from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-T = tp.TypeVar('T')
+METADATA_KEY = '__metadata__'
+"""
+    Where a file keeps what was written beside the configuration. It sits next to it rather than in it, so
+    that decoding answers the configuration alone and a reader that knows nothing of it reads the file.
+"""
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class SparkJSONEncoder(json.JSONEncoder):
 	"""
@@ -27,30 +31,28 @@ class SparkJSONEncoder(json.JSONEncoder):
 	"""
 	__version__ = '1.0'
 
-	def __init__(self, *args, is_partial: bool = False, **kwargs) -> None:
-		self._is_partial = is_partial
+	def __init__(self, *args, metadata: dict[str, tp.Any] | None = None, **kwargs) -> None:
+		self._metadata = metadata
 		super().__init__(*args, **kwargs)
 
-	def encode(self, obj):
+	def iterencode(self, obj, _one_shot: bool = False):
 		wrapped = {
 			'__version__': self.__version__,
 			'__data__': obj
 		}
-		return super().encode(wrapped)
+		if self._metadata is not None:
+			wrapped[METADATA_KEY] = self._metadata
+		return super().iterencode(wrapped, _one_shot)
 
 	def default(self, obj) -> dict[str, tp.Any]:
-		# Encode jax arrays
-		if isinstance(obj, (jax.Array, jnp.ndarray)):
+		# Unwrap configuration values
+		if isinstance(obj, StaticValue):
+			value = obj.value
+			return self.default(value) if isinstance(value, (jax.Array, np.ndarray)) else value
+		# Encode arrays
+		if isinstance(obj, (jax.Array, np.ndarray)):
 			return {
-				'__type__': 'jax_array',
-				'dtype': obj.dtype.name,
-				'shape': list(obj.shape),
-				'data': obj.tolist()
-			}
-		# Encode numpy arrays
-		if isinstance(obj, np.ndarray):
-			return {
-				'__type__': 'numpy_array',
+				'__type__': 'array',
 				'dtype': obj.dtype.name,
 				'shape': list(obj.shape),
 				'data': obj.tolist()
@@ -58,25 +60,25 @@ class SparkJSONEncoder(json.JSONEncoder):
 		# Encode spark configs
 		if isinstance(obj, SparkConfig):
 			return {
-				'__type__': REGISTRY.CONFIG.get_by_cls(obj.__class__).name,
-				'__cfg__': obj.to_dict(is_partial=self._is_partial),
+				'__type__': REGISTRY.Configs.get_by_cls(obj.__class__).name,
+				'__cfg__': {k: v for k,v in obj}
 			}
 		# Encode spark specs. 
 		# NOTE: Order matters!
 		if isinstance(obj, PortSpecs):
 			return  {
 				'__type__': 'port_specs',
-				'__data__': obj.to_dict(is_partial=self._is_partial),
+				'__data__': obj.to_dict(),
 			}
 		if isinstance(obj, PortMap):
 			return  {
 				'__type__': 'port_map',
-				'__data__': obj.to_dict(is_partial=self._is_partial),
+				'__data__': obj.to_dict(),
 			}
 		if isinstance(obj, ModuleSpecs):
 			return  {
 				'__type__': 'module_specs',
-				'__data__': obj.to_dict(is_partial=self._is_partial),
+				'__data__': obj.to_dict(),
 			}
 		# Encode jax/numpy dtypes
 		if utils.is_dtype(obj):
@@ -88,8 +90,10 @@ class SparkJSONEncoder(json.JSONEncoder):
 			}
 		# Default handler
 		return super().default(obj)
-
+	
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+T = tp.TypeVar('T')
 
 class SparkJSONDecoder(json.JSONDecoder):
 	"""
@@ -97,9 +101,8 @@ class SparkJSONDecoder(json.JSONDecoder):
 	"""
 	__supported_versions__ = {'1.0'}
 
-	def __init__(self, *args, ignore_version: bool = False, is_partial: bool = False, **kwargs) -> None:
+	def __init__(self, *args, ignore_version: bool = False, **kwargs) -> None:
 		self._ignore_version = ignore_version
-		self._is_partial = is_partial
 		super().__init__(object_hook=self.object_hook, *args, **kwargs)
 
 	def object_hook(self, obj: dict) -> tp.Any:
@@ -111,7 +114,7 @@ class SparkJSONDecoder(json.JSONDecoder):
 				if version not in self.__supported_versions__:
 					raise ValueError(
 						f'Unsupported version: {version}. '
-						f'Use the flag \"ignore_version=True\" if you wish to continue at your own risk.'
+						f'Use the flag "ignore_version=True" if you wish to continue at your own risk.'
 					)
 			else:
 				if version not in self.__supported_versions__:
@@ -120,49 +123,28 @@ class SparkJSONDecoder(json.JSONDecoder):
 					)
 			return obj.get('__data__')
 
-		# Decode jax arrays
-		if obj.get('__type__') == 'jax_array':
-			return jnp.array(obj.get('data'), dtype=obj.get('dtype')).reshape(obj.get('shape'))
-		# Decode numpy arrays
-		if obj.get('__type__') == 'numpy_array':
+		# Decode arrays
+		if obj.get('__type__') in ['array', 'jax_array']:
 			return np.array(obj.get('data'), dtype=obj.get('dtype')).reshape(obj.get('shape'))
-		# Decode numpy/jax dtypes
+		# Decode dtypes
 		if obj.get('__type__') == 'dtype':
 			return np.dtype(obj.get('name')).type
-		# Decode payload and module types
-		if isinstance(obj, dict) and obj.get('__payload_type__'):
-			payload_type: str | None = obj.get('__payload_type__')
-			if not payload_type or not isinstance(payload_type, str):
-				raise TypeError(f'Expected \"__payload_type__\" to be of type \"str\", but got {payload_type}')
-			reg = REGISTRY.PAYLOADS.get(payload_type)
-			if not reg:
-				raise KeyError(f'There is no payload with name \"{payload_type}\" in the registry.')
-			return reg.class_ref
+		# Decode modules cls
 		if isinstance(obj, dict) and obj.get('__module_type__'):
 			module_type: str | None = obj.get('__module_type__')
 			subregistry: str | None = obj.get('__subregistry__')
-			if not module_type or not isinstance(module_type, str):
-				raise TypeError(f'Expected \"__module_type__\" to be of type \"str\", but got {module_type}')
 			reg = getattr(REGISTRY, subregistry).get(module_type)
 			if not reg:
-				raise KeyError(f'There is no module with name \"{module_type}\" in the registry.')
-			return reg.class_ref
+				raise KeyError(f'There is no module with name "{module_type}" in the registry.')
+			return reg.get_cls()
 		# Decode spark configs
 		if obj.get('__cfg__'):
 			config_type: str | None = obj.get('__type__')
-			if not config_type or not isinstance(config_type, str):
-				raise TypeError(f'Expected \"__type__\" to be of type \"str\", but got {config_type}')
-			reg = REGISTRY.CONFIG.get(config_type)
+			reg = REGISTRY.Configs.get(config_type)
 			if not reg:
-				raise KeyError(f'There is no config with name \"{config_type}\" in the registry.')
+				raise KeyError(f'There is no registered configuration "{config_type}" in the registry.')
 			config_data = obj.get('__cfg__')
-			if not isinstance(config_data, dict):
-				raise TypeError(f'Expected \"__cfg__\" to be of type \"dict\", but got {config_data}')
-			if self._is_partial:
-				return reg.class_ref._create_partial(**config_data)
-			else:
-				return reg.class_ref(**config_data)
-			#return cls.from_dict(obj.get('__cfg__'))
+			return reg.get_cls().partial(**config_data)
 		# Decode spark specs
 		if obj.get('__type__') == 'port_specs':
 			return self._decode_spec(PortSpecs, obj)
@@ -177,7 +159,7 @@ class SparkJSONDecoder(json.JSONDecoder):
 		data = obj.get('__data__')
 		if not isinstance(data, dict):
 			raise TypeError(f'Expected \"__data__\" to be of type \"dict\", but got {data}')
-		return _type.from_dict(data, is_partial=self._is_partial)
+		return _type.from_dict(data)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

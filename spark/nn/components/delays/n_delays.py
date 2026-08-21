@@ -14,7 +14,7 @@ import typing as tp
 import spark.core.utils as utils
 from math import prod, ceil
 from spark.core.payloads import SpikeArray
-from spark.core.variables import Variable, Constant
+from spark.core.backend import Variable, Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.initializers.common import UniformInitializerConfig
@@ -76,9 +76,9 @@ class NDelays(Delays):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
-    def build(self, input_specs: dict[str, PortSpecs]):
+    def build(self, in_spikes: SpikeArray):
         # Initialize shapes
-        self._shape = utils.validate_shape(input_specs['in_spikes'].shape)
+        self._shape = utils.validate_shape(in_spikes.shape)
         self._units = prod(self._shape)
         # Initialize varibles
         self.max_delay = self.config.max_delay
@@ -88,9 +88,12 @@ class NDelays(Delays):
         self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
         self._current_idx = Variable(0, dtype=jnp.int32)
         # Initialize kernel
-        delays_kernel = self.config.delays.init(
-            init_kwargs = {'scale':self._buffer_size+1, 'min_value':1,},
-            key=self.get_rng_keys(1), shape=(self._units,), dtype=jnp.uint8,
+        delays_kernel = self.config.init.delays(
+            key=self.get_rng_keys(1), 
+            shape=(self._units,), 
+            dtype=jnp.uint8,
+            scale=self._buffer_size+1, 
+            min_value=1,
         )
         self._kernel = Constant(delays_kernel, dtype=jnp.uint8)
 
