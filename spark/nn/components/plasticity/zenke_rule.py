@@ -49,7 +49,7 @@ class ZenkeRuleConfig(PlasticityConfig):
             'description': 'Time constant of the fast postynaptic spike train',
         })
     post_slow_tau: float | jax.Array | Initializer = dc.field(
-        default = 20.0, 
+        default = 100.0, 
         metadata = {
             'units': 'ms',
             'validators': [
@@ -59,7 +59,7 @@ class ZenkeRuleConfig(PlasticityConfig):
             'description': 'Time constant of the slow postynaptic spike train',
         })
     target_tau: float | jax.Array | Initializer = dc.field(
-        default = 20000.0, 
+        default = 1200000.0, 
         metadata = {
             'units': 'ms',
             'validators': [
@@ -69,7 +69,7 @@ class ZenkeRuleConfig(PlasticityConfig):
             'description': 'Time constant of the kernel target',
         })
     a: float | jax.Array = dc.field(
-        default = 1.0, 
+        default = 2.0, 
         metadata = {
             'validators': [
                 TypeValidator,
@@ -77,7 +77,7 @@ class ZenkeRuleConfig(PlasticityConfig):
             'description': 'Scale factor of the triplet LTP term.',
         })
     b: float | jax.Array = dc.field(
-        default = -1.0, 
+        default = -0.02, 
         metadata = {
             'validators': [
                 TypeValidator,
@@ -85,7 +85,7 @@ class ZenkeRuleConfig(PlasticityConfig):
             'description': 'Scale factor of the doublet LTD term.',
         })
     c: float | jax.Array = dc.field(
-        default = -1.0, 
+        default = -400.0, 
         metadata = {
             'validators': [
                 TypeValidator,
@@ -93,7 +93,7 @@ class ZenkeRuleConfig(PlasticityConfig):
             'description': 'Scale factor of the heterosynaptic plasticity term.',
         })
     d: float | jax.Array = dc.field(
-        default = 1.0, 
+        default = 2e-5, 
         metadata = {
             'validators': [
                 TypeValidator,
@@ -106,7 +106,7 @@ class ZenkeRuleConfig(PlasticityConfig):
             'validators': [
                 TypeValidator,
             ], 
-            'description': '',
+            'description': 'Scale factor of the double-well consolidation potential.',
         })
     eta: float | jax.Array = dc.field(
         default = 0.1, 
