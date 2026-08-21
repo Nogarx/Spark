@@ -21,7 +21,21 @@ from spark.core.registry import REGISTRY
 REGISTRY._build()
 
 # Editor
-from spark.graph_editor.editor import SparkGraphEditor as GraphEditor
+def __getattr__(name: str):
+    if name == 'GraphEditor':
+        try:
+            from spark.graph_editor.editor import SparkGraphEditor
+        except ImportError as error:
+            raise ImportError(
+                'The graph editor is built on PySide6, which this installation does not have. It is asked '
+                'for by name: pip install "spark_snn[editor]".'
+            ) from error
+        globals()['GraphEditor'] = SparkGraphEditor
+        return SparkGraphEditor
+    raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
+
+def __dir__() -> list[str]:
+    return sorted(set(globals()) | {'GraphEditor'})
 
 __all__ = [
     'nn', 

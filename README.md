@@ -1,12 +1,12 @@
 # ⚡ Spark: Modular Spiking Neural Networks
+
+<div align="center"><img src="https://raw.githubusercontent.com/nogarx/Spark/main/docs/images/spark_logo.png" width="500" alt="Spark Logo"></div>
+
 <!--
-<div align="center"><img src="./images/spark_logo.png" width="500" alt="Spark Logo"></div>
--->
-
 <div align="center"  alt="Spark Summary">
-    <img src="https://raw.githubusercontent.com/nogarx/Spark/main/docs/images/spark_summary.png" width="1000" alt="Spark Graph Editor"></div>
+    <img src="https://raw.githubusercontent.com/nogarx/Spark/main/docs/images/spark_summary.png" width="1000" alt="Spark Summary"></div>
 </div>
-
+-->
 
 <p align="center">
     <strong>
@@ -52,10 +52,16 @@ No coding required for model design.
 
 Spark is available on PyPI, so it can be installed with:
 
-
+Lightweight version,
 ```
 pip install spark-snn
 ```
+
+Full version,
+```
+pip install spark-snn[editor]
+```
+
 
 Or, for the latest development version, clone this repository:
 
