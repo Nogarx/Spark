@@ -74,7 +74,7 @@ Do not know what to do next? The [tutorials](https://nogarx.github.io/Spark/tuto
 Design your network's structure, set parameters for each component, and connect them to create a model.
 
 <div align="center">
-    <img src="https://raw.githubusercontent.com/nogarx/Spark/main/docs/images/graph_editor_details.png" width="1200" alt="Spark Graph Editor"></div>
+    <img src="https://raw.githubusercontent.com/nogarx/Spark/main/docs/images/spark_graph_editor.png" width="1200" alt="Spark Graph Editor"></div>
     <p>
         <em>The Spark visual interface for building SNNs.</em>
     </p>
