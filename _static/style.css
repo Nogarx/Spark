@@ -1,0 +1,7 @@
+article {
+    div.tutorial-text {
+        text-align: justify;
+        width: fit-content !important;
+        font-size: 18px;
+    }
+}

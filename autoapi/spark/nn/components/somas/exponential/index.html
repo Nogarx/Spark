@@ -1,0 +1,837 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spark.nn.components.somas.exponential &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../../../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../../../_static/copybutton.js?v=30646c52"></script>
+    <script src="../../../../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../../../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/spark/nn/components/somas/exponential/index';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../../../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" />
+    <link rel="next" title="spark.nn.components.somas.izhikevich" href="../izhikevich/index.html" />
+    <link rel="prev" title="spark.nn.components.somas.base" href="../base/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../../../../../../_static/searchtools.js"></script>
+    <script src="../../../../../../_static/language_data.js"></script>
+    <script src="../../../../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../../../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <img src="../../../../../../_static/spark_250px.png" class="logo__image only-dark pst-js-only" alt="Spark  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/neurons.html">Tutorial #3: Neurons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/brains.html">Tutorial #4: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/graph_editor.html">Tutorial #5: Graph Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/cartpole.html">Tutorial #6: Solving the CartPole™</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/sharding.html">Tutorial #7: Sharding</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../../../index.html">spark</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/backend/index.html">spark.core.backend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/decorators/index.html">spark.core.decorators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/validation/index.html">spark.core.validation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/commands/index.html">spark.graph_editor.commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/styles/index.html">spark.graph_editor.styles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/view/index.html">spark.graph_editor.view</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../../../index.html">spark.nn</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4 current active"><a class="reference internal" href="../../index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../controllers/index.html">spark.nn.controllers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../../../index.html" class="nav-link">spark</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">spark.nn</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">spark.nn.components</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">spark.nn.components.somas</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">spark.nn.components.somas.exponential</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../../../../_sources/autoapi/spark/nn/components/somas/exponential/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>spark.nn.components.somas.exponential</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.potential_rest"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.potential_rest</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.potential_reset"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.potential_reset</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.potential_tau"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.potential_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.resistance"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.resistance</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.threshold"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.threshold</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.rheobase_threshold"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.rheobase_threshold</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.spike_slope"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.spike_slope</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSoma"><code class="docutils literal notranslate"><span class="pre">ExponentialSoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSoma.config"><code class="docutils literal notranslate"><span class="pre">ExponentialSoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSoma.build"><code class="docutils literal notranslate"><span class="pre">ExponentialSoma.build()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.AdaptiveExponentialSomaConfig"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSomaConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.AdaptiveExponentialSoma"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.AdaptiveExponentialSoma.config"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSoma.config</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-spark.nn.components.somas.exponential">
+<span id="spark-nn-components-somas-exponential"></span><h1>spark.nn.components.somas.exponential<a class="headerlink" href="#module-spark.nn.components.somas.exponential" title="Link to this heading">#</a></h1>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig" title="spark.nn.components.somas.exponential.ExponentialSomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExponentialSomaConfig</span></code></a></p></td>
+<td><p>Configuration for <cite>ExponentialSoma</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.somas.exponential.ExponentialSoma" title="spark.nn.components.somas.exponential.ExponentialSoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExponentialSoma</span></code></a></p></td>
+<td><p>Exponential integrate-and-fire soma.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.somas.exponential.AdaptiveExponentialSomaConfig" title="spark.nn.components.somas.exponential.AdaptiveExponentialSomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AdaptiveExponentialSomaConfig</span></code></a></p></td>
+<td><p>Configuration for <cite>AdaptiveExponentialSoma</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.somas.exponential.AdaptiveExponentialSoma" title="spark.nn.components.somas.exponential.AdaptiveExponentialSoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AdaptiveExponentialSoma</span></code></a></p></td>
+<td><p>Adaptive exponential integrate-and-fire soma (AdEx).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.exponential.ExponentialSomaConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.exponential.</span></span><span class="sig-name descname"><span class="pre">ExponentialSomaConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas/exponential.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../base/index.html#spark.nn.components.somas.base.SomaConfig" title="spark.nn.components.somas.base.SomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.somas.base.SomaConfig</span></code></a></p>
+<p>Configuration for <cite>ExponentialSoma</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>potential_rest</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default -70.0</em>) – Membrane rest potential, in mV.</p></li>
+<li><p><strong>potential_reset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default -51.0</em>) – Membrane potential after a spike, in mV.</p></li>
+<li><p><strong>potential_tau</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 5.0</em>) – Membrane potential decay constant, in ms.</p></li>
+<li><p><strong>resistance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 0.5</em>) – Membrane resistance, in GΩ.</p></li>
+<li><p><strong>threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default -30.0</em>) – Potential at which a spike is registered, in mV. This is the cutoff of the exponential
+upswing, not the point where firing begins.</p></li>
+<li><p><strong>rheobase_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default -50.0</em>) – Rheobase threshold, in mV. The potential above which the exponential term dominates
+and the upswing becomes irreversible.</p></li>
+<li><p><strong>spike_slope</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 2.0</em>) – Sharpness of spike initiation, in mV. Smaller values approach a hard threshold.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.exponential.ExponentialSomaConfig.potential_rest">
+<span class="sig-name descname"><span class="pre">potential_rest</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas/exponential.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.potential_rest" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.exponential.ExponentialSomaConfig.potential_reset">
+<span class="sig-name descname"><span class="pre">potential_reset</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas/exponential.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.potential_reset" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.exponential.ExponentialSomaConfig.potential_tau">
+<span class="sig-name descname"><span class="pre">potential_tau</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas/exponential.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.potential_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.exponential.ExponentialSomaConfig.resistance">
+<span class="sig-name descname"><span class="pre">resistance</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas/exponential.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.resistance" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.exponential.ExponentialSomaConfig.threshold">
+<span class="sig-name descname"><span class="pre">threshold</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas/exponential.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.threshold" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.exponential.ExponentialSomaConfig.rheobase_threshold">
+<span class="sig-name descname"><span class="pre">rheobase_threshold</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas/exponential.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.rheobase_threshold" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.exponential.ExponentialSomaConfig.spike_slope">
+<span class="sig-name descname"><span class="pre">spike_slope</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas/exponential.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.spike_slope" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.exponential.ExponentialSoma">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.exponential.</span></span><span class="sig-name descname"><span class="pre">ExponentialSoma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas/exponential.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.exponential.ExponentialSoma" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../base/index.html#spark.nn.components.somas.base.Soma" title="spark.nn.components.somas.base.Soma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.somas.base.Soma</span></code></a></p>
+<p>Exponential integrate-and-fire soma.</p>
+<p>A leaky membrane with an added exponential term, which reproduces the upswing of a spike
+rather than firing on a hard threshold crossing. A spike is registered when the potential
+reaches <code class="docutils literal notranslate"><span class="pre">threshold</span></code>, after which the potential is set to <code class="docutils literal notranslate"><span class="pre">potential_reset</span></code>.</p>
+<p>Note that this is not the adaptive exponential (AdEx) model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig" title="spark.nn.components.somas.exponential.ExponentialSomaConfig"><em>ExponentialSomaConfig</em></a><em>, </em><em>optional</em>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>current</strong> (<em>CurrentArray</em>) – Current delivered to the membrane, in pA.</p></li>
+<li><p><strong>inhibition_mask</strong> (<em>BooleanMask, optional</em>) – Marks the inhibitory units. Supplied by the enclosing <cite>Neuron</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>spikes</strong> (<em>SpikeArray</em>) – Non-zero where the potential crossed the threshold on this step.</p>
+</dd>
+<dt class="field-even">Properties<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>potential</strong> (<em>PotentialArray</em>) – Membrane potential, relative to <code class="docutils literal notranslate"><span class="pre">potential_rest</span></code>. Read only.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Potentials are stored relative to <code class="docutils literal notranslate"><span class="pre">potential_rest</span></code>, so a stored value of zero is rest.
+With <span class="math notranslate nohighlight">\(\Delta_T\)</span> the slope factor and <span class="math notranslate nohighlight">\(V_{rh}\)</span> the rheobase threshold, the step
+is a forward Euler integration:</p>
+<div class="math notranslate nohighlight">
+\[V_{t+1} = V_t + \frac{\Delta t}{\tau_V} \left(
+    -V_t + \Delta_T \exp\!\left(\frac{V_t - V_{rh}}{\Delta_T}\right) + R I_t \right)\]</div>
+<p class="rubric">References</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id1" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>N. Fourcaud-Trocmé, D. Hansel, C. van Vreeswijk and N. Brunel, “How Spike Generation
+Mechanisms Determine the Neuronal Response to Fluctuating Inputs”, Journal of
+Neuroscience 23(37), 11628-11640, 2003.
+<a class="reference external" href="https://www.jneurosci.org/content/23/37/11628">https://www.jneurosci.org/content/23/37/11628</a></p>
+</aside>
+<aside class="footnote brackets" id="id2" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<p>W. Gerstner, W. M. Kistler, R. Naud and L. Paninski, “Neuronal Dynamics: From
+Single Neurons to Networks and Models of Cognition”, Chapter 5.2, Exponential
+Integrate-and-Fire Model. <a class="reference external" href="https://neuronaldynamics.epfl.ch/online/Ch5.S2.html">https://neuronaldynamics.epfl.ch/online/Ch5.S2.html</a></p>
+</aside>
+</aside>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.nn.components.somas.exponential.AdaptiveExponentialSoma" title="spark.nn.components.somas.exponential.AdaptiveExponentialSoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AdaptiveExponentialSoma</span></code></a></dt><dd><p>This model with the adaptation mechanisms (AdEx).</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.exponential.ExponentialSoma.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig" title="spark.nn.components.somas.exponential.ExponentialSomaConfig"><span class="pre">ExponentialSomaConfig</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas/exponential.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.exponential.ExponentialSoma.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.somas.exponential.ExponentialSoma.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">abc_args</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas/exponential.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.exponential.ExponentialSoma.build" title="Link to this definition">#</a></dt>
+<dd><p>Lazy initialize method.</p>
+<p>Called once, by <cite>_build</cite>, with the payloads of the first call. Used by any subclass of
+<cite>SparkModule</cite> to define any variable that depends on the shape of the input to the module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**abc_args</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.SparkPayload" title="spark.core.payloads.SparkPayload"><em>SparkPayload</em></a>) – The payloads that arrived on the first call, by port name.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.exponential.AdaptiveExponentialSomaConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.exponential.</span></span><span class="sig-name descname"><span class="pre">AdaptiveExponentialSomaConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas/exponential.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.exponential.AdaptiveExponentialSomaConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../adaptive/index.html#spark.nn.components.somas.adaptive.AdaptiveSomaConfig" title="spark.nn.components.somas.adaptive.AdaptiveSomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.somas.adaptive.AdaptiveSomaConfig</span></code></a>, <a class="reference internal" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig" title="spark.nn.components.somas.exponential.ExponentialSomaConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExponentialSomaConfig</span></code></a></p>
+<p>Configuration for <cite>AdaptiveExponentialSoma</cite>.</p>
+<p>Union of <cite>ExponentialSomaConfig</cite> and <cite>AdaptiveSomaConfig</cite>. It declares no field of its own.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.somas.exponential.AdaptiveExponentialSoma">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.somas.exponential.</span></span><span class="sig-name descname"><span class="pre">AdaptiveExponentialSoma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas/exponential.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.exponential.AdaptiveExponentialSoma" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../adaptive/index.html#spark.nn.components.somas.adaptive.AdaptiveSoma" title="spark.nn.components.somas.adaptive.AdaptiveSoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.somas.adaptive.AdaptiveSoma</span></code></a>, <a class="reference internal" href="#spark.nn.components.somas.exponential.ExponentialSoma" title="spark.nn.components.somas.exponential.ExponentialSoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExponentialSoma</span></code></a></p>
+<p>Adaptive exponential integrate-and-fire soma (AdEx).</p>
+<p><cite>ExponentialSoma</cite> composed with <cite>AdaptiveSoma</cite>. Setting <code class="docutils literal notranslate"><span class="pre">adaptation_delta</span></code> and
+<code class="docutils literal notranslate"><span class="pre">adaptation_subthreshold</span></code> gives the adaptation current of the AdEx model; the refractory
+period, the potential clamp and the adaptive threshold are available on the same terms as
+for any other soma.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.somas.exponential.AdaptiveExponentialSomaConfig" title="spark.nn.components.somas.exponential.AdaptiveExponentialSomaConfig"><em>AdaptiveExponentialSomaConfig</em></a><em>, </em><em>optional</em>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>current</strong> (<em>CurrentArray</em>) – Current delivered to the membrane, in pA.</p></li>
+<li><p><strong>inhibition_mask</strong> (<em>BooleanMask, optional</em>) – Marks the inhibitory units. Supplied by the enclosing <cite>Neuron</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>spikes</strong> (<em>SpikeArray</em>) – Non-zero where the potential crossed the threshold on this step.</p>
+</dd>
+<dt class="field-even">Properties<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>potential</strong> (<em>PotentialArray</em>) – Membrane potential, relative to <code class="docutils literal notranslate"><span class="pre">potential_rest</span></code>. Read only.</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id3" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>R. Brette and W. Gerstner, “Adaptive Exponential Integrate-and-Fire Model as an
+Effective Description of Neuronal Activity”, Journal of Neurophysiology 94(5),
+3637-3642, 2005. <a class="reference external" href="https://doi.org/10.1152/jn.00686.2005">https://doi.org/10.1152/jn.00686.2005</a></p>
+</aside>
+</aside>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.nn.components.somas.exponential.ExponentialSoma" title="spark.nn.components.somas.exponential.ExponentialSoma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExponentialSoma</span></code></a></dt><dd><p>The membrane integration, without the mechanisms.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">AdaptiveSoma</span></code></dt><dd><p>The mechanisms and their equations.</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.somas.exponential.AdaptiveExponentialSoma.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.somas.exponential.AdaptiveExponentialSomaConfig" title="spark.nn.components.somas.exponential.AdaptiveExponentialSomaConfig"><span class="pre">AdaptiveExponentialSomaConfig</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/somas/exponential.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.somas.exponential.AdaptiveExponentialSoma.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../base/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">spark.nn.components.somas.base</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../izhikevich/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">spark.nn.components.somas.izhikevich</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.potential_rest"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.potential_rest</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.potential_reset"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.potential_reset</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.potential_tau"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.potential_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.resistance"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.resistance</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.threshold"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.threshold</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.rheobase_threshold"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.rheobase_threshold</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSomaConfig.spike_slope"><code class="docutils literal notranslate"><span class="pre">ExponentialSomaConfig.spike_slope</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSoma"><code class="docutils literal notranslate"><span class="pre">ExponentialSoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSoma.config"><code class="docutils literal notranslate"><span class="pre">ExponentialSoma.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.ExponentialSoma.build"><code class="docutils literal notranslate"><span class="pre">ExponentialSoma.build()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.AdaptiveExponentialSomaConfig"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSomaConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.AdaptiveExponentialSoma"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSoma</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.somas.exponential.AdaptiveExponentialSoma.config"><code class="docutils literal notranslate"><span class="pre">AdaptiveExponentialSoma.config</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

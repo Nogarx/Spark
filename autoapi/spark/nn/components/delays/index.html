@@ -1,0 +1,1031 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spark.nn.components.delays &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../../_static/copybutton.js?v=30646c52"></script>
+    <script src="../../../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/spark/nn/components/delays/index';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <link rel="next" title="spark.nn.components.delays.base" href="base/index.html" />
+    <link rel="prev" title="spark.nn.components.base" href="../base/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../../../../../_static/searchtools.js"></script>
+    <script src="../../../../../_static/language_data.js"></script>
+    <script src="../../../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <img src="../../../../../_static/spark_250px.png" class="logo__image only-dark pst-js-only" alt="Spark  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/neurons.html">Tutorial #3: Neurons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/brains.html">Tutorial #4: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/graph_editor.html">Tutorial #5: Graph Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/cartpole.html">Tutorial #6: Solving the CartPole™</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/sharding.html">Tutorial #7: Sharding</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../../index.html">spark</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/backend/index.html">spark.core.backend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/decorators/index.html">spark.core.decorators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/validation/index.html">spark.core.validation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/commands/index.html">spark.graph_editor.commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/styles/index.html">spark.graph_editor.styles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/view/index.html">spark.graph_editor.view</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../../index.html">spark.nn</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4 current active"><a class="reference internal" href="../index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../controllers/index.html">spark.nn.controllers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">spark</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">spark.nn</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">spark.nn.components</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">spark.nn.components.delays</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../../../_sources/autoapi/spark/nn/components/delays/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>spark.nn.components.delays</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#package-contents">Package Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.Delays"><code class="docutils literal notranslate"><span class="pre">Delays</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.Delays.kernel"><code class="docutils literal notranslate"><span class="pre">Delays.kernel()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.Delays.reset"><code class="docutils literal notranslate"><span class="pre">Delays.reset()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.Delays.__call__"><code class="docutils literal notranslate"><span class="pre">Delays.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.DelaysOutput"><code class="docutils literal notranslate"><span class="pre">DelaysOutput</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.DelaysOutput.out_spikes"><code class="docutils literal notranslate"><span class="pre">DelaysOutput.out_spikes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">DelaysOutput.out_spikes</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelays"><code class="docutils literal notranslate"><span class="pre">NDelays</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelays.config"><code class="docutils literal notranslate"><span class="pre">NDelays.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelays.build"><code class="docutils literal notranslate"><span class="pre">NDelays.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelays.reset"><code class="docutils literal notranslate"><span class="pre">NDelays.reset()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelays.get_dense"><code class="docutils literal notranslate"><span class="pre">NDelays.get_dense()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelays.__call__"><code class="docutils literal notranslate"><span class="pre">NDelays.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelaysConfig"><code class="docutils literal notranslate"><span class="pre">NDelaysConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelaysConfig.max_delay"><code class="docutils literal notranslate"><span class="pre">NDelaysConfig.max_delay</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelaysConfig.delays"><code class="docutils literal notranslate"><span class="pre">NDelaysConfig.delays</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.N2NDelays"><code class="docutils literal notranslate"><span class="pre">N2NDelays</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.N2NDelays.config"><code class="docutils literal notranslate"><span class="pre">N2NDelays.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.N2NDelays.build"><code class="docutils literal notranslate"><span class="pre">N2NDelays.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.N2NDelays.reset"><code class="docutils literal notranslate"><span class="pre">N2NDelays.reset()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.N2NDelays.get_dense"><code class="docutils literal notranslate"><span class="pre">N2NDelays.get_dense()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.N2NDelays.__call__"><code class="docutils literal notranslate"><span class="pre">N2NDelays.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.N2NDelaysConfig"><code class="docutils literal notranslate"><span class="pre">N2NDelaysConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.N2NDelaysConfig.units"><code class="docutils literal notranslate"><span class="pre">N2NDelaysConfig.units</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-spark.nn.components.delays">
+<span id="spark-nn-components-delays"></span><h1>spark.nn.components.delays<a class="headerlink" href="#module-spark.nn.components.delays" title="Link to this heading">#</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="base/index.html">spark.nn.components.delays.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="n2n_delays/index.html">spark.nn.components.delays.n2n_delays</a></li>
+<li class="toctree-l1"><a class="reference internal" href="n_delays/index.html">spark.nn.components.delays.n_delays</a></li>
+</ul>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.delays.Delays" title="spark.nn.components.delays.Delays"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Delays</span></code></a></p></td>
+<td><p>Base class for synaptic delay models.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.delays.DelaysOutput" title="spark.nn.components.delays.DelaysOutput"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DelaysOutput</span></code></a></p></td>
+<td><p>Output ports of a delay model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.delays.NDelays" title="spark.nn.components.delays.NDelays"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NDelays</span></code></a></p></td>
+<td><p>Conduction delay attached to the presynaptic unit.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.delays.NDelaysConfig" title="spark.nn.components.delays.NDelaysConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NDelaysConfig</span></code></a></p></td>
+<td><p>Configuration for <cite>NDelays</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.delays.N2NDelays" title="spark.nn.components.delays.N2NDelays"><code class="xref py py-obj docutils literal notranslate"><span class="pre">N2NDelays</span></code></a></p></td>
+<td><p>Conduction delay attached to the pair of units.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.delays.N2NDelaysConfig" title="spark.nn.components.delays.N2NDelaysConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">N2NDelaysConfig</span></code></a></p></td>
+<td><p>Configuration for <cite>N2NDelays</cite>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="package-contents">
+<h2>Package Contents<a class="headerlink" href="#package-contents" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.delays.Delays">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.delays.</span></span><span class="sig-name descname"><span class="pre">Delays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.Delays" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../base/index.html#spark.nn.components.base.Component" title="spark.nn.components.base.Component"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.base.Component</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">ConfigT</span></code>]</p>
+<p>Base class for synaptic delay models.</p>
+<p>A delay model buffers incoming spikes and releases each one after the number of steps its
+kernel entry holds. Subclasses provide <cite>_push</cite>, which stores the spikes of the current
+step, and <cite>_gather</cite>, which reads the spikes due on it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="base/index.html#spark.nn.components.delays.base.DelaysConfig" title="spark.nn.components.delays.base.DelaysConfig"><em>DelaysConfig</em></a>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>in_spikes</strong> (<em>SpikeArray</em>) – Spikes emitted on this step.</p>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>out_spikes</strong> (<em>SpikeArray</em>) – Spikes emitted in the past and due on this step.</p>
+</dd>
+<dt class="field-even">Properties<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>kernel</strong> (<em>IntegerArray</em>) – Delay of every entry, in steps rather than in ms. Writable.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The delays are exposed as the writable <code class="docutils literal notranslate"><span class="pre">kernel</span></code> property, in steps rather than in ms.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.nn.components.delays.NDelays" title="spark.nn.components.delays.NDelays"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NDelays</span></code></a></dt><dd><p>One delay per presynaptic unit.</p>
+</dd>
+<dt><a class="reference internal" href="#spark.nn.components.delays.N2NDelays" title="spark.nn.components.delays.N2NDelays"><code class="xref py py-obj docutils literal notranslate"><span class="pre">N2NDelays</span></code></a></dt><dd><p>One delay per (postsynaptic, presynaptic) pair.</p>
+</dd>
+</dl>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.delays.Delays.kernel">
+<span class="sig-name descname"><span class="pre">kernel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.Delays.kernel" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.IntegerArray" title="spark.core.payloads.IntegerArray">spark.core.payloads.IntegerArray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.delays.Delays.reset">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.Delays.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets component state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.delays.Delays.__call__">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_spikes</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.Delays.__call__" title="Link to this definition">#</a></dt>
+<dd><p>Stores the incoming spikes and returns the ones due on this step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>in_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>SpikeArray</em></a>) – Spikes emitted on this step.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary with one entry, <code class="docutils literal notranslate"><span class="pre">out_spikes</span></code>, the spikes whose delay elapsed on this
+step.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#spark.nn.components.delays.DelaysOutput" title="spark.nn.components.delays.DelaysOutput">DelaysOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.delays.DelaysOutput">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.delays.</span></span><span class="sig-name descname"><span class="pre">DelaysOutput</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.DelaysOutput" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
+<p>Output ports of a delay model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.delays.DelaysOutput.out_spikes">
+<span class="sig-name descname"><span class="pre">out_spikes</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.DelaysOutput.out_spikes" title="Link to this definition">#</a></dt>
+<dd><p>Spikes emitted in the past, delivered on this step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray">SpikeArray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Initialize</span> <span class="pre">self.</span>&#160; <span class="pre">See</span> <span class="pre">help(type(self))</span> <span class="pre">for</span> <span class="pre">accurate</span> <span class="pre">signature.</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">out_spikes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><span class="pre">spark.core.payloads.SpikeArray</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.delays.NDelays">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.delays.</span></span><span class="sig-name descname"><span class="pre">NDelays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.NDelays" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.delays.base.Delays" title="spark.nn.components.delays.base.Delays"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.delays.base.Delays</span></code></a></p>
+<p>Conduction delay attached to the presynaptic unit.</p>
+<p>Every spike a unit emits reaches all of its targets after the same number of steps. If
+unit A fires, everything listening to A sees the spike <code class="docutils literal notranslate"><span class="pre">k_A</span></code> steps later, with <code class="docutils literal notranslate"><span class="pre">k_A</span></code>
+the delay of A alone.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.delays.NDelaysConfig" title="spark.nn.components.delays.NDelaysConfig"><em>NDelaysConfig</em></a><em>, </em><em>optional</em>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>in_spikes</strong> (<em>SpikeArray</em>) – Spikes emitted on this step.</p>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>out_spikes</strong> (<em>SpikeArray</em>) – Spikes due on this step, of the same shape as the input.</p>
+</dd>
+<dt class="field-even">Properties<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>kernel</strong> (<em>IntegerArray</em>) – Delay of every presynaptic unit, in steps rather than in ms. Writable.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Spikes are held in a ring buffer of <code class="docutils literal notranslate"><span class="pre">ceil(max_delay</span> <span class="pre">/</span> <span class="pre">dt)</span></code> steps, bit-packed eight units
+to a byte, so the buffer costs one bit per unit per step. Reading is a gather at the
+per-unit offset, which makes the cost independent of the delay values.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.nn.components.delays.N2NDelays" title="spark.nn.components.delays.N2NDelays"><code class="xref py py-obj docutils literal notranslate"><span class="pre">N2NDelays</span></code></a></dt><dd><p>One delay per (postsynaptic, presynaptic) pair.</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.delays.NDelays.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.delays.NDelaysConfig" title="spark.nn.components.delays.NDelaysConfig"><span class="pre">NDelaysConfig</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.NDelays.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.delays.NDelays.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_spikes</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.NDelays.build" title="Link to this definition">#</a></dt>
+<dd><p>Lazy initialize method.</p>
+<p>Called once, by <cite>_build</cite>, with the payloads of the first call. Used by any subclass of
+<cite>SparkModule</cite> to define any variable that depends on the shape of the input to the module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>**abc_args</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SparkPayload" title="spark.core.payloads.SparkPayload"><em>SparkPayload</em></a>) – The payloads that arrived on the first call, by port name.</p></li>
+<li><p><strong>in_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>spark.core.payloads.SpikeArray</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.delays.NDelays.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.NDelays.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets component state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.delays.NDelays.get_dense">
+<span class="sig-name descname"><span class="pre">get_dense</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.NDelays.get_dense" title="Link to this definition">#</a></dt>
+<dd><p>Convert bitmask to dense vector (aligned with MSB-first packing).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.delays.NDelays.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_spikes</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.NDelays.__call__" title="Link to this definition">#</a></dt>
+<dd><p>Stores the incoming spikes and returns the ones due on this step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>in_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>SpikeArray</em></a>) – Spikes emitted on this step.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary with one entry, <code class="docutils literal notranslate"><span class="pre">out_spikes</span></code>, the spikes whose delay elapsed on this
+step.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#spark.nn.components.delays.DelaysOutput" title="spark.nn.components.delays.DelaysOutput">DelaysOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.delays.NDelaysConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.delays.</span></span><span class="sig-name descname"><span class="pre">NDelaysConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.NDelaysConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.delays.base.DelaysConfig" title="spark.nn.components.delays.base.DelaysConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.delays.base.DelaysConfig</span></code></a></p>
+<p>Configuration for <cite>NDelays</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_delay</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default 8.0</em>) – Longest delay the buffer can hold, in ms. The buffer holds <code class="docutils literal notranslate"><span class="pre">ceil(max_delay</span> <span class="pre">/</span> <span class="pre">dt)</span></code>
+steps, which bounds every drawn delay.</p></li>
+<li><p><strong>delays</strong> (<a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default UniformInitializerConfig</em><em>(</em><em>)</em>) – Delay of every presynaptic unit, in steps. Drawn over <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">buffer_size]</span></code> when an
+initializer is given.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.delays.NDelaysConfig.max_delay">
+<span class="sig-name descname"><span class="pre">max_delay</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.NDelaysConfig.max_delay" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.delays.NDelaysConfig.delays">
+<span class="sig-name descname"><span class="pre">delays</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.NDelaysConfig.delays" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.delays.N2NDelays">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.delays.</span></span><span class="sig-name descname"><span class="pre">N2NDelays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.N2NDelays" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.delays.base.Delays" title="spark.nn.components.delays.base.Delays"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.delays.base.Delays</span></code></a></p>
+<p>Conduction delay attached to the pair of units.</p>
+<p>Every connection carries its own delay, so one presynaptic spike reaches each of its
+targets at a different time. If unit A fires and B, C and D listen to A, they see the
+spike <code class="docutils literal notranslate"><span class="pre">k_BA</span></code>, <code class="docutils literal notranslate"><span class="pre">k_CA</span></code> and <code class="docutils literal notranslate"><span class="pre">k_DA</span></code> steps later.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.delays.N2NDelaysConfig" title="spark.nn.components.delays.N2NDelaysConfig"><em>N2NDelaysConfig</em></a><em>, </em><em>optional</em>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>in_spikes</strong> (<em>SpikeArray</em>) – Spikes emitted on this step.</p>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>out_spikes</strong> (<em>SpikeArray</em>) – Spikes due on this step, of shape <code class="docutils literal notranslate"><span class="pre">units</span> <span class="pre">+</span> <span class="pre">in_spikes.shape</span></code> and marked asynchronous. A
+synapse consuming it sums over the presynaptic axes only.</p>
+</dd>
+<dt class="field-even">Properties<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>kernel</strong> (<em>IntegerArray</em>) – Delay of every (postsynaptic, presynaptic) pair, in steps rather than in ms. Writable.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Spikes are held in the same bit-packed ring buffer as <cite>NDelays</cite>. Only the kernel grows: it
+holds one delay per pair rather than one per presynaptic unit.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.nn.components.delays.NDelays" title="spark.nn.components.delays.NDelays"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NDelays</span></code></a></dt><dd><p>One delay per presynaptic unit.</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.delays.N2NDelays.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.delays.N2NDelaysConfig" title="spark.nn.components.delays.N2NDelaysConfig"><span class="pre">N2NDelaysConfig</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.N2NDelays.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.delays.N2NDelays.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_spikes</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.N2NDelays.build" title="Link to this definition">#</a></dt>
+<dd><p>Lazy initialize method.</p>
+<p>Called once, by <cite>_build</cite>, with the payloads of the first call. Used by any subclass of
+<cite>SparkModule</cite> to define any variable that depends on the shape of the input to the module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>**abc_args</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SparkPayload" title="spark.core.payloads.SparkPayload"><em>SparkPayload</em></a>) – The payloads that arrived on the first call, by port name.</p></li>
+<li><p><strong>in_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>spark.core.payloads.SpikeArray</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.delays.N2NDelays.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.N2NDelays.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets component state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.delays.N2NDelays.get_dense">
+<span class="sig-name descname"><span class="pre">get_dense</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.N2NDelays.get_dense" title="Link to this definition">#</a></dt>
+<dd><p>Convert bitmask to dense vector (aligned with MSB-first packing).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)">jax.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.delays.N2NDelays.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_spikes</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.N2NDelays.__call__" title="Link to this definition">#</a></dt>
+<dd><p>Stores the incoming spikes and returns the ones due on this step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>in_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>SpikeArray</em></a>) – Spikes emitted on this step.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary with one entry, <code class="docutils literal notranslate"><span class="pre">out_spikes</span></code>, the spikes whose delay elapsed on this
+step.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#spark.nn.components.delays.DelaysOutput" title="spark.nn.components.delays.DelaysOutput">DelaysOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.delays.N2NDelaysConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.delays.</span></span><span class="sig-name descname"><span class="pre">N2NDelaysConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.N2NDelaysConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="n_delays/index.html#spark.nn.components.delays.n_delays.NDelaysConfig" title="spark.nn.components.delays.n_delays.NDelaysConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.delays.n_delays.NDelaysConfig</span></code></a></p>
+<p>Configuration for <cite>N2NDelays</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>units</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Shape of the postsynaptic pool.</p></li>
+<li><p><strong>max_delay</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default 8.0</em>) – Longest delay the buffer can hold, in ms. The buffer holds <code class="docutils literal notranslate"><span class="pre">ceil(max_delay</span> <span class="pre">/</span> <span class="pre">dt)</span></code>
+steps, which bounds every drawn delay.</p></li>
+<li><p><strong>delays</strong> (<a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default UniformInitializerConfig</em><em>(</em><em>)</em>) – Delay of every (postsynaptic, presynaptic) pair, in steps. Drawn over
+<code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">buffer_size]</span></code> when an initializer is given.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.delays.N2NDelaysConfig.units">
+<span class="sig-name descname"><span class="pre">units</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/delays.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.delays.N2NDelaysConfig.units" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../base/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">spark.nn.components.base</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="base/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">spark.nn.components.delays.base</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#package-contents">Package Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.Delays"><code class="docutils literal notranslate"><span class="pre">Delays</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.Delays.kernel"><code class="docutils literal notranslate"><span class="pre">Delays.kernel()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.Delays.reset"><code class="docutils literal notranslate"><span class="pre">Delays.reset()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.Delays.__call__"><code class="docutils literal notranslate"><span class="pre">Delays.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.DelaysOutput"><code class="docutils literal notranslate"><span class="pre">DelaysOutput</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.DelaysOutput.out_spikes"><code class="docutils literal notranslate"><span class="pre">DelaysOutput.out_spikes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">DelaysOutput.out_spikes</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelays"><code class="docutils literal notranslate"><span class="pre">NDelays</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelays.config"><code class="docutils literal notranslate"><span class="pre">NDelays.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelays.build"><code class="docutils literal notranslate"><span class="pre">NDelays.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelays.reset"><code class="docutils literal notranslate"><span class="pre">NDelays.reset()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelays.get_dense"><code class="docutils literal notranslate"><span class="pre">NDelays.get_dense()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelays.__call__"><code class="docutils literal notranslate"><span class="pre">NDelays.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelaysConfig"><code class="docutils literal notranslate"><span class="pre">NDelaysConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelaysConfig.max_delay"><code class="docutils literal notranslate"><span class="pre">NDelaysConfig.max_delay</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.NDelaysConfig.delays"><code class="docutils literal notranslate"><span class="pre">NDelaysConfig.delays</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.N2NDelays"><code class="docutils literal notranslate"><span class="pre">N2NDelays</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.N2NDelays.config"><code class="docutils literal notranslate"><span class="pre">N2NDelays.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.N2NDelays.build"><code class="docutils literal notranslate"><span class="pre">N2NDelays.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.N2NDelays.reset"><code class="docutils literal notranslate"><span class="pre">N2NDelays.reset()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.N2NDelays.get_dense"><code class="docutils literal notranslate"><span class="pre">N2NDelays.get_dense()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.N2NDelays.__call__"><code class="docutils literal notranslate"><span class="pre">N2NDelays.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.N2NDelaysConfig"><code class="docutils literal notranslate"><span class="pre">N2NDelaysConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.delays.N2NDelaysConfig.units"><code class="docutils literal notranslate"><span class="pre">N2NDelaysConfig.units</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

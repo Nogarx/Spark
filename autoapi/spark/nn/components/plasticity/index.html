@@ -1,0 +1,1887 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spark.nn.components.plasticity &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../../_static/copybutton.js?v=30646c52"></script>
+    <script src="../../../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/spark/nn/components/plasticity/index';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <link rel="next" title="spark.nn.components.plasticity.base" href="base/index.html" />
+    <link rel="prev" title="spark.nn.components.delays.n_delays" href="../delays/n_delays/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../../../../../_static/searchtools.js"></script>
+    <script src="../../../../../_static/language_data.js"></script>
+    <script src="../../../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <img src="../../../../../_static/spark_250px.png" class="logo__image only-dark pst-js-only" alt="Spark  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/neurons.html">Tutorial #3: Neurons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/brains.html">Tutorial #4: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/graph_editor.html">Tutorial #5: Graph Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/cartpole.html">Tutorial #6: Solving the CartPole™</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/sharding.html">Tutorial #7: Sharding</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../../index.html">spark</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/backend/index.html">spark.core.backend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/decorators/index.html">spark.core.decorators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/validation/index.html">spark.core.validation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/commands/index.html">spark.graph_editor.commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/styles/index.html">spark.graph_editor.styles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/view/index.html">spark.graph_editor.view</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../../index.html">spark.nn</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4 current active"><a class="reference internal" href="../index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../controllers/index.html">spark.nn.controllers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">spark</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">spark.nn</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">spark.nn.components</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">spark.nn.components.plasticity</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../../../_sources/autoapi/spark/nn/components/plasticity/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>spark.nn.components.plasticity</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#package-contents">Package Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.Plasticity"><code class="docutils literal notranslate"><span class="pre">Plasticity</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.Plasticity.synaptic_mask"><code class="docutils literal notranslate"><span class="pre">Plasticity.synaptic_mask</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.Plasticity.synaptic_mask_map"><code class="docutils literal notranslate"><span class="pre">Plasticity.synaptic_mask_map</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.Plasticity.__call__"><code class="docutils literal notranslate"><span class="pre">Plasticity.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.PlasticityConfig"><code class="docutils literal notranslate"><span class="pre">PlasticityConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.PlasticityOutput"><code class="docutils literal notranslate"><span class="pre">PlasticityOutput</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.PlasticityOutput.kernel"><code class="docutils literal notranslate"><span class="pre">PlasticityOutput.kernel</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">PlasticityOutput.kernel</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedPlasticity"><code class="docutils literal notranslate"><span class="pre">ModulatedPlasticity</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedPlasticity.config"><code class="docutils literal notranslate"><span class="pre">ModulatedPlasticity.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedPlasticity.build"><code class="docutils literal notranslate"><span class="pre">ModulatedPlasticity.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedPlasticity.__call__"><code class="docutils literal notranslate"><span class="pre">ModulatedPlasticity.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedPlasticityConfig"><code class="docutils literal notranslate"><span class="pre">ModulatedPlasticityConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRule"><code class="docutils literal notranslate"><span class="pre">ZenkeRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRule.config"><code class="docutils literal notranslate"><span class="pre">ZenkeRule.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRule.build"><code class="docutils literal notranslate"><span class="pre">ZenkeRule.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRule.reset"><code class="docutils literal notranslate"><span class="pre">ZenkeRule.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.pre_tau"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.pre_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.post_tau"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.post_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.post_slow_tau"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.post_slow_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.target_tau"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.target_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.a"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.a</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.b"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.b</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.c"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.c</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.d"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.d</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.p"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.p</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.eta"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.eta</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedZenkeRule"><code class="docutils literal notranslate"><span class="pre">ModulatedZenkeRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedZenkeRule.config"><code class="docutils literal notranslate"><span class="pre">ModulatedZenkeRule.config</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedZenkeRuleConfig"><code class="docutils literal notranslate"><span class="pre">ModulatedZenkeRuleConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.HebbianRule"><code class="docutils literal notranslate"><span class="pre">HebbianRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.HebbianRule.config"><code class="docutils literal notranslate"><span class="pre">HebbianRule.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.HebbianRule.build"><code class="docutils literal notranslate"><span class="pre">HebbianRule.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.HebbianRule.reset"><code class="docutils literal notranslate"><span class="pre">HebbianRule.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.HebbianRuleConfig"><code class="docutils literal notranslate"><span class="pre">HebbianRuleConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.HebbianRuleConfig.pre_tau"><code class="docutils literal notranslate"><span class="pre">HebbianRuleConfig.pre_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.HebbianRuleConfig.post_tau"><code class="docutils literal notranslate"><span class="pre">HebbianRuleConfig.post_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.HebbianRuleConfig.eta"><code class="docutils literal notranslate"><span class="pre">HebbianRuleConfig.eta</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.OjaRule"><code class="docutils literal notranslate"><span class="pre">OjaRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.OjaRule.config"><code class="docutils literal notranslate"><span class="pre">OjaRule.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.OjaRule.build"><code class="docutils literal notranslate"><span class="pre">OjaRule.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.OjaRule.reset"><code class="docutils literal notranslate"><span class="pre">OjaRule.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.OjaRuleConfig"><code class="docutils literal notranslate"><span class="pre">OjaRuleConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.OjaRuleConfig.post_tau"><code class="docutils literal notranslate"><span class="pre">OjaRuleConfig.post_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.OjaRuleConfig.eta"><code class="docutils literal notranslate"><span class="pre">OjaRuleConfig.eta</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedHebbianRule"><code class="docutils literal notranslate"><span class="pre">ModulatedHebbianRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedHebbianRule.config"><code class="docutils literal notranslate"><span class="pre">ModulatedHebbianRule.config</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedHebbianRuleConfig"><code class="docutils literal notranslate"><span class="pre">ModulatedHebbianRuleConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedOjaRule"><code class="docutils literal notranslate"><span class="pre">ModulatedOjaRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedOjaRule.config"><code class="docutils literal notranslate"><span class="pre">ModulatedOjaRule.config</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedOjaRuleConfig"><code class="docutils literal notranslate"><span class="pre">ModulatedOjaRuleConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRule"><code class="docutils literal notranslate"><span class="pre">QuadrupletRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRule.config"><code class="docutils literal notranslate"><span class="pre">QuadrupletRule.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRule.build"><code class="docutils literal notranslate"><span class="pre">QuadrupletRule.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRule.reset"><code class="docutils literal notranslate"><span class="pre">QuadrupletRule.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.pre_tau"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig.pre_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.post_tau"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig.post_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.q_alpha"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig.q_alpha</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.q_beta"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig.q_beta</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.q_gamma"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig.q_gamma</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.q_delta"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig.q_delta</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.eta"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig.eta</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.max_clip"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig.max_clip</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedQuadrupletRule"><code class="docutils literal notranslate"><span class="pre">ModulatedQuadrupletRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedQuadrupletRule.config"><code class="docutils literal notranslate"><span class="pre">ModulatedQuadrupletRule.config</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedQuadrupletRuleConfig"><code class="docutils literal notranslate"><span class="pre">ModulatedQuadrupletRuleConfig</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-spark.nn.components.plasticity">
+<span id="spark-nn-components-plasticity"></span><h1>spark.nn.components.plasticity<a class="headerlink" href="#module-spark.nn.components.plasticity" title="Link to this heading">#</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="base/index.html">spark.nn.components.plasticity.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hebbian_rule/index.html">spark.nn.components.plasticity.hebbian_rule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modulated/index.html">spark.nn.components.plasticity.modulated</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quadruplet_rule/index.html">spark.nn.components.plasticity.quadruplet_rule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="short_term/index.html">spark.nn.components.plasticity.short_term</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zenke_rule/index.html">spark.nn.components.plasticity.zenke_rule</a></li>
+</ul>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.Plasticity" title="spark.nn.components.plasticity.Plasticity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Plasticity</span></code></a></p></td>
+<td><p>Base class for plasticity rules.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.PlasticityConfig" title="spark.nn.components.plasticity.PlasticityConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PlasticityConfig</span></code></a></p></td>
+<td><p>Base configuration for plasticity rules.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.PlasticityOutput" title="spark.nn.components.plasticity.PlasticityOutput"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PlasticityOutput</span></code></a></p></td>
+<td><p>Output ports of a plasticity rule.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedPlasticity" title="spark.nn.components.plasticity.ModulatedPlasticity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedPlasticity</span></code></a></p></td>
+<td><p>Third factor for plasticity rules.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedPlasticityConfig" title="spark.nn.components.plasticity.ModulatedPlasticityConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedPlasticityConfig</span></code></a></p></td>
+<td><p>Configuration for <cite>ModulatedPlasticity</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.ZenkeRule" title="spark.nn.components.plasticity.ZenkeRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ZenkeRule</span></code></a></p></td>
+<td><p>Zenke triplet rule with homeostatic consolidation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.ZenkeRuleConfig" title="spark.nn.components.plasticity.ZenkeRuleConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ZenkeRuleConfig</span></code></a></p></td>
+<td><p>Configuration for <cite>ZenkeRule</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedZenkeRule" title="spark.nn.components.plasticity.ModulatedZenkeRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedZenkeRule</span></code></a></p></td>
+<td><p>Zenke triplet rule scaled by a third factor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedZenkeRuleConfig" title="spark.nn.components.plasticity.ModulatedZenkeRuleConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedZenkeRuleConfig</span></code></a></p></td>
+<td><p>Configuration for <cite>ModulatedZenkeRule</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.HebbianRule" title="spark.nn.components.plasticity.HebbianRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HebbianRule</span></code></a></p></td>
+<td><p>Pair-based Hebbian rule.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.HebbianRuleConfig" title="spark.nn.components.plasticity.HebbianRuleConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HebbianRuleConfig</span></code></a></p></td>
+<td><p>Configuration for <cite>HebbianRule</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.OjaRule" title="spark.nn.components.plasticity.OjaRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OjaRule</span></code></a></p></td>
+<td><p>Oja's rule.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.OjaRuleConfig" title="spark.nn.components.plasticity.OjaRuleConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OjaRuleConfig</span></code></a></p></td>
+<td><p>Configuration for <cite>OjaRule</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedHebbianRule" title="spark.nn.components.plasticity.ModulatedHebbianRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedHebbianRule</span></code></a></p></td>
+<td><p>Three-factor Hebbian rule.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedHebbianRuleConfig" title="spark.nn.components.plasticity.ModulatedHebbianRuleConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedHebbianRuleConfig</span></code></a></p></td>
+<td><p>Configuration for <cite>ModulatedHebbianRule</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedOjaRule" title="spark.nn.components.plasticity.ModulatedOjaRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedOjaRule</span></code></a></p></td>
+<td><p>Oja's rule scaled by a third factor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedOjaRuleConfig" title="spark.nn.components.plasticity.ModulatedOjaRuleConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedOjaRuleConfig</span></code></a></p></td>
+<td><p>Configuration for <cite>ModulatedOjaRule</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.QuadrupletRule" title="spark.nn.components.plasticity.QuadrupletRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QuadrupletRule</span></code></a></p></td>
+<td><p>Four-term modulated plasticity rule.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.QuadrupletRuleConfig" title="spark.nn.components.plasticity.QuadrupletRuleConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QuadrupletRuleConfig</span></code></a></p></td>
+<td><p>Configuration for <cite>QuadrupletRule</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedQuadrupletRule" title="spark.nn.components.plasticity.ModulatedQuadrupletRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedQuadrupletRule</span></code></a></p></td>
+<td><p>Four-term rule scaled by a third factor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedQuadrupletRuleConfig" title="spark.nn.components.plasticity.ModulatedQuadrupletRuleConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedQuadrupletRuleConfig</span></code></a></p></td>
+<td><p>Configuration for <cite>ModulatedQuadrupletRule</cite>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="package-contents">
+<h2>Package Contents<a class="headerlink" href="#package-contents" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.Plasticity">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">Plasticity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.Plasticity" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../base/index.html#spark.nn.components.base.Component" title="spark.nn.components.base.Component"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.base.Component</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">ConfigT</span></code>]</p>
+<p>Base class for plasticity rules.</p>
+<p>A plasticity rule reads the presynaptic spikes, the postsynaptic spikes and the current
+weights, and returns the weights for the next step. It does not own the weights: the
+result is written back onto the synapse through an effect declared in the enclosing
+controller.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.plasticity.PlasticityConfig" title="spark.nn.components.plasticity.PlasticityConfig"><em>PlasticityConfig</em></a><em>, </em><em>optional</em>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>pre_spikes</strong> (<em>SpikeArray</em>) – Presynaptic spikes, after any conduction delay.</p></li>
+<li><p><strong>post_spikes</strong> (<em>SpikeArray</em>) – Postsynaptic spikes emitted on this step.</p></li>
+<li><p><strong>kernel</strong> (<em>FloatArray</em>) – Current synaptic weights, read from the synapse.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kernel</strong> (<em>FloatArray</em>) – The updated weights, written back onto the synapse as an effect.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>A rule parameter may be given per connection type rather than as a single value. Passing
+a 4-tuple selects one value for each of the excitatory-excitatory, excitatory-inhibitory,
+inhibitory-excitatory and inhibitory-inhibitory pairs, in the order <code class="docutils literal notranslate"><span class="pre">(EE,</span> <span class="pre">EI,</span> <span class="pre">IE,</span> <span class="pre">II)</span></code>.
+The pairing is read from the inhibition masks the spikes carry and is available as the
+<code class="docutils literal notranslate"><span class="pre">synaptic_mask</span></code> property, with <code class="docutils literal notranslate"><span class="pre">synaptic_mask_map</span></code> giving the names.</p>
+<p>Spikes are reshaped to broadcast against the kernel before the rule is evaluated: the
+presynaptic axes are placed last and the postsynaptic axes first. A rule is therefore
+written as an elementwise expression over the kernel shape.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.HebbianRule" title="spark.nn.components.plasticity.HebbianRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HebbianRule</span></code></a></dt><dd><p>Pair-based potentiation.</p>
+</dd>
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.OjaRule" title="spark.nn.components.plasticity.OjaRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OjaRule</span></code></a></dt><dd><p>Hebbian potentiation with multiplicative normalization.</p>
+</dd>
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.QuadrupletRule" title="spark.nn.components.plasticity.QuadrupletRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QuadrupletRule</span></code></a></dt><dd><p>Four-term rule driven by an external signal.</p>
+</dd>
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedHebbianRule" title="spark.nn.components.plasticity.ModulatedHebbianRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedHebbianRule</span></code></a></dt><dd><p>Hebbian rule gated by an external signal.</p>
+</dd>
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.ZenkeRule" title="spark.nn.components.plasticity.ZenkeRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ZenkeRule</span></code></a></dt><dd><p>Triplet rule with heterosynaptic and transmitter-induced terms.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">RUShortTermPlasticity</span></code></dt><dd><p>Short term depression of the current, not of the weights.</p>
+</dd>
+</dl>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.Plasticity.synaptic_mask">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">synaptic_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.IntegerMask" title="spark.core.payloads.IntegerMask"><span class="pre">spark.core.payloads.IntegerMask</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.Plasticity.synaptic_mask" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.IntegerMask" title="spark.core.payloads.IntegerMask">spark.core.payloads.IntegerMask</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.Plasticity.synaptic_mask_map">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">synaptic_mask_map</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.Plasticity.synaptic_mask_map" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.Plasticity.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pre_spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.Plasticity.__call__" title="Link to this definition">#</a></dt>
+<dd><p>Computes the weights for the next step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pre_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>SpikeArray</em></a>) – Presynaptic spikes, after any conduction delay.</p></li>
+<li><p><strong>post_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>SpikeArray</em></a>) – Postsynaptic spikes emitted on this step.</p></li>
+<li><p><strong>kernel</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><em>FloatArray</em></a>) – Current synaptic weights.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary with one entry, <code class="docutils literal notranslate"><span class="pre">kernel</span></code>, the updated weights.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#spark.nn.components.plasticity.PlasticityOutput" title="spark.nn.components.plasticity.PlasticityOutput">PlasticityOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.PlasticityConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">PlasticityConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.PlasticityConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../base/index.html#spark.nn.components.base.ComponentConfig" title="spark.nn.components.base.ComponentConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.base.ComponentConfig</span></code></a></p>
+<p>Base configuration for plasticity rules.</p>
+<p>Carries no field of its own. Concrete rules declare their own parameters.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.PlasticityOutput">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">PlasticityOutput</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.PlasticityOutput" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
+<p>Output ports of a plasticity rule.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.PlasticityOutput.kernel">
+<span class="sig-name descname"><span class="pre">kernel</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.PlasticityOutput.kernel" title="Link to this definition">#</a></dt>
+<dd><p>The updated synaptic weights, to be written back onto the synapse.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray">FloatArray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Initialize</span> <span class="pre">self.</span>&#160; <span class="pre">See</span> <span class="pre">help(type(self))</span> <span class="pre">for</span> <span class="pre">accurate</span> <span class="pre">signature.</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">kernel</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><span class="pre">spark.core.payloads.FloatArray</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedPlasticity">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">ModulatedPlasticity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedPlasticity" title="Link to this definition">#</a></dt>
+<dd><p>Third factor for plasticity rules.</p>
+<p>Mixin adding a <code class="docutils literal notranslate"><span class="pre">modulation</span></code> input port to a <cite>Plasticity</cite> subclass and scaling the
+weight change by whatever arrives on it. It must precede the rule in the base list:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">ModulatedHebbianRule</span><span class="p">(</span><span class="n">ModulatedPlasticity</span><span class="p">,</span> <span class="n">HebbianRule</span><span class="p">):</span> <span class="o">...</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.plasticity.ModulatedPlasticityConfig" title="spark.nn.components.plasticity.ModulatedPlasticityConfig"><em>ModulatedPlasticityConfig</em></a><em>, </em><em>optional</em>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>modulation</strong> (<em>FloatArray</em>) – Third factor scaling the whole update.</p></li>
+<li><p><strong>pre_spikes</strong> (<em>SpikeArray</em>) – Presynaptic spikes, after any conduction delay.</p></li>
+<li><p><strong>post_spikes</strong> (<em>SpikeArray</em>) – Postsynaptic spikes emitted on this step.</p></li>
+<li><p><strong>kernel</strong> (<em>FloatArray</em>) – Current synaptic weights, read from the synapse.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kernel</strong> (<em>FloatArray</em>) – The updated weights, written back onto the synapse as an effect.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The rule supplies its terms through <cite>Plasticity._kernel_delta</cite>, and the mixin folds the
+third factor into the learning rate rather than into the result:</p>
+<div class="math notranslate nohighlight">
+\[W \leftarrow \mathrm{clip}\left(
+    W + \Delta t \, (\eta M) \, \Delta W \right)\]</div>
+<p>A modulation of zero freezes the weights, and a negative modulation reverses the sign of
+the update. The bounds are those of the rule, so an upper bound declared by the rule is
+still applied.</p>
+<p>Scaling the rate rather than the result is what keeps the arithmetic associated the same
+way as in an unmodulated rule, which matters in half precision.</p>
+<p>The signal is expected in a shape that broadcasts against the kernel: a scalar, the
+presynaptic shape, the postsynaptic shape, or the kernel shape itself.</p>
+<p>The port is added by overriding <code class="docutils literal notranslate"><span class="pre">__call__</span></code>, whose signature is what the framework reads
+the input ports from. <cite>build</cite> drops the extra argument before handing the rest to the
+rule.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.Plasticity" title="spark.nn.components.plasticity.Plasticity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Plasticity</span></code></a></dt><dd><p>The base the rule derives from, and the hooks it fills in.</p>
+</dd>
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedHebbianRule" title="spark.nn.components.plasticity.ModulatedHebbianRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedHebbianRule</span></code></a></dt><dd><p><cite>HebbianRule</cite> with this mixin.</p>
+</dd>
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedQuadrupletRule" title="spark.nn.components.plasticity.ModulatedQuadrupletRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedQuadrupletRule</span></code></a></dt><dd><p><cite>QuadrupletRule</cite> with this mixin.</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedPlasticity.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedPlasticityConfig" title="spark.nn.components.plasticity.ModulatedPlasticityConfig"><span class="pre">ModulatedPlasticityConfig</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedPlasticity.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedPlasticity.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modulation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedPlasticity.build" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modulation</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><em>spark.core.payloads.FloatArray</em></a>)</p></li>
+<li><p><strong>pre_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>spark.core.payloads.SpikeArray</em></a>)</p></li>
+<li><p><strong>post_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>spark.core.payloads.SpikeArray</em></a>)</p></li>
+<li><p><strong>kernel</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><em>spark.core.payloads.FloatArray</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedPlasticity.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modulation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedPlasticity.__call__" title="Link to this definition">#</a></dt>
+<dd><p>Computes the weights for the next step, scaled by the third factor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modulation</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><em>FloatArray</em></a>) – Third factor scaling the whole update.</p></li>
+<li><p><strong>pre_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>SpikeArray</em></a>) – Presynaptic spikes, after any conduction delay.</p></li>
+<li><p><strong>post_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>SpikeArray</em></a>) – Postsynaptic spikes emitted on this step.</p></li>
+<li><p><strong>kernel</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><em>FloatArray</em></a>) – Current synaptic weights.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary with one entry, <code class="docutils literal notranslate"><span class="pre">kernel</span></code>, the updated weights.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#spark.nn.components.plasticity.PlasticityOutput" title="spark.nn.components.plasticity.PlasticityOutput">PlasticityOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedPlasticityConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">ModulatedPlasticityConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedPlasticityConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.plasticity.base.PlasticityConfig" title="spark.nn.components.plasticity.base.PlasticityConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.base.PlasticityConfig</span></code></a></p>
+<p>Configuration for <cite>ModulatedPlasticity</cite>.</p>
+<p>Carries no field of its own. The third factor arrives on a port rather than through the
+configuration.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ZenkeRule">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">ZenkeRule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ZenkeRule" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.plasticity.base.Plasticity" title="spark.nn.components.plasticity.base.Plasticity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.base.Plasticity</span></code></a></p>
+<p>Zenke triplet rule with homeostatic consolidation.</p>
+<p>A triplet rule extended with two terms that keep the weights bounded on their own: a
+heterosynaptic term that pulls each weight towards a slowly moving target, and a
+transmitter-induced term that potentiates on presynaptic activity alone. The combination
+is stable without an external constraint on the weights.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.plasticity.ZenkeRuleConfig" title="spark.nn.components.plasticity.ZenkeRuleConfig"><em>ZenkeRuleConfig</em></a><em>, </em><em>optional</em>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>pre_spikes</strong> (<em>SpikeArray</em>) – Presynaptic spikes, after any conduction delay.</p></li>
+<li><p><strong>post_spikes</strong> (<em>SpikeArray</em>) – Postsynaptic spikes emitted on this step.</p></li>
+<li><p><strong>kernel</strong> (<em>FloatArray</em>) – Current synaptic weights, read from the synapse.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kernel</strong> (<em>FloatArray</em>) – The updated weights, written back onto the synapse as an effect.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>With <span class="math notranslate nohighlight">\(x\)</span> the presynaptic trace, <span class="math notranslate nohighlight">\(y\)</span> and <span class="math notranslate nohighlight">\(\bar{y}\)</span> the fast and slow
+postsynaptic traces and <span class="math notranslate nohighlight">\(\tilde{W}\)</span> the weight target,</p>
+<div class="math notranslate nohighlight">
+\[\Delta W = \eta \left(
+    a \, x \bar{y} \, s_{\mathrm{post}}
+  + b \, y \, s_{\mathrm{pre}}
+  + c \, (W - \tilde{W}) \, y^3 s_{\mathrm{post}}
+  + d \, s_{\mathrm{pre}} \right)\]</div>
+<p>applied as <span class="math notranslate nohighlight">\(W \leftarrow \max(W + \Delta t \, \Delta W, 0)\)</span>. The target follows</p>
+<div class="math notranslate nohighlight">
+\[\tilde{W} \leftarrow \tilde{W} + \lambda_{\tilde{W}} \left(
+    W - p \, \tilde{W} \left(\tfrac{1}{4} - \tilde{W}\right)
+                        \left(\tfrac{1}{2} - \tilde{W}\right) - \tilde{W} \right)\]</div>
+<p>a double-well potential with minima that separate weak from strong synapses, so a weight
+settles into one of the two rather than drifting between them.</p>
+<p class="rubric">References</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id1" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>F. Zenke, E. J. Agnes and W. Gerstner, “Diverse Synaptic Plasticity Mechanisms
+Orchestrated to Form and Retrieve Memories in Spiking Neural Networks”, Nature
+Communications 6, 6922, 2015. <a class="reference external" href="https://doi.org/10.1038/ncomms7922">https://doi.org/10.1038/ncomms7922</a></p>
+</aside>
+</aside>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.HebbianRule" title="spark.nn.components.plasticity.HebbianRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HebbianRule</span></code></a></dt><dd><p>Pair-based potentiation without the homeostatic terms.</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ZenkeRule.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.plasticity.ZenkeRuleConfig" title="spark.nn.components.plasticity.ZenkeRuleConfig"><span class="pre">ZenkeRuleConfig</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ZenkeRule.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ZenkeRule.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pre_spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ZenkeRule.build" title="Link to this definition">#</a></dt>
+<dd><p>Lazy initialize method.</p>
+<p>Called once, by <cite>_build</cite>, with the payloads of the first call. Used by any subclass of
+<cite>SparkModule</cite> to define any variable that depends on the shape of the input to the module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>**abc_args</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SparkPayload" title="spark.core.payloads.SparkPayload"><em>SparkPayload</em></a>) – The payloads that arrived on the first call, by port name.</p></li>
+<li><p><strong>pre_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>spark.core.payloads.SpikeArray</em></a>)</p></li>
+<li><p><strong>post_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>spark.core.payloads.SpikeArray</em></a>)</p></li>
+<li><p><strong>kernel</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><em>spark.core.payloads.FloatArray</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ZenkeRule.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ZenkeRule.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets component state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ZenkeRuleConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">ZenkeRuleConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ZenkeRuleConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.plasticity.base.PlasticityConfig" title="spark.nn.components.plasticity.base.PlasticityConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.base.PlasticityConfig</span></code></a></p>
+<p>Configuration for <cite>ZenkeRule</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pre_tau</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 20.0</em>) – Decay constant of the presynaptic trace, in ms.</p></li>
+<li><p><strong>post_tau</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 20.0</em>) – Decay constant of the fast postsynaptic trace, in ms.</p></li>
+<li><p><strong>post_slow_tau</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 100.0</em>) – Decay constant of the slow postsynaptic trace, in ms.</p></li>
+<li><p><strong>target_tau</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 1200000.0</em>) – Decay constant of the weight target, in ms. Much slower than the other traces, so the
+target moves on the time scale of consolidation rather than of activity.</p></li>
+<li><p><strong>a</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default 2.0</em>) – Weight of the triplet potentiation term.</p></li>
+<li><p><strong>b</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default -0.02</em>) – Weight of the doublet depression term. Negative.</p></li>
+<li><p><strong>c</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default -400.0</em>) – Weight of the heterosynaptic term. Negative.</p></li>
+<li><p><strong>d</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default 2e-05</em>) – Weight of the transmitter-induced term.</p></li>
+<li><p><strong>p</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default 20.0</em>) – Depth of the double-well potential that holds the weight target.</p></li>
+<li><p><strong>eta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default 0.1</em>) – Learning rate.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ZenkeRuleConfig.pre_tau">
+<span class="sig-name descname"><span class="pre">pre_tau</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ZenkeRuleConfig.pre_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ZenkeRuleConfig.post_tau">
+<span class="sig-name descname"><span class="pre">post_tau</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ZenkeRuleConfig.post_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ZenkeRuleConfig.post_slow_tau">
+<span class="sig-name descname"><span class="pre">post_slow_tau</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ZenkeRuleConfig.post_slow_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ZenkeRuleConfig.target_tau">
+<span class="sig-name descname"><span class="pre">target_tau</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ZenkeRuleConfig.target_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ZenkeRuleConfig.a">
+<span class="sig-name descname"><span class="pre">a</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ZenkeRuleConfig.a" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ZenkeRuleConfig.b">
+<span class="sig-name descname"><span class="pre">b</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ZenkeRuleConfig.b" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ZenkeRuleConfig.c">
+<span class="sig-name descname"><span class="pre">c</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ZenkeRuleConfig.c" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ZenkeRuleConfig.d">
+<span class="sig-name descname"><span class="pre">d</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ZenkeRuleConfig.d" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ZenkeRuleConfig.p">
+<span class="sig-name descname"><span class="pre">p</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ZenkeRuleConfig.p" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ZenkeRuleConfig.eta">
+<span class="sig-name descname"><span class="pre">eta</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ZenkeRuleConfig.eta" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedZenkeRule">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">ModulatedZenkeRule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedZenkeRule" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="modulated/index.html#spark.nn.components.plasticity.modulated.ModulatedPlasticity" title="spark.nn.components.plasticity.modulated.ModulatedPlasticity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.modulated.ModulatedPlasticity</span></code></a>, <a class="reference internal" href="#spark.nn.components.plasticity.ZenkeRule" title="spark.nn.components.plasticity.ZenkeRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ZenkeRule</span></code></a></p>
+<p>Zenke triplet rule scaled by a third factor.</p>
+<p><cite>ZenkeRule</cite> composed with <cite>ModulatedPlasticity</cite>. The signal on the <code class="docutils literal notranslate"><span class="pre">modulation</span></code> port
+scales the whole update, the homeostatic terms included.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.plasticity.ModulatedZenkeRuleConfig" title="spark.nn.components.plasticity.ModulatedZenkeRuleConfig"><em>ModulatedZenkeRuleConfig</em></a><em>, </em><em>optional</em>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>modulation</strong> (<em>FloatArray</em>) – Third factor scaling the whole update.</p></li>
+<li><p><strong>pre_spikes</strong> (<em>SpikeArray</em>) – Presynaptic spikes, after any conduction delay.</p></li>
+<li><p><strong>post_spikes</strong> (<em>SpikeArray</em>) – Postsynaptic spikes emitted on this step.</p></li>
+<li><p><strong>kernel</strong> (<em>FloatArray</em>) – Current synaptic weights, read from the synapse.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kernel</strong> (<em>FloatArray</em>) – The updated weights, written back onto the synapse as an effect.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<div class="math notranslate nohighlight">
+\[W \leftarrow \max\left(
+    W + \Delta t \, (\eta M) \, \Delta W, 0 \right)\]</div>
+<p>with <span class="math notranslate nohighlight">\(\Delta W\)</span> the four terms of <cite>ZenkeRule</cite>.</p>
+<p>The heterosynaptic and transmitter-induced terms are what bound the weights, and they are
+scaled along with the rest. A modulation of zero therefore suspends the homeostasis as
+well as the learning, and a sustained negative modulation removes the bound rather than
+reversing it. The weight target keeps advancing on its own in either case, since it
+follows the weights rather than the update.</p>
+<p class="rubric">References</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>F. Zenke, E. J. Agnes and W. Gerstner, “Diverse Synaptic Plasticity Mechanisms
+Orchestrated to Form and Retrieve Memories in Spiking Neural Networks”, Nature
+Communications 6, 6922, 2015. <a class="reference external" href="https://doi.org/10.1038/ncomms7922">https://doi.org/10.1038/ncomms7922</a></p>
+</aside>
+</aside>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.ZenkeRule" title="spark.nn.components.plasticity.ZenkeRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ZenkeRule</span></code></a></dt><dd><p>The same rule without the third factor.</p>
+</dd>
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedPlasticity" title="spark.nn.components.plasticity.ModulatedPlasticity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedPlasticity</span></code></a></dt><dd><p>The mixin supplying the third factor.</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedZenkeRule.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedZenkeRuleConfig" title="spark.nn.components.plasticity.ModulatedZenkeRuleConfig"><span class="pre">ModulatedZenkeRuleConfig</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedZenkeRule.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedZenkeRuleConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">ModulatedZenkeRuleConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedZenkeRuleConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="modulated/index.html#spark.nn.components.plasticity.modulated.ModulatedPlasticityConfig" title="spark.nn.components.plasticity.modulated.ModulatedPlasticityConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.modulated.ModulatedPlasticityConfig</span></code></a>, <a class="reference internal" href="#spark.nn.components.plasticity.ZenkeRuleConfig" title="spark.nn.components.plasticity.ZenkeRuleConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ZenkeRuleConfig</span></code></a></p>
+<p>Configuration for <cite>ModulatedZenkeRule</cite>.</p>
+<p>Union of <cite>ZenkeRuleConfig</cite> and <cite>ModulatedPlasticityConfig</cite>. It declares no field of its
+own, so the defaults are those of <cite>ZenkeRuleConfig</cite>.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.HebbianRule">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">HebbianRule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.HebbianRule" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.plasticity.base.Plasticity" title="spark.nn.components.plasticity.base.Plasticity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.base.Plasticity</span></code></a></p>
+<p>Pair-based Hebbian rule.</p>
+<p>Every presynaptic spike is potentiated in proportion to the postsynaptic trace, and every
+postsynaptic spike in proportion to the presynaptic trace. The rule only potentiates, so
+the weights grow without bound unless something else keeps them in check.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.plasticity.HebbianRuleConfig" title="spark.nn.components.plasticity.HebbianRuleConfig"><em>HebbianRuleConfig</em></a>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>pre_spikes</strong> (<em>SpikeArray</em>) – Presynaptic spikes, after any conduction delay.</p></li>
+<li><p><strong>post_spikes</strong> (<em>SpikeArray</em>) – Postsynaptic spikes emitted on this step.</p></li>
+<li><p><strong>kernel</strong> (<em>FloatArray</em>) – Current synaptic weights, read from the synapse.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kernel</strong> (<em>FloatArray</em>) – The updated weights, written back onto the synapse as an effect.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>With <span class="math notranslate nohighlight">\(x\)</span> the presynaptic trace and <span class="math notranslate nohighlight">\(y\)</span> the postsynaptic trace,</p>
+<div class="math notranslate nohighlight">
+\[\Delta W = \eta \left( y \, s_{\mathrm{pre}} + x \, s_{\mathrm{post}} \right)\]</div>
+<p>applied as <span class="math notranslate nohighlight">\(W \leftarrow \max(W + \Delta t \, \Delta W, 0)\)</span>. Each trace is scaled by
+the reciprocal of its own time constant, so its magnitude does not change with <code class="docutils literal notranslate"><span class="pre">tau</span></code>.</p>
+<p class="rubric">References</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id3" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>W. Gerstner, W. M. Kistler, R. Naud and L. Paninski, “Neuronal Dynamics: From
+Single Neurons to Networks and Models of Cognition”, Chapter 19.2, Hebbian Rate
+Models. <a class="reference external" href="https://neuronaldynamics.epfl.ch/online/Ch19.S2.html">https://neuronaldynamics.epfl.ch/online/Ch19.S2.html</a></p>
+</aside>
+</aside>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.OjaRule" title="spark.nn.components.plasticity.OjaRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OjaRule</span></code></a></dt><dd><p>The same potentiation with a normalizing term.</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.HebbianRule.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.plasticity.HebbianRuleConfig" title="spark.nn.components.plasticity.HebbianRuleConfig"><span class="pre">HebbianRuleConfig</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.HebbianRule.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.HebbianRule.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pre_spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.HebbianRule.build" title="Link to this definition">#</a></dt>
+<dd><p>Lazy initialize method.</p>
+<p>Called once, by <cite>_build</cite>, with the payloads of the first call. Used by any subclass of
+<cite>SparkModule</cite> to define any variable that depends on the shape of the input to the module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>**abc_args</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SparkPayload" title="spark.core.payloads.SparkPayload"><em>SparkPayload</em></a>) – The payloads that arrived on the first call, by port name.</p></li>
+<li><p><strong>pre_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>spark.core.payloads.SpikeArray</em></a>)</p></li>
+<li><p><strong>post_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>spark.core.payloads.SpikeArray</em></a>)</p></li>
+<li><p><strong>kernel</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><em>spark.core.payloads.FloatArray</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.HebbianRule.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.HebbianRule.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets component state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.HebbianRuleConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">HebbianRuleConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.HebbianRuleConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.plasticity.base.PlasticityConfig" title="spark.nn.components.plasticity.base.PlasticityConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.base.PlasticityConfig</span></code></a></p>
+<p>Configuration for <cite>HebbianRule</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pre_tau</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 20.0</em>) – Decay constant of the presynaptic trace, in ms. May be a 4-tuple, one value per
+connection type.</p></li>
+<li><p><strong>post_tau</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 20.0</em>) – Decay constant of the postsynaptic trace, in ms. May be a 4-tuple, one value per
+connection type.</p></li>
+<li><p><strong>eta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default 0.01</em>) – Learning rate.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.HebbianRuleConfig.pre_tau">
+<span class="sig-name descname"><span class="pre">pre_tau</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.HebbianRuleConfig.pre_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.HebbianRuleConfig.post_tau">
+<span class="sig-name descname"><span class="pre">post_tau</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.HebbianRuleConfig.post_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.HebbianRuleConfig.eta">
+<span class="sig-name descname"><span class="pre">eta</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.HebbianRuleConfig.eta" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.OjaRule">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">OjaRule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.OjaRule" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.plasticity.base.Plasticity" title="spark.nn.components.plasticity.base.Plasticity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.base.Plasticity</span></code></a></p>
+<p>Oja’s rule.</p>
+<p>Hebbian potentiation with a decay term proportional to the weight and to the square of
+the postsynaptic trace. The decay bounds the weight vector, which plain Hebbian
+potentiation does not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.plasticity.OjaRuleConfig" title="spark.nn.components.plasticity.OjaRuleConfig"><em>OjaRuleConfig</em></a>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>pre_spikes</strong> (<em>SpikeArray</em>) – Presynaptic spikes, after any conduction delay.</p></li>
+<li><p><strong>post_spikes</strong> (<em>SpikeArray</em>) – Postsynaptic spikes emitted on this step.</p></li>
+<li><p><strong>kernel</strong> (<em>FloatArray</em>) – Current synaptic weights, read from the synapse.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kernel</strong> (<em>FloatArray</em>) – The updated weights, written back onto the synapse as an effect.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>With <span class="math notranslate nohighlight">\(y\)</span> the postsynaptic trace,</p>
+<div class="math notranslate nohighlight">
+\[\Delta W = \eta \left( y \, s_{\mathrm{pre}} - W y^2 \right)\]</div>
+<p>applied as <span class="math notranslate nohighlight">\(W \leftarrow \max(W + \Delta t \, \Delta W, 0)\)</span>.</p>
+<p class="rubric">References</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id4" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>E. Oja, “A Simplified Neuron Model as a Principal Component Analyzer”, Journal of
+Mathematical Biology 15(3), 267-273, 1982. <a class="reference external" href="https://doi.org/10.1007/BF00275687">https://doi.org/10.1007/BF00275687</a></p>
+</aside>
+</aside>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.HebbianRule" title="spark.nn.components.plasticity.HebbianRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HebbianRule</span></code></a></dt><dd><p>The same potentiation without the normalizing term.</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.OjaRule.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.plasticity.OjaRuleConfig" title="spark.nn.components.plasticity.OjaRuleConfig"><span class="pre">OjaRuleConfig</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.OjaRule.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.OjaRule.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pre_spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.OjaRule.build" title="Link to this definition">#</a></dt>
+<dd><p>Lazy initialize method.</p>
+<p>Called once, by <cite>_build</cite>, with the payloads of the first call. Used by any subclass of
+<cite>SparkModule</cite> to define any variable that depends on the shape of the input to the module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>**abc_args</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SparkPayload" title="spark.core.payloads.SparkPayload"><em>SparkPayload</em></a>) – The payloads that arrived on the first call, by port name.</p></li>
+<li><p><strong>pre_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>spark.core.payloads.SpikeArray</em></a>)</p></li>
+<li><p><strong>post_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>spark.core.payloads.SpikeArray</em></a>)</p></li>
+<li><p><strong>kernel</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><em>spark.core.payloads.FloatArray</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.OjaRule.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.OjaRule.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets component state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.OjaRuleConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">OjaRuleConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.OjaRuleConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.plasticity.base.PlasticityConfig" title="spark.nn.components.plasticity.base.PlasticityConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.base.PlasticityConfig</span></code></a></p>
+<p>Configuration for <cite>OjaRule</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>post_tau</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 20.0</em>) – Decay constant of the postsynaptic trace, in ms. May be a 4-tuple, one value per
+connection type.</p></li>
+<li><p><strong>eta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default 0.1</em>) – Learning rate.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.OjaRuleConfig.post_tau">
+<span class="sig-name descname"><span class="pre">post_tau</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.OjaRuleConfig.post_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.OjaRuleConfig.eta">
+<span class="sig-name descname"><span class="pre">eta</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.OjaRuleConfig.eta" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedHebbianRule">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">ModulatedHebbianRule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedHebbianRule" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="modulated/index.html#spark.nn.components.plasticity.modulated.ModulatedPlasticity" title="spark.nn.components.plasticity.modulated.ModulatedPlasticity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.modulated.ModulatedPlasticity</span></code></a>, <a class="reference internal" href="#spark.nn.components.plasticity.HebbianRule" title="spark.nn.components.plasticity.HebbianRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HebbianRule</span></code></a></p>
+<p>Three-factor Hebbian rule.</p>
+<p><cite>HebbianRule</cite> composed with <cite>ModulatedPlasticity</cite>. The pair-based update is unchanged and
+the whole of it is scaled by the signal on the <code class="docutils literal notranslate"><span class="pre">modulation</span></code> port. The signal gates
+learning in time: the coincidence of the two spike trains sets which weights would change,
+and the modulation sets whether and how much they do.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.plasticity.ModulatedHebbianRuleConfig" title="spark.nn.components.plasticity.ModulatedHebbianRuleConfig"><em>ModulatedHebbianRuleConfig</em></a><em>, </em><em>optional</em>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>modulation</strong> (<em>FloatArray</em>) – Third factor scaling the whole update.</p></li>
+<li><p><strong>pre_spikes</strong> (<em>SpikeArray</em>) – Presynaptic spikes, after any conduction delay.</p></li>
+<li><p><strong>post_spikes</strong> (<em>SpikeArray</em>) – Postsynaptic spikes emitted on this step.</p></li>
+<li><p><strong>kernel</strong> (<em>FloatArray</em>) – Current synaptic weights, read from the synapse.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kernel</strong> (<em>FloatArray</em>) – The updated weights, written back onto the synapse as an effect.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>With <span class="math notranslate nohighlight">\(x\)</span> the presynaptic trace and <span class="math notranslate nohighlight">\(y\)</span> the postsynaptic trace,</p>
+<div class="math notranslate nohighlight">
+\[\Delta W = \eta \left( y \, s_{\mathrm{pre}} + x \, s_{\mathrm{post}} \right)\]</div>
+<p>applied as <span class="math notranslate nohighlight">\(W \leftarrow \max(W + \Delta t \, M \, \Delta W, 0)\)</span>. A modulation of
+zero freezes the weights, and a negative modulation reverses the sign of the update.</p>
+<p class="rubric">References</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id5" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>W. Gerstner, M. Lehmann, V. Liakoni, D. Corneil and J. Brea, “Eligibility Traces and
+Plasticity on Behavioral Time Scales”, Frontiers in Neural Circuits 12, 53, 2018.
+<a class="reference external" href="https://doi.org/10.3389/fncir.2018.00053">https://doi.org/10.3389/fncir.2018.00053</a></p>
+</aside>
+</aside>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.HebbianRule" title="spark.nn.components.plasticity.HebbianRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HebbianRule</span></code></a></dt><dd><p>The same rule without the third factor.</p>
+</dd>
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedPlasticity" title="spark.nn.components.plasticity.ModulatedPlasticity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedPlasticity</span></code></a></dt><dd><p>The mixin supplying the third factor.</p>
+</dd>
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedQuadrupletRule" title="spark.nn.components.plasticity.ModulatedQuadrupletRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedQuadrupletRule</span></code></a></dt><dd><p>Modulated rule with separate spike and trace terms.</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedHebbianRule.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedHebbianRuleConfig" title="spark.nn.components.plasticity.ModulatedHebbianRuleConfig"><span class="pre">ModulatedHebbianRuleConfig</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedHebbianRule.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedHebbianRuleConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">ModulatedHebbianRuleConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedHebbianRuleConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="modulated/index.html#spark.nn.components.plasticity.modulated.ModulatedPlasticityConfig" title="spark.nn.components.plasticity.modulated.ModulatedPlasticityConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.modulated.ModulatedPlasticityConfig</span></code></a>, <a class="reference internal" href="#spark.nn.components.plasticity.HebbianRuleConfig" title="spark.nn.components.plasticity.HebbianRuleConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HebbianRuleConfig</span></code></a></p>
+<p>Configuration for <cite>ModulatedHebbianRule</cite>.</p>
+<p>Union of <cite>HebbianRuleConfig</cite> and <cite>ModulatedPlasticityConfig</cite>. It declares no field of its
+own, so the defaults are those of <cite>HebbianRuleConfig</cite>.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedOjaRule">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">ModulatedOjaRule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedOjaRule" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="modulated/index.html#spark.nn.components.plasticity.modulated.ModulatedPlasticity" title="spark.nn.components.plasticity.modulated.ModulatedPlasticity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.modulated.ModulatedPlasticity</span></code></a>, <a class="reference internal" href="#spark.nn.components.plasticity.OjaRule" title="spark.nn.components.plasticity.OjaRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OjaRule</span></code></a></p>
+<p>Oja’s rule scaled by a third factor.</p>
+<p><cite>OjaRule</cite> composed with <cite>ModulatedPlasticity</cite>. Both terms of the rule are scaled together
+by the signal on the <code class="docutils literal notranslate"><span class="pre">modulation</span></code> port, so the normalization follows the potentiation
+rather than acting on its own.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.plasticity.ModulatedOjaRuleConfig" title="spark.nn.components.plasticity.ModulatedOjaRuleConfig"><em>ModulatedOjaRuleConfig</em></a><em>, </em><em>optional</em>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>modulation</strong> (<em>FloatArray</em>) – Third factor scaling the whole update.</p></li>
+<li><p><strong>pre_spikes</strong> (<em>SpikeArray</em>) – Presynaptic spikes, after any conduction delay.</p></li>
+<li><p><strong>post_spikes</strong> (<em>SpikeArray</em>) – Postsynaptic spikes emitted on this step.</p></li>
+<li><p><strong>kernel</strong> (<em>FloatArray</em>) – Current synaptic weights, read from the synapse.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kernel</strong> (<em>FloatArray</em>) – The updated weights, written back onto the synapse as an effect.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>With <span class="math notranslate nohighlight">\(y\)</span> the postsynaptic trace,</p>
+<div class="math notranslate nohighlight">
+\[W \leftarrow \max\left(
+    W + \Delta t \, (\eta M) \left( y \, s_{\mathrm{pre}} - W y^2 \right), 0 \right)\]</div>
+<p>A modulation of zero freezes the weights entirely, the decay term included, so the weight
+vector is not renormalized while learning is gated off. A negative modulation reverses
+both terms, which grows the weights rather than bounding them.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.OjaRule" title="spark.nn.components.plasticity.OjaRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OjaRule</span></code></a></dt><dd><p>The same rule without the third factor.</p>
+</dd>
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedPlasticity" title="spark.nn.components.plasticity.ModulatedPlasticity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedPlasticity</span></code></a></dt><dd><p>The mixin supplying the third factor.</p>
+</dd>
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedHebbianRule" title="spark.nn.components.plasticity.ModulatedHebbianRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedHebbianRule</span></code></a></dt><dd><p>Modulated potentiation without the normalizing term.</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedOjaRule.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedOjaRuleConfig" title="spark.nn.components.plasticity.ModulatedOjaRuleConfig"><span class="pre">ModulatedOjaRuleConfig</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedOjaRule.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedOjaRuleConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">ModulatedOjaRuleConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedOjaRuleConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="modulated/index.html#spark.nn.components.plasticity.modulated.ModulatedPlasticityConfig" title="spark.nn.components.plasticity.modulated.ModulatedPlasticityConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.modulated.ModulatedPlasticityConfig</span></code></a>, <a class="reference internal" href="#spark.nn.components.plasticity.OjaRuleConfig" title="spark.nn.components.plasticity.OjaRuleConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OjaRuleConfig</span></code></a></p>
+<p>Configuration for <cite>ModulatedOjaRule</cite>.</p>
+<p>Union of <cite>OjaRuleConfig</cite> and <cite>ModulatedPlasticityConfig</cite>. It declares no field of its own,
+so the defaults are those of <cite>OjaRuleConfig</cite>.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.QuadrupletRule">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">QuadrupletRule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.QuadrupletRule" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.plasticity.base.Plasticity" title="spark.nn.components.plasticity.base.Plasticity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.base.Plasticity</span></code></a></p>
+<p>Four-term modulated plasticity rule.</p>
+<p>Standard pre-post pair plasticity rule model, with elegibility traces:
+Update is scaled by the signal on the <code class="docutils literal notranslate"><span class="pre">modulation</span></code> port.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.plasticity.QuadrupletRuleConfig" title="spark.nn.components.plasticity.QuadrupletRuleConfig"><em>QuadrupletRuleConfig</em></a><em>, </em><em>optional</em>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>modulation</strong> (<em>FloatArray</em>) – Third factor scaling the whole update.</p></li>
+<li><p><strong>pre_spikes</strong> (<em>SpikeArray</em>) – Presynaptic spikes, after any conduction delay.</p></li>
+<li><p><strong>post_spikes</strong> (<em>SpikeArray</em>) – Postsynaptic spikes emitted on this step.</p></li>
+<li><p><strong>kernel</strong> (<em>FloatArray</em>) – Current synaptic weights, read from the synapse.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kernel</strong> (<em>FloatArray</em>) – The updated weights, written back onto the synapse as an effect.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<div class="math notranslate nohighlight">
+\[\Delta W = \eta \, M \left(
+    \alpha \, s_{\mathrm{pre}}
+  + \beta \, y \, s_{\mathrm{pre}}
+  + \gamma \, s_{\mathrm{post}}
+  + \delta \, x \, s_{\mathrm{post}} \right)\]</div>
+<p>applied as <span class="math notranslate nohighlight">\(W \leftarrow \mathrm{clip}(W + \Delta t \, \Delta W, 0, W_{\max})\)</span>. The
+<span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\gamma\)</span> terms fire on a spike alone and act as a baseline drift.</p>
+<p class="rubric">References</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id6" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>E. Oja, “Memory by a thousand rules: Automated discovery of functional multi-type plasticity rules
+reveals variety &amp; degeneracy at the heart of learning”, Basile Confavreux, Zoe P. M. Harrington, Maciej Kania,
+Poornima Ramesh, Anastasia N. Krouglova, Panos A. Bozelos,  Jakob H. Macke, Andrew M. Saxe, Pedro J. Gonçalves,
+Tim P. Vogels, bioRxiv 2025.05.28.656584; doi: <a class="reference external" href="https://doi.org/10.1101/2025.05.28.656584">https://doi.org/10.1101/2025.05.28.656584</a></p>
+</aside>
+</aside>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedHebbianRule" title="spark.nn.components.plasticity.ModulatedHebbianRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedHebbianRule</span></code></a></dt><dd><p>Modulated Hebbian rule, with the two trace terms only.</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.QuadrupletRule.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.plasticity.QuadrupletRuleConfig" title="spark.nn.components.plasticity.QuadrupletRuleConfig"><span class="pre">QuadrupletRuleConfig</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.QuadrupletRule.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.QuadrupletRule.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pre_spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.QuadrupletRule.build" title="Link to this definition">#</a></dt>
+<dd><p>Lazy initialize method.</p>
+<p>Called once, by <cite>_build</cite>, with the payloads of the first call. Used by any subclass of
+<cite>SparkModule</cite> to define any variable that depends on the shape of the input to the module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>**abc_args</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SparkPayload" title="spark.core.payloads.SparkPayload"><em>SparkPayload</em></a>) – The payloads that arrived on the first call, by port name.</p></li>
+<li><p><strong>pre_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>spark.core.payloads.SpikeArray</em></a>)</p></li>
+<li><p><strong>post_spikes</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>spark.core.payloads.SpikeArray</em></a>)</p></li>
+<li><p><strong>kernel</strong> (<a class="reference internal" href="../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><em>spark.core.payloads.FloatArray</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.QuadrupletRule.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.QuadrupletRule.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets component state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.QuadrupletRuleConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">QuadrupletRuleConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.QuadrupletRuleConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base/index.html#spark.nn.components.plasticity.base.PlasticityConfig" title="spark.nn.components.plasticity.base.PlasticityConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.base.PlasticityConfig</span></code></a></p>
+<p>Configuration for <cite>QuadrupletRule</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pre_tau</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 1</em>) – Decay constant of the presynaptic trace, in ms. May be a 4-tuple, one value per
+connection type.</p></li>
+<li><p><strong>post_tau</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default</em><em> (</em><em>1.0</em><em>, </em><em>2.0</em><em>, </em><em>3.0</em><em>, </em><em>4.0</em><em>)</em>) – Decay constant of the postsynaptic trace, in ms. May be a 4-tuple, one value per
+connection type.</p></li>
+<li><p><strong>q_alpha</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 1.0</em>) – Weight of the presynaptic spike term.</p></li>
+<li><p><strong>q_beta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 1.0</em>) – Weight of the postsynaptic trace times presynaptic spike term.</p></li>
+<li><p><strong>q_gamma</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default</em><em> (</em><em>1.0</em><em>, </em><em>2.0</em><em>, </em><em>3.0</em><em>, </em><em>4.0</em><em>)</em>) – Weight of the postsynaptic spike term.</p></li>
+<li><p><strong>q_delta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 1.0</em>) – Weight of the presynaptic trace times postsynaptic spike term.</p></li>
+<li><p><strong>eta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default 0.1</em>) – Learning rate.</p></li>
+<li><p><strong>max_clip</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default</em><em> (</em><em>20.0</em><em>, </em><em>20.0</em><em>, </em><em>20.0</em><em>, </em><em>20.0</em><em>)</em>) – Upper bound on the weights, per connection type in the order <code class="docutils literal notranslate"><span class="pre">(EE,</span> <span class="pre">EI,</span> <span class="pre">IE,</span> <span class="pre">II)</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.QuadrupletRuleConfig.pre_tau">
+<span class="sig-name descname"><span class="pre">pre_tau</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.pre_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.QuadrupletRuleConfig.post_tau">
+<span class="sig-name descname"><span class="pre">post_tau</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.post_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.QuadrupletRuleConfig.q_alpha">
+<span class="sig-name descname"><span class="pre">q_alpha</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.q_alpha" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.QuadrupletRuleConfig.q_beta">
+<span class="sig-name descname"><span class="pre">q_beta</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.q_beta" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.QuadrupletRuleConfig.q_gamma">
+<span class="sig-name descname"><span class="pre">q_gamma</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.q_gamma" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.QuadrupletRuleConfig.q_delta">
+<span class="sig-name descname"><span class="pre">q_delta</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.q_delta" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.QuadrupletRuleConfig.eta">
+<span class="sig-name descname"><span class="pre">eta</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.eta" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.QuadrupletRuleConfig.max_clip">
+<span class="sig-name descname"><span class="pre">max_clip</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.max_clip" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedQuadrupletRule">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">ModulatedQuadrupletRule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedQuadrupletRule" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="modulated/index.html#spark.nn.components.plasticity.modulated.ModulatedPlasticity" title="spark.nn.components.plasticity.modulated.ModulatedPlasticity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.modulated.ModulatedPlasticity</span></code></a>, <a class="reference internal" href="#spark.nn.components.plasticity.QuadrupletRule" title="spark.nn.components.plasticity.QuadrupletRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QuadrupletRule</span></code></a></p>
+<p>Four-term rule scaled by a third factor.</p>
+<p><cite>QuadrupletRule</cite> composed with <cite>ModulatedPlasticity</cite>. The four terms are unchanged and the
+whole update is scaled by the signal on the <code class="docutils literal notranslate"><span class="pre">modulation</span></code> port.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.plasticity.ModulatedQuadrupletRuleConfig" title="spark.nn.components.plasticity.ModulatedQuadrupletRuleConfig"><em>ModulatedQuadrupletRuleConfig</em></a><em>, </em><em>optional</em>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>modulation</strong> (<em>FloatArray</em>) – Third factor scaling the whole update.</p></li>
+<li><p><strong>pre_spikes</strong> (<em>SpikeArray</em>) – Presynaptic spikes, after any conduction delay.</p></li>
+<li><p><strong>post_spikes</strong> (<em>SpikeArray</em>) – Postsynaptic spikes emitted on this step.</p></li>
+<li><p><strong>kernel</strong> (<em>FloatArray</em>) – Current synaptic weights, read from the synapse.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kernel</strong> (<em>FloatArray</em>) – The updated weights, written back onto the synapse as an effect.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<div class="math notranslate nohighlight">
+\[W \leftarrow \mathrm{clip}\left(
+    W + \Delta t \, M \, \Delta W, 0, W_{\max} \right)\]</div>
+<p>with <span class="math notranslate nohighlight">\(\Delta W\)</span> the four terms of <cite>QuadrupletRule</cite>. The upper bound of the rule is
+still applied.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.QuadrupletRule" title="spark.nn.components.plasticity.QuadrupletRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QuadrupletRule</span></code></a></dt><dd><p>The four terms, without the third factor.</p>
+</dd>
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedHebbianRule" title="spark.nn.components.plasticity.ModulatedHebbianRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedHebbianRule</span></code></a></dt><dd><p>Modulated Hebbian rule, with the two trace terms only.</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedQuadrupletRule.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.plasticity.ModulatedQuadrupletRuleConfig" title="spark.nn.components.plasticity.ModulatedQuadrupletRuleConfig"><span class="pre">ModulatedQuadrupletRuleConfig</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedQuadrupletRule.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.ModulatedQuadrupletRuleConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.</span></span><span class="sig-name descname"><span class="pre">ModulatedQuadrupletRuleConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.ModulatedQuadrupletRuleConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="modulated/index.html#spark.nn.components.plasticity.modulated.ModulatedPlasticityConfig" title="spark.nn.components.plasticity.modulated.ModulatedPlasticityConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.modulated.ModulatedPlasticityConfig</span></code></a>, <a class="reference internal" href="#spark.nn.components.plasticity.QuadrupletRuleConfig" title="spark.nn.components.plasticity.QuadrupletRuleConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QuadrupletRuleConfig</span></code></a></p>
+<p>Configuration for <cite>ModulatedQuadrupletRule</cite>.</p>
+<p>Union of <cite>QuadrupletRuleConfig</cite> and <cite>ModulatedPlasticityConfig</cite>. It declares no field of
+its own.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../delays/n_delays/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">spark.nn.components.delays.n_delays</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="base/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">spark.nn.components.plasticity.base</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#package-contents">Package Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.Plasticity"><code class="docutils literal notranslate"><span class="pre">Plasticity</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.Plasticity.synaptic_mask"><code class="docutils literal notranslate"><span class="pre">Plasticity.synaptic_mask</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.Plasticity.synaptic_mask_map"><code class="docutils literal notranslate"><span class="pre">Plasticity.synaptic_mask_map</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.Plasticity.__call__"><code class="docutils literal notranslate"><span class="pre">Plasticity.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.PlasticityConfig"><code class="docutils literal notranslate"><span class="pre">PlasticityConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.PlasticityOutput"><code class="docutils literal notranslate"><span class="pre">PlasticityOutput</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.PlasticityOutput.kernel"><code class="docutils literal notranslate"><span class="pre">PlasticityOutput.kernel</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">PlasticityOutput.kernel</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedPlasticity"><code class="docutils literal notranslate"><span class="pre">ModulatedPlasticity</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedPlasticity.config"><code class="docutils literal notranslate"><span class="pre">ModulatedPlasticity.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedPlasticity.build"><code class="docutils literal notranslate"><span class="pre">ModulatedPlasticity.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedPlasticity.__call__"><code class="docutils literal notranslate"><span class="pre">ModulatedPlasticity.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedPlasticityConfig"><code class="docutils literal notranslate"><span class="pre">ModulatedPlasticityConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRule"><code class="docutils literal notranslate"><span class="pre">ZenkeRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRule.config"><code class="docutils literal notranslate"><span class="pre">ZenkeRule.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRule.build"><code class="docutils literal notranslate"><span class="pre">ZenkeRule.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRule.reset"><code class="docutils literal notranslate"><span class="pre">ZenkeRule.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.pre_tau"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.pre_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.post_tau"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.post_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.post_slow_tau"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.post_slow_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.target_tau"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.target_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.a"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.a</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.b"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.b</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.c"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.c</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.d"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.d</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.p"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.p</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ZenkeRuleConfig.eta"><code class="docutils literal notranslate"><span class="pre">ZenkeRuleConfig.eta</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedZenkeRule"><code class="docutils literal notranslate"><span class="pre">ModulatedZenkeRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedZenkeRule.config"><code class="docutils literal notranslate"><span class="pre">ModulatedZenkeRule.config</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedZenkeRuleConfig"><code class="docutils literal notranslate"><span class="pre">ModulatedZenkeRuleConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.HebbianRule"><code class="docutils literal notranslate"><span class="pre">HebbianRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.HebbianRule.config"><code class="docutils literal notranslate"><span class="pre">HebbianRule.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.HebbianRule.build"><code class="docutils literal notranslate"><span class="pre">HebbianRule.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.HebbianRule.reset"><code class="docutils literal notranslate"><span class="pre">HebbianRule.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.HebbianRuleConfig"><code class="docutils literal notranslate"><span class="pre">HebbianRuleConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.HebbianRuleConfig.pre_tau"><code class="docutils literal notranslate"><span class="pre">HebbianRuleConfig.pre_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.HebbianRuleConfig.post_tau"><code class="docutils literal notranslate"><span class="pre">HebbianRuleConfig.post_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.HebbianRuleConfig.eta"><code class="docutils literal notranslate"><span class="pre">HebbianRuleConfig.eta</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.OjaRule"><code class="docutils literal notranslate"><span class="pre">OjaRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.OjaRule.config"><code class="docutils literal notranslate"><span class="pre">OjaRule.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.OjaRule.build"><code class="docutils literal notranslate"><span class="pre">OjaRule.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.OjaRule.reset"><code class="docutils literal notranslate"><span class="pre">OjaRule.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.OjaRuleConfig"><code class="docutils literal notranslate"><span class="pre">OjaRuleConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.OjaRuleConfig.post_tau"><code class="docutils literal notranslate"><span class="pre">OjaRuleConfig.post_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.OjaRuleConfig.eta"><code class="docutils literal notranslate"><span class="pre">OjaRuleConfig.eta</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedHebbianRule"><code class="docutils literal notranslate"><span class="pre">ModulatedHebbianRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedHebbianRule.config"><code class="docutils literal notranslate"><span class="pre">ModulatedHebbianRule.config</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedHebbianRuleConfig"><code class="docutils literal notranslate"><span class="pre">ModulatedHebbianRuleConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedOjaRule"><code class="docutils literal notranslate"><span class="pre">ModulatedOjaRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedOjaRule.config"><code class="docutils literal notranslate"><span class="pre">ModulatedOjaRule.config</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedOjaRuleConfig"><code class="docutils literal notranslate"><span class="pre">ModulatedOjaRuleConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRule"><code class="docutils literal notranslate"><span class="pre">QuadrupletRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRule.config"><code class="docutils literal notranslate"><span class="pre">QuadrupletRule.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRule.build"><code class="docutils literal notranslate"><span class="pre">QuadrupletRule.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRule.reset"><code class="docutils literal notranslate"><span class="pre">QuadrupletRule.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.pre_tau"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig.pre_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.post_tau"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig.post_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.q_alpha"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig.q_alpha</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.q_beta"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig.q_beta</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.q_gamma"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig.q_gamma</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.q_delta"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig.q_delta</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.eta"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig.eta</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.QuadrupletRuleConfig.max_clip"><code class="docutils literal notranslate"><span class="pre">QuadrupletRuleConfig.max_clip</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedQuadrupletRule"><code class="docutils literal notranslate"><span class="pre">ModulatedQuadrupletRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedQuadrupletRule.config"><code class="docutils literal notranslate"><span class="pre">ModulatedQuadrupletRule.config</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.ModulatedQuadrupletRuleConfig"><code class="docutils literal notranslate"><span class="pre">ModulatedQuadrupletRuleConfig</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
