@@ -27,7 +27,14 @@ METADATA_KEY = '__metadata__'
 
 class SparkJSONEncoder(json.JSONEncoder):
 	"""
-		Custom JSON encoder to handle common types encounter in Spark.
+		JSON encoder for the types a Spark configuration holds.
+
+		Handles configurations, module specifications, port maps, dtypes, jax arrays, enums and
+		registered classes, which are written by their registered name rather than by value.
+
+		See Also
+		--------
+		SparkJSONDecoder : Reads back what this writes.
 	"""
 	__version__ = '1.0'
 
@@ -97,7 +104,10 @@ T = tp.TypeVar('T')
 
 class SparkJSONDecoder(json.JSONDecoder):
 	"""
-		Custom JSON decoder to handle common types encounter in Spark.
+		JSON decoder for the types a Spark configuration holds.
+
+		Reads back what `SparkJSONEncoder` writes. A class is looked up in the registry by the
+		name it was written under, so the model it names has to be registered first.
 	"""
 	__supported_versions__ = {'1.0'}
 

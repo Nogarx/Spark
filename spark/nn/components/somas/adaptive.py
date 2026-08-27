@@ -133,6 +133,23 @@ class AdaptiveSoma:
         config : AdaptiveSomaConfig, optional
             Model configuration. Its fields may also be given as keyword arguments.
 
+        Input Ports
+        -----------
+        current : CurrentArray
+            Current delivered to the membrane, in pA. Gated off while the refractory period is active.
+        inhibition_mask : BooleanMask, optional
+            Marks the inhibitory units. Passed through to the model unchanged.
+
+        Output Ports
+        ------------
+        spikes : SpikeArray
+            Non-zero where the potential crossed the adapted threshold and no veto applied.
+
+        Properties
+        ----------
+        potential : PotentialArray
+            Membrane potential, as held by the model this mixin extends. Read only.
+
         Notes
         -----
         The mixin supplies four terms of the soma step. The membrane integration

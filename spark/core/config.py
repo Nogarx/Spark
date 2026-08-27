@@ -34,6 +34,12 @@ logger = logging.getLogger('Spark')
 #################################################################################################################################################
 
 class AnnotationWarning(Warning):
+	"""
+		Raised when the annotation of a field cannot be resolved.
+
+		A field whose annotation cannot be read is left unchecked rather than refused, so a
+		configuration still builds.
+	"""
 	pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -71,6 +77,10 @@ VALIDATE_CONFIGS = True
 def validation_enabled() -> bool:
 	"""
 		Whether the validators of a field are being run.
+
+		Returns
+		-------
+		bool
 	"""
 	return VALIDATE_CONFIGS
 
@@ -80,11 +90,19 @@ def set_validation(enabled: bool) -> bool:
 	"""
 		Turns the validators on or off.
 
-		Args:
-			enabled: bool, True to run the validators of every field.
+		Parameters
+		----------
+		enabled : bool
+			True to run the validators of every field.
 
-		Returns:
-			bool, what the setting was before, which is what puts it back.
+		Returns
+		-------
+		bool
+			The previous setting, for restoring it afterwards.
+
+		See Also
+		--------
+		NoValidation : Context manager doing the same for one block.
 	"""
 	global VALIDATE_CONFIGS
 	previous = VALIDATE_CONFIGS
@@ -95,13 +113,16 @@ def set_validation(enabled: bool) -> bool:
 
 def holds_a_collection(field: dc.Field) -> bool:
 	"""
-		True if the annotation of a field says that it holds a collection.
+		Whether the annotation of a field says it holds a collection.
 
-		Args:
-			field: dc.Field, the field to judge.
+		Parameters
+		----------
+		field : dataclasses.Field
+			Field to read.
 
-		Returns:
-			bool, True when the field holds a collection.
+		Returns
+		-------
+		bool
 	"""
 	annotation = field.type
 	if isinstance(annotation, str):
@@ -113,14 +134,18 @@ def holds_a_collection(field: dc.Field) -> bool:
 
 def is_module_specs_field(field: dc.Field, value: tp.Any = None) -> bool:
 	"""
-		True if a field holds a collection of module specifications.
+		Whether a field holds a collection of module specifications.
 
-		Args:
-			field: dc.Field, the field to judge.
-			value: tp.Any, what the field is about to hold, consulted when the annotation says nothing.
+		Parameters
+		----------
+		field : dataclasses.Field
+			Field to read.
+		value : Any, optional
+			What the field is about to hold. Read when the annotation says nothing.
 
-		Returns:
-			bool, True when the field holds module specifications.
+		Returns
+		-------
+		bool
 	"""
 	from spark.core.specs import ModuleSpecs
 	annotation = field.type
@@ -185,7 +210,9 @@ def unflatten_kwargs(kwargs: dict[str, tp.Any], __nested_delimiter__: str = NEST
 # NOTE: Pytree does not work with mutable values.
 class StaticValue:
 	"""
-		Wrapper to freeze values. 
+		Wrapper marking a value as static.
+
+		A value wrapped this way is kept out of the traced state, so it can be read at trace time.
 	"""
 
 	__slots__ = ('value',)
@@ -225,7 +252,12 @@ class StaticValue:
 
 class _InitNamespace:
 	"""
-		Proxy namespace to handle dynamic parameter injection.
+		Proxy giving access to the initializers of a configuration.
+
+		Reached as ``config.init.<field>``. Reading a field answers with something callable: an
+		initializer when the field holds one, and a function returning the value otherwise. A
+		module can therefore call ``config.init.tau(...)`` without checking which of the two it
+		was given.
 	"""
 
 	def __init__(self, instance) -> None:
@@ -284,13 +316,17 @@ class _InitNamespace:
 
 def _resolved_valid_types(cls: type) -> dict[str, tuple]:
 	"""
-		The types every field of a configuration class accepts, as classes rather than as text.
+		The types every field of a configuration class accepts, as classes rather than as strings.
 
-		Args:
-			cls: type, the configuration class.
+		Parameters
+		----------
+		cls : type
+			Configuration class.
 
-		Returns:
-			dict[str, tuple], the types by field name. A field whose annotation could not be read is absent.
+		Returns
+		-------
+		dict of str to tuple
+			Types by field name. A field whose annotation could not be resolved is absent.
 	"""
 	resolved = cls.__dict__.get('__resolved_valid_types__', None)
 	if resolved is not None:
@@ -315,7 +351,16 @@ def _resolved_valid_types(cls: type) -> dict[str, tuple]:
 
 def _holds_a_tracer(value: tp.Any) -> bool:
 	"""
-		True if a value is being traced, or holds something that is.
+		Whether a value is a jax tracer, or holds one.
+
+		Parameters
+		----------
+		value : Any
+			Value to check.
+
+		Returns
+		-------
+		bool
 	"""
 	if isinstance(value, jax.core.Tracer):
 		return True
@@ -327,11 +372,19 @@ def _holds_a_tracer(value: tp.Any) -> bool:
 
 def _validate_fields(cls: type, values: dict[str, tp.Any]) -> None:
 	"""
-		Runs the validators every field declares against the values a configuration is about to hold.
+		Runs the validators every field declares against the values it is about to hold.
 
-		Args:
-			cls: type, the configuration class being built.
-			values: dict, the values by field name.
+		Parameters
+		----------
+		cls : type
+			Configuration class being built.
+		values : dict
+			Values by field name.
+
+		Raises
+		------
+		Exception
+			Whatever a validator raises. Nothing is run while validation is off.
 	"""
 	if not validation_enabled():
 		return
@@ -362,7 +415,11 @@ def _validate_fields(cls: type, values: dict[str, tp.Any]) -> None:
 
 class SparkConfigMeta(abc.ABCMeta):
 	"""
-		Spark Configuration Metaclass
+		Metaclass for `SparkConfig`.
+
+		Turns a configuration class into a dataclass, promotes every annotated attribute into a
+		field, and records the parsed annotation under the ``valid_types`` metadata entry. Mutable
+		defaults are rewritten as factories.
 	"""
 
 	METADATA_TEMPLATE = {
@@ -585,7 +642,27 @@ class SparkConfigMeta(abc.ABCMeta):
 
 class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 	"""
-		Base Configuration.
+		Base class for the configuration of a module.
+
+		A configuration is a frozen dataclass carrying the parameters of a module. It is
+		serializable, so a model can be written to a file and read back without a Python
+		definition, and it validates its fields as they are set.
+
+		Notes
+		-----
+		Every annotated attribute becomes a field. The metadata of a field may declare
+		``validators``, ``units``, a ``description`` and ``value_options``, which the editor and
+		the validators read.
+
+		A field may be given an `Initializer` in place of a value. The array is then drawn at
+		build time, once the shape is known, and is reached through ``config.init.<field>``.
+
+		Fields named ``dt`` and ``units`` are handed down by a controller to every configuration
+		it contains, so a pool is sized and clocked in one place.
+
+		See Also
+		--------
+		DefaultSparkConfig : Adds the seed, dtype and dt every module needs.
 	"""
 
 	@classmethod
@@ -598,7 +675,17 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 
 	def merge(self, **kwargs) -> 'SparkConfig':
 		"""
-			Answers with a new configuration, this one with the given values written over it.
+			Returns a copy of this configuration with the given values written over it.
+
+			Parameters
+			----------
+			**kwargs
+				Values by field name.
+
+			Returns
+			-------
+			SparkConfig
+				A new configuration. This one is left unchanged.
 		"""
 		_self = {field.name: getattr(self, field.name) for field in dc.fields(self)}
 		return type(self)(**(_self | kwargs))
@@ -614,7 +701,11 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 	@property
 	def class_ref(obj: 'SparkConfig') -> type:
 		"""
-			Returns the type of the associated Module/Initializer.
+			Returns the module or initializer class this configuration belongs to.
+
+			Returns
+			-------
+			type
 		"""
 		# TODO: This could probably be handle more gracefully (part of the todo above)
 		# Check if this Config is for a controller (Brain/Neuron) 
@@ -664,11 +755,14 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 
 	def __iter__(self) -> tp.Iterator[tuple[str, tp.Any]]:
 		"""
-			(key, value) iterator.
+			Iterates over the fields of the configuration.
 
-			Output:
-				field_name: str, field name 
-				field_value: tp.Any, field value
+			Yields
+			------
+			field_name : str
+				Name of the field.
+			field_value : Any
+				Value the field holds.
 		"""
 		# Iterate over all defined fields of the dataclass
 		for f in dc.fields(self):
@@ -682,7 +776,7 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 
 	def inspect(self, simplified=False) -> str:
 		"""
-			Returns a formated string of the datastructure.
+			Prints the tree of fields of this configuration.
 		"""
 		print(utils.ascii_tree(self._parse_tree_structure(0, simplified=simplified)))
 
@@ -748,8 +842,12 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 
 	def with_new_seeds(self, seed: int | None = None) -> 'SparkConfig':
 		"""
-			Utility method to recompute all seed variables within the SparkConfig.
-			Useful when creating several populations from the same config.
+			Returns a copy of this configuration with every seed redrawn.
+
+			Returns
+			-------
+			SparkConfig
+				A new configuration. This one is left unchanged.
 		"""
 		from spark.core.specs import ModuleSpecs
 
@@ -793,7 +891,11 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 
 	def to_dict(self,) -> dict[str, dict[str, tp.Any]]:
 		"""
-			Serialize config to dictionary
+			Serializes the configuration to a dictionary.
+
+			Returns
+			-------
+			dict
 		"""
 
 		def _clean_value(value: tp.Any):
@@ -819,7 +921,16 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 	@classmethod
 	def from_dict(cls: type['SparkConfig'], dct: dict[str, tp.Any]) -> 'SparkConfig':
 		"""
-			Create config instance from dictionary.
+			Builds a configuration from a dictionary.
+
+			Parameters
+			----------
+			dct : dict
+				As produced by `to_dict`.
+
+			Returns
+			-------
+			SparkConfig
 		"""
 		return cls(**dct)
 
@@ -833,15 +944,19 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 			metadata: dict[str, tp.Any] | None = None,
 		) -> None:
 		"""
-			Export a config instance from a .scfg file.
+			Writes the configuration to a .scfg file.
 
-			Args:
-				file_path: str, where to write.
-				compress: bool, whether the file is compressed.
-				verbose: bool, whether to announce where it was written.
-				metadata: dict[str, tp.Any] | None, what the writer has to say about the file that the
-					configuration has no place for. It is written beside the configuration and is not read
-					back by from_file, which answers the configuration alone. metadata_from_file answers it.
+			Parameters
+			----------
+			file_path : str
+				Where to write.
+			compress : bool, default True
+				Compress the file.
+			verbose : bool, default True
+				Log where the file was written.
+			metadata : dict, optional
+				Written beside the configuration. `from_file` does not read it back; use
+				`metadata_from_file` for that. The editor stores node positions here.
 		"""
 		# Validate path
 		path = pl.Path(file_path)
@@ -874,16 +989,20 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 	@classmethod
 	def metadata_from_file(cls, file_path: str) -> dict[str, tp.Any]:
 		"""
-			Answers with what was written beside the configuration of a file.
+			Reads the metadata written beside the configuration of a file.
 
-			The configuration is not decoded, so this answers for a file naming models that are nowhere to
-			be found as readily as for any other.
+			The configuration itself is not decoded, so this works for a file naming models that are
+			not registered.
 
-			Args:
-				file_path: str, the file to read.
+			Parameters
+			----------
+			file_path : str
+				File to read.
 
-			Returns:
-				dict[str, tp.Any], what the writer left, empty when it left nothing.
+			Returns
+			-------
+			dict
+				What the writer stored, empty when it stored nothing.
 		"""
 		from spark.core.serializer import METADATA_KEY
 		path = pl.Path(file_path)
@@ -901,7 +1020,16 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 	@classmethod
 	def from_file(cls: type['SparkConfig'], file_path: str) -> 'SparkConfig':
 		"""
-			Create config instance from a .scfg file.
+			Builds a configuration from a .scfg file.
+
+			Parameters
+			----------
+			file_path : str
+				File to read.
+
+			Returns
+			-------
+			SparkConfig
 		"""
 		path = pl.Path(file_path)
 		# Validate path
@@ -933,7 +1061,16 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 @register_config
 class DefaultSparkConfig(SparkConfig):
     """
-        Default class for module configuration.
+        Configuration of a module, with the fields every module needs.
+
+        Parameters
+        ----------
+        seed : int, optional
+            Seed for the random draws of the module. Drawn from the operating system when omitted.
+        dtype : DTypeLike, default jnp.float16
+            Dtype used for the internal state.
+        dt : float, default 1.0
+            Integration step, in ms.
     """
     seed: int = dc.field(
         default_factory=lambda: int.from_bytes(os.urandom(4), 'little'), 

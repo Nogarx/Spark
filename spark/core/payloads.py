@@ -35,7 +35,18 @@ import spark.core.utils as utils
 @dc.dataclass
 class SparkPayload(abc.ABC):
     """
-        Abstract payload definition to validate exchanges between SparkModule's.
+        Base class for the values modules exchange.
+
+        A payload names what a quantity is, not only how it is shaped. A port declares the payload
+        it carries, and the framework refuses a connection between two ports of different types,
+        so a current cannot be wired where a potential is expected.
+
+        Every payload is registered as a pytree, so it crosses a jit boundary as data.
+
+        See Also
+        --------
+        ValueSparkPayload : Payloads holding a single array.
+        SpikeArray : Spikes and their inhibition mask, bit-packed.
     """
 
     def tree_flatten(self) -> tuple[tuple[jax.Array], None]:
@@ -69,25 +80,51 @@ class SparkPayload(abc.ABC):
 @dc.dataclass(init=False)
 class SpikeArray(SparkPayload):
     """
-        Representation of a collection of spike events.
+        Spike events of a pool, with the sign of each unit.
 
-        Init:
-            spikes: jax.Array[bool], True if neuron spiked, False otherwise
-            inhibition_mask: jax.Array[bool], True if neuron is inhibitory, False otherwise
+        The spike bit and the inhibition bit of every unit are packed into one ``uint8`` array,
+        so the two travel together and a downstream module cannot read one without the other.
 
-        The async_spikes flag is automatically set True by delay mechanisms that perform neuron-to-neuron specific delays.
-        Note that when async_spikes is True the shape of the spikes changes from (origin_units,) to (target_units, origin_units).
-        This is important when implementing new synaptic models, since fully valid synaptic models should be able to handle both cases. 
+        Inhibition schema
+        Excitatory -> + or 0
+        Inhibitory -> - or 1
+
+        Encoding schema
+        (Spike bit, Inhibition bit)
+        0: (False, False) ->  0
+        1: (True,  False) ->  1
+        2: (False, True)  -> -0
+        3: (True,  True)  -> -1
+
+        Parameters
+        ----------
+        spikes : jax.Array
+            Non-zero where a unit spiked.
+        inhibition_mask : BooleanMask or jax.Array or bool, optional
+            True where a unit is inhibitory. Broadcast against ``spikes`` when it has fewer
+            dimensions. Defaults to all excitatory.
+        async_spikes : bool, default False
+            Marks one entry per (target, origin) pair rather than one per origin.
+
+        Attributes
+        ----------
+        spikes : jax.Array
+            The spike bit, as bool.
+        inhibition_mask : jax.Array
+            The inhibition bit, as bool.
+        value : jax.Array
+            The signed spikes: ``+1`` for an excitatory spike, ``-1`` for an inhibitory one, ``0``
+            for no spike.
+
+        Notes
+        -----
+        ``async_spikes`` is set by the delay models that give every connection its own delay, such
+        as `N2NDelays`. The shape then grows from ``(origin_units,)`` to
+        ``(target_units, origin_units)``. A synapse model that means to accept both forms has to
+        read the flag and sum over the origin axes only.
     """
     _encoding: jax.Array 
     async_spikes: bool = False
-
-    # Encoding schema
-    # (Spike bit, Inhibition bit)
-    # 0: (False, False) ->  0
-    # 1: (True,  False) ->  1
-    # 2: (False, True)  -> -0
-    # 3: (True,  True)  -> -1
 
     def __init__(self, spikes: jax.Array, inhibition_mask: BooleanMask | jax.Array | bool | None = None, async_spikes: bool = False) -> None:
         spikes = jnp.array(spikes, dtype=jnp.uint8)
@@ -161,7 +198,12 @@ class SpikeArray(SparkPayload):
 @dc.dataclass
 class ValueSparkPayload(SparkPayload, abc.ABC):
     """
-        Abstract payload definition to single value payloads.
+        Base class for payloads holding a single array.
+
+        Parameters
+        ----------
+        value : jax.Array
+            The array the payload carries.
     """
     value: jnp.ndarray
 
@@ -205,7 +247,9 @@ class ValueSparkPayload(SparkPayload, abc.ABC):
 @dc.dataclass
 class CurrentArray(ValueSparkPayload):
     """
-        Representation of a collection of currents.
+        Synaptic current, in pA.
+
+        Produced by a synapse model and consumed by a soma.
     """
     pass
     
@@ -216,7 +260,10 @@ class CurrentArray(ValueSparkPayload):
 @dc.dataclass
 class PotentialArray(ValueSparkPayload):
     """
-        Representation of a collection of membrane potentials.
+        Membrane potential, in mV.
+
+        Exposed by a soma as its ``potential`` property. Whether it is measured from rest or in
+        absolute mV depends on the soma model.
     """
     pass
     
@@ -227,7 +274,9 @@ class PotentialArray(ValueSparkPayload):
 @dc.dataclass
 class BooleanMask(ValueSparkPayload):
     """
-        Representation of an inhibitory boolean mask.
+        Boolean mask over the units of a pool.
+
+        Used for the inhibition mask a `Neuron` hands to its modules.
     """
     pass
         
@@ -238,7 +287,9 @@ class BooleanMask(ValueSparkPayload):
 @dc.dataclass
 class IntegerMask(ValueSparkPayload):
     """
-        Representation of an integer mask.
+        Integer mask over the units of a pool.
+
+        Used for the connection type of every synapse, as exposed by `Plasticity.synaptic_mask`.
     """
     pass
     
@@ -249,7 +300,10 @@ class IntegerMask(ValueSparkPayload):
 @dc.dataclass
 class FloatArray(ValueSparkPayload):
     """
-        Representation of a float array.
+        Array of floats, with no unit attached.
+
+        Used for synaptic weights and for the signals that are neither currents nor potentials,
+        such as the third factor of a modulated plasticity rule.
     """
     pass
     
@@ -260,7 +314,9 @@ class FloatArray(ValueSparkPayload):
 @dc.dataclass
 class IntegerArray(ValueSparkPayload):
     """
-        Representation of an integer array.
+        Array of integers, with no unit attached.
+
+        Used for conduction delays, which are counted in steps.
     """
     pass
     

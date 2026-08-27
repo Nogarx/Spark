@@ -41,6 +41,16 @@ class Component(SparkModule, abc.ABC, tp.Generic[ConfigT]):
         config : ComponentConfig, optional
             Model configuration. Its fields may also be given as keyword arguments.
 
+        Input Ports
+        -----------
+        **inputs : SparkPayload
+            Declared by the concrete component through the signature of its ``__call__``.
+
+        Output Ports
+        ------------
+        **outputs : SparkPayload
+            Declared by the concrete component through the TypedDict its ``__call__`` returns.
+
         See Also
         --------
         Soma : Membrane potential and spike generation.

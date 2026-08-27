@@ -20,8 +20,16 @@ from spark.core.signature_parser import is_instance, normalize_typehint
 
 class NoValidation:
     """
-        Context manager suspending the validators, for the cases where a configuration is knowingly built out
-        of values that do not stand on their own yet.
+        Context manager suspending the field validators.
+
+        For building a configuration out of values that are not valid on their own yet, such as a
+        half-finished model in the graph editor.
+
+        Examples
+        --------
+        >>> with NoValidation():
+        ...     config = LeakySomaConfig(potential_tau=None)
+
     """
 
     def __enter__(self) -> 'NoValidation':
@@ -38,15 +46,17 @@ class NoValidation:
 
 class ConfigurationValidator:
     """
-        Base class for validators for the fields in a SparkConfig.
+        Base class for the validators of a configuration field.
+
+        Parameters
+        ----------
+        field : dataclasses.Field
+            Field being guarded.
+        valid_types : tuple of type, optional
+            Types the field accepts. Read from the field metadata when omitted.
     """
 
     def __init__(self, field: dc.Field, valid_types: tuple[tp.Any, ...] | None = None) -> None:
-        """
-            Args:
-                field: dc.Field, field being guarded.
-                valid_types: tuple[type, ...], types the field accepts
-        """
         self.field = field
         self.valid_types = valid_types
 
@@ -61,13 +71,16 @@ class ConfigurationValidator:
 @register_cfg_validator
 class TypeValidator(ConfigurationValidator):
     """
-        Validates the type of the field against a set of valid_types defined in the metadata.
+        Checks the value against the types declared by the field.
+
+        The types come from the ``valid_types`` metadata entry, which the metaclass fills in from
+        the annotation.
     """
 
     def validate(self, value: tp.Any) -> None:
         valid_types = self._types()
-        # NOTE: An annotation this validator cannot read is a question it cannot answer, and answering it
-        # anyway would refuse every value of the field. Silence is the only correct verdict there.
+        # NOTE: An unreadable annotation yields no types, and validating against none of them would
+        # refuse every value. The field is left unchecked instead.
         if not valid_types:
             return
         if is_instance(value, valid_types):
@@ -80,7 +93,13 @@ class TypeValidator(ConfigurationValidator):
 
     def _types(self) -> tuple[tp.Any, ...]:
         """
-            The types this field accepts or None if they cannot be read.
+            The types this field accepts.
+
+            Returns
+            -------
+            tuple of type or None
+                None when the annotation could not be read, in which case the field is left
+                unchecked.
         """
         valid_types = self.valid_types if self.valid_types is not None else self.field.metadata.get('valid_types')
         valid_types = tuple(valid_types or ())
@@ -95,7 +114,7 @@ class TypeValidator(ConfigurationValidator):
 @register_cfg_validator
 class PositiveValidator(ConfigurationValidator):
     """
-        Validates that the value(s) of the attribute are greater than zero.
+        Checks that every entry of the value is greater than zero.
     """
 
     def validate(self, value: tp.Any) -> None:
@@ -115,7 +134,7 @@ class PositiveValidator(ConfigurationValidator):
 @register_cfg_validator
 class BinaryValidator(ConfigurationValidator):
     """
-        Validates that the value(s) of the attribute are in the set {0,1}.
+        Checks that every entry of the value is 0 or 1.
     """
 
     def validate(self, value: tp.Any) -> None:
@@ -139,7 +158,7 @@ class BinaryValidator(ConfigurationValidator):
 @register_cfg_validator
 class ZeroOneValidator(ConfigurationValidator):
     """
-        Validates that the value(s) of the attribute are in the range [0,1].
+        Checks that every entry of the value lies in ``[0, 1]``.
     """
 
     def validate(self, value: tp.Any) -> None:

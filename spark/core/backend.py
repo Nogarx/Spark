@@ -32,7 +32,7 @@ def data(
 
 def grad(*args, **kwargs) -> (tp.Callable[..., tp.Any] | tp.Callable[[tp.Callable[..., tp.Any]], tp.Callable[..., tp.Any]] ):
     """
-        Wrapper around flax.nnx.grad to simply imports.
+        Wrapper around flax.nnx.grad, to simplify imports.
     """
     return nnx.grad(*args, **kwargs)
 
@@ -40,7 +40,7 @@ def grad(*args, **kwargs) -> (tp.Callable[..., tp.Any] | tp.Callable[[tp.Callabl
 
 def jit(*args, **kwargs) -> JitWrapped | tp.Callable[[tp.Callable[..., tp.Any]], JitWrapped]:
     """
-        Wrapper around flax.nnx.jit to simply imports.
+        Wrapper around flax.nnx.jit, to simplify imports.
     """
     return nnx.jit(*args, **kwargs)
 
@@ -48,7 +48,7 @@ def jit(*args, **kwargs) -> JitWrapped | tp.Callable[[tp.Callable[..., tp.Any]],
 
 def eval_shape(*args, **kwargs) -> A:
     """
-        Wrapper around flax.nnx.eval_shape to simply imports.
+        Wrapper around flax.nnx.eval_shape, to simplify imports.
     """
     return nnx.eval_shape(*args, **kwargs)
 
@@ -56,7 +56,7 @@ def eval_shape(*args, **kwargs) -> A:
 
 def split(*args, **kwargs) -> tuple[GraphDef[A], GraphState | VariableState, tpe.Unpack[tuple[GraphState | VariableState, ...]],]:
     """
-        Wrapper around flax.nnx.split to simply imports.
+        Wrapper around flax.nnx.split, to simplify imports.
     """
     return nnx.split(*args, **kwargs)
 
@@ -64,7 +64,7 @@ def split(*args, **kwargs) -> tuple[GraphDef[A], GraphState | VariableState, tpe
 
 def merge(*args, **kwargs) -> A:
     """
-        Wrapper around flax.nnx.merge to simply imports.
+        Wrapper around flax.nnx.merge, to simplify imports.
     """
     return nnx.merge(*args, **kwargs)
 
@@ -73,11 +73,22 @@ def merge(*args, **kwargs) -> A:
 #################################################################################################################################################
 
 class Module(nnx.Module):
+    """
+        Base class of the module hierarchy.
+
+        Alias of the Flax module, to simplify imports and to give the framework one place to
+        change if the backend does.
+    """
     pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class ModuleMeta(nnx.module.ModuleMeta):
+    """
+        Metaclass of `Module`.
+
+        Alias of the Flax module metaclass, to simplify imports.
+    """
     pass
 
 #################################################################################################################################################
@@ -92,14 +103,19 @@ class ModuleMeta(nnx.module.ModuleMeta):
 
 def _as_array(value: tp.Any, dtype: tp.Any = None) -> jax.Array:
     """
-        Casts value to a jax array.
+        Casts a value to a jax array.
 
-        Args:
-            value: tp.Any, value to cast
-            dtype: tp.Any, dtype to cast to
+        Parameters
+        ----------
+        value : Any
+            Value to cast.
+        dtype : DTypeLike, optional
+            Dtype of the result. The dtype jax infers is kept when omitted.
 
-        Returns:
-            jax.Array, the value as jax.Array
+        Returns
+        -------
+        jax.Array
+            The value as an array.
     """
     if isinstance(value, (Variable, Constant)):
         value = value.value
@@ -128,8 +144,11 @@ def _as_array(value: tp.Any, dtype: tp.Any = None) -> jax.Array:
 
 class Variable(nnx.Variable):
     """
-        The base class for all ``Variable`` types.
-        Note that this is just a convinience wrapper around Flax's Variable to simplify imports.
+        Representation of a variable array/object.
+
+        Wrapper around the Flax variable, to simplify imports. The dtype given at construction is
+        applied once, to the initial value; a later assignment to ``value`` is converted to an
+        array but keeps its own dtype.
     """
     # Type hint
     value: jax.Array
@@ -160,7 +179,14 @@ class Variable(nnx.Variable):
 @jax.tree_util.register_static
 class Constant:
     """
-        Jax.Array wrapper for constant arrays.
+        Representation of a constant array/object.
+
+        Holds a quantity fixed at build time, such as a decay constant or a delay kernel.
+        Assigning to ``value`` raises `AttributeError`; a quantity that changes belongs in a
+        `Variable`.
+
+        Registered as a static pytree node, so it travels in the treedef rather than as a traced
+        leaf.
     """
 
     def __init__(self, data: tp.Any, dtype: tp.Any = None) -> None:

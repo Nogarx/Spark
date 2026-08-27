@@ -45,6 +45,16 @@ class Interface(SparkModule, abc.ABC, tp.Generic[ConfigT]):
         config : InterfaceConfig
             Model configuration. Its fields may also be given as keyword arguments.
 
+        Input Ports
+        -----------
+        **inputs : SparkPayload
+            Declared by the concrete interface through the signature of its ``__call__``.
+
+        Output Ports
+        ------------
+        **outputs : SparkPayload
+            Declared by the concrete interface through the TypedDict its ``__call__`` returns.
+
         See Also
         --------
         InputInterface : Turns an external signal into spikes.

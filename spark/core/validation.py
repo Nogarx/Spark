@@ -28,18 +28,24 @@ DEFAULT_CFG_VALIDATOR_PATH = 'spark.core.config_validation.ConfigurationValidato
 
 def _is_spark_type(obj: tp.Any, type_name: str) -> bool:
     """
-        Check if a given object is a subclass of a specific fully qualified type name.
+        Whether a class is a subclass of the type named by a qualified name.
 
-        Notes:
-            THIS METHOD IS INTENDED FOR INTERNAL USAGE ONLY.
-            This function relies on matching the string representation of each class
-            in the MRO with the target type name. It only works if 'obj' is an actual class.
+        Parameters
+        ----------
+        obj : Any
+            Class to check.
+        type_name : str
+            Fully qualified name of the target type.
 
-        Args:
-            obj (tp.Any): The class to check.
-            type_name (str): The fully qualified name of the target type.
-        Returns:
-            bool, True if 'obj' is a subclass of the specified type, False otherwise.
+        Returns
+        -------
+        bool
+            False for anything that is not a class.
+
+        Notes
+        -----
+        Internal. Matches ``type_name`` against the string form of every class in the MRO, which
+        is what lets a module test for a type it cannot import without a circular import.
     """
     if isinstance(obj, type):
         for sub_cls in obj.__mro__:
@@ -52,18 +58,23 @@ def _is_spark_type(obj: tp.Any, type_name: str) -> bool:
 
 def _is_spark_instance(obj: tp.Any, type_name: str) -> bool:
     """
-        Check if an object instance is derived from a specific fully qualified type name.
+        Whether an instance derives from the type named by a qualified name.
 
-        Notes:
-            THIS METHOD IS INTENDED FOR INTERNAL USAGE ONLY.
-            This function relies on matching the string representation of each class
-            in the MRO with the target type name. It only works if 'obj' is an actual class.
+        Parameters
+        ----------
+        obj : Any
+            Instance to check.
+        type_name : str
+            Fully qualified name of the target type.
 
-        Args:
-            obj (tp.Any): The instance to check.
-            type_name (str): The fully qualified name of the target type.
-        Returns:
-            bool, True if the instance is derived from the specified type, False otherwise.
+        Returns
+        -------
+        bool
+
+        Notes
+        -----
+        Internal. Matches ``type_name`` against the string form of every class in the MRO, which
+        is what lets a module test for a type it cannot import without a circular import.
     """
     if not isinstance(obj, type):
         for sub_cls in type(obj).__mro__:
@@ -76,12 +87,22 @@ def _is_spark_instance(obj: tp.Any, type_name: str) -> bool:
 
 def _is_initializer_type(obj: tp.Any) -> bool:
     """
-        Check if an object is a subclass of 'spark.nn.initializers.base.Initializer'.
+        Whether an object is a subclass of `Initializer`.
 
-        Args:
-            obj (tp.Any): The class to check.
-        Returns:
-            bool, True if 'obj' is a subclass of 'Initializer', False otherwise.
+        Parameters
+        ----------
+        obj : Any
+            Class to check.
+
+        Returns
+        -------
+        bool
+            False for anything that is not a class.
+
+        Notes
+        -----
+        Internal. Matches the qualified name against the MRO by string, so it answers for a class
+        the caller cannot import without a circular import.
     """
     return _is_spark_type(obj, DEFAULT_INITIALIZER_PATH)
 
@@ -89,12 +110,21 @@ def _is_initializer_type(obj: tp.Any) -> bool:
 
 def _is_initializer_instance(obj: tp.Any) -> bool:
     """
-        Check if an object instance is derived from 'spark.nn.initializers.base.Initializer'.
+        Whether an object is an instance of `Initializer`.
 
-        Args:
-            obj (tp.Any): The class to check.
-        Returns:
-            bool, True if 'obj' is an instance of 'Initializer', False otherwise.
+        Parameters
+        ----------
+        obj : Any
+            Instance to check.
+
+        Returns
+        -------
+        bool
+
+        Notes
+        -----
+        Internal. Matches the qualified name against the MRO by string, so it answers for a class
+        the caller cannot import without a circular import.
     """
     return _is_spark_instance(obj, DEFAULT_INITIALIZER_PATH)
 
@@ -102,12 +132,22 @@ def _is_initializer_instance(obj: tp.Any) -> bool:
 
 def _is_initializer_config_type(obj: tp.Any) -> bool:
     """
-        Check if an object is a subclass of 'spark.nn.initializers.base.InitializerConfig'.
+        Whether an object is a subclass of `InitializerConfig`.
 
-        Args:
-            obj (tp.Any): The class to check.
-        Returns:
-            bool, True if 'obj' is a subclass of 'InitializerConfig', False otherwise.
+        Parameters
+        ----------
+        obj : Any
+            Class to check.
+
+        Returns
+        -------
+        bool
+            False for anything that is not a class.
+
+        Notes
+        -----
+        Internal. Matches the qualified name against the MRO by string, so it answers for a class
+        the caller cannot import without a circular import.
     """
     return _is_spark_type(obj, DEFAULT_INITIALIZER_CONFIG_PATH)
 
@@ -115,12 +155,22 @@ def _is_initializer_config_type(obj: tp.Any) -> bool:
 
 def _is_payload_type(obj: tp.Any) -> bool:
     """
-        Check if an object is a subclass of 'spark.core.payloads.SparkPayload'.
+        Whether an object is a subclass of `SparkPayload`.
 
-        Args:
-            obj (tp.Any): The class to check.
-        Returns:
-            bool, True if 'obj' is a subclass of 'SparkPayload', False otherwise.
+        Parameters
+        ----------
+        obj : Any
+            Class to check.
+
+        Returns
+        -------
+        bool
+            False for anything that is not a class.
+
+        Notes
+        -----
+        Internal. Matches the qualified name against the MRO by string, so it answers for a class
+        the caller cannot import without a circular import.
     """
     return _is_spark_type(obj, DEFAULT_PAYLOAD_PATH)
 
@@ -128,12 +178,21 @@ def _is_payload_type(obj: tp.Any) -> bool:
 
 def _is_payload_instance(obj: tp.Any) -> bool:
     """
-        Check if an object instance is derived from 'spark.core.payloads.SparkPayload'.
+        Whether an object is an instance of `SparkPayload`.
 
-        Args:
-            obj (tp.Any): The instance to check.
-        Returns:
-            bool, True if the 'obj' is an instance of 'SparkPayload', False otherwise.
+        Parameters
+        ----------
+        obj : Any
+            Instance to check.
+
+        Returns
+        -------
+        bool
+
+        Notes
+        -----
+        Internal. Matches the qualified name against the MRO by string, so it answers for a class
+        the caller cannot import without a circular import.
     """
     return _is_spark_instance(obj, DEFAULT_PAYLOAD_PATH)
 
@@ -141,12 +200,21 @@ def _is_payload_instance(obj: tp.Any) -> bool:
 
 def _is_module_instance(obj: tp.Any) -> bool:
     """
-        Check if an object is an instance of 'spark.core.module.SparkModule'.
+        Whether an object is an instance of `SparkModule`.
 
-        Args:
-            obj (tp.Any): The class to check.
-        Returns:
-            bool, True if 'obj' is an instance of 'SparkModule', False otherwise.
+        Parameters
+        ----------
+        obj : Any
+            Instance to check.
+
+        Returns
+        -------
+        bool
+
+        Notes
+        -----
+        Internal. Matches the qualified name against the MRO by string, so it answers for a class
+        the caller cannot import without a circular import.
     """
     return _is_spark_instance(obj, DEFAULT_SPARK_MODULE_PATH)
 
@@ -154,12 +222,22 @@ def _is_module_instance(obj: tp.Any) -> bool:
 
 def _is_module_type(obj: tp.Any) -> bool:
     """
-        Check if an object is a subclass of 'spark.core.module.SparkModule'.
+        Whether an object is a subclass of `SparkModule`.
 
-        Args:
-            obj (tp.Any): The class to check.
-        Returns:
-            bool, True if 'obj' is a subclass of 'SparkModule', False otherwise.
+        Parameters
+        ----------
+        obj : Any
+            Class to check.
+
+        Returns
+        -------
+        bool
+            False for anything that is not a class.
+
+        Notes
+        -----
+        Internal. Matches the qualified name against the MRO by string, so it answers for a class
+        the caller cannot import without a circular import.
     """
     return _is_spark_type(obj, DEFAULT_SPARK_MODULE_PATH)
 
@@ -167,12 +245,21 @@ def _is_module_type(obj: tp.Any) -> bool:
 
 def _is_controller_instance(obj: tp.Any) -> bool:
     """
-        Check if an object is an instance of 'spark.nn.controllers.base.Controller'.
+        Whether an object is an instance of `Controller`.
 
-        Args:
-            obj (tp.Any): The class to check.
-        Returns:
-            bool, True if 'obj' is an instance of 'SparkModule', False otherwise.
+        Parameters
+        ----------
+        obj : Any
+            Instance to check.
+
+        Returns
+        -------
+        bool
+
+        Notes
+        -----
+        Internal. Matches the qualified name against the MRO by string, so it answers for a class
+        the caller cannot import without a circular import.
     """
     return _is_spark_instance(obj, DEFAULT_SPARK_CONTROLLER_PATH)
 
@@ -180,12 +267,22 @@ def _is_controller_instance(obj: tp.Any) -> bool:
 
 def _is_controller_type(obj: tp.Any) -> bool:
     """
-        Check if an object is a subclass of 'spark.nn.controllers.base.Controller'.
+        Whether an object is a subclass of `Controller`.
 
-        Args:
-            obj (tp.Any): The class to check.
-        Returns:
-            bool, True if 'obj' is a subclass of 'SparkModule', False otherwise.
+        Parameters
+        ----------
+        obj : Any
+            Class to check.
+
+        Returns
+        -------
+        bool
+            False for anything that is not a class.
+
+        Notes
+        -----
+        Internal. Matches the qualified name against the MRO by string, so it answers for a class
+        the caller cannot import without a circular import.
     """
     return _is_spark_type(obj, DEFAULT_SPARK_CONTROLLER_PATH)
 
@@ -193,12 +290,21 @@ def _is_controller_type(obj: tp.Any) -> bool:
 
 def _is_config_instance(obj: tp.Any) -> bool:
     """
-        Check if an object instance is derived from DEFAULT_CONFIG_PATH.
+        Whether an object is an instance of `SparkConfig`.
 
-        Args:
-            obj (tp.Any): The instance to check.
-        Returns:
-            bool, True if the object is an instance of 'SparkConfig', False otherwise.
+        Parameters
+        ----------
+        obj : Any
+            Instance to check.
+
+        Returns
+        -------
+        bool
+
+        Notes
+        -----
+        Internal. Matches the qualified name against the MRO by string, so it answers for a class
+        the caller cannot import without a circular import.
     """
     return _is_spark_instance(obj, DEFAULT_CONFIG_PATH)
 
@@ -206,12 +312,22 @@ def _is_config_instance(obj: tp.Any) -> bool:
 
 def _is_config_type(obj: tp.Any) -> bool:
     """
-        Check if an object a subclass of from DEFAULT_CONFIG_PATH.
+        Whether an object is a subclass of `SparkConfig`.
 
-        Args:
-            obj (tp.Any): The instance to check.
-        Returns:
-            bool, True if the object is a subclass of 'SparkConfig', False otherwise.
+        Parameters
+        ----------
+        obj : Any
+            Class to check.
+
+        Returns
+        -------
+        bool
+            False for anything that is not a class.
+
+        Notes
+        -----
+        Internal. Matches the qualified name against the MRO by string, so it answers for a class
+        the caller cannot import without a circular import.
     """
     return _is_spark_type(obj, DEFAULT_CONFIG_PATH)
 

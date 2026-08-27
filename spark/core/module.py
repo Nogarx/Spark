@@ -32,7 +32,10 @@ InputT = tp.TypeVar("InputT")
 
 class ModuleOutput(tp.TypedDict):
     """
-        Spark module output template
+        Base class for the output ports of a module.
+
+        A module declares its output ports by annotating the return of its ``__call__`` with a
+        TypedDict. The names and payload types of that TypedDict become the output specification.
     """
     pass
 
@@ -40,7 +43,11 @@ class ModuleOutput(tp.TypedDict):
 
 class SparkMeta(ModuleMeta):
     """
-        Metaclass for Spark Modules.
+        Metaclass for `SparkModule`.
+
+        Wraps ``__call__`` so that the first call builds the module. Shapes are not known until
+        values arrive, so a module is constructed from its configuration alone and completes on
+        the first call.
     """
 
     def __new__(mcs, name, bases, dct):
@@ -66,7 +73,7 @@ class SparkMeta(ModuleMeta):
         @wraps(original_call)
         def wrapped_call(self, *args, **kwargs):
             """
-                Wrapper around __call__ to trigger lazy init.
+                Wraps ``__call__`` so that the first call builds the module.
             """
             # Check if already built.
             if not getattr(self, '__built__', False):
@@ -86,7 +93,29 @@ class SparkMeta(ModuleMeta):
 
 class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkMeta):
     """
-        Base class for Spark Modules
+        Base class for the modules of a network.
+
+        A module owns its state, declares its ports through the signature of ``__call__``, and is
+        built the first time it is called. Its configuration is a `SparkConfig` subclass, declared
+        through the ``config`` annotation.
+
+        Parameters
+        ----------
+        config : SparkConfig
+            Module configuration. Its fields may also be given as keyword arguments.
+
+        Notes
+        -----
+        Ports are read from the signature. The parameters of ``__call__`` are the input ports, 
+        the TypedDict it returns names the output ports, and every `spark_property` is a property port.
+
+        Shape inference happens once, on the first call: `build` receives the payloads that
+        arrived and initializes whatever depends on their shape.
+
+        See Also
+        --------
+        SparkConfig : The configuration a module is built from.
+        spark_property : Declares a property port.
     """
 
     name: str = 'name'
@@ -144,7 +173,12 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
     @classmethod 
     def get_config_spec(cls) -> type[ConfigT]:
         """
-            Returns the default configuration class associated with this module.
+            Returns the configuration class this module is built from.
+
+            Returns
+            -------
+            type of SparkConfig
+                The class named by the ``config`` annotation.
         """
         type_hints = tp.get_type_hints(cls)
         return type_hints['config']
@@ -153,7 +187,10 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
 
     def _build(self, **abc_kwargs: SparkPayload) -> None:
         """
-            Triggers the shape inference and parameter initialization cascade.
+            Runs shape inference and parameter initialization.
+
+            Called once, on the first call to the module. Reads the payloads that arrived, records the
+            input, output and property specifications, and calls `build`.
         """
         # Override signatures 
         # NOTE: This is a particular case for modules that expect many abstract arguments. 
@@ -204,9 +241,21 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
             self, 
         ) -> tuple[dict[str, SparkPayload], dict[str, SparkPayload]]:
         """
-            Returns expected-like outputs and properties of the module.
+            Returns what the outputs and properties of this module look like before it has run.
 
-            This function is a binding contract that allows the modules to accept self connections.
+            A module that defines this method may form a closed cycles.
+
+            Returns
+            -------
+            output_contract_specs : dict of str to SparkPayload
+                Mock payload per output port.
+            property_contract_specs : dict of str to SparkPayload
+                Mock payload per property port.
+
+            Raises
+            ------
+            NotImplementedError
+                If the module declares no contract. Check `has_recurrent_contract` first.
         """
         raise RuntimeError(
             f'Recurrent contract not implemented. '
@@ -221,7 +270,12 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
     @classmethod
     def has_recurrent_contract(cls) -> bool:
         """
-            Returns True if the modules defines a recurrent contract, False otherwise.
+            Whether the module declares a recurrent contract.
+
+            Returns
+            -------
+            bool
+                True if `recurrent_contract` may be called.
         """
         return cls.recurrent_contract is not SparkModule.recurrent_contract
 
@@ -229,7 +283,15 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
 
     def build(self, **abc_kwargs: SparkPayload) -> None:
         """
-            Build method.
+            Lazy initialize method.
+
+            Called once, by `_build`, with the payloads of the first call. Used by any subclass of 
+            `SparkModule` to define any variable that depends on the shape of the input to the module. 
+
+            Parameters
+            ----------
+            **abc_args : SparkPayload
+                The payloads that arrived on the first call, by port name.
         """
         pass
 
@@ -237,7 +299,9 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
 
     def reset(self,):
         """
-            Reset module to its default state.
+            Returns the state of the module to its initial value.
+
+            Leaves the parameters drawn at build time untouched.
         """
         pass
 
@@ -249,13 +313,14 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
             property_contract_specs: dict[str, PortSpecs]
         ) -> None:
         """
-            Recurrent shape policy pre-defines expected shapes for the output/property specs.
+            Fixes the specifications a module presents while a cycle is being resolved.
 
-            This is function is a binding contract that allows the modules to accept self connections.
-
-            Input:
-                output_contract_specs: dict[str, PortSpecs], A dictionary with a contract for the output specs.
-                property_contract_specs: dict[str, PortSpecs], A dictionary with a contract for the property specs.
+            Parameters
+            ----------
+            output_contract_specs : dict of str to PortSpecs
+                Specification per output port.
+            property_contract_specs : dict of str to PortSpecs
+                Specification per property port.
         """
 
         # Validate output contract.
@@ -293,7 +358,12 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
 
     def get_contract_specs(self,) -> tuple[dict[str, PortSpecs], dict[str, PortSpecs]]:
         """
-            Retrieve the recurrent spec policy of the module.
+            Returns the recurrent contract set on this module.
+
+            Returns
+            -------
+            output_contract_specs : dict of str to PortSpecs
+            property_contract_specs : dict of str to PortSpecs
         """
         return self.recurrent_contract()
 
@@ -392,7 +462,17 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
 
     def get_input_specs(self) -> dict[str, PortSpecs]:
         """
-            Returns a dictionary of the SparkModule's input port specifications.
+            Returns the input port specifications of this instance.
+
+            Returns
+            -------
+            dict of str to PortSpecs
+                One entry per input port, with the shape and dtype seen at build time.
+
+            Raises
+            ------
+            RuntimeError
+                If the module has not been built.
         """
         if self._input_specs is None:
             raise RuntimeError('Module not yet built.')
@@ -402,7 +482,17 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
 
     def get_output_specs(self) -> dict[str, PortSpecs]:
         """
-            Returns a dictionary of the SparkModule's input port specifications.
+            Returns the output port specifications of this instance.
+
+            Returns
+            -------
+            dict of str to PortSpecs
+                One entry per output port, with the shape and dtype seen at build time.
+
+            Raises
+            ------
+            RuntimeError
+                If the module has not been built.
         """
         if self._output_specs is None:
             raise RuntimeError('Module not yet built.')
@@ -412,7 +502,17 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
 
     def get_property_specs(self) -> dict[str, PortSpecs]:
         """
-            Returns a dictionary of the SparkModule's property port specifications.
+            Returns the property port specifications of this instance.
+
+            Returns
+            -------
+            dict of str to PortSpecs
+                One entry per property port, with the shape and dtype seen at build time.
+
+            Raises
+            ------
+            RuntimeError
+                If the module has not been built.
         """
         if self._property_specs is None:
             raise RuntimeError('Module not yet built.')
@@ -423,7 +523,14 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
     @classmethod
     def _get_input_specs(cls) -> dict[str, PortSpecs]:
         """
-            Returns a dictionary of the SparkModule's input port specifications.
+            Returns the input port specifications read from the class.
+
+            Available before the module is built, so shape and dtype are None.
+
+            Returns
+            -------
+            dict of str to PortSpecs
+                One entry per parameter of ``__call__``.
         """
         return sig_parser.get_input_specs(cls)
 
@@ -432,7 +539,14 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
     @classmethod
     def _get_output_specs(cls) -> dict[str, PortSpecs]:
         """
-            Returns a dictionary of the SparkModule's input port specifications.
+            Returns the output port specifications read from the class.
+
+            Available before the module is built, so shape and dtype are None.
+
+            Returns
+            -------
+            dict of str to PortSpecs
+                One entry per member of the TypedDict ``__call__`` returns.
         """
         return sig_parser.get_output_specs(cls)
 
@@ -441,14 +555,38 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
     @classmethod
     def _get_property_specs(cls) -> dict[str, PortSpecs]:
         """
-            Returns a dictionary of the SparkModule's property port specifications.
+            Returns the property port specifications read from the class.
+
+            Available before the module is built, so shape and dtype are None.
+
+            Returns
+            -------
+            dict of str to PortSpecs
+                One entry per `spark_property`.
         """
         return sig_parser.get_property_specs(cls)
         
 
     def get_rng_keys(self, num_keys: int) -> jax.Array | list[jax.Array]:
         """
-            Generates a new collection of random keys for the JAX's random engine.
+            Draws new keys from the random engine of the module.
+
+            Advances the internal key, so two calls never return the same keys.
+
+            Parameters
+            ----------
+            num_keys : int
+                Number of keys to draw.
+
+            Returns
+            -------
+            jax.Array or list of jax.Array
+                A single key when ``num_keys`` is 1, a list otherwise.
+
+            Raises
+            ------
+            RuntimeError
+                If the configuration of the module declares no seed.
         """
         if not hasattr(self, 'rng'):
             raise RuntimeError(
@@ -464,7 +602,11 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
     @classmethod
     def get_properties(cls,) -> tuple[str, ...]:
         """
-            Returns all the attributes names wrapped by the spark_property wrapper.
+            Returns the names of every `spark_property` of this class.
+
+            Returns
+            -------
+            tuple of str
         """
         return tuple(
             [name  for name, attr in inspect.getmembers(cls) if isinstance(attr, spark_property)]
@@ -475,7 +617,13 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
     @classmethod
     def get_readonly_properties(cls,) -> tuple[str, ...]:
         """
-            Returns all the attributes names wrapped by the spark_property wrapper that do not define a setter.
+            Returns the names of every `spark_property` of this class that has no setter.
+
+            A read-only property can be read by other modules but cannot be the target of an effect.
+
+            Returns
+            -------
+            tuple of str
         """
         return tuple(
             [name  for name, attr in inspect.getmembers(cls) if isinstance(attr, spark_property) and attr.fset is None]
@@ -499,7 +647,7 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
 
     def inspect(self,) -> str:
         """
-            Returns a formated string of the datastructure.
+            Prints the tree of modules held by this one.
         """
         print(utils.ascii_tree(self._parse_tree_structure()))
 

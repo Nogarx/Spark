@@ -23,7 +23,17 @@ import types
 
 def _expand(t) -> list[type]:
     """
-        Recursively expand a type-hint t into a list of fully concrete non-union types.
+        Expands a type hint into the concrete non-union types it stands for.
+
+        Parameters
+        ----------
+        t : Any
+            Type hint to expand.
+
+        Returns
+        -------
+        list of type
+            One entry per branch of the hint.
     """
     # Unpack typevars
     if type(t) == tp.TypeVar:
@@ -62,7 +72,17 @@ def _expand(t) -> list[type]:
 
 def normalize_typehint(t) -> tuple[type]:
     """
-        Produce a tuple of fully expanded, non-union, non-merged type variants.
+        Expands a type hint into a tuple of concrete non-union types.
+
+        Parameters
+        ----------
+        hint : Any
+            Type hint to expand.
+
+        Returns
+        -------
+        tuple of type
+            The branches of the hint, with unions and aliases resolved.
     """
     expanded = _expand(t)
     # Remove duplicates while preserving order
@@ -78,8 +98,20 @@ def normalize_typehint(t) -> tuple[type]:
 
 def _is_instance(value, annotated_type) -> bool:
     """
-    Validate a value against parameterized generics at runtime.
-    Supports list[T], tuple[T], dict[K,V], set[T], and plain classes.
+        Checks a value against a parameterized generic at runtime.
+
+        Supports ``list[T]``, ``tuple[T]``, ``dict[K, V]``, ``set[T]`` and plain classes.
+
+        Parameters
+        ----------
+        value : Any
+            Value to check.
+        hint : Any
+            Type hint to check against.
+
+        Returns
+        -------
+        bool
     """
     origin = tp.get_origin(annotated_type)
     args = tp.get_args(annotated_type)
@@ -160,7 +192,22 @@ def is_instance(value, types):
 
 def get_input_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
     """
-        Returns a dictionary of the SparkModule's input port specifications.
+        Reads the input port specifications off a module class.
+
+        Parameters
+        ----------
+        module : type of SparkModule
+            Class to inspect.
+
+        Returns
+        -------
+        dict of str to PortSpecs
+            One entry per parameter of ``__call__``, excluding ``self``.
+
+        Raises
+        ------
+        TypeError
+            If a parameter is annotated with something that is not a `SparkPayload`.
     """
 
     # Check isinstance of SparkModule.
@@ -223,7 +270,19 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
 
 def get_optional_input_names(module: type[SparkModule]) -> list[str]:
     """
-        Returns a list of the SparkModule's optional input port names.
+        Reads the names of the optional input ports off a module class.
+
+        An input is optional when its annotation accepts None. It may be left unconnected, and the
+        module falls back to its own default.
+
+        Parameters
+        ----------
+        module : type of SparkModule
+            Class to inspect.
+
+        Returns
+        -------
+        list of str
     """
 
     # Check isinstance of SparkModule.
@@ -254,7 +313,23 @@ def get_optional_input_names(module: type[SparkModule]) -> list[str]:
 
 def get_output_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
     """
-        Returns a dictionary of the SparkModule's output port specifications.
+        Reads the output port specifications off a module class.
+
+        Parameters
+        ----------
+        module : type of SparkModule
+            Class to inspect.
+
+        Returns
+        -------
+        dict of str to PortSpecs
+            One entry per member of the TypedDict ``__call__`` returns.
+
+        Raises
+        ------
+        TypeError
+            If ``__call__`` has no TypedDict return annotation, or if a member is annotated with
+            something that is not a `SparkPayload`.
     """
 
     # Check isinstance of SparkModule.
@@ -307,7 +382,24 @@ def get_output_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
 
 def get_property_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
     """
-        Returns a dictionary of the SparkModule's property port specifications.
+        Reads the property port specifications off a module class.
+
+        Parameters
+        ----------
+        module : type of SparkModule
+            Class to inspect.
+
+        Returns
+        -------
+        dict of str to PortSpecs
+            One entry per `spark_property`.
+
+        Raises
+        ------
+        SyntaxError
+            If a property getter has no return annotation, or annotates a union.
+        TypeError
+            If a getter is annotated with something that is not a `SparkPayload`.
     """
 
     # Check isinstance of SparkModule.

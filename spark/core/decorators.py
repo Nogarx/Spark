@@ -14,10 +14,25 @@ from functools import wraps
 
 class spark_property:
     """
-		Custom property descriptor to expose Spark module properties to the rest of the framework in a safe way.
-        Properties must be properly wrapper in payloads to be valid.
-        
-        Behaves identically to the default property descriptor.
+        Declares a property port on a module.
+
+        Behaves like the built-in property, and additionally marks the attribute as a port the
+        framework can wire. The getter must be annotated with the `SparkPayload` it returns, which
+        is what the port carries.
+
+        A property with no setter is read only: other modules may read it, but it cannot be the
+        target of an effect.
+
+        Examples
+        --------
+        >>> class Synapses(Component):
+        ...     @spark_property
+        ...     def kernel(self) -> FloatArray:
+        ...         return FloatArray(self._kernel.value)
+        ...
+        ...     @kernel.setter
+        ...     def kernel(self, new_kernel: FloatArray) -> None:
+        ...         self._kernel.value = new_kernel.value
     """
     
     def __init__(self, fget=None, fset=None, fdel=None, doc=None) -> None:
@@ -61,8 +76,21 @@ class spark_property:
 
 def limit_recursion(limit) -> tp.Callable[..., tp.Callable[..., tp.Any]]:
     """
-		Decorator to limit recursion depth, used in some post config validation.
-	"""
+        Decorator bounding how deep a function may re-enter itself.
+
+        Used by the configuration hooks that hand values down to nested configurations, where a
+        nested configuration would otherwise call back into the one above it.
+
+        Parameters
+        ----------
+        limit : int
+            Depth at which a call returns its first argument instead of running.
+
+        Returns
+        -------
+        callable
+            The decorator.
+    """
     def decorator(func):
         state = threading.local()
 
