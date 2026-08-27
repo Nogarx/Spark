@@ -17,7 +17,12 @@ from spark.core.decorators import spark_property
 
 class SynanpsesOutput(tp.TypedDict):
     """
-       Generic synapses model output spec.
+        Output ports of a synapse model.
+
+        Attributes
+        ----------
+        currents : CurrentArray
+            Current delivered to each postsynaptic unit.
     """
     currents: CurrentArray
 
@@ -25,7 +30,9 @@ class SynanpsesOutput(tp.TypedDict):
 
 class SynanpsesConfig(ComponentConfig):
     """
-       Abstract synapse model configuration class.
+        Base configuration for synapse models.
+
+        Carries no field of its own. Concrete models declare their own parameters.
     """
     pass
 ConfigT = tp.TypeVar("ConfigT", bound=SynanpsesConfig)
@@ -34,18 +41,43 @@ ConfigT = tp.TypeVar("ConfigT", bound=SynanpsesConfig)
 
 class Synapses(Component, tp.Generic[ConfigT]):
     """
-        Abstract synapse model.
+        Base class for synapse models.
 
-        Note that we require the kernel entries to be in pA for numerical stability, since most of the time we want to run in half-precision.
-        However somas expect the current in nA so we need to rescale the output.
+        A synapse model turns presynaptic spikes into postsynaptic current. Subclasses provide
+        `_dot`, which is the whole of the step.
 
-        Init:
+        Parameters
+        ----------
+        config : SynanpsesConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
 
-        Input:
-            spikes: SpikeArray
-            
-        Output:
-            currents: CurrentArray
+        Input Ports
+        -----------
+        spikes : SpikeArray
+            Presynaptic spikes.
+
+        Output Ports
+        ------------
+        currents : CurrentArray
+            Current delivered to each postsynaptic unit.
+
+        Properties
+        ----------
+        kernel : FloatArray
+            Synaptic weights, in pA. Writable, which is how a plasticity rule updates them.
+
+        Notes
+        -----
+        Kernel entries are in pA. The framework runs in half precision by default, and nA-scale
+        weights lose too much of the mantissa to be summed reliably.
+
+        The weights are exposed as the writable ``kernel`` property, which is what lets a
+        plasticity rule read them and write them back.
+
+        See Also
+        --------
+        LinearSynapses : Weighted sum of the incoming spikes.
+        TracedSynapses : Weighted sum filtered by a single exponential.
     """
     _kernel: Variable
 
@@ -75,7 +107,18 @@ class Synapses(Component, tp.Generic[ConfigT]):
 
     def __call__(self, spikes: SpikeArray) -> SynanpsesOutput:
         """
-            Compute synanpse's currents.
+            Converts presynaptic spikes into postsynaptic current.
+
+            Parameters
+            ----------
+            spikes : SpikeArray
+                Presynaptic spikes.
+
+            Returns
+            -------
+            SynanpsesOutput
+                Dictionary with one entry, ``currents``, the current delivered to each postsynaptic
+                unit.
         """
         return {
             'currents': self._dot(spikes)

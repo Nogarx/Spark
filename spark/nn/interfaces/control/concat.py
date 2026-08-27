@@ -20,7 +20,7 @@ from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceC
 @register_config
 class ConcatConfig(ControlInterfaceConfig):
     """
-        Concat configuration class.
+        Configuration for `Concat`.
     """
     pass
 
@@ -29,16 +29,29 @@ class ConcatConfig(ControlInterfaceConfig):
 @register_interface
 class Concat(ControlInterface):
     """
-        Combines several streams of inputs of the same type into a single stream.
+        Joins several inputs into one flat payload.
 
-        Init:
-            payload_type: type[SparkPayload]
-            
-        Input:
-            input: type[SparkPayload]
-            
-        Output:
-            output: type[SparkPayload]
+        Every input is flattened and concatenated in the order the ports were declared. All inputs
+        must carry the same payload type, which is also the type of the result.
+
+        Parameters
+        ----------
+        config : ConcatConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        **inputs : SparkPayload
+            Any number of inputs, all of the same payload type. Named by the graph.
+
+        Output Ports
+        ------------
+        output : SparkPayload
+            The joined inputs, one dimensional and of the same payload type as the inputs.
+
+        See Also
+        --------
+        ConcatReshape : The same join, followed by a reshape.
     """
     config: ConcatConfig
 
@@ -64,7 +77,18 @@ class Concat(ControlInterface):
 
     def __call__(self, **inputs: SparkPayload) -> ControlInterfaceOutput:
         """
-            Merge all input streams into a single data output stream.
+            Flattens and concatenates every input.
+
+            Parameters
+            ----------
+            **inputs : SparkPayload
+                Any number of inputs, all of the same payload type.
+
+            Returns
+            -------
+            ControlInterfaceOutput
+                Dictionary with one entry, ``output``, one dimensional and of the payload type of the
+                inputs.
         """
         # Control flow operation
         return {
@@ -78,7 +102,12 @@ class Concat(ControlInterface):
 @register_config
 class ConcatReshapeConfig(ConcatConfig):
     """
-        ConcatReshape configuration class.
+        Configuration for `ConcatReshape`.
+
+        Parameters
+        ----------
+        reshape : tuple of int
+            Shape of the result. Its size must match the total size of the inputs.
     """
 
     reshape: tuple[int, ...] = dc.field(
@@ -94,17 +123,29 @@ class ConcatReshapeConfig(ConcatConfig):
 @register_interface
 class ConcatReshape(ControlInterface):
     """
-        Combines several streams of inputs of the same type into a single stream.
+        Joins several inputs into one payload of a given shape.
 
-        Init:
-            reshape: tuple[int, ...]
-            payload_type: type[SparkPayload]
-            
-        Input:
-            input: type[SparkPayload]
-            
-        Output:
-            output: type[SparkPayload]
+        `Concat` followed by a reshape to ``reshape``, which is what lets several one dimensional
+        sources feed a module that expects a pool of a particular shape.
+
+        Parameters
+        ----------
+        config : ConcatReshapeConfig
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        **inputs : SparkPayload
+            Any number of inputs, all of the same payload type. Named by the graph.
+
+        Output Ports
+        ------------
+        output : SparkPayload
+            The joined inputs, of shape ``reshape`` and of the same payload type as the inputs.
+
+        See Also
+        --------
+        Concat : The join, without the reshape.
     """
     config: ConcatReshapeConfig
 
@@ -137,7 +178,18 @@ class ConcatReshape(ControlInterface):
 
     def __call__(self, **inputs: SparkPayload) -> ControlInterfaceOutput:
         """
-            Merge all input streams into a single data output stream. Output stream is reshape to match the pre-specified shape.
+            Flattens, concatenates and reshapes every input.
+
+            Parameters
+            ----------
+            **inputs : SparkPayload
+                Any number of inputs, all of the same payload type.
+
+            Returns
+            -------
+            ControlInterfaceOutput
+                Dictionary with one entry, ``output``, of shape ``reshape`` and of the payload type of
+                the inputs.
         """
         # Control flow operation
         return {

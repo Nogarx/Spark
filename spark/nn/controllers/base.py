@@ -31,13 +31,33 @@ from spark.core.config_validation import TypeValidator, PositiveValidator
 
 class ControllerMeta(SparkMeta):
     """
-        Controller metaclass.
+        Metaclass for controllers.
     """
     pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class ControllerConfig(SparkConfig):
+    """
+        Base configuration for controllers.
+
+        Parameters
+        ----------
+        modules_specs : tuple of ModuleSpecs
+            The modules the controller holds and how their ports are wired. Each entry names a
+            module, its class, its configuration, and where each of its inputs comes from.
+        seed : int, optional
+            Seed for the random draws of the controller and its modules. Drawn from the operating
+            system when omitted.
+        dt : float, default 1.0
+            Integration step, in ms.
+
+        Notes
+        -----
+        ``dt`` is handed down to every configuration the controller contains, so the modules of
+        one controller always integrate on the same clock. A ``dt`` set on a module directly is
+        overwritten.
+    """
     modules_specs: tuple[ModuleSpecs, ...] = dc.field(
         metadata = {
             'validators': [
@@ -90,9 +110,40 @@ ConfigT = tp.TypeVar("ConfigT", bound=ControllerConfig)
 
 class Controller(Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerMeta):
     """
-        Controller model.
+        Base class for controllers.
 
-        A controller is a pipeline object used to represent and coordinate a collection of Spark modules.
+        A controller holds a set of modules and the wiring between them, and steps them in order.
+
+        Parameters
+        ----------
+        config : ControllerConfig, optional
+            Controller configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        **inputs : SparkPayload
+            Derived from the modules: a module input wired to ``__call__`` becomes an input port of
+            the controller, under the name the port map gives it.
+
+        Output Ports
+        ------------
+        **outputs : SparkPayload
+            Derived from the modules: a module output named in ``outputs`` becomes an output port of
+            the controller.
+
+        Notes
+        -----
+        The input and output ports of a controller are derived from its modules. A module input
+        wired to ``__call__`` becomes an input port of the controller, and a module output named
+        in ``outputs`` becomes an output port.
+
+        Beyond ports, a module may declare an effect: a value written onto a property of another
+        module after the step, which is how a plasticity rule writes weights back onto a synapse.
+
+        See Also
+        --------
+        Neuron : Controller whose modules step in dependency order within one timestep.
+        Brain : Controller whose modules read the previous timestep from a cache.
     """
     config: ConfigT
     default_config: type[ConfigT]
@@ -653,7 +704,17 @@ class Controller(Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerMeta)
     @abc.abstractmethod
     def __call__(self, **inputs: SparkPayload) -> dict[str, SparkPayload]:
         """
-            Update controller's states.
+            Advances every module one step.
+
+            Parameters
+            ----------
+            **inputs : SparkPayload
+                One entry per input port of the controller, as derived from the modules.
+
+            Returns
+            -------
+            dict of str to SparkPayload
+                One entry per output port of the controller, as derived from the modules.
         """
         pass
 

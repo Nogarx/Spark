@@ -21,7 +21,18 @@ from spark.core.backend import data as set_data_fn
 
 class InitializerConfig(SparkConfig, abc.ABC):
     """
-        Base initializers configuration class.
+        Base configuration for initializers.
+
+        Parameters
+        ----------
+        dtype : DTypeLike, default jnp.float16
+            Dtype of the produced array.
+        scale : int or float, default 1
+            Factor applied to the produced array.
+        min_value : int or float or None, default None
+            Lower bound. Applied by clipping in the initializers of this package.
+        max_value : int or float or None, default None
+            Upper bound. Applied by clipping in the initializers of this package.
     """
 
     # NOTE: x64 dtypes require manual override and it is unlikely that they are going to be required anyway; similar with complex numbers.
@@ -75,7 +86,25 @@ ConfigT = tp.TypeVar("ConfigT", bound=InitializerConfig)
 
 class Initializer(abc.ABC):
     """
-        Base (abstract) class for all Spark initializers.
+        Base class for initializers.
+
+        An initializer produces the array a parameter starts from. Passing one in place of a value
+        lets a configuration describe a whole pool without holding the array: the array is drawn
+        at build time, once the shape is known.
+
+        A subclass must declare its configuration through the ``config`` annotation, which is also
+        what it falls back to when constructed without one.
+
+        Parameters
+        ----------
+        config : InitializerConfig, optional
+            Initializer configuration. Its fields may also be given as keyword arguments.
+
+        See Also
+        --------
+        ConstantInitializer : Every entry the same value.
+        UniformInitializer : Entries drawn uniformly.
+        SparseUniformInitializer : Uniform entries with a fraction zeroed.
     """
     config: InitializerConfig
     default_config: type[ConfigT]
@@ -111,17 +140,54 @@ class Initializer(abc.ABC):
 
     @abc.abstractmethod
     def __call__(self, key: jax.Array, shape: tuple[int, ...], **kwargs) -> jax.Array:
+        """
+            Draws the array.
+
+            Parameters
+            ----------
+            key : jax.Array
+                PRNG key.
+            shape : tuple of int
+                Shape of the array to draw.
+            **kwargs
+                Extra arguments accepted by the concrete initializer.
+
+            Returns
+            -------
+            jax.Array
+                The drawn array, cast to ``dtype``.
+        """
         raise NotImplementedError
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class MaskedInitializer(abc.ABC):
     """
-        Base (abstract) class for masked initializers.
+        Base class for initializers that take a mask.
+
+        Called with a mask alongside the key and the shape, which is what lets an initializer draw
+        different values for different groups of entries.
     """
 
     @abc.abstractmethod
     def __call__(self, mask: jax.Array, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
+        """
+            Draws the array under a mask.
+
+            Parameters
+            ----------
+            mask : jax.Array
+                Selects which entries are drawn together.
+            key : jax.Array
+                PRNG key.
+            shape : tuple of int
+                Shape of the array to draw.
+
+            Returns
+            -------
+            jax.Array
+                The drawn array.
+        """
         raise NotImplementedError
 
 #################################################################################################################################################

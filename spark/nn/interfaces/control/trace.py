@@ -26,7 +26,12 @@ from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceC
 
 class SignalTraceOutput(tp.TypedDict):
     """
-       Generic signal trace model output spec.
+        Output ports of a signal trace.
+
+        Attributes
+        ----------
+        output : FloatArray
+            The trace after this step, plus whatever arrived on the ``trace`` port.
     """
     output: FloatArray
 
@@ -34,7 +39,14 @@ class SignalTraceOutput(tp.TypedDict):
 
 class SignalTraceConfig(ControlInterfaceConfig):
     """
-        Abstract signal trace configuration class.
+        Base configuration for signal traces.
+
+        Parameters
+        ----------
+        tau : float or jax.Array, default 10.0
+            Decay constant of the trace, in ms.
+        base : float or jax.Array, default 0.0
+            Value the trace decays towards.
     """
 
     tau: float | jax.Array = dc.field(
@@ -60,28 +72,47 @@ ConfigT = tp.TypeVar("ConfigT", bound=SignalTraceConfig)
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class SignalTrace(ControlInterface, tp.Generic[ConfigT]):
-    """
-        Abstract exponentially decaying trace of a signal.
+    r"""
+        Base class for exponentially decaying traces of a signal.
 
-        A model driven by an environment sees values that arrive at one rate and matter at
-        another: a reward, a context cue, a neuromodulator release. Holding such a value and
-        decaying it between calls puts a piece of the model in the training loop, and makes the
-        decay constant a number the caller has to keep consistent with the model's dt. A trace
-        owns it instead, so the signal is delivered as it happens and the trace is what the rest
-        of the graph reads.
+        A signal that arrives at one rate and is read at another is held here rather than by the
+        caller: the value is delivered as it happens and the trace is what the rest of the graph
+        reads. This keeps the decay constant inside the model, where ``dt`` is known.
 
-        What separates the two implementations is which quantity survives a change of dt, and
-        that is why they are separate components rather than one with a switch:
+        Subclasses differ in the gain applied to the incoming signal, and therefore in which
+        quantity is preserved when ``dt`` changes:
 
-            SignalAccumulator   conserves the area of a signal delivered once
-            SignalAverage       conserves the level of a signal delivered on every step
+        * `SignalAccumulator` preserves the area of a signal delivered once.
+        * `SignalAverage` preserves the level of a signal delivered on every step.
 
-        Neither conserves both, and choosing the wrong one does not fail loudly: it rescales the
-        signal the moment dt changes.
+        Neither preserves both. Picking the other one rescales the trace rather than raising.
 
-        Traces chain. Feeding the output of one into the "trace" port of the next adds them, so
-        a port carrying signals of both kinds takes one of each, rather than a single trace with
-        a correction factor applied to whichever signal lost.
+        Parameters
+        ----------
+        config : SignalTraceConfig
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        signal : FloatArray
+            Value delivered on this step.
+        trace : FloatArray, optional
+            Trace arriving from an upstream `SignalTrace`, added to this one.
+
+        Output Ports
+        ------------
+        output : FloatArray
+            The trace after this step, plus whatever arrived on ``trace``.
+
+        Notes
+        -----
+        Traces chain. Feeding the output of one into the ``trace`` port of the next adds them, so
+        a port carrying signals of both kinds takes one trace of each.
+
+        See Also
+        --------
+        SignalAccumulator : Area-preserving trace.
+        SignalAverage : Level-preserving trace.
     """
     config: ConfigT
 
@@ -120,7 +151,19 @@ class SignalTrace(ControlInterface, tp.Generic[ConfigT]):
 
     def __call__(self, signal: FloatArray, trace: FloatArray | None = None) -> SignalTraceOutput:
         """
-            Advances the trace with the incoming signal and adds whatever arrived from upstream.
+            Advances the trace with the incoming signal.
+
+            Parameters
+            ----------
+            signal : FloatArray
+                Value delivered on this step.
+            trace : FloatArray, optional
+                Trace arriving from an upstream `SignalTrace`, added to this one.
+
+            Returns
+            -------
+            SignalTraceOutput
+                Dictionary with one entry, ``output``, the trace after this step.
         """
         own = self.trace(signal.value)
         return {
@@ -134,7 +177,14 @@ class SignalTrace(ControlInterface, tp.Generic[ConfigT]):
 @register_config
 class SignalAccumulatorConfig(SignalTraceConfig):
     """
-        SignalAccumulator configuration class.
+        Configuration for `SignalAccumulator`.
+
+        Parameters
+        ----------
+        tau : float or jax.Array, default 10.0
+            Decay constant of the trace, in ms.
+        base : float or jax.Array, default 0.0
+            Value the trace decays towards.
     """
     pass
 
@@ -142,28 +192,43 @@ class SignalAccumulatorConfig(SignalTraceConfig):
 
 @register_interface
 class SignalAccumulator(SignalTrace):
-    """
-        Leaky accumulation of a signal.
+    r"""
+        Area-preserving trace of a signal.
 
-        The signal enters at full amplitude and decays from there, so a value delivered on one
-        step and followed by silence reproduces exactly the decaying schedule a caller would
-        otherwise have written out by hand. What is conserved is the area under a single
-        delivery, which approaches tau times its amplitude as dt shrinks, so an event keeps its
-        meaning when the integration step changes.
+        The signal enters the trace unscaled, so a one-off delivery leaves a jump of its full
+        magnitude that then decays. Use this for events: a reward, a cue, anything delivered on
+        the step it happens and on no other.
 
-        A signal delivered on every step accumulates rather than settling on itself, and the
-        level it reaches grows as dt shrinks. Use SignalAverage for that.
+        Parameters
+        ----------
+        config : SignalAccumulatorConfig
+            Model configuration. Its fields may also be given as keyword arguments.
 
-        Init:
-            tau: float [ms]
-            base: float
+        Input Ports
+        -----------
+        signal : FloatArray
+            Value delivered on this step.
+        trace : FloatArray, optional
+            Trace arriving from an upstream `SignalTrace`, added to this one.
 
-        Input:
-            signal: FloatArray
-            trace: FloatArray | None
+        Output Ports
+        ------------
+        output : FloatArray
+            The trace after this step, plus whatever arrived on ``trace``.
 
-        Output:
-            output: FloatArray
+        Notes
+        -----
+        With :math:`\lambda = 1 - \exp(-\Delta t / \tau)`,
+
+        .. math::
+            T \leftarrow T + \lambda (T_{\mathrm{base}} - T) + x
+
+        A signal delivered on every step accumulates to :math:`x / \lambda`, which grows as
+        ``dt`` shrinks. Use `SignalAverage` for that case.
+
+        See Also
+        --------
+        SignalAverage : Level-preserving trace.
     """
     config: SignalAccumulatorConfig
 
@@ -181,7 +246,14 @@ class SignalAccumulator(SignalTrace):
 @register_config
 class SignalAverageConfig(SignalTraceConfig):
     """
-        SignalAverage configuration class.
+        Configuration for `SignalAverage`.
+
+        Parameters
+        ----------
+        tau : float or jax.Array, default 10.0
+            Decay constant of the trace, in ms.
+        base : float or jax.Array, default 0.0
+            Value the trace decays towards.
     """
     pass
 
@@ -189,27 +261,43 @@ class SignalAverageConfig(SignalTraceConfig):
 
 @register_interface
 class SignalAverage(SignalTrace):
-    """
-        Exponential moving average of a signal.
+    r"""
+        Level-preserving trace of a signal.
 
-        A signal delivered on every step settles on itself whatever the integration step, so a
-        level keeps its meaning when dt changes. This is also the safer of the two at reduced
-        precision: a level is often the smaller of the signals sharing a port, and this trace is
-        the one that does not ask it to carry a correction factor.
+        The signal is scaled by the decay rate as it enters the trace, so a constant input settles
+        at that constant rather than at a multiple of it. Use this for signals present on every
+        step: a firing rate, a sensor reading, a running error.
 
-        A signal delivered once enters attenuated by one minus the decay per step, and the area
-        it leaves behind shrinks with dt. Use SignalAccumulator for that.
+        Parameters
+        ----------
+        config : SignalAverageConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
 
-        Init:
-            tau: float [ms]
-            base: float
+        Input Ports
+        -----------
+        signal : FloatArray
+            Value delivered on this step.
+        trace : FloatArray, optional
+            Trace arriving from an upstream `SignalTrace`, added to this one.
 
-        Input:
-            signal: FloatArray
-            trace: FloatArray | None
+        Output Ports
+        ------------
+        output : FloatArray
+            The trace after this step, plus whatever arrived on ``trace``.
 
-        Output:
-            output: FloatArray
+        Notes
+        -----
+        With :math:`\lambda = 1 - \exp(-\Delta t / \tau)`,
+
+        .. math::
+            T \leftarrow T + \lambda (T_{\mathrm{base}} - T) + \lambda x
+
+        which is the exponential moving average of :math:`x`. A one-off delivery leaves a jump of
+        :math:`\lambda x`, which shrinks with ``dt``. Use `SignalAccumulator` for that case.
+
+        See Also
+        --------
+        SignalAccumulator : Area-preserving trace.
     """
     config: SignalAverageConfig
 

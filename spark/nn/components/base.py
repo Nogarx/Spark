@@ -15,7 +15,16 @@ from spark.core.config import DefaultSparkConfig
 
 class ComponentConfig(DefaultSparkConfig):
     """
-       Abstract neuronal component configuration class.
+        Base configuration for components.
+
+        Parameters
+        ----------
+        seed : int, optional
+            Seed for internal random draws. Drawn from the operating system when omitted.
+        dtype : DTypeLike, default jnp.float16
+            Dtype used for the internal state.
+        dt : float, default 1.0
+            Integration step, in ms. Overwritten by the enclosing controller.
     """
     pass
 
@@ -25,7 +34,19 @@ ConfigT = tp.TypeVar("ConfigT", bound=ComponentConfig)
 
 class Component(SparkModule, abc.ABC, tp.Generic[ConfigT]):
     """
-        Abstract neuronal component.
+        Base class for the components a neuron is built from.
+
+        Parameters
+        ----------
+        config : ComponentConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        See Also
+        --------
+        Soma : Membrane potential and spike generation.
+        Synapses : Presynaptic spikes to postsynaptic current.
+        Delays : Conduction delays.
+        Plasticity : Weight updates.
     """
     config: ConfigT
 

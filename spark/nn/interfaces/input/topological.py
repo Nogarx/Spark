@@ -27,7 +27,22 @@ from spark.nn.initializers.base import Initializer
 @register_config
 class TopologicalSpikerConfig(InputInterfaceConfig):
     """
-        Base TopologicalSpiker configuration class.
+        Base configuration for topological spikers.
+
+        Parameters
+        ----------
+        glue : jax.Array, default 0
+            Per-dimension flag marking whether the two ends of that dimension are identified. A
+            glued dimension is encoded on a circle, so its two extremes excite the same units.
+        mins : jax.Array, default 0
+            Lower end of the input range, per dimension or as a single value.
+        maxs : jax.Array, default 1
+            Upper end of the input range, per dimension or as a single value.
+        resolution : int, default 64
+            Number of units each input dimension is spread over.
+        sigma : float, default 1/32
+            Width of the activity bump, as the standard deviation of a Gaussian in the target
+            space.
     """
     
     glue: int | jax.Array | Initializer = dc.field(
@@ -84,7 +99,7 @@ class TopologicalSpikerConfig(InputInterfaceConfig):
 @register_config
 class TopologicalPoissonSpikerConfig(TopologicalSpikerConfig, PoissonSpikerConfig):
     """
-        TopologicalPoissonSpiker configuration class.
+        Configuration for `TopologicalPoissonSpiker`.
     """
     pass
 
@@ -93,23 +108,35 @@ class TopologicalPoissonSpikerConfig(TopologicalSpikerConfig, PoissonSpikerConfi
 @register_interface
 class TopologicalPoissonSpiker(InputInterface):
     """
-        Transforms a continuous signal to a spiking signal.
-        This transformation maps a vector (a point in a hypercube) into a simple manifold with/without its borders glued.
-        This transformation assumes a very simple poisson neuron model without any type of adaptation or plasticity.
+        Place-coded stochastic encoding of a continuous signal.
 
-        Init:
-            glue: jax.Array
-            mins: jax.Array
-            maxs: jax.Array
-            resolution: int 
-            max_freq: float [Hz]
-            sigma: float
+        Each input dimension is spread over ``resolution`` units laid out along that dimension.
+        A value excites the units near its position under a Gaussian bump of width ``sigma``, and
+        those units then fire as independent Poisson processes. Nearby values excite overlapping
+        populations, which a per-unit rate code does not give.
 
-        Input:
-            signal: FloatArray
-            
-        Output:
-            spikes: SpikeArray
+        Setting ``glue`` for a dimension identifies its two ends, so that dimension is encoded on
+        a circle. (e.g. an angular signal should reconciliate units placed at 0 and 2π positions)
+
+        Parameters
+        ----------
+        config : TopologicalPoissonSpikerConfig
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        signal : FloatArray
+            Value to encode, expected in ``[mins, maxs]``.
+
+        Output Ports
+        ------------
+        spikes : SpikeArray
+            Place-coded spike trains, of shape ``signal.shape + (resolution,)``.
+
+        See Also
+        --------
+        PoissonSpiker : One unit per input, without the place code.
+        TopologicalLinearSpiker : The same place code, deterministically encoded.
     """
     config: TopologicalPoissonSpikerConfig
 
@@ -139,10 +166,17 @@ class TopologicalPoissonSpiker(InputInterface):
         
     def __call__(self, signal: FloatArray) -> InputInterfaceOutput:
         """
-            Input interface operation.
+            Encodes the signal as spikes.
 
-            Input: A FloatArray of values in the range [mins, maxs].
-            Output: A SpikeArray of the same shape as the input.
+            Parameters
+            ----------
+            signal : FloatArray
+                Value to encode, expected in ``[mins, maxs]``.
+
+            Returns
+            -------
+            InputInterfaceOutput
+                Dictionary with one entry, ``spikes``, of shape ``signal.shape + (resolution,)``.
         """
         # Transform input to [0, 1]
         x = (signal.value - self._mins.value) / (self._maxs.value - self._mins.value)
@@ -159,7 +193,10 @@ class TopologicalPoissonSpiker(InputInterface):
 @register_config
 class TopologicalLinearSpikerConfig(TopologicalSpikerConfig, LinearSpikerConfig):
     """
-        TopologicalLinearSpiker configuration class.
+        Configuration for `TopologicalLinearSpiker`.
+
+        Union of `TopologicalSpikerConfig` and `LinearSpikerConfig`. It declares no field of its
+        own.
     """
     pass
 
@@ -168,25 +205,35 @@ class TopologicalLinearSpikerConfig(TopologicalSpikerConfig, LinearSpikerConfig)
 @register_interface
 class TopologicalLinearSpiker(InputInterface):
     """
-        Transforms a continuous signal to a spiking signal.
-        This transformation maps a vector (a point in a hypercube) into a simple manifold with/without its borders glued.
-        This transformation assumes a very simple linear neuron model without any type of adaptation or plasticity.
+        Place-coded deterministic encoding of a continuous signal.
 
-        Init:
-            glue: jax.Array
-            mins: jax.Array
-            maxs: jax.Array
-            resolution: int 
-            tau: float [ms]
-            cd: float [ms]
-            max_freq: float [Hz]
-            sigma: float
+        Each input dimension is spread over ``resolution`` units laid out along that dimension.
+        A value excites the units near its position under a Gaussian bump of width ``sigma``, and
+        those units then fire as independent Poisson processes. Nearby values excite overlapping
+        populations, which a per-unit rate code does not give.
 
-        Input:
-            signal: FloatArray
-            
-        Output:
-            spikes: SpikeArray
+        Setting ``glue`` for a dimension identifies its two ends, so that dimension is encoded on
+        a circle. (e.g. an angular signal should reconciliate units placed at 0 and 2π positions)
+
+        Parameters
+        ----------
+        config : TopologicalLinearSpikerConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        signal : FloatArray
+            Value to encode, expected in ``[mins, maxs]``.
+
+        Output Ports
+        ------------
+        spikes : SpikeArray
+            Place-coded spike trains, of shape ``signal.shape + (resolution,)``.
+
+        See Also
+        --------
+        TopologicalPoissonSpiker : The same place code, stochastically encoded.
+        LinearSpiker : One unit per input, without the place code.
     """
     config: TopologicalLinearSpikerConfig
 
@@ -232,10 +279,17 @@ class TopologicalLinearSpiker(InputInterface):
 
     def __call__(self, signal: FloatArray) -> InputInterfaceOutput:
         """
-            Input interface operation.
+            Encodes the signal as spikes.
 
-            Input: A FloatArray of values in the range [mins, maxs].
-            Output: A SpikeArray of the same shape as the input.
+            Parameters
+            ----------
+            signal : FloatArray
+                Value to encode, expected in ``[mins, maxs]``.
+
+            Returns
+            -------
+            InputInterfaceOutput
+                Dictionary with one entry, ``spikes``, of shape ``signal.shape + (resolution,)``.
         """
         # Transform input to [0, 1]
         x = (signal.value - self._mins.value) / (self._maxs.value - self._mins.value)

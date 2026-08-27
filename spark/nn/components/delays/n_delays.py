@@ -28,7 +28,16 @@ from spark.nn.components.delays.base import Delays, DelaysOutput, DelaysConfig
 @register_config
 class NDelaysConfig(DelaysConfig):
     """
-    NDelays configuration class.
+        Configuration for `NDelays`.
+
+        Parameters
+        ----------
+        max_delay : float, default 8.0
+            Longest delay the buffer can hold, in ms. The buffer holds ``ceil(max_delay / dt)``
+            steps, which bounds every drawn delay.
+        delays : jax.Array or Initializer, default UniformInitializerConfig()
+            Delay of every presynaptic unit, in steps. Drawn over ``[1, buffer_size]`` when an
+            initializer is given.
     """
 
     max_delay: float = dc.field(
@@ -55,20 +64,41 @@ class NDelaysConfig(DelaysConfig):
 @register_module
 class NDelays(Delays):
     """
-        Data structure for spike storage and retrival for efficient neuron spike delay implementation.
-        This synaptic delay model implements a generic conduction delay of the outputs spikes of neruons. 
-        Example: Neuron A fires, every neuron that listens to A recieves its spikes K timesteps later,
-                neuron B fires, every neuron that listens to B recieves its spikes L timesteps later.
+        Conduction delay attached to the presynaptic unit.
 
-        Init:
-            max_delay: float
-            delay_initializer: DelayInitializerConfig
+        Every spike a unit emits reaches all of its targets after the same number of steps. If
+        unit A fires, everything listening to A sees the spike ``k_A`` steps later, with ``k_A``
+        the delay of A alone.
 
-        Input:
-            in_spikes: SpikeArray
-            
-        Output:
-            out_spikes: SpikeArray
+        Parameters
+        ----------
+        config : NDelaysConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        in_spikes : SpikeArray
+            Spikes emitted on this step.
+
+        Output Ports
+        ------------
+        out_spikes : SpikeArray
+            Spikes due on this step, of the same shape as the input.
+
+        Properties
+        ----------
+        kernel : IntegerArray
+            Delay of every presynaptic unit, in steps rather than in ms. Writable.
+
+        Notes
+        -----
+        Spikes are held in a ring buffer of ``ceil(max_delay / dt)`` steps, bit-packed eight units
+        to a byte, so the buffer costs one bit per unit per step. Reading is a gather at the
+        per-unit offset, which makes the cost independent of the delay values.
+
+        See Also
+        --------
+        N2NDelays : One delay per (postsynaptic, presynaptic) pair.
     """
     config: NDelaysConfig
 
@@ -143,6 +173,20 @@ class NDelays(Delays):
         return unpacked.reshape(self._buffer_size, -1)[:, :self._units].reshape((self._buffer_size,self._units))
 
     def __call__(self, in_spikes: SpikeArray) -> DelaysOutput:
+        """
+            Stores the incoming spikes and returns the ones due on this step.
+
+            Parameters
+            ----------
+            in_spikes : SpikeArray
+                Spikes emitted on this step.
+
+            Returns
+            -------
+            DelaysOutput
+                Dictionary with one entry, ``out_spikes``, the spikes whose delay elapsed on this
+                step.
+        """
         self._push(in_spikes)
         out_spikes = self._gather(in_spikes.inhibition_mask)
         return {

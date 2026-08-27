@@ -22,9 +22,26 @@ from spark.nn.components.plasticity.hebbian_rule import HebbianRule, HebbianRule
 @register_config
 class ALIFNeuronConfig(NeuronConfig):
 	"""
-        Standard Adaptive Leaky-and-Integrate (ALIF) neuron model with traced synapses, neuron-to-neuron delays and Hebbian learning.
-		
-		NOTE: Parameter calibration is still necessary.
+		Configuration for `ALIFNeuron`.
+
+		Parameters
+		----------
+		modules_specs : tuple of ModuleSpecs
+			The four components listed under `ALIFNeuron`, prewired. Replace an entry to swap a
+			component, or edit its configuration to retune one.
+		units : tuple of int
+			Shape of the pool of neurons.
+		inhibitory_rate : float, default 0.2
+			Fraction of the pool that is inhibitory.
+		seed : int, optional
+			Seed for the random draws of the neuron and its modules.
+		dt : float, default 1.0
+			Integration step, in ms.
+
+		Notes
+		-----
+		The default parameters of the components have not been calibrated against any particular
+		dataset or firing regime.
 	"""
 	
 	modules_specs: tuple[ModuleSpecs, ...] = dc.field(
@@ -82,6 +99,46 @@ class ALIFNeuronConfig(NeuronConfig):
 
 @register_neuron
 class ALIFNeuron(Neuron):
+	"""
+		Adaptive leaky integrate-and-fire neuron with plastic synapses.
+
+		A prewired `Neuron` holding four components:
+
+		* ``delays``, an `N2NDelays` conduction delay, one per connection.
+		* ``synapses``, `TracedSynapses`, giving each spike an exponential postsynaptic current.
+		* ``soma``, an `AdaptiveLeakySoma` with a 3 ms refractory period and a threshold that
+		  rises by 100 mV per spike and decays back.
+		* ``hebbian_rule``, a `HebbianRule` reading the delayed presynaptic spikes, the emitted
+		  spikes and the current weights.
+
+		The rising threshold makes the unit progressively harder to drive as it fires, so a
+		constant input produces a rate that falls rather than one that holds.
+
+		Parameters
+		----------
+		config : ALIFNeuronConfig, optional
+				Controller configuration. Its fields may also be given as keyword arguments.
+
+		Input Ports
+		-----------
+		in_spikes : SpikeArray
+			Spikes arriving at the pool.
+
+		Output Ports
+		------------
+		out_spikes : SpikeArray
+			Spikes emitted by the pool on this step.
+
+		Properties
+		----------
+		inhibition_mask : BooleanMask
+			Marks the inhibitory units of the pool. Read only.
+
+		See Also
+		--------
+		LIFNeuron : The same neuron without threshold adaptation.
+		AdExNeuron : Adaptation through a current rather than through the threshold.
+	"""
 	config: ALIFNeuronConfig
 
 #################################################################################################################################################

@@ -28,7 +28,18 @@ from spark.nn.initializers.base import Initializer
 @register_config
 class ThreeFactorHebbianRuleConfig(PlasticityConfig):
     """
-       ThreeFactorHebbianRule configuration class.
+        Configuration for `ThreeFactorHebbianRule`.
+
+        Parameters
+        ----------
+        pre_tau : float or jax.Array or Initializer, default 10.0
+            Decay constant of the presynaptic trace, in ms. May be a 4-tuple, one value per
+            connection type.
+        post_tau : float or jax.Array or Initializer, default 10.0
+            Decay constant of the postsynaptic trace, in ms. May be a 4-tuple, one value per
+            connection type.
+        eta : float, default 0.1
+            Learning rate.
     """
 
     pre_tau: float | jax.Array | Initializer = dc.field(
@@ -64,21 +75,53 @@ class ThreeFactorHebbianRuleConfig(PlasticityConfig):
 
 @register_module
 class ThreeFactorHebbianRule(Plasticity):
-    """
-        Three-factor Hebbian plasticy rule model.
+    r"""
+        Three-factor Hebbian rule.
 
-        Init:
-            pre_tau: float | jax.Array
-            post_tau: float | jax.Array
-            eta: float | jax.Array
+        The pair-based Hebbian update of `HebbianRule` scaled by a third signal supplied on the
+        ``modulation`` port. The signal gates learning in time: the coincidence of the two spike
+        trains sets which weights would change, and the modulation sets whether and how much they
+        do.
 
-        Input:
-            pre_spikes: SpikeArray
-            post_spikes: SpikeArray
-            kernel: FloatArray
-            
-        Output:
-            kernel: FloatArray
+        Parameters
+        ----------
+        config : ThreeFactorHebbianRuleConfig
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        modulation : FloatArray
+            Third factor scaling the whole update.
+        pre_spikes : SpikeArray
+            Presynaptic spikes, after any conduction delay.
+        post_spikes : SpikeArray
+            Postsynaptic spikes emitted on this step.
+        kernel : FloatArray
+            Current synaptic weights, read from the synapse.
+
+        Output Ports
+        ------------
+        kernel : FloatArray
+            The updated weights, written back onto the synapse as an effect.
+
+        Notes
+        -----
+        .. math::
+            \Delta W = \eta \, M \left( y \, s_{\mathrm{pre}} + x \, s_{\mathrm{post}} \right)
+
+        applied as :math:`W \leftarrow \max(W + \Delta t \, \Delta W, 0)`. A modulation of zero
+        freezes the weights, and a negative modulation reverses the sign of the update.
+
+        References
+        ----------
+        .. [1] W. Gerstner, M. Lehmann, V. Liakoni, D. Corneil and J. Brea, "Eligibility Traces and
+               Plasticity on Behavioral Time Scales", Frontiers in Neural Circuits 12, 53, 2018.
+               https://doi.org/10.3389/fncir.2018.00053
+
+        See Also
+        --------
+        HebbianRule : The same rule without the third factor.
+        QuadrupletRule : Modulated rule with separate spike and trace terms.
     """
     config: ThreeFactorHebbianRuleConfig
 
@@ -136,7 +179,23 @@ class ThreeFactorHebbianRule(Plasticity):
         
     def __call__(self, modulation: FloatArray, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> PlasticityOutput:
         """
-            Computes and returns the next kernel update.
+            Computes the weights for the next step.
+
+            Parameters
+            ----------
+            modulation : FloatArray
+                Third factor scaling the whole update.
+            pre_spikes : SpikeArray
+                Presynaptic spikes, after any conduction delay.
+            post_spikes : SpikeArray
+                Postsynaptic spikes emitted on this step.
+            kernel : FloatArray
+                Current synaptic weights.
+
+            Returns
+            -------
+            PlasticityOutput
+                Dictionary with one entry, ``kernel``, the updated weights.
         """
         return {
             'kernel': FloatArray(self._compute_kernel_update(modulation, pre_spikes, post_spikes, kernel))

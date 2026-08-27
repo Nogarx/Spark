@@ -17,7 +17,7 @@ from spark.nn.controllers.base import ControllerConfig, ControllerMeta, Controll
 
 class BrainMeta(ControllerMeta):
 	"""
-		Brain metaclass.
+		Metaclass for `Brain`.
 	"""
 	pass
 
@@ -26,7 +26,17 @@ class BrainMeta(ControllerMeta):
 @register_config
 class BrainConfig(ControllerConfig):
 	"""
-		Configuration class for Brain's.
+		Configuration for `Brain`.
+
+		Parameters
+		----------
+		modules_specs : tuple of ModuleSpecs
+			The neurons and interfaces the brain holds, and how their ports are wired.
+		seed : int, optional
+			Seed for the random draws of the brain and its modules. Drawn from the operating
+			system when omitted.
+		dt : float, default 1.0
+			Integration step, in ms. Handed down to every module.
 	"""
 	pass
 
@@ -35,13 +45,38 @@ class BrainConfig(ControllerConfig):
 @register_module
 class Brain(Controller, metaclass=BrainMeta):
 	"""
-		Brain model.
+		Network of neurons and interfaces.
 
-		A brain is a pipeline object used to represent and coordinate a collection of neurons and interfaces.
-		This implementation relies on a cache system to simplify parallel computations; every timestep all the modules
-		in the Brain read from the cache, update its internal state and update the cache state. 
-		Note that this introduces a small latency between elements of the brain, which for most cases is negligible, and for
-		such a reason it is recommended that only full neuron models and interfaces are used within a Brain.
+		Every module reads from a cache holding the outputs of the previous step, updates its own
+		state, and writes its outputs back. Because no module waits for another, any wiring is
+		legal, cycles included, and the modules of one step are independent of each other.
+		Note that due to implementation details, modules within this controller have a one step
+		latency per connection; which, for most cases, is negligible.
+
+		Parameters
+		----------
+		config : BrainConfig, optional
+				Controller configuration. Its fields may also be given as keyword arguments.
+
+		Input Ports
+		-----------
+		**inputs : SparkPayload
+			Derived from the modules: a module input wired to ``__call__`` becomes an input port of
+			the controller, under the name the port map gives it.
+
+		Output Ports
+		------------
+		**outputs : SparkPayload
+			Derived from the modules: a module output named in ``outputs`` becomes an output port of
+			the controller.
+
+		Notes
+		-----
+		Input and output ports are derived from the modules, as for any controller.
+
+		See Also
+		--------
+		Neuron : Controller without the cache, where a step is ordered by its dependencies.
 	"""
 	config: BrainConfig
 
@@ -59,7 +94,20 @@ class Brain(Controller, metaclass=BrainMeta):
 
 	def __call__(self, **inputs: SparkPayload) -> dict[str, SparkPayload]:
 		"""
-			Update brain's states.
+			Advances every module one step against the cache.
+
+			Every module reads the outputs of the previous step, so the modules of one step are
+			independent of each other. The cache is written once all of them have run.
+
+			Parameters
+			----------
+			**inputs : SparkPayload
+				One entry per input port of the brain, as derived from the modules.
+
+			Returns
+			-------
+			dict of str to SparkPayload
+				One entry per output port of the brain, as derived from the modules.
 		"""
 		# Update modules
 		outputs = {}

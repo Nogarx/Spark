@@ -28,7 +28,18 @@ from spark.nn.initializers.base import Initializer
 @register_config
 class HebbianRuleConfig(PlasticityConfig):
     """
-       HebbianRule configuration class.
+        Configuration for `HebbianRule`.
+
+        Parameters
+        ----------
+        pre_tau : float or jax.Array or Initializer, default 20.0
+            Decay constant of the presynaptic trace, in ms. May be a 4-tuple, one value per
+            connection type.
+        post_tau : float or jax.Array or Initializer, default 20.0
+            Decay constant of the postsynaptic trace, in ms. May be a 4-tuple, one value per
+            connection type.
+        eta : float, default 0.01
+            Learning rate.
     """
 
     pre_tau: float | jax.Array | Initializer = dc.field(
@@ -64,21 +75,51 @@ class HebbianRuleConfig(PlasticityConfig):
 
 @register_module
 class HebbianRule(Plasticity):
-    """
-        Hebbian plasticy rule model.
+    r"""
+        Pair-based Hebbian rule.
 
-        Init:
-            pre_tau: float | jax.Array
-            post_tau: float | jax.Array
-            gamma: float | jax.Array
+        Every presynaptic spike is potentiated in proportion to the postsynaptic trace, and every
+        postsynaptic spike in proportion to the presynaptic trace. The rule only potentiates, so
+        the weights grow without bound unless something else keeps them in check.
 
-        Input:
-            pre_spikes: SpikeArray
-            post_spikes: SpikeArray
-            kernel: FloatArray
-            
-        Output:
-            kernel: FloatArray
+        Parameters
+        ----------
+        config : HebbianRuleConfig
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        pre_spikes : SpikeArray
+            Presynaptic spikes, after any conduction delay.
+        post_spikes : SpikeArray
+            Postsynaptic spikes emitted on this step.
+        kernel : FloatArray
+            Current synaptic weights, read from the synapse.
+
+        Output Ports
+        ------------
+        kernel : FloatArray
+            The updated weights, written back onto the synapse as an effect.
+
+        Notes
+        -----
+        With :math:`x` the presynaptic trace and :math:`y` the postsynaptic trace,
+
+        .. math::
+            \Delta W = \eta \left( y \, s_{\mathrm{pre}} + x \, s_{\mathrm{post}} \right)
+
+        applied as :math:`W \leftarrow \max(W + \Delta t \, \Delta W, 0)`. Each trace is scaled by
+        the reciprocal of its own time constant, so its magnitude does not change with ``tau``.
+
+        References
+        ----------
+        .. [1] W. Gerstner, W. M. Kistler, R. Naud and L. Paninski, "Neuronal Dynamics: From
+               Single Neurons to Networks and Models of Cognition", Chapter 19.2, Hebbian Rate
+               Models. https://neuronaldynamics.epfl.ch/online/Ch19.S2.html
+
+        See Also
+        --------
+        OjaRule : The same potentiation with a normalizing term.
     """
     config: HebbianRuleConfig
 
@@ -135,7 +176,21 @@ class HebbianRule(Plasticity):
         
     def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> PlasticityOutput:
         """
-            Computes and returns the next kernel update.
+            Computes the weights for the next step.
+
+            Parameters
+            ----------
+            pre_spikes : SpikeArray
+                Presynaptic spikes, after any conduction delay.
+            post_spikes : SpikeArray
+                Postsynaptic spikes emitted on this step.
+            kernel : FloatArray
+                Current synaptic weights.
+
+            Returns
+            -------
+            PlasticityOutput
+                Dictionary with one entry, ``kernel``, the updated weights.
         """
         return {
             'kernel': FloatArray(self._compute_kernel_update(pre_spikes, post_spikes, kernel))
@@ -147,6 +202,17 @@ class HebbianRule(Plasticity):
 
 @register_config
 class OjaRuleConfig(PlasticityConfig):
+    """
+        Configuration for `OjaRule`.
+
+        Parameters
+        ----------
+        post_tau : float or jax.Array or Initializer, default 20.0
+            Decay constant of the postsynaptic trace, in ms. May be a 4-tuple, one value per
+            connection type.
+        eta : float, default 0.1
+            Learning rate.
+    """
     post_tau: float | jax.Array | Initializer = dc.field(
         default = 20.0, 
         metadata = {
@@ -170,21 +236,49 @@ class OjaRuleConfig(PlasticityConfig):
 
 @register_module
 class OjaRule(Plasticity):
-    """
-        Oja's plasticy rule model.
+    r"""
+        Oja's rule.
 
-        Init:
-            pre_tau: float | jax.Array
-            post_tau: float | jax.Array
-            gamma: float | jax.Array
+        Hebbian potentiation with a decay term proportional to the weight and to the square of
+        the postsynaptic trace. The decay bounds the weight vector, which plain Hebbian
+        potentiation does not.
 
-        Input:
-            pre_spikes: SpikeArray
-            post_spikes: SpikeArray
-            kernel: FloatArray
-            
-        Output:
-            kernel: FloatArray
+        Parameters
+        ----------
+        config : OjaRuleConfig
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        pre_spikes : SpikeArray
+            Presynaptic spikes, after any conduction delay.
+        post_spikes : SpikeArray
+            Postsynaptic spikes emitted on this step.
+        kernel : FloatArray
+            Current synaptic weights, read from the synapse.
+
+        Output Ports
+        ------------
+        kernel : FloatArray
+            The updated weights, written back onto the synapse as an effect.
+
+        Notes
+        -----
+        With :math:`y` the postsynaptic trace,
+
+        .. math::
+            \Delta W = \eta \left( y \, s_{\mathrm{pre}} - W y^2 \right)
+
+        applied as :math:`W \leftarrow \max(W + \Delta t \, \Delta W, 0)`.
+
+        References
+        ----------
+        .. [1] E. Oja, "A Simplified Neuron Model as a Principal Component Analyzer", Journal of
+               Mathematical Biology 15(3), 267-273, 1982. https://doi.org/10.1007/BF00275687
+
+        See Also
+        --------
+        HebbianRule : The same potentiation without the normalizing term.
     """
     config: OjaRuleConfig
 
@@ -237,7 +331,21 @@ class OjaRule(Plasticity):
 
     def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> PlasticityOutput:
         """
-            Computes and returns the next kernel update.
+            Computes the weights for the next step.
+
+            Parameters
+            ----------
+            pre_spikes : SpikeArray
+                Presynaptic spikes, after any conduction delay.
+            post_spikes : SpikeArray
+                Postsynaptic spikes emitted on this step.
+            kernel : FloatArray
+                Current synaptic weights.
+
+            Returns
+            -------
+            PlasticityOutput
+                Dictionary with one entry, ``kernel``, the updated weights.
         """
         return {
             'kernel': FloatArray(self._compute_kernel_update(pre_spikes, post_spikes, kernel))

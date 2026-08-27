@@ -22,10 +22,26 @@ from spark.nn.components.plasticity.hebbian_rule import HebbianRule, HebbianRule
 @register_config
 class LIFNeuronConfig(NeuronConfig):
 	"""
-        Standard Leaky-and-Integrate (LIF) neuron model with linear synapses, neuron-to-neuron delays,
-		an absolute refractory period and Hebbian learning.
-		
-		NOTE: Parameter calibration is still necessary.
+		Configuration for `LIFNeuron`.
+
+		Parameters
+		----------
+		modules_specs : tuple of ModuleSpecs
+			The four components listed under `LIFNeuron`, prewired. Replace an entry to swap a
+			component, or edit its configuration to retune one.
+		units : tuple of int
+			Shape of the pool of neurons.
+		inhibitory_rate : float, default 0.2
+			Fraction of the pool that is inhibitory.
+		seed : int, optional
+			Seed for the random draws of the neuron and its modules.
+		dt : float, default 1.0
+			Integration step, in ms.
+
+		Notes
+		-----
+		The default parameters of the components have not been calibrated against any particular
+		dataset or firing regime.
 	"""
 	
 	modules_specs: tuple[ModuleSpecs, ...] = dc.field(
@@ -83,6 +99,47 @@ class LIFNeuronConfig(NeuronConfig):
 
 @register_neuron
 class LIFNeuron(Neuron):
+	"""
+		Leaky integrate-and-fire neuron with plastic synapses.
+
+		A prewired `Neuron` holding four components:
+
+		* ``delays``, an `N2NDelays` conduction delay, one per connection.
+		* ``synapses``, `LinearSynapses`, whose weights the plasticity rule writes back.
+		* ``soma``, an `AdaptiveLeakySoma` with a 3 ms refractory period.
+		* ``hebbian_rule``, a `HebbianRule` reading the delayed presynaptic spikes, the emitted
+		  spikes and the current weights.
+
+		Parameters
+		----------
+		config : LIFNeuronConfig, optional
+				Controller configuration. Its fields may also be given as keyword arguments.
+
+		Input Ports
+		-----------
+		in_spikes : SpikeArray
+			Spikes arriving at the pool.
+
+		Output Ports
+		------------
+		out_spikes : SpikeArray
+			Spikes emitted by the pool on this step.
+
+		Properties
+		----------
+		inhibition_mask : BooleanMask
+			Marks the inhibitory units of the pool. Read only.
+
+		Notes
+		-----
+		Only the refractory period is enabled on the soma. Threshold adaptation and the adaptation
+		current are available by setting their trigger parameters on the soma configuration.
+
+		See Also
+		--------
+		ALIFNeuron : The same neuron with threshold adaptation.
+		AdExNeuron : Adaptive exponential soma in place of the leaky one.
+	"""
 	config: LIFNeuronConfig
 
 #################################################################################################################################################

@@ -25,7 +25,12 @@ PlasticityParamLike = float  | tuple[float, float, float, float] | jax.Array #| 
 
 class PlasticityOutput(tp.TypedDict):
     """
-       Generic plasticity rule model output spec.
+        Output ports of a plasticity rule.
+
+        Attributes
+        ----------
+        kernel : FloatArray
+            The updated synaptic weights, to be written back onto the synapse.
     """
     kernel: FloatArray
 
@@ -33,7 +38,9 @@ class PlasticityOutput(tp.TypedDict):
 
 class PlasticityConfig(ComponentConfig):
     """
-        Abstract plasticity rule configuration class.
+        Base configuration for plasticity rules.
+
+        Carries no field of its own. Concrete rules declare their own parameters.
     """
     pass
 ConfigT = tp.TypeVar("ConfigT", bound=PlasticityConfig)
@@ -41,8 +48,53 @@ ConfigT = tp.TypeVar("ConfigT", bound=PlasticityConfig)
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class Plasticity(Component, tp.Generic[ConfigT]):
-    """
-        Abstract plasticity rule model.
+    r"""
+        Base class for plasticity rules.
+
+        A plasticity rule reads the presynaptic spikes, the postsynaptic spikes and the current
+        weights, and returns the weights for the next step. It does not own the weights: the
+        result is written back onto the synapse through an effect declared in the enclosing
+        controller.
+
+        Parameters
+        ----------
+        config : PlasticityConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        pre_spikes : SpikeArray
+            Presynaptic spikes, after any conduction delay.
+        post_spikes : SpikeArray
+            Postsynaptic spikes emitted on this step.
+        kernel : FloatArray
+            Current synaptic weights, read from the synapse.
+
+        Output Ports
+        ------------
+        kernel : FloatArray
+            The updated weights, written back onto the synapse as an effect.
+
+        Notes
+        -----
+        A rule parameter may be given per connection type rather than as a single value. Passing
+        a 4-tuple selects one value for each of the excitatory-excitatory, excitatory-inhibitory,
+        inhibitory-excitatory and inhibitory-inhibitory pairs, in the order ``(EE, EI, IE, II)``.
+        The pairing is read from the inhibition masks the spikes carry and is available as the
+        ``synaptic_mask`` property, with ``synaptic_mask_map`` giving the names.
+
+        Spikes are reshaped to broadcast against the kernel before the rule is evaluated: the
+        presynaptic axes are placed last and the postsynaptic axes first. A rule is therefore
+        written as an elementwise expression over the kernel shape.
+
+        See Also
+        --------
+        HebbianRule : Pair-based potentiation.
+        OjaRule : Hebbian potentiation with multiplicative normalization.
+        QuadrupletRule : Four-term rule driven by an external signal.
+        ThreeFactorHebbianRule : Hebbian rule gated by an external signal.
+        ZenkeRule : Triplet rule with heterosynaptic and transmitter-induced terms.
+        RUShortTermPlasticity : Short term depression of the current, not of the weights.
     """
 
     def __init__(self, config: ConfigT | None = None, **kwargs) -> None:

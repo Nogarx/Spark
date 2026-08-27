@@ -25,7 +25,26 @@ from spark.nn.components.somas.adaptive import AdaptiveSoma, AdaptiveSomaConfig
 @register_config
 class ExponentialSomaConfig(SomaConfig):
     """
-        ExponentialSoma model configuration class.
+        Configuration for `ExponentialSoma`.
+
+        Parameters
+        ----------
+        potential_rest : float or jax.Array or Initializer, default -70.0
+            Membrane rest potential, in mV.
+        potential_reset : float or jax.Array or Initializer, default -51.0
+            Membrane potential after a spike, in mV.
+        potential_tau : float or jax.Array or Initializer, default 5.0
+            Membrane potential decay constant, in ms.
+        resistance : float or jax.Array or Initializer, default 0.5
+            Membrane resistance, in GΩ.
+        threshold : float or jax.Array or Initializer, default -30.0
+            Potential at which a spike is registered, in mV. This is the cutoff of the exponential
+            upswing, not the point where firing begins.
+        rheobase_threshold : float or jax.Array or Initializer, default -50.0
+            Rheobase threshold, in mV. The potential above which the exponential term dominates
+            and the upswing becomes irreversible.
+        spike_slope : float or jax.Array or Initializer, default 2.0
+            Sharpness of spike initiation, in mV. Smaller values approach a hard threshold.
     """
     potential_rest: float | jax.Array | Initializer = dc.field(
         default = -70.0,
@@ -96,38 +115,60 @@ class ExponentialSomaConfig(SomaConfig):
 
 @register_module
 class ExponentialSoma(Soma):
-    """
-        Exponential soma model.
+    r"""
+        Exponential integrate-and-fire soma.
 
-        Refractoriness and adaptation are not part of this model. The adaptive exponential
-        (AdEx) model is AdaptiveExponentialSoma, this model composed with the adaptation
-        extension and given an adaptation current.
+        A leaky membrane with an added exponential term, which reproduces the upswing of a spike
+        rather than firing on a hard threshold crossing. A spike is registered when the potential
+        reaches ``threshold``, after which the potential is set to ``potential_reset``.
 
-        Init:
-            units: tuple[int, ...]
-            potential_rest: float | jax.Array
-            potential_reset: float | jax.Array
-            potential_tau: float | jax.Array
-            resistance: float | jax.Array
-            threshold: float | jax.Array
-            rheobase_threshold: float | jax.Array
-            spike_slope: float | jax.Array
+        Note that this is not the adaptive exponential (AdEx) model.
 
-        Input:
-            current: CurrentArray
+        Parameters
+        ----------
+        config : ExponentialSomaConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
 
-        Output:
-            spikes: SpikeArray
+        Input Ports
+        -----------
+        current : CurrentArray
+            Current delivered to the membrane, in pA.
+        inhibition_mask : BooleanMask, optional
+            Marks the inhibitory units. Supplied by the enclosing `Neuron`.
 
-        Reference:
-            How Spike Generation Mechanisms Determine the Neuronal Response to Fluctuating Inputs
-            Nicolas Fourcaud-Trocmé, David Hansel, Carl van Vreeswijk, and Nicolas Brunel
-            The Journal of Neuroscience, December 17, 2003
-            https://www.jneurosci.org/content/23/37/11628
-            Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition.
-            Gerstner W, Kistler WM, Naud R, Paninski L.
-            Chapter 5.2 Exponential Integrate-and-Fire Model
-            https://neuronaldynamics.epfl.ch/online/Ch5.S2.html
+        Output Ports
+        ------------
+        spikes : SpikeArray
+            Non-zero where the potential crossed the threshold on this step.
+
+        Properties
+        ----------
+        potential : PotentialArray
+            Membrane potential, relative to ``potential_rest``. Read only.
+
+        Notes
+        -----
+        Potentials are stored relative to ``potential_rest``, so a stored value of zero is rest.
+        With :math:`\Delta_T` the slope factor and :math:`V_{rh}` the rheobase threshold, the step
+        is a forward Euler integration:
+
+        .. math::
+            V_{t+1} = V_t + \frac{\Delta t}{\tau_V} \left(
+                -V_t + \Delta_T \exp\!\left(\frac{V_t - V_{rh}}{\Delta_T}\right) + R I_t \right)
+
+        References
+        ----------
+        .. [1] N. Fourcaud-Trocmé, D. Hansel, C. van Vreeswijk and N. Brunel, "How Spike Generation
+               Mechanisms Determine the Neuronal Response to Fluctuating Inputs", Journal of
+               Neuroscience 23(37), 11628-11640, 2003.
+               https://www.jneurosci.org/content/23/37/11628
+        .. [2] W. Gerstner, W. M. Kistler, R. Naud and L. Paninski, "Neuronal Dynamics: From
+               Single Neurons to Networks and Models of Cognition", Chapter 5.2, Exponential
+               Integrate-and-Fire Model. https://neuronaldynamics.epfl.ch/online/Ch5.S2.html
+
+        See Also
+        --------
+        AdaptiveExponentialSoma : This model with the adaptation mechanisms (AdEx).
     """
     config: ExponentialSomaConfig
 
@@ -175,7 +216,9 @@ class ExponentialSoma(Soma):
 @register_config
 class AdaptiveExponentialSomaConfig(AdaptiveSomaConfig, ExponentialSomaConfig):
     """
-        AdaptiveExponentialSoma model configuration class.
+        Configuration for `AdaptiveExponentialSoma`.
+
+        Union of `ExponentialSomaConfig` and `AdaptiveSomaConfig`. It declares no field of its own.
     """
     pass
 
@@ -184,13 +227,45 @@ class AdaptiveExponentialSomaConfig(AdaptiveSomaConfig, ExponentialSomaConfig):
 @register_module
 class AdaptiveExponentialSoma(AdaptiveSoma, ExponentialSoma):
     """
-        Exponential soma model with the adaptation extension.
+        Adaptive exponential integrate-and-fire soma (AdEx).
 
-        Input:
-            current: CurrentArray
+        `ExponentialSoma` composed with `AdaptiveSoma`. Setting ``adaptation_delta`` and
+        ``adaptation_subthreshold`` gives the adaptation current of the AdEx model; the refractory
+        period, the potential clamp and the adaptive threshold are available on the same terms as
+        for any other soma.
 
-        Output:
-            spikes: SpikeArray
+        Parameters
+        ----------
+        config : AdaptiveExponentialSomaConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        current : CurrentArray
+            Current delivered to the membrane, in pA.
+        inhibition_mask : BooleanMask, optional
+            Marks the inhibitory units. Supplied by the enclosing `Neuron`.
+
+        Output Ports
+        ------------
+        spikes : SpikeArray
+            Non-zero where the potential crossed the threshold on this step.
+
+        Properties
+        ----------
+        potential : PotentialArray
+            Membrane potential, relative to ``potential_rest``. Read only.
+
+        References
+        ----------
+        .. [1] R. Brette and W. Gerstner, "Adaptive Exponential Integrate-and-Fire Model as an
+               Effective Description of Neuronal Activity", Journal of Neurophysiology 94(5),
+               3637-3642, 2005. https://doi.org/10.1152/jn.00686.2005
+
+        See Also
+        --------
+        ExponentialSoma : The membrane integration, without the mechanisms.
+        AdaptiveSoma : The mechanisms and their equations.
     """
     config: AdaptiveExponentialSomaConfig
 

@@ -25,7 +25,20 @@ from spark.nn.components.somas.adaptive import AdaptiveSoma, AdaptiveSomaConfig
 @register_config
 class LeakySomaConfig(SomaConfig):
     """
-        LeakySoma model configuration class.
+        Configuration for `LeakySoma`.
+
+        Parameters
+        ----------
+        potential_rest : float or jax.Array or Initializer, default -60.0
+            Membrane rest potential, in mV.
+        potential_reset : float or jax.Array or Initializer, default -50.0
+            Membrane potential after a spike, in mV.
+        potential_tau : float or jax.Array or Initializer, default 20.0
+            Membrane potential decay constant, in ms.
+        resistance : float or jax.Array or Initializer, default 0.1
+            Membrane resistance, in GΩ.
+        threshold : float or jax.Array or Initializer, default -40.0
+            Spike threshold, in mV.
     """
 
     potential_rest: float | jax.Array | Initializer = dc.field(
@@ -79,32 +92,49 @@ class LeakySomaConfig(SomaConfig):
 
 @register_module
 class LeakySoma(Soma):
-    """
-        Leaky soma model.
+    r"""
+        Leaky integrate-and-fire soma.
 
-        Refractoriness and threshold adaptation are not part of this model.
-        AdaptiveLeakySoma is this model composed with the adaptation extension and is what
-        provides them.
+        Parameters
+        ----------
+        config : LeakySomaConfig
+            Model configuration. Its fields may also be given as keyword arguments.
 
-        Init:
-            units: tuple[int, ...]
-            potential_rest: float | jax.Array
-            potential_reset: float | jax.Array
-            potential_tau: float | jax.Array
-            resistance: float | jax.Array
-            threshold: float | jax.Array
+        Input Ports
+        -----------
+        current : CurrentArray
+            Current delivered to the membrane, in pA.
+        inhibition_mask : BooleanMask, optional
+            Marks the inhibitory units. Supplied by the enclosing `Neuron`.
 
-        Input:
-            current: CurrentArray
+        Output Ports
+        ------------
+        spikes : SpikeArray
+            Non-zero where the potential crossed the threshold on this step.
 
-        Output:
-            spikes: SpikeArray
+        Properties
+        ----------
+        potential : PotentialArray
+            Membrane potential, relative to ``potential_rest``. Read only.
 
-        Reference:
-            Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition.
-            Gerstner W, Kistler WM, Naud R, Paninski L.
-            Chapter 1.3 Integrate-And-Fire Models
-            https://neuronaldynamics.epfl.ch/online/Ch1.S3.html
+        Notes
+        -----
+        Potentials are stored relative to ``potential_rest``, so a stored value of zero is rest.
+        The membrane is integrated in closed form, with
+        :math:`\alpha = \exp(-\Delta t / \tau_V)`:
+
+        .. math::
+            V_{t+1} = \alpha V_t + (1 - \alpha) R I_t
+
+        References
+        ----------
+        .. [1] W. Gerstner, W. M. Kistler, R. Naud and L. Paninski, "Neuronal Dynamics: From
+               Single Neurons to Networks and Models of Cognition", Chapter 1.3, Integrate-And-Fire
+               Models. https://neuronaldynamics.epfl.ch/online/Ch1.S3.html
+
+        See Also
+        --------
+        AdaptiveLeakySoma : This model with the adaptation mechanisms.
     """
     config: LeakySomaConfig
 
@@ -147,7 +177,9 @@ class LeakySoma(Soma):
 @register_config
 class AdaptiveLeakySomaConfig(AdaptiveSomaConfig, LeakySomaConfig):
     """
-        AdaptiveLeakySoma model configuration class.
+        Configuration for `AdaptiveLeakySoma`.
+
+        Union of `LeakySomaConfig` and `AdaptiveSomaConfig`. It declares no field of its own.
     """
     pass
 
@@ -156,13 +188,38 @@ class AdaptiveLeakySomaConfig(AdaptiveSomaConfig, LeakySomaConfig):
 @register_module
 class AdaptiveLeakySoma(AdaptiveSoma, LeakySoma):
     """
-        Leaky soma model with the adaptation extension.
+        Leaky integrate-and-fire soma with the adaptation mechanisms.
 
-        Input:
-            current: CurrentArray
+        `LeakySoma` composed with `AdaptiveSoma`, which adds an absolute refractory period, a
+        potential clamp, an adaptive threshold and an adaptation current. Each is enabled by its
+        trigger parameter and costs nothing while that parameter is None.
 
-        Output:
-            spikes: SpikeArray
+        Parameters
+        ----------
+        config : AdaptiveLeakySomaConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        current : CurrentArray
+            Current delivered to the membrane, in pA.
+        inhibition_mask : BooleanMask, optional
+            Marks the inhibitory units. Supplied by the enclosing `Neuron`.
+
+        Output Ports
+        ------------
+        spikes : SpikeArray
+            Non-zero where the potential crossed the threshold on this step.
+
+        Properties
+        ----------
+        potential : PotentialArray
+            Membrane potential, relative to ``potential_rest``. Read only.
+
+        See Also
+        --------
+        LeakySoma : The membrane integration, without the mechanisms.
+        AdaptiveSoma : The mechanisms and their equations.
     """
     config: AdaptiveLeakySomaConfig
 

@@ -23,7 +23,12 @@ from spark.core.decorators import spark_property
 
 class SomaOutput(tp.TypedDict):
     """
-       Generic soma model output spec.
+        Output ports of a soma model.
+
+        Attributes
+        ----------
+        spikes : SpikeArray
+            One entry per unit, non-zero where the membrane potential crossed the threshold.
     """
     spikes: SpikeArray
 
@@ -31,7 +36,9 @@ class SomaOutput(tp.TypedDict):
 
 class SomaConfig(ComponentConfig):
     """
-        Abstract soma model configuration class.
+        Base configuration for soma models.
+
+        Carries no field of its own. Concrete models declare their own parameters.
     """
     pass
 ConfigT = tp.TypeVar("ConfigT", bound=SomaConfig)
@@ -40,36 +47,62 @@ ConfigT = tp.TypeVar("ConfigT", bound=SomaConfig)
 
 class Soma(Component, tp.Generic[ConfigT]):
     """
-        Abstract soma model.
+        Base class for soma models.
 
-        Owns the membrane potential and the threshold/reset mechanics. The step is fixed here
-        and subclasses fill in the parts they need:
+        Base component representing membrane potential dynamics. Soma models subclass this component
+        in order to implement specific some dynamics. Standard auxiliary methods are provided by this
+        component.
 
             I_eff = _effective_current(I)
             V'    = _integrate(V, I_eff)
             V''   = _post_integrate(V')
             s     = (V'' > _effective_threshold()) and _spike_mask()
             V     = s ? V_reset : V''
-            _after_spike(s)
+                    _after_spike(s)
 
-        Only _integrate is required. The remaining hooks default to doing nothing, so a model
-        that is nothing but a membrane integration is exactly that and pays for nothing else.
+        Only `_integrate` is required. The other hooks return their argument unchanged, so a
+        model that is a membrane integration and nothing else defines one method.
 
-        The hooks exist so that a mechanism which is not part of the membrane integration can
-        still take part in the step without becoming a separate node. Two kinds of subclass use
-        them:
+        Parameters
+        ----------
+        config : SomaConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
 
-            A model whose own state is integrated alongside the membrane, such as the recovery
-            variable of the Izhikevich model, updates that state in _post_integrate and
-            _after_spike.
+        Input Ports
+        -----------
+        current : CurrentArray
+            Current delivered to the membrane, in pA.
+        inhibition_mask : BooleanMask, optional
+            Marks the inhibitory units. Supplied by the enclosing `Neuron`. It is stamped onto the
+            emitted spikes and does not affect the integration.
 
-            The adaptation extension, see AdaptiveSoma in this package, wraps an
-            existing model by driving the current, the potential, the threshold and the spike
-            veto. Composing it with a model gives the adaptive variant of that model.
+        Output Ports
+        ------------
+        spikes : SpikeArray
+            Non-zero where the potential crossed the threshold on this step.
 
-        Subclasses are expected to own a "threshold" and a "potential_reset" constant. Anything
-        expressed against them, rather than against a particular integration, composes with
-        every model in this package.
+        Properties
+        ----------
+        potential : PotentialArray
+            Membrane potential, relative to ``potential_rest``. Read only.
+
+        Notes
+        -----
+        A subclass owns a ``threshold`` and a ``potential_reset`` constant. A mechanism written
+        against those, rather than against a particular integration, composes with every model in
+        this package.
+
+        Two kinds of subclass use the hooks. A model whose own state is integrated alongside the
+        membrane, such as the recovery variable of `IzhikevichSoma`, updates that state in
+        `_post_integrate` and `_after_spike`. `AdaptiveSoma` wraps an existing model by driving
+        the current, the potential, the threshold and the spike veto.
+
+        See Also
+        --------
+        AdaptiveSoma : Refractoriness, potential clamp, threshold and current adaptation.
+        LeakySoma : Leaky integrate-and-fire membrane.
+        ExponentialSoma : Exponential integrate-and-fire membrane.
+        IzhikevichSoma : Quadratic membrane with a recovery variable.
     """
     config: ConfigT
 
@@ -154,7 +187,21 @@ class Soma(Component, tp.Generic[ConfigT]):
             inhibition_mask: BooleanMask | bool | None = None,
         ) -> SomaOutput:
         """
-            Update neuron's states and compute spikes.
+            Advances the membrane one step and emits the spikes.
+
+            Parameters
+            ----------
+            current : CurrentArray
+                Current delivered to the membrane, in pA.
+            inhibition_mask : BooleanMask or bool, optional
+                Marks the inhibitory units. Stamped onto the emitted spikes without affecting the
+                integration.
+
+            Returns
+            -------
+            SomaOutput
+                Dictionary with one entry, ``spikes``, non-zero where the potential crossed the
+                threshold.
         """
         potential = self._integrate(self._potential.value, self._effective_current(current.value))
         potential = self._post_integrate(potential)

@@ -23,10 +23,31 @@ from spark.nn.initializers.base import Initializer
 
 class AdaptiveSomaConfig(ComponentConfig):
     """
-        Configuration for AdaptiveSoma.
+        Configuration for `AdaptiveSoma`.
 
-        A mechanism is enabled when its trigger parameter is not None. The triggers are
-        "cooldown", "clamp_duration", "threshold_delta" and "adaptation_delta".
+        Each mechanism is enabled by its trigger parameter and disabled while that parameter is
+        None. A disabled mechanism contributes no operations to the step.
+
+        Parameters
+        ----------
+        cooldown : float or jax.Array or Initializer or None, default None
+            Absolute refractory period, in ms. Enables refractoriness.
+        clamp_duration : float or jax.Array or Initializer or None, default None
+            Time the membrane potential is held at the reset value after a spike, in ms. Enables
+            the potential clamp.
+        threshold_delta : float or jax.Array or Initializer or None, default None
+            Threshold increment per spike, in mV. Enables threshold adaptation.
+        threshold_tau : float or jax.Array or Initializer, default 20.0
+            Decay constant of the threshold offset, in ms. Read only when ``threshold_delta`` is
+            set.
+        adaptation_delta : float or jax.Array or Initializer or None, default None
+            Adaptation current increment per spike, in pA. Enables the adaptation current.
+        adaptation_tau : float or jax.Array or Initializer, default 100.0
+            Decay constant of the adaptation current, in ms. Read only when ``adaptation_delta``
+            is set.
+        adaptation_subthreshold : float or jax.Array or Initializer, default 0.5
+            Coupling of the adaptation current to the membrane potential, in nS. Read only when
+            ``adaptation_delta`` is set.
     """
 
     cooldown: float | jax.Array | Initializer | None = dc.field(
@@ -99,45 +120,64 @@ class AdaptiveSomaConfig(ComponentConfig):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class AdaptiveSoma:
-    """
+    r"""
         Adaptation mechanisms for soma models.
 
-        Mixin adding an absolute refractory period, a potential clamp, an adaptive threshold
-        and an adaptation current to a Soma subclass. It must precede the model in the base
-        list:
+        Mixin adding an absolute refractory period, a potential clamp, an adaptive threshold and
+        an adaptation current to a `Soma` subclass. It must precede the model in the base list::
 
             class AdaptiveLeakySoma(AdaptiveSoma, LeakySoma): ...
 
-        The mixin supplies four terms of the soma step. The membrane integration Phi is
-        provided by the model:
+        Parameters
+        ----------
+        config : AdaptiveSomaConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
 
-            I_eff = input_gain * I + current_offset
-            V'    = Phi(V, I_eff)
-            V     = dynamics_gain * V' + (1 - dynamics_gain) * V_reset
-            s     = (V > threshold + threshold_offset) and spike_mask
+        Notes
+        -----
+        The mixin supplies four terms of the soma step. The membrane integration
+        :math:`\Phi` comes from the model it is mixed into:
 
-        Each mechanism is enabled by its trigger parameter and drives the terms beside it:
+        .. math::
+            I_{\mathrm{eff}} &= g_{\mathrm{in}} I + I_{\mathrm{off}} \\
+            V' &= \Phi(V, I_{\mathrm{eff}}) \\
+            V'' &= g_{\mathrm{dyn}} V' + (1 - g_{\mathrm{dyn}}) V_{\mathrm{reset}} \\
+            s &= (V'' > \theta + \theta_{\mathrm{off}}) \wedge m
 
-            cooldown          input_gain, spike_mask
-            clamp_duration    dynamics_gain
-            threshold_delta   threshold_offset
-            adaptation_delta  current_offset
+        Each trigger parameter drives the terms beside it:
 
-        A disabled mechanism contributes no operations. Refraction and the potential clamp
-        share a single spike counter.
+        * ``cooldown`` drives :math:`g_{\mathrm{in}}` and :math:`m`.
+        * ``clamp_duration`` drives :math:`g_{\mathrm{dyn}}`.
+        * ``threshold_delta`` drives :math:`\theta_{\mathrm{off}}`.
+        * ``adaptation_delta`` drives :math:`I_{\mathrm{off}}`.
 
-        Mechanism state is read at the start of the step and updated in _after_spike from the
-        spikes and membrane potential of that step. The hooks call super(), so a model that
-        overrides the same hooks, such as IzhikevichSoma, keeps working when extended.
+        Refractoriness gates the input current off and vetoes the spikes for ``cooldown`` after a
+        spike. The potential clamp holds the potential at ``potential_reset`` for
+        ``clamp_duration``. Both share one spike counter, saturating at the longer of the two.
 
-        Init:
-            cooldown: float | jax.Array | None
-            clamp_duration: float | jax.Array | None
-            threshold_delta: float | jax.Array | None
-            threshold_tau: float | jax.Array
-            adaptation_delta: float | jax.Array | None
-            adaptation_tau: float | jax.Array
-            adaptation_subthreshold: float | jax.Array
+        The threshold offset decays exponentially and is incremented by ``threshold_delta`` on
+        every spike, with :math:`\alpha_\theta = \exp(-\Delta t / \tau_\theta)`:
+
+        .. math::
+            \theta_{\mathrm{off}} \leftarrow \alpha_\theta \theta_{\mathrm{off}}
+                                           + \Delta\theta \, s
+
+        The adaptation current is subtracted from the input current, so
+        :math:`I_{\mathrm{off}} = -w`. It couples to the post-reset potential and is incremented
+        on every spike, with :math:`a` the subthreshold coupling and :math:`b` the increment:
+
+        .. math::
+            w \leftarrow w + \frac{\Delta t}{\tau_w} \left( -w + a V \right) + b \, s
+
+        Mechanism state is read at the start of the step and updated in `_after_spike` from the
+        spikes and the membrane potential of that step. The hooks call `super`, so a model that
+        overrides the same hooks, such as `IzhikevichSoma`, keeps working when extended.
+
+        See Also
+        --------
+        AdaptiveLeakySoma : Leaky membrane with these mechanisms.
+        AdaptiveExponentialSoma : Exponential membrane with these mechanisms (AdEx).
+        AdaptiveIzhikevichSoma : Izhikevich membrane with these mechanisms.
     """
     config: AdaptiveSomaConfig
 
