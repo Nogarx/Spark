@@ -40,7 +40,7 @@ class EdgeModel(BaseModel):
     @classmethod
     def validate_connection(cls, src_port: PortModel, dst_port: PortModel) -> tuple[bool, str]:
         """
-            Validates if a connection between two ports is allowed.
+            Returns True if a connection between two ports is allowed.
         """
         if not src_port or not dst_port:
             return False, 'Missing port.'
@@ -65,10 +65,10 @@ class EdgeModel(BaseModel):
 
     @classmethod
     def from_dict(cls, data, all_ports) -> None | tp.Self:
-        # We expect a dictionary of all available PortModels, keyed by ID.
+        # all_ports holds every available PortModel, keyed by id.
         src_port = all_ports.get(data.get('source_port_id'))
         dst_port = all_ports.get(data.get('target_port_id'))
-        # Discard edge if ports are missing.
+        # An edge with a missing port is discarded.
         if not src_port or not dst_port:
             return None
         edge = cls(src_port, dst_port)

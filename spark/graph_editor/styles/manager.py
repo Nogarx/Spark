@@ -94,8 +94,7 @@ class StyleManager(QObject):
 
     def stylesheet(self) -> str:
         if self._qss is None:
-            # NOTE: The stylesheet ships with the editor, only its values are configurable. Looking for it
-            # next to the active configuration broke as soon as a custom style was saved anywhere else.
+            # The stylesheet ships with the editor, only its values are configurable.
             path = self._default_path.parent / 'app.qss'
             self._qss = Template(path.read_text()).safe_substitute(self._flatten_tokens())
         return self._qss
@@ -128,7 +127,6 @@ class StyleManager(QObject):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# Global access
 STYLES = StyleManager()
 
 #################################################################################################################################################

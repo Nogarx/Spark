@@ -42,7 +42,7 @@ class _MessageWidget(QWidget):
         icon_label = QLabel()
         icon_label.setFixedWidth(18)
         icon_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
-        # Visual queues for the messages
+        # Visual cues for the messages.
         pix = QPixmap(18, 18)
         pix.fill(Qt.GlobalColor.transparent)
         p = QPainter(pix)
@@ -59,14 +59,12 @@ class _MessageWidget(QWidget):
         p.drawEllipse(6, 3, 6, 6)
         p.end()
         icon_label.setPixmap(pix)
-        # Text content
         text_label = QLabel(text)
         text_label.setObjectName('consoleMessageText')
         text_label.setWordWrap(True)
         text_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         text_label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         text_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        # Layout
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(4)
@@ -123,17 +121,14 @@ class ConsoleView(QWidget):
         min_width = STYLES.get_val('console', 'min_width')
         self.setMinimumWidth(min_width)
         self.setMinimumHeight(STYLES.get_val('console', 'min_height', default=185))
-        # Widget layout
         layout = QVBoxLayout()
         layout.setContentsMargins(QMargins(0, 0, 0, 0))
         layout.setSpacing(0)
         self.setLayout(layout)
-        # Scroll area
         scroll_area = QScrollArea()
         scroll_area.setObjectName('consoleScroll')
         scroll_area.setWidgetResizable(True)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        # Content widget
         self.content = QWidget()
         self.content.setObjectName('consoleContent')
         scroll_area.setWidget(self.content)
@@ -151,7 +146,6 @@ class ConsoleView(QWidget):
         self._btn_error = self._make_filter_button('Error', MessageLevel.ERROR)
         self._btn_clear = QPushButton('Clear')
         self._btn_clear.clicked.connect(self.clear)
-        # Layout for top buttons (left-aligned)
         buttons_layout = QHBoxLayout()
         bm = STYLES.get_val('console', 'btn_bar_margins')
         buttons_layout.setContentsMargins(*bm)
@@ -167,23 +161,22 @@ class ConsoleView(QWidget):
         top_bar.setLayout(buttons_layout)
         self.vscrollbar = scroll_area.verticalScrollBar()
         self.vscrollbar.rangeChanged.connect(self.scrollToBottom)
-        # Main layout: top bar above scroll area
+        # Main layout: the top bar above the scroll area.
         layout.addWidget(top_bar)
         layout.addWidget(scroll_area)
         self._setup_logger()
 
     def _setup_logger(self) -> None:
-        # Set up the 'spark' logger
         self.logger = logging.getLogger('spark')
         self.logger.setLevel(logging.DEBUG)
-        # Remove old handlers to avoid memory leaks and publishing to destroyed widgets
+        # Old handlers are removed, so nothing is published to a destroyed widget.
         for h in list(self.logger.handlers):
             if isinstance(h, ConsoleHandler):
                 self.logger.removeHandler(h)
         handler = ConsoleHandler(self)
         handler.setFormatter(logging.Formatter('%(message)s'))
         self.logger.addHandler(handler)
-        # Stop propagating to root logger to avoid duplicate console output if not desired
+        # Propagation to the root logger is stopped, so messages are not printed twice.
         self.logger.propagate = False
 
     def _make_filter_button(self, label: str, level: MessageLevel) -> QPushButton:
@@ -195,21 +188,19 @@ class ConsoleView(QWidget):
 
     def add_message(self, level: MessageLevel, text: str) -> None:
         """
-            Add a message to the console.
+            Adds a message to the console.
         """
-        # Append timestamp to message
         timestamp = datetime.now().strftime('%H:%M:%S')
         text = f'[{timestamp}] {text}'
         msg = _MessageWidget(level, text)
-        # Insert message
         self.content.layout().addWidget(msg)
         self._messages.append(msg)
-        # Show/hide according to current filter
+        # Shown or hidden according to the current filter.
         msg.setVisible(self._filters.get(level, True))
 
     def clear(self) -> None:
         """
-            Remove all messages from the console.
+            Removes every message from the console.
         """
         for w in self._messages:
             w.setParent(None)
@@ -224,7 +215,6 @@ class ConsoleView(QWidget):
                 widget.deleteLater()
 
     def _on_filter_toggled(self, level: MessageLevel) -> None:
-        # Read button state
         enabled = False
         if level == MessageLevel.INFO:
             enabled = self._btn_info.isChecked()
@@ -235,7 +225,7 @@ class ConsoleView(QWidget):
         elif level == MessageLevel.ERROR:
             enabled = self._btn_error.isChecked()
         self._filters[level] = enabled
-        # Update visibility of existing messages
+        # Update the visibility of the existing messages.
         for w in self._messages:
             if w.level == level:
                 w.setVisible(enabled)

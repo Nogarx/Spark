@@ -42,7 +42,7 @@ class TempPipeItem(QGraphicsPathItem):
         if is_disconnecting:
             color = QColor(STYLES.get_color('temp_pipe', 'color_disconnecting'))
         elif port_type is not None:
-            # NOTE: Dragging shows the colour of the payload being connected, like the finished pipe will.
+            # Dragging shows the colour of the payload being connected, like the finished pipe.
             color = QColor(STYLES.get_port_style(port_type).get('color'))
         else:
             color = QColor(255, 255, 255)
@@ -66,13 +66,12 @@ class GraphScene(QGraphicsScene):
 
     def __init__(self, model=None, parent=None) -> None:
         super().__init__(parent)
-        # Create a model if none was provided
         self.model = model if model else GraphModel()
         # Style setup
         self.setBackgroundBrush(QBrush(STYLES.get_color('graph', 'background_color')))
         self._grid_size = STYLES.get_val('graph', 'grid_size')
         self.setSceneRect(-5000, -5000, 10000, 10000)
-        # Placeholder variables
+        # Drag and disconnect state.
         self.active_port = None
         self.drag_source_port = None
         self.temp_pipe = None
@@ -84,7 +83,7 @@ class GraphScene(QGraphicsScene):
         self.model.edge_added.connect(self.on_edge_added)
         self.model.edge_removed.connect(self.on_edge_removed)
         self.model.graph_cleared.connect(self.on_graph_cleared)
-        # Populate existing items from the model
+        # Populate the items the model already holds.
         for node in self.model.nodes:
             self.on_node_added(node)
         for edge in self.model.edges:
@@ -92,7 +91,7 @@ class GraphScene(QGraphicsScene):
 
     def on_graph_cleared(self) -> None:
         self.clear()
-        # Reset any temporary drag/panning states
+        # Reset the temporary drag/panning state.
         self.active_port = None
         self.drag_source_port = None
         if self.temp_pipe:
@@ -100,7 +99,7 @@ class GraphScene(QGraphicsScene):
             self.temp_pipe = None
         self.is_disconnecting = False
         self._pending_disconnect_item = None
-        # Reset view-level tracking for multi-move
+        # Reset the view level tracking of a multi-move.
         for view in self.views():
             if isinstance(view, GraphView):
                 view._move_start_positions = {}
@@ -134,7 +133,7 @@ class GraphScene(QGraphicsScene):
             self.addItem(pipe)
             src_port.add_pipe(pipe)
             dst_port.add_pipe(pipe)
-            # If waypoints exist in the model, use them
+            # Waypoints held by the model take precedence.
             if edge_model.waypoints:
                 pipe.pivots = [QPointF(x, y) for x, y in edge_model.waypoints]
             pipe.update_path()
@@ -155,7 +154,7 @@ class GraphScene(QGraphicsScene):
             item = item.parentItem()
         self._pending_disconnect_item = None
         if isinstance(item, PortItem) and event.button() == Qt.MouseButton.LeftButton:
-            # ALWAYS start a new pipe when dragging from a port
+            # Dragging from a port always starts a new pipe.
             self.is_disconnecting = False
             self.active_port = item
             self.drag_source_port = item
@@ -165,16 +164,16 @@ class GraphScene(QGraphicsScene):
         if isinstance(item, PipeItem) and event.button() == Qt.MouseButton.LeftButton:
             idx, is_horiz = item._get_segment_at(event.scenePos())
             if idx == 0 or idx == len(item.full_pts) - 2:
-                # Prepare for disconnect logic via dragging the endpoint segment of a pipe
-                # We wait for mouseMoveEvent to actually disconnect, allowing double-clicks to pass through.
+                # Dragging the endpoint segment of a pipe disconnects it. The disconnection waits for
+                # mouseMoveEvent, so that double clicks still pass through.
                 self._pending_disconnect_item = item
                 self._pending_disconnect_idx = idx
                 self._pending_disconnect_pos = event.scenePos()
         super().mousePressEvent(event)
 
     def update_all_pipes(self) -> None:
-        # NOTE: Pipes are routed oldest first: each one avoids the lanes the previous ones already claimed, so
-        # the result is stable instead of depending on the order the scene happens to return its items in.
+        # NOTE: Pipes are routed oldest first, each one avoiding the lanes the previous ones claimed. The
+        # result does not depend on the order the scene returns its items in.
         pipes = [item for item in self.items() if isinstance(item, PipeItem) and isValid(item)]
         context = PipeRouteContext.for_scene(self)
         for item in sorted(pipes, key=lambda pipe: pipe._route_priority):
@@ -221,7 +220,7 @@ class GraphScene(QGraphicsScene):
                 if is_valid:
                     src = self.active_port if not self.active_port.model.is_input else target_item
                     dst = target_item if target_item.model.is_input else self.active_port
-                    # Remove existing pipes if multi_connection is False
+                    # A port that is not multi_connection drops the pipe it already holds.
                     if not src.model.multi_connection and src.connected_pipes:
                         for p in list(src.connected_pipes): p.disconnect_pipe()
                     if not dst.model.multi_connection and dst.connected_pipes:
@@ -231,12 +230,12 @@ class GraphScene(QGraphicsScene):
                 else:
                     print(f'Connection Denied: {msg}')
             elif self.is_disconnecting:
-                pass # Pipe already removed during mousePressEvent
+                pass  # The pipe was already removed during mousePressEvent.
             self.active_port = None
             self.drag_source_port = None
             self.is_disconnecting = False
         super().mouseReleaseEvent(event)
-        # Trigger loop cleaning on all valid pipes after interaction
+        # Clean the loops of every valid pipe after the interaction.
         for item in self.items():
             if isinstance(item, PipeItem) and isValid(item):
                 try:
@@ -317,7 +316,7 @@ class GraphView(QGraphicsView):
         self._context_menu = GraphContextMenu(self.scene().model.profile, self)
         self.scene().model.profile_changed.connect(self._context_menu.set_profile)
 
-    # Signature overwrite
+    # Narrows the return type of QGraphicsView.scene().
     def scene(self) -> GraphScene:
         return super().scene()
 
@@ -341,7 +340,6 @@ class GraphView(QGraphicsView):
         if not action is None:
             action_data: ActionData = action.data()
             if action_data.command == ContextMenuCommand.Create:
-                # Instantiate node
                 try:
                     new_node: NodeModel = action_data.cls()
                 except Exception as error:
@@ -379,9 +377,8 @@ class GraphView(QGraphicsView):
         """
             Places a node for a module class at the centre of the view.
 
-            This is the menu driven counterpart of dropping a node from the context menu, which knows
-            where the pointer was. It is what makes an imported model a node of the graph.
-        """
+            Menu driven counterpart of dropping a node from the context menu, which knows where the pointer was.
+            """
         node_cls = NODE_REGISTRY.get(module_cls)
         if node_cls is None:
             raise RuntimeError(f'No node model is available for "{module_cls.__name__}".')
@@ -407,9 +404,8 @@ class GraphView(QGraphicsView):
                     reopened, since a configuration cannot carry the layout by itself.
         """
         model = self.scene().model
-        # NOTE: Importing pre-populates the controller with reasonable data, it does not add a second model.
-        # The controller keeps a single set of settings, so those are only taken from the file when there is
-        # nothing on the canvas yet; a later import only contributes modules.
+        # NOTE: The controller keeps a single set of settings, taken from the file only while the canvas is
+        # empty. A later import contributes modules alone.
         adopt_settings = not model.nodes
         try:
             imported = expand_controller_config(config, model, model.profile, layout=layout)
@@ -435,7 +431,7 @@ class GraphView(QGraphicsView):
         # NOTE: Pipes route themselves as they are created, so the first ones are laid out before the last
         # nodes of the import exist. One pass over the finished scene gives every pipe the same information.
         self.scene().update_all_pipes()
-        # Select what was just added, so it is obvious where it landed.
+        # Select what was just added.
         self.scene().clearSelection()
         for item in self.scene().items():
             if isinstance(item, NodeItem) and item.model in imported.nodes:
@@ -448,15 +444,15 @@ class GraphView(QGraphicsView):
     def delete_selected(self) -> None:
         stack = self.scene().model.undo_stack
         stack.beginMacro('Delete Selection')
-        # Collect items to avoid iterator invalidation issues if any
+        # Collected up front to avoid invalidating the iterator.
         selected_items = self.scene().selectedItems()
-        # First remove pipes that are explicitly selected
+        # Remove the pipes that are explicitly selected.
         for item in selected_items:
             if isinstance(item, PipeItem) and item.model:
-                # Check if it's still in the model (might have been removed if its node was processed)
+                # The pipe may already have been removed together with its node.
                 if item.model in self.scene().model.edges:
                     stack.push(RemoveEdgeCommand(self.scene().model, item.model))
-        # Then remove nodes
+        # Then remove the nodes.
         for item in selected_items:
             if isinstance(item, NodeItem) and item.model:
                 if item.model in self.scene().model.nodes:
@@ -470,7 +466,7 @@ class GraphView(QGraphicsView):
             if isinstance(item, NodeItem):
                 selected_nodes.append(item)
                 self._clipboard.add_node(item.model, item.scenePos())
-        # Find shared pipes
+        # Find the shared pipes.
         for item in self.scene().selectedItems():
             if isinstance(item, PipeItem):
                 src_node = item.source_port.parentItem().parentItem() if item.source_port else None
@@ -492,40 +488,38 @@ class GraphView(QGraphicsView):
         stack = self.scene().model.undo_stack
         stack.beginMacro('Paste Selection')
         nodes_model, nodes_pos = self._clipboard.get_nodes_data()
-        # Calculate center of copied items
+        # Center of the copied items.
         min_x = min(pos.x() for pos in nodes_pos)
         max_x = max(pos.x() for pos in nodes_pos)
         min_y = min(pos.y() for pos in nodes_pos)
         max_y = max(pos.y() for pos in nodes_pos)
         orig_center = QPointF((min_x + max_x) / 2.0, (min_y + max_y) / 2.0)
-        # Get center of current view
+        # Center of the current view.
         view_center = self.mapToScene(self.viewport().rect().center())
         offset = view_center - orig_center
         new_models = []
         for orig_model, orig_pos in zip(nodes_model, nodes_pos):
-            # Clone model using its specific class
+            # Clone the model with its own class.
             new_model: NodeModel = orig_model.__class__(orig_model.name, orig_model.type_name)
             for p in orig_model.call_section.ports:
                 new_model.call_section.add_port(PortModel(p.name, p.is_input, p.port_type, p.is_optional, p.multi_connection))
             for p in orig_model.props_section.ports:
                 new_model.props_section.add_port(PortModel(p.name, p.is_input, p.port_type, p.is_optional, p.multi_connection))
-            # Offset position to view center
             new_pos = orig_pos + offset
-            # Snap pasted items if snapping is enabled
+            # Snap the pasted items when snapping is enabled.
             if STYLES.get_val('graph', 'snapping', 'enabled'):
                 grid = float(STYLES.get_val('graph', 'snapping', 'node_grid'))
                 new_pos.setX(round(new_pos.x() / grid) * grid)
                 new_pos.setY(round(new_pos.y() / grid) * grid)
             new_model.pos = (new_pos.x(), new_pos.y())
-            # Rename to prevent collisions
+            # Rename to prevent collisions.
             name = self.scene().model.get_next_free_name(new_model.name)
             new_model.name = name
-            # Use command
             stack.push(AddNodeCommand(self.scene().model, new_model))
             new_models.append(new_model)
-        # Update clipboard so pasting again shifts further
+        # Update the clipboard, so pasting again shifts further.
         self._clipboard.shift_pos(QPointF(20, 20))
-        # Select newly pasted items
+        # Select the pasted items.
         for item in self.scene().items():
             if isinstance(item, NodeItem) and item.model in new_models:
                 item.setSelected(True)
@@ -538,7 +532,7 @@ class GraphView(QGraphicsView):
             if src_port and dst_port:
                 edge_model = EdgeModel(src_port, dst_port)
                 stack.push(AddEdgeCommand(self.scene().model, edge_model))
-        # Select newly pasted pipes
+        # Select the pasted pipes.
         for item in self.scene().items():
             if isinstance(item, PipeItem):
                 if item.model and item.model.source_port.node in new_models:
@@ -552,16 +546,16 @@ class GraphView(QGraphicsView):
             self.setCursor(Qt.CursorShape.ClosedHandCursor)
             return
         elif event.button() == Qt.MouseButton.LeftButton:
-            # Check what is under the mouse before passing the event
+            # Check what is under the mouse before passing the event on.
             item = self.itemAt(event.position().toPoint())
             if not item:
                 self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
-            # Capture nodes that are selected before the click
+            # Nodes selected before the click.
             pre_selected_nodes = [it for it in self.scene().selectedItems() if isinstance(it, NodeItem)]
             super().mousePressEvent(event)
-            # NOTE: After super() the selection is updated.
+            # The selection is updated by super().
             self._move_start_positions = {}
-            # We only track movement if we clicked on something that is or belongs to a NodeItem
+            # Movement is only tracked for a click on a NodeItem or one of its children.
             curr = item
             is_node_interaction = False
             clicked_node = None
@@ -572,15 +566,12 @@ class GraphView(QGraphicsView):
                     break
                 curr = curr.parentItem()
             if is_node_interaction:
-                # The set of nodes to track is:
-                # 1. The clicked node
-                # 2. Any nodes that were ALREADY selected if the clicked node was part of that selection
-                # 3. Any nodes that are NOW selected (in case Qt updated selection)
+                # The nodes to track are the clicked node, the nodes already selected when the clicked node was
+                # part of that selection, and the nodes selected after Qt updated the selection.
                 nodes_to_track: set[NodeItem] = set()
                 if clicked_node:
                     nodes_to_track.add(clicked_node)
-                # If we clicked on an item that was already part of a multi-selection, 
-                # keep tracking the whole group.
+                # A click on an item already part of a multi-selection keeps tracking the whole group.
                 if clicked_node in pre_selected_nodes:
                     nodes_to_track.update(pre_selected_nodes)
                 for it in self.scene().selectedItems():
@@ -588,7 +579,7 @@ class GraphView(QGraphicsView):
                         nodes_to_track.add(it)
                 for it in nodes_to_track:
                     self._move_start_positions[it] = it.pos()
-                # Track waypoints for pipes that might be shifted (both ends in the tracked set)
+                # Track the waypoints of the pipes that may shift, those with both ends in the tracked set.
                 self._pipe_start_waypoints = {}
                 for it in self.scene().items():
                     if isinstance(it, PipeItem) and it.model:
@@ -615,14 +606,14 @@ class GraphView(QGraphicsView):
             return
         elif event.button() == Qt.MouseButton.LeftButton:
             self.setDragMode(QGraphicsView.DragMode.NoDrag)
-            # Check for movement in any selected nodes
+            # Check whether any selected node moved.
             if self._move_start_positions:
-                # Filter for nodes that actually moved
+                # Keep the nodes that moved.
                 moved_nodes = []
                 for it, old_pos in self._move_start_positions.items():
                     if it.pos() != old_pos:
                         moved_nodes.append((it.model, (old_pos.x(), old_pos.y()), (it.x(), it.y())))
-                # Filter for pipes that actually moved their waypoints
+                # Keep the pipes whose waypoints moved.
                 moved_pipes = []
                 if hasattr(self, '_pipe_start_waypoints'):
                     for it, old_waypoints in self._pipe_start_waypoints.items():
@@ -632,7 +623,7 @@ class GraphView(QGraphicsView):
                 if moved_nodes or moved_pipes:
                     stack = self.scene().model.undo_stack
                     stack.beginMacro('Move Items')
-                    # Push pipe routing commands first so they are undone LAST (after node restoration)
+                    # Pipe routing commands are pushed first, so they are undone after the nodes are restored.
                     for model, ow, nw in moved_pipes:
                         stack.push(ChangeEdgeWaypointsCommand(model, ow, nw))
                     for model, op, np in moved_nodes:

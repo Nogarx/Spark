@@ -40,7 +40,7 @@ class GraphEditorRegistry(Registry):
         self._registry = utils.TwoKeyDict({r: {} for r in GraphEditorRegistryNamespace._member_map_.values()})
 
 
-    # NOTE: Quick workaround to refresh the graph editor registry 
+    # TODO: Refreshes the graph editor registry. Replace with a proper invalidation.
     def _rebuild_registry(self,) -> None:
         self._registry = utils.TwoKeyDict({r: {} for r in GraphEditorRegistryNamespace._member_map_.values()})
         self._populate_from_registry(REGISTRY.Components, GraphEditorRegistryNamespace.Components)
@@ -57,7 +57,6 @@ class GraphEditorRegistry(Registry):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# Singleton
 EDITOR_REGISTRY = GraphEditorRegistry()
 EDITOR_REGISTRY._build()
 

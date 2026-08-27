@@ -20,7 +20,7 @@ SETTINGS_KEY = 'recent_files'
 
 MAX_RECENT = 8
 """
-    Number of files kept. Old enough entries are of no use, and a menu that scrolls is worse than a short one.
+    Number of files kept.
 """
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -28,10 +28,6 @@ MAX_RECENT = 8
 def _settings() -> QSettings:
     """
         Settings to read the list from.
-
-        NOTE: The identity is ensured here rather than assumed. Without an organisation and an application
-        name QSettings writes somewhere else entirely, so a list built before the styles were initialised
-        would be written to one place and read back from another.
     """
     STYLES._ensure_app_identity()
     return QSettings()
@@ -120,10 +116,7 @@ def remember(path: str | pl.Path) -> None:
 
 def forget(path: str | pl.Path) -> None:
     """
-        Drops a file from the list. Used when it turns out not to be there anymore.
-
-        NOTE: The path is dropped as it was given as well as resolved. An entry that cannot be dropped is one
-        the list keeps offering.
+        Drops a file from the list. The path is dropped both as given and as resolved.
     """
     dropped = {str(path), str(pl.Path(path))}
     resolved = _entry(path)

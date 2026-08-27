@@ -57,7 +57,7 @@ class PortItem(QGraphicsObject):
 
     def boundingRect(self) -> QRectF:
         r = self.radius
-        # Expand bounding rect by 4 pixels to account for pen width and custom shapes (stars/polygons)
+        # The bounding rect is expanded by 4 pixels to cover the pen width and the custom shapes.
         return QRectF(-r - 4.0, -r - 4.0, 2.0 * r + 8.0, 2.0 * r + 8.0)
 
     def paint(self, painter: QPainter, option: QStyleOption, widget: QWidget) -> None:
@@ -69,9 +69,9 @@ class PortItem(QGraphicsObject):
         base_color = QColor(style.get('color'))
         shape_type = style.get('shape', 'circle')
         sides = style.get('sides', 4)
-        # Unconnected: Dark fill, Colored border
-        # Connected: Colored fill (semi-transparent), Colored border
-        # Hovered: Bright colored fill, Colored border
+        # Unconnected: dark fill, coloured border.
+        # Connected: coloured fill (semi-transparent), coloured border.
+        # Hovered: bright coloured fill, coloured border.
         if hovered:
             fill_color = QColor(base_color)
             fill_color.setAlpha(230)
@@ -97,7 +97,7 @@ class PortItem(QGraphicsObject):
                 poly.append(QPointF(x, y))
             painter.drawPolygon(poly)
         elif shape_type == 'star':
-            outer = r + 1.0 # Slight boost for stars
+            outer = r + 1.0  # Stars are drawn slightly larger.
             inner = outer * 0.5
             poly = QPolygonF()
             total = sides * 2
@@ -150,7 +150,7 @@ class PropertyRowItem(QGraphicsItem):
 
 class OptionalDividerItem(QGraphicsItem):
     """
-        A custom separator for optional ports, drawing '-- Optional --'.
+        Separator drawn above the optional ports.
     """
 
     def __init__(self, width: float, parent: QWidget | None = None) -> None:
@@ -170,12 +170,10 @@ class OptionalDividerItem(QGraphicsItem):
         painter.setFont(font)
         fm = QFontMetrics(font)
         tw = fm.horizontalAdvance(text)
-        # Dashed lines
         painter.setPen(QPen(QColor(255, 255, 255, 30), 1, Qt.PenStyle.DashLine))
         spacing = 6
         painter.drawLine(20, y, self.width/2 - tw/2 - spacing, y)
         painter.drawLine(self.width/2 + tw/2 + spacing, y, self.width - 20, y)
-        # Text
         painter.setPen(QPen(QColor(150, 150, 150, 150)))
         painter.drawText(QRectF(0, 0, self.width, self.height), Qt.AlignmentFlag.AlignCenter, text)
 
@@ -185,7 +183,6 @@ class NodeItem(QGraphicsItem):
 
     def __init__(self, model: NodeModel, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        # Model
         self.model = model
         self.rows: list[QGraphicsItem] = []
         self.section_headers: list[tuple[str, float]] = [] # (text, y_pos)
@@ -197,17 +194,14 @@ class NodeItem(QGraphicsItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
         # Headers
-        # Title
         self.title_item = QGraphicsTextItem(self.model.name, self)
         self.title_item.setDefaultTextColor(STYLES.get_color('node', 'text_color'))
         self.title_item.setFont(QFont('Segoe UI', 10, QFont.Weight.Bold))
         self.title_item.setPos(5, 2)
-        # Class
         self.type_item = QGraphicsTextItem(self.model.type_name.upper(), self)
         self.type_item.setDefaultTextColor(STYLES.get_color('node', 'type_text_color'))
         self.type_item.setFont(QFont('Segoe UI', 7, QFont.Weight.Bold))
         self.type_item.setPos(7, 22)
-        # Callbacks
         self._setup_content()
         self.model.position_changed.connect(self.on_model_pos_changed)
         self.model.selected_changed.connect(self.on_model_selected_changed)
@@ -249,7 +243,7 @@ class NodeItem(QGraphicsItem):
                 current_y += divider.height + 2
                 for group in self._group_ports(optional):
                     row = PropertyRowItem(name=group['name'], input_port_model=group['in'], output_port_model=group['out'], parent=self)
-                    # Dim the label slightly for optional ports
+                    # The label of an optional port is dimmed.
                     row.label.setDefaultTextColor(QColor(150, 150, 150, 150))
                     row.setPos(0, current_y)
                     self.rows.append(row)
@@ -299,8 +293,7 @@ class NodeItem(QGraphicsItem):
                 x = round(value.x() / grid) * grid
                 y = round(value.y() / grid) * grid
                 value = QPointF(x, y)
-            # Shift shared pipes if both ends are selected and moving
-            # ONLY during an active mouse drag (not during undo/redo)
+            # Shared pipes are shifted when both ends are selected and moving, during a mouse drag only.
             if scene.mouseGrabberItem() == self:
                 delta = value - self.pos()
                 if delta.x() != 0 or delta.y() != 0:
@@ -315,7 +308,7 @@ class NodeItem(QGraphicsItem):
                                 src_node = pipe.source_port.parentItem().parentItem() if pipe.source_port else None
                                 dst_node = pipe.target_port.parentItem().parentItem() if pipe.target_port else None
                                 if src_node and dst_node and src_node.isSelected() and dst_node.isSelected():
-                                    # We apply half the delta per node; both nodes will trigger this.
+                                    # Half the delta is applied per node, both nodes trigger this.
                                     for p in pipe.pivots:
                                         p.setX(p.x() + delta.x() / 2.0)
                                         p.setY(p.y() + delta.y() / 2.0)
@@ -354,12 +347,12 @@ class NodeItem(QGraphicsItem):
             painter.drawRect(bar_rect)
             painter.setPen(QPen(STYLES.get_color('node', 'section_header_label'), 1))
             painter.setFont(QFont('Segoe UI', 7, QFont.Weight.Bold))
-            # Center the text both horizontally and vertically
+            # Center the text horizontally and vertically.
             painter.drawText(bar_rect, Qt.AlignmentFlag.AlignCenter, text.upper())
-            # Subtle section divider line
+            # Section divider line.
             painter.setPen(QPen(QColor(0, 0, 0, 80), 1))
             painter.drawLine(bar_rect.bottomLeft(), bar_rect.bottomRight())
-        # Main Header separator line
+        # Header separator line.
         painter.setPen(QPen(QColor(0, 0, 0, 100), 1.5))
         painter.drawLine(0, self.header_height, self.width, self.header_height)
 

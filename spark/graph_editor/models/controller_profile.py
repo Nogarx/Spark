@@ -22,19 +22,16 @@ logger = logging.getLogger('spark')
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# NOTE: A graph in the editor is always the template of one Controller. Everything that depends on which
-# controller is being built is declared here, so that the rest of the editor never branches on a controller
-# type. Most of the behaviour is derived from the controller class itself (its configuration class, its
-# properties, its recurrence rules); only what cannot be introspected is declared:
-#   - palette_namespaces: which registry namespaces may be placed on the canvas.
-#   - atomic_namespaces:  which of those are served as a single node instead of being expanded into the
-#                         components they are made of. This is what makes an imported neuron a single node in
-#                         a Brain and a collection of somas/synapses/delays in a Neuron.
-#   - import_namespaces:  which registered models can be expanded into this graph. They are not placed as a
-#                         node: their modules become nodes of the current graph.
-#   - model_namespace:    where models built under this profile are registered, so another profile can tell
-#                         whether it is able to host them. A Brain is not hosted by anything, so it has none.
-# Supporting a new controller is one more registration below.
+# A graph in the editor is always the template of one Controller. Everything that depends on which
+# controller is being built is declared here. Most of the behaviour is derived from the controller class
+# itself (its configuration class, its properties, its recurrence rules); the rest is declared:
+#   - palette_namespaces: registry namespaces that may be placed on the canvas.
+#   - atomic_namespaces:  namespaces served as a single node instead of being expanded into the components
+#                         they are made of.
+#   - import_namespaces:  namespaces whose registered models can be expanded into this graph. Their modules
+#                         become nodes of the current graph.
+#   - model_namespace:    where models built under this profile are registered. None when no other profile
+#                         can host them.
 
 @dc.dataclass(frozen=True)
 class ControllerProfile:
@@ -113,8 +110,7 @@ class ControllerProfile:
         """
             True if a model built under "other" belongs on this canvas as a single node.
 
-            A Brain hosts Neurons this way. It is not the same as importing: an imported model is
-            expanded into the modules it is made of, a hosted one stays whole.
+            A hosted model stays whole. An imported one is expanded into the modules it is made of.
         """
         namespace = other.model_namespace
         if namespace is None:
@@ -170,8 +166,6 @@ def get_controller_profile(key: str | None) -> ControllerProfile | None:
 def profile_for_config(config: tp.Any) -> ControllerProfile | None:
     """
         Resolves the profile of an existing controller configuration.
-
-        This is what allows loading a model without ever asking the user for a controller type.
     """
     for profile in CONTROLLER_PROFILES.values():
         config_cls = profile.config_cls

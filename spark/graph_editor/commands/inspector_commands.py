@@ -40,35 +40,35 @@ class ChangeConfigValueCommand(QUndoCommand):
         self._is_first_run = True
 
     def id(self) -> int:
-        # Unique ID based on the specific node and config path to pool consecutive edits
+        # Id built from the node and the config path, so consecutive edits of one field are merged.
         path_str = '/'.join(str(p) for p in self.path)
         return 200 + hash(path_str) % 10000
 
     def mergeWith(self, command) -> bool:
         if command.id() != self.id():
             return False
-        # Merge by accepting the newer value, keeping the original old_value
+        # Merging keeps the original old_value and takes the newer value.
         self.new_value = copy.deepcopy(command.new_value)
         return True
 
     def undo(self) -> None:
-        # Revert Python backend
+        # Revert the Python backend.
         self.graph_model.set_node_config_value(self.path, self.old_value)
-        # Propagate via inheritance
+        # Propagate through the inheritance tree.
         self.graph_model.update_inherited_value(self.path, self.old_value)
         
-        # Revert UI state model safely
+        # Revert the UI state model.
         if isValid(self.node):
             self.node.value = self.old_value
         logger.info(f'Undo config change at {self.path}')
 
     def redo(self) -> None:
-        # Update Python backend
+        # Update the Python backend.
         self.graph_model.set_node_config_value(self.path, self.new_value)
-        # Propagate via inheritance
+        # Propagate through the inheritance tree.
         self.graph_model.update_inherited_value(self.path, self.new_value)
         
-        # Update UI state model safely
+        # Update the UI state model.
         if isValid(self.node):
             self.node.value = self.new_value
             
@@ -103,7 +103,7 @@ class ToggleInheritanceCommand(QUndoCommand):
             self.node.is_inherited = self.old_state
         self.graph_model.toggle_inheritance(self.path, self.old_state)
         
-        # Restore old child values if we had overridden them
+        # Restore the child values that were overridden.
         if self.new_state:
             for child_path_tuple, old_val in self.old_child_values.items():
                 child_path = list(child_path_tuple)

@@ -14,11 +14,9 @@ from spark.graph_editor.styles.manager import STYLES
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# NOTE: A Spark graph is a dataflow graph, not an arbitrary network: it has a direction, and the framework
-# itself groups the modules in execution layers. A layered (left to right) placement therefore reproduces the
-# way the model is read, which a force directed layout cannot do: a spring layout only minimizes edge length,
-# so it scatters a pipeline into a blob and gives a different result on every run. Here the horizontal axis is
-# the dependency depth and the vertical axis only separates modules that are independent of each other.
+# A Spark graph is a dataflow graph: it has a direction, and the framework groups the modules in execution
+# layers. Nodes are placed left to right, with the horizontal axis the dependency depth and the vertical
+# axis separating modules that are independent of each other.
 
 _ROW_HEIGHT = 20.0
 _SECTION_HEADER = 18.0
@@ -29,10 +27,7 @@ _DIVIDER = 16.0
 def estimate_node_size(node: NodeModel) -> tuple[float, float]:
     """
         Approximates the rendered size of a node from its ports.
-
-        NOTE: The real geometry belongs to the view (NodeItem), which does not exist yet while a model is
-        being imported. The estimate follows the same layout rules so that the placement leaves enough room.
-    """
+        """
     width = float(STYLES.get_val('node', 'width', default=180))
     height = float(STYLES.get_val('node', 'header_height', default=45))
 
@@ -67,9 +62,9 @@ def _break_cycles(keys: list[str], successors: dict[str, list[str]]) -> set[tupl
     """
         Finds the back edges of the graph with a depth first search.
 
-        Recurrent models are legal in Spark, so the dependency graph is not acyclic. Back edges are ignored
-        while layering, which places a recurrent module after the modules it feeds forward into.
-    """
+        The dependency graph is not acyclic: recurrent models are legal. Back edges are ignored while
+        layering, placing a recurrent module after the modules it feeds forward into.
+        """
     back_edges: set[tuple[str, str]] = set()
     state = {key: 0 for key in keys}  # 0 unvisited, 1 in progress, 2 done
 
@@ -142,8 +137,8 @@ def _order_layers(
         neighbours = predecessors if forward else successors
         for index in sorted(layers.keys(), reverse=not forward):
             layer = layers[index]
-            # NOTE: The current order has to be captured up front. CPython empties a list while sorting it,
-            # so the key function cannot look the element up in the very list being sorted.
+            # NOTE: CPython empties a list while sorting it, so the key function cannot look an element up in the
+            # list being sorted. The current order is captured up front.
             current = {key: position for position, key in enumerate(layer)}
             def _barycenter(key: str, current=current) -> float:
                 related = [indices[n] for n in neighbours.get(key, []) if n in indices]
@@ -226,9 +221,8 @@ def offset_below(existing: tp.Iterable[NodeModel], incoming: tp.Iterable[NodeMod
     """
         Translation that drops a set of new nodes under everything already on the canvas.
 
-        Importing is additive, so a second import must not land on top of the first one. The relative
-        placement of the incoming nodes is preserved, only the block as a whole is moved.
-    """
+        The relative placement of the incoming nodes is preserved, only the block as a whole is moved.
+        """
     margin = float(STYLES.get_val('graph', 'layout_import_margin', default=120) if margin is None else margin)
     incoming = list(incoming)
     occupied = bounding_box(existing)

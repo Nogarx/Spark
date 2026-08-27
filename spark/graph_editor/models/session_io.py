@@ -116,7 +116,7 @@ def load_session(path: str | pl.Path) -> LoadedSession:
     config = payload.get('config', None)
     if not isinstance(config, SparkConfig):
         raise ValueError(f'"{path.name}" does not contain a controller configuration.')
-    # The controller comes from the file, the user is never asked when opening a session.
+    # The controller comes from the file.
     profile = get_controller_profile(payload.get('profile', None)) or profile_for_config(config)
     return LoadedSession(profile=profile, config=config, layout=_read_layout(payload.get('layout')))
 
@@ -174,10 +174,9 @@ def _layout_metadata(layout: dict[str, tuple[float, float]]) -> dict[str, tp.Any
 
 def model_layout(path: str | pl.Path) -> dict[str, tuple[float, float]]:
     """
-        Answers with where a model file was left, by node name.
+        Node positions stored in a model file, by node name.
 
-        A file written by something other than the editor says nothing about it, and is answered with
-        nothing, which is what asks for the model to be laid out as it is read.
+        Files not written by the editor carry none, and the model is laid out on import instead.
 
         Args:
             path: str | pl.Path, the file to read.

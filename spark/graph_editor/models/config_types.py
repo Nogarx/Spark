@@ -14,11 +14,11 @@ import numpy as np
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# NOTE: SparkConfigMeta promotes every annotated attribute into a dataclass field and stores the parsed annotation
-# under the "valid_types" metadata entry. Depending on whether the declaring module uses "from __future__ import
-# annotations", that entry contains either real types (e.g. <class 'float'>) or the raw annotation string
-# (e.g. 'float | jax.Array | Initializer'). Both forms must be understood by the editor, so every candidate is
-# reduced to a set of normalized string tokens before being classified.
+# NOTE: SparkConfigMeta promotes every annotated attribute into a dataclass field and stores the parsed
+# annotation under the "valid_types" metadata entry. That entry holds either real types (e.g. <class 'float'>)
+# or the raw annotation string (e.g. 'float | jax.Array | Initializer'), depending on whether the declaring
+# module uses "from __future__ import annotations". Every candidate is reduced to a set of normalized string
+# tokens before being classified.
 
 class FieldKind(enum.Enum):
     """
@@ -37,8 +37,7 @@ class FieldKind(enum.Enum):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# Type aliases used across the framework. They are resolved lazily so the editor can expand them into their
-# underlying types instead of treating them as opaque names.
+# Type aliases used across the framework, resolved lazily and expanded into their underlying types.
 _ALIAS_SOURCES: dict[str, tuple[str, str]] = {
     'PlasticityParamLike': ('spark.nn.components.plasticity.base', 'PlasticityParamLike'),
     'DTypeLike': ('jax.typing', 'DTypeLike'),
@@ -224,16 +223,6 @@ def initializer_policy(tokens: frozenset[str], metadata: dict | None = None) -> 
     """
         Decides whether a field may (and must) be defined through an initializer.
 
-        NOTE: "allows_init" is set by SparkConfigMeta for anything mentioning an Initializer, a jax.Array or
-        PlasticityParamLike, which is broader than what the modules actually accept:
-            - "jax.Array | None" fields (e.g. ExponentialIntegrator.output_map) are read as raw arrays by the
-              module, so an initializer would be consumed as an array and break the build. They are optional
-              and their default (None) is meaningful, so they are left alone.
-            - "jax.Array | Initializer" fields (e.g. LinearSynapses.kernel) have no valid scalar form: the
-              kernel must span the full (output, input) shape or the dot product collapses. A constant value
-              is expressed with a ConstantInitializer, so the initializer is mandatory for them.
-            - Fields offering a scalar (float/int/PlasticityParamLike) keep both paths.
-
         Input:
             tokens: frozenset[str], normalized type tokens of the field.
             metadata: dict, field metadata.
@@ -270,10 +259,7 @@ def type_label(tokens: frozenset[str], type_hint: tp.Any = None) -> str:
 def dtype_key(value: tp.Any) -> str | None:
     """
         Canonical name of a dtype-like value.
-
-        NOTE: jnp.float16 and np.float16 are different objects that describe the same dtype, so dtype values
-        must never be compared by identity.
-    """
+        """
     if value is None:
         return None
     try:

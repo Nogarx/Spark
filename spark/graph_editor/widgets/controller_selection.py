@@ -30,7 +30,7 @@ class ControllerCard(QPushButton):
         self.setObjectName('controllerCard')
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         # NOTE: QPushButton computes its size hint from its own text/icon and ignores a child layout, so the
-        # card has to report the height of its content itself (see sizeHint/heightForWidth below).
+        # card reports the height of its content itself (see sizeHint/heightForWidth below).
         policy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         policy.setHeightForWidth(True)
         self.setSizePolicy(policy)
@@ -96,7 +96,7 @@ class ControllerChooser(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(STYLES.get_val('start', 'list_spacing', default=8))
         self._cards: list[ControllerCard] = []
-        # NOTE: Driven by the profile registry, so a new controller shows up here without touching the UI.
+        # Driven by the profile registry.
         for profile in CONTROLLER_PROFILES.values():
             card = ControllerCard(profile)
             card.clicked.connect(lambda _=False, p=profile: self.profile_selected.emit(p))
@@ -109,7 +109,7 @@ class ControllerChooser(QWidget):
 
     def _equalize_heights(self) -> None:
         """
-            Gives every card the height of the tallest one, so summaries of different lengths still align.
+            Gives every card the height of the tallest one, aligning summaries of different lengths.
         """
         width = max(1, self.width())
         tallest = max((card.heightForWidth(width) for card in self._cards), default=0)
@@ -142,7 +142,7 @@ class RecentCard(QPushButton):
         name.setObjectName('recentCardName')
         layout.addWidget(name)
         layout.addStretch(1)
-        # NOTE: The suffix is the only thing that tells a session from a model, so it is what is shown.
+        # The suffix is what tells a session from a model, so it is what is shown.
         kind = QLabel(path.suffix.lstrip('.'))
         kind.setObjectName('recentCardKind')
         layout.addWidget(kind)
@@ -151,7 +151,7 @@ class RecentCard(QPushButton):
 
 class StartView(QWidget):
     """
-        Placeholder shown on the canvas while no model is open.
+        Start screen, shown on the canvas while no model is open.
     """
 
     model_requested = Signal(object)
@@ -197,7 +197,7 @@ class StartView(QWidget):
         open_btn.clicked.connect(self.open_requested.emit)
         layout.addWidget(open_btn)
 
-        # Recent files. The section is only there while there is something to put in it.
+        # Recent files. The section is only shown while it holds something.
         self._recent_title = QLabel('Recent')
         self._recent_title.setObjectName('startRecentTitle')
         layout.addWidget(self._recent_title)
@@ -214,14 +214,14 @@ class StartView(QWidget):
 
     def set_recent_files(self, paths: tp.Sequence[pl.Path]) -> None:
         """
-            Shows the files that can be picked up again, most recent first.
+            Shows the remembered files, most recent first.
         """
         while self._recent_layout.count():
             item = self._recent_layout.takeAt(0)
             widget = item.widget()
             if widget is not None:
-                # NOTE: Detached before being destroyed. Deletion is deferred, and until it happens the old
-                # cards are still children of the panel.
+                # NOTE: Detached before being destroyed. Deletion is deferred, and the old cards are children of
+                # the panel until it happens.
                 widget.setParent(None)
                 widget.deleteLater()
         shown = list(paths)[:STYLES.get_val('start', 'recent_max', default=5)]

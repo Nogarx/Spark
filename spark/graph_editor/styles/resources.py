@@ -7,8 +7,8 @@ from __future__ import annotations
 from PySide6.QtGui import QPixmap, QIcon, QColor, QPainter
 from PySide6.QtCore import Qt, QSize
 
-# NOTE: Importing the compiled resource module registers the ":/icons/*" paths with Qt. Pixmaps themselves are
-# only built on demand, since a QGuiApplication must exist before any of them can be created.
+# NOTE: Importing the compiled resource module registers the ":/icons/*" paths with Qt. Pixmaps are built
+# on demand: a QGuiApplication must exist before any of them can be created.
 import spark.graph_editor.styles.resources_rc  # noqa: F401
 
 #################################################################################################################################################

@@ -22,13 +22,13 @@ logger = logging.getLogger('spark')
 
 class NodeFactory:
     """
-        Utility class to create NodeModel instances from Registry entries.
+        Builds NodeModel classes from registry entries.
     """
 
     @staticmethod
     def create_node_from_registry(entry: RegistryEntry, base_node_cls: type[NodeModel]) -> type[NodeModel]:
         """
-            Creates and populates a NodeModel based on a RegistryEntry.
+            Creates a NodeModel class from a registry entry.
         """
         node_model_cls = type(
             entry.name,
@@ -48,7 +48,6 @@ class NodeRegistry:
         Graph Editor Registry for node models.
     """
 
-    # Node model base class used for each registry namespace.
     NAMESPACE_BASE_MODEL = {
         RegistryNamespace.Components: ComponentNodeModel,
         RegistryNamespace.Interfaces: InterfaceNodeModel,
@@ -60,7 +59,6 @@ class NodeRegistry:
         self._registry: dict[type, type[NodeModel]] = {}
         self._namespaces: dict[type, RegistryNamespace] = {}
 
-        # Map available models
         for namespace, base_model in self.NAMESPACE_BASE_MODEL.items():
             for _, entry in getattr(REGISTRY, namespace.name).items():
                 self._map(entry, namespace, base_model)
@@ -78,7 +76,7 @@ class NodeRegistry:
 
     def _adopt(self, node_cls: type) -> type[NodeModel] | None:
         """
-            Builds the node model of a class, post-initialization.
+            Builds the node model of a class after initialization.
         """
         for namespace, base_model in self.NAMESPACE_BASE_MODEL.items():
             entry = getattr(REGISTRY, namespace.name).get_by_cls(node_cls)
@@ -92,7 +90,7 @@ class NodeRegistry:
 
     def get_namespace(self, node_cls: type) -> RegistryNamespace | None:
         """
-            Get node's registry namespace.
+            Returns the registry namespace of a node.
         """
         if node_cls not in self._namespaces:
             self._adopt(node_cls)
@@ -100,7 +98,6 @@ class NodeRegistry:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# Singleton
 NODE_REGISTRY = NodeRegistry()
 
 #################################################################################################################################################

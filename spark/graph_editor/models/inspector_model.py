@@ -20,9 +20,9 @@ logger = logging.getLogger('spark')
 class ConfigNode(QObject):
     """
         Base class for all configuration nodes in the inspector state model.
-        This provides a generic, observable tree structure that the UI can bind to,
-        isolating the editor from the complex nested dataclasses and ModuleSpecs.
-    """
+
+        Observable tree structure the UI binds to, wrapping the nested dataclasses and ModuleSpecs.
+        """
     value_changed = Signal(object, object) 
     errors_changed = Signal(object, list)
     inheritance_changed = Signal(object, bool)
@@ -91,7 +91,7 @@ class ConfigValueNode(ConfigNode):
 
     @value.setter
     def value(self, new_val) -> None:
-        # NOTE: Arrays return element-wise comparisons, so a plain "!=" cannot be used here.
+        # NOTE: Arrays return element-wise comparisons, so a plain "!=" cannot be used.
         if not values_equal(self._value, new_val):
             self._value = new_val
             self.revalidate()
@@ -131,7 +131,7 @@ class ConfigGroupNode(ConfigNode):
     def add_child(self, child: ConfigNode) -> None:
         child.setParent(self)
         self.children.append(child)
-        # Propagate child value changes up so the inspector can react if needed
+        # Propagate child value changes up, so the inspector can react to them.
         child.value_changed.connect(self._on_child_value_changed)
 
     def _on_child_value_changed(self, node, new_val) -> None:
@@ -201,10 +201,8 @@ def collect_field_errors(
     metadata = metadata or {}
     errors: list[str] = []
     if value is None:
-        # NOTE: A partial configuration leaves unset fields as None, and a model under construction is
-        # expected to be half baked: a value may still arrive from an inheritance cascade or be filled in
-        # later. Missing values are therefore not reported while editing; that check belongs to the export
-        # validation, which sees the finished graph. Only actual values are validated here.
+        # NOTE: A partial configuration leaves unset fields as None. Missing values are not reported while
+        # editing, that check belongs to the export validation. Only actual values are validated here.
         return errors
     # NOTE: Validators are instantiated from the dataclass field, so they cannot run without it.
     if field is None:
@@ -239,30 +237,26 @@ def parse_object_to_state(
         field: dc.Field | None = None,
     ) -> ConfigNode:
     """
-        Recursively parses a Python object (SparkConfig, Dataclass, ModuleSpecs, List, or Primitive) into a UI-bindable ConfigNode tree.
-    """
+        Parses a Python object (SparkConfig, dataclass, ModuleSpecs, list or primitive) into a ConfigNode tree.
+        """
     metadata = metadata or {}
 
-    # Handle ModuleSpecs
     if isinstance(obj, ModuleSpecs):
         node = ConfigGroupNode(name, type(obj), parent)
         node.metadata = metadata
         node.add_child(ConfigValueNode('name', obj.name, str, parent=node))
         node.add_child(parse_object_to_state('config', obj.config, type_hint=None, parent=node))
 
-    # Handle Primitive Fields holding an InitializerConfig
     elif metadata.get('allows_init', False) and isinstance(obj, InitializerConfig):
         node = ConfigValueNode(name, obj, type_hint or type(obj), parent, field=field)
         node.metadata = metadata
         node._is_initializer_active = True
 
-    # Handle SparkConfig
     elif isinstance(obj, SparkConfig):
         node = ConfigGroupNode(name, type(obj), parent)
         node.metadata = metadata
         for child_field in dc.fields(obj):
             value = getattr(obj, child_field.name, None)
-            # Use field.type for type_hint if available, and pass field.metadata
             child_node = parse_object_to_state(
                 child_field.name,
                 value,
@@ -273,19 +267,16 @@ def parse_object_to_state(
             )
             node.add_child(child_node)
 
-    # Handle collections of specs/configs.
-    # NOTE: SparkConfigMeta crystallizes every mutable iterable into a tuple, so ModuleSpecs collections are
-    # tuples rather than lists by the time they reach the editor. An empty collection is still rendered as a
-    # list whenever the field declares one.
+    # NOTE: SparkConfigMeta crystallizes every mutable iterable into a tuple, so ModuleSpecs collections
+    # reach the editor as tuples. An empty collection is rendered as a list when the field declares one.
     elif _is_container_of_configs(obj) or (
             isinstance(obj, (list, tuple)) and classify(type_hint, metadata.get('valid_types')) is FieldKind.MODULE_SPECS
         ):
-        # Attempt to infer the item type
         item_type = type(obj[0]) if len(obj) > 0 else ModuleSpecs
         node = ConfigListNode(name, item_type, parent)
         node.metadata = metadata
         for i, item in enumerate(obj):
-            # The name "[i]" is useful for UI labels, but is ignored during to_python() list reconstruction
+            # The name "[i]" is used for UI labels and ignored during to_python() list reconstruction.
             node.add_child(parse_object_to_state(f"[{i}]", item, type_hint=item_type, parent=node))
 
     # Handle Primitives (int, float, str, bool, tuple[int, ...], arrays, etc.)

@@ -26,9 +26,9 @@ logger = logging.getLogger('spark')
 
 class GraphModel(BaseModel):
 
-    # NOTE: The controller has settings of its own (the size of a neuron pool, dt, the seed) that belong to
-    # no node. They are addressed through this reserved id, so the inspector, the undo stack and the
-    # inheritance trees can treat them exactly like any other configuration.
+    # NOTE: The controller has settings of its own (the size of a neuron pool, dt, the seed) that belong to no
+    # node. They are addressed through this reserved id, so the inspector, the undo stack and the inheritance
+    # trees treat them like any other configuration.
     CONTROLLER_ID = '__controller__'
 
     node_added = Signal(NodeModel)
@@ -44,17 +44,16 @@ class GraphModel(BaseModel):
         super().__init__(parent)
         self.nodes: list[NodeModel] = []
         self.edges: list[EdgeModel] = []
-        # NOTE: A graph is always the template of one controller. Without a profile there is no document yet.
+        # A graph is always the template of one controller. Without a profile there is no document yet.
         self._profile: ControllerProfile | None = profile
-        # NOTE: The controller is a module too: it has a configuration of its own (units, dt, seed, ...) that
-        # belongs to the graph rather than to any node.
+        # The controller is a module too: it has a configuration of its own (units, dt, seed, ...) that belongs
+        # to the graph rather than to any node.
         self._controller_config: tp.Any = None
         self.undo_stack = QUndoStack(self)
-        # NOTE: Inheritance is scoped to a single node: a value can only cascade to the nested configurations
-        # of the very same node (the editor equivalent of the "_s_" shared kwargs of SparkConfig). Each node
-        # therefore owns an independent tree, keyed by node id.
+        # NOTE: Inheritance is scoped to a single node: a value only cascades to the nested configurations of
+        # the same node (the editor equivalent of the "_s_" shared kwargs of SparkConfig). Each node owns an
+        # independent tree, keyed by node id.
         self.inheritance_trees: dict[str, InheritanceTree] = {}
-        #
         self.node_added.connect(self.rebuild_inheritance_tree)
         self.node_removed.connect(self.rebuild_inheritance_tree)
         self.graph_cleared.connect(self.rebuild_inheritance_tree)
@@ -74,9 +73,8 @@ class GraphModel(BaseModel):
         """
             Sets the controller profile of the graph.
 
-            The profile determines which modules may be placed and how the graph is exported, so it is fixed
-            for the lifetime of a document: it can only change while the graph is empty. Loading a model is
-            the exception, since the profile is then dictated by the file itself.
+            The profile determines which modules may be placed and how the graph is exported. It can only
+            change while the graph is empty, except when loading a model, where the file dictates it.
 
             Input:
                 profile: ControllerProfile | None, the new profile.
@@ -107,8 +105,8 @@ class GraphModel(BaseModel):
         if self._controller_config is None and self._profile is not None:
             config_cls = self._profile.config_cls
             if config_cls is not None:
-                # NOTE: The module list has to be seeded explicitly. A controller configuration declares
-                # "modules_specs" without a default, and partial() cannot fill that one in on its own.
+                # NOTE: A controller configuration declares "modules_specs" without a default, so partial() cannot
+                # fill it in. The module list is seeded explicitly.
                 self._controller_config = config_cls.partial(modules_specs=())
         return self._controller_config
 
@@ -121,9 +119,8 @@ class GraphModel(BaseModel):
         """
             Takes the controller settings of an existing configuration, and only those.
 
-            NOTE: The modules are deliberately dropped. The canvas is the single source of truth for what the
-            controller contains; a module list copied from a file would be a second, stale one, and anything
-            added afterwards would never appear in it.
+            NOTE: The modules are dropped. The canvas is the single source of truth for what the controller
+            contains.
 
             Returns:
                 bool, True if the settings were adopted.
@@ -165,25 +162,22 @@ class GraphModel(BaseModel):
                 return
             for field in dc.fields(obj):
                 val = getattr(obj, field.name, None)
-                # Check if field is ModuleSpecs
                 if isinstance(val, ModuleSpecs):
                     _add_config_to_tree(path_prefix + [field.name], val)
                     continue
-                # Check if field is a collection of ModuleSpecs.
-                # NOTE: SparkConfig crystallizes mutable iterables into tuples, so both forms must be accepted.
+                # NOTE: SparkConfig crystallizes mutable iterables into tuples, so both forms are accepted.
                 if isinstance(val, (list, tuple)) and len(val) > 0 and all(isinstance(v, ModuleSpecs) for v in val):
                     for i, item in enumerate(val):
                         _add_config_to_tree(path_prefix + [field.name, f'[{i}]'], item)
                     continue
-                # Initializers are cascaded as a whole, their inner fields are not independent leaves.
+                # Initializers cascade as a whole, their inner fields are not independent leaves.
                 if isinstance(val, InitializerConfig):
                     tree.add_leaf(path_prefix + [field.name], type_string=field.metadata.get('valid_types') or field.type)
                     continue
-                # Nested configurations become branches so that their fields can receive from an ancestor.
+                # Nested configurations become branches, so their fields can receive from an ancestor.
                 if isinstance(val, SparkConfig):
                     _add_config_to_tree(path_prefix + [field.name], val)
                     continue
-                # Field is a regular field
                 tree.add_leaf(path_prefix + [field.name], type_string=field.metadata.get('valid_types') or field.type)
 
         _add_config_to_tree([], config)
@@ -278,7 +272,7 @@ class GraphModel(BaseModel):
                 return current[int(part[1:-1])]
             except (TypeError, ValueError, IndexError, KeyError):
                 return None
-        # NOTE: ModuleSpecs is transparent whenever the path does not name its "config" attribute explicitly.
+        # NOTE: ModuleSpecs is transparent unless the path names its "config" attribute explicitly.
         if isinstance(current, ModuleSpecs) and not hasattr(current, part):
             current = current.config
         return getattr(current, part, None)
@@ -384,7 +378,6 @@ class GraphModel(BaseModel):
             leaf.flags |= InheritanceFlags.IS_INHERITING
         else:
             leaf.flags &= ~InheritanceFlags.IS_INHERITING
-        # Revalidate tree to propagate the state
         tree = self.inheritance_trees.get(path[0], None)
         if tree is not None:
             tree.invalidate()
@@ -398,7 +391,7 @@ class GraphModel(BaseModel):
 
     def remove_node(self, node: NodeModel) -> None:
         if node in self.nodes:
-            # Clean up associated edges first
+            # The edges of the node are removed first.
             for port in node.get_all_ports():
                 for edge in list(port.edges):
                     self.remove_edge(edge)
@@ -445,7 +438,7 @@ class GraphModel(BaseModel):
         self.clear()
         if hasattr(self, 'undo_stack'):
             self.undo_stack.clear()
-        # The controller type is dictated by the session, the user is never asked when loading.
+        # The controller type is dictated by the session.
         self.set_profile(get_controller_profile(data.get('profile', None)), force=True)
 
 

@@ -25,10 +25,9 @@ logger = logging.getLogger('spark')
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# NOTE: This is the inverse of model_import: it turns what is on the canvas back into the configuration of a
-# controller. The editor deliberately allows half finished graphs, so the translation never refuses to run:
-# it reports what is missing and still produces the best configuration it can. Whether those problems matter
-# is decided by the caller, a session accepts them and a model does not.
+# Inverse of model_import: turns what is on the canvas back into the configuration of a controller. Half
+# finished graphs are legal, so the translation never refuses to run: it reports what is missing and still
+# produces a configuration. Whether those problems matter is decided by the caller.
 
 _CALL_ORIGIN = '__call__'
 _SELF_ORIGIN = '__self__'
@@ -74,7 +73,7 @@ def _port_map_for(port: PortModel) -> PortMap | None:
     if node is None:
         return None
     if isinstance(node, SourceNodeModel):
-        # A source stands for one input of the controller, named after the node.
+        # A source is one input of the controller, named after the node.
         return PortMap(origin=_CALL_ORIGIN, port=node.name, is_property=False)
     if isinstance(node, SelfPropertyNodeModel):
         return PortMap(origin=_SELF_ORIGIN, port=node.name, is_property=True)
@@ -86,10 +85,7 @@ def _port_map_for(port: PortModel) -> PortMap | None:
 def _incoming(port: PortModel) -> list[PortMap]:
     """
         Every connection feeding an input port, in a stable order.
-
-        NOTE: The order matters. Several values arriving on the same port are concatenated by the controller
-        in exactly this order.
-    """
+        """
     maps = []
     for edge in port.edges:
         source = edge.source_port
@@ -178,10 +174,7 @@ def build_module_specs(graph_model: GraphModel) -> tuple[list[ModuleSpecs], list
 def _unset_required_fields(config: SparkConfig, where: str) -> list[str]:
     """
         Fields left unset that the framework will need.
-
-        NOTE: The inspector does not complain about these while editing, a model under construction is
-        expected to be incomplete. They are reported here, where the graph is meant to be finished.
-    """
+        """
     from spark.core.config import SparkConfig as _SparkConfig
     problems: list[str] = []
     if config is None:
@@ -210,7 +203,6 @@ def build_controller_config(
         Input:
             graph_model: GraphModel, the graph to translate.
             strict: bool, also report everything that would stop the framework from instantiating the model.
-                A session tolerates the problems, a model does not.
 
         Returns:
             ExportedGraph, the configuration, the specs, the node layout and the problems found.
@@ -242,8 +234,7 @@ def build_controller_config(
                 field.name: getattr(base, field.name, None)
                 for field in dc.fields(base) if field.name != 'modules_specs'
             }
-        # NOTE: partial() is what allows a half finished graph to be described at all: every field the user
-        # has not set yet stays None instead of raising.
+        # NOTE: partial() leaves the fields the user has not set to None instead of raising.
         result.config = config_cls.partial(modules_specs=tuple(specs), **own_fields)
     except Exception as error:
         result.problems.append(f'Unable to build the {profile.label} configuration: {error}')
@@ -264,8 +255,7 @@ def build_controller_config(
                     result.problems.append(str(error))
         for spec in specs:
             result.problems.extend(_unset_required_fields(spec.config, spec.name))
-        # NOTE: The controller settings are shown by the inspector while nothing is selected, so the message
-        # says where to go rather than naming a field the user cannot find.
+        # The controller settings are shown by the inspector while nothing is selected.
         own = _unset_required_fields(result.config, profile.label)
         if own:
             result.problems.extend(own)

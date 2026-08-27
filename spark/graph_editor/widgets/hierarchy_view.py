@@ -36,13 +36,11 @@ class HierarchyView(QWidget):
         bg_color = STYLES.get_val('hierarchy', 'background_color')
         min_width = STYLES.get_val('hierarchy', 'min_width')
         self.setMinimumWidth(min_width)
-        # Search bar Container
         search_container = QWidget()
         search_container.setObjectName('hierarchySearchContainer')
         search_layout = QVBoxLayout(search_container)
         sm = STYLES.get_val('hierarchy', 'search_margins')
         search_layout.setContentsMargins(*sm)
-        # Search bar
         self.search_bar = QLineEdit()
         self.search_bar.setObjectName('hierarchySearch')
         self.search_bar.setPlaceholderText('Search nodes...')
@@ -78,11 +76,10 @@ class HierarchyView(QWidget):
             self.trees[class_name] = tree
             self.blocks[class_name] = block
         self.content_layout.addStretch(1)
-        # Connect model signals
         self.model.node_added.connect(self.on_node_added)
         self.model.node_removed.connect(self.on_node_removed)
         self.model.graph_cleared.connect(self.on_graph_cleared)
-        # Add existing nodes (if any)
+        # Add the nodes the model already holds.
         for node in self.model.nodes:
             self.on_node_added(node)
             
@@ -117,7 +114,7 @@ class HierarchyView(QWidget):
         tree.setIndentation(0)
         tree.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         tree.setExpandsOnDoubleClick(False)
-        # Disable internal scrolling so the outer QScrollArea handles it
+        # Internal scrolling is disabled, the outer QScrollArea handles it.
         tree.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         tree.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         tree.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
@@ -129,7 +126,7 @@ class HierarchyView(QWidget):
             tree.setVisible(checked)
             header_btn.setArrowType(Qt.ArrowType.DownArrow if checked else Qt.ArrowType.RightArrow)
             _update_header_style(checked)
-            # Force layout update to recalculate scroll area
+            # Force a layout update to recompute the scroll area.
             self.content_widget.updateGeometry()
         header_btn.toggled.connect(_toggle_block)
         tree.itemSelectionChanged.connect(lambda t=tree: self.on_tree_selection_changed(t))
@@ -141,16 +138,13 @@ class HierarchyView(QWidget):
         class_name = node.__class__.__name__
         tree = self.trees.get(class_name, self.trees['GeneralNodeModel'])
         item = QTreeWidgetItem(tree)
-        # Store item reference
         self.node_to_item[node] = (tree, item)
         item.setData(0, Qt.ItemDataRole.UserRole, node)
         self._update_item_widget(tree, item, node)
         self._adjust_tree_height(tree)
-        # Connect node signals
         node.name_changed.connect(lambda n, nd=node: self._on_node_data_changed(nd))
         node.type_changed.connect(lambda t, nd=node: self._on_node_data_changed(nd))
         node.selected_changed.connect(lambda s, nd=node: self._on_node_selected_changed(nd, s))
-        # Initial selection state
         if node.is_selected:
             self._on_node_selected_changed(node, True)
         self.on_search_changed(self.search_bar.text())
@@ -176,17 +170,17 @@ class HierarchyView(QWidget):
         item.setSizeHint(0, widget.sizeHint())
 
     def _adjust_tree_height(self, tree: QTreeWidget) -> None:
-        # Dynamically adjust the QTreeWidget height to fit its contents
+        # The height of the QTreeWidget follows its contents.
         height = 0
         for i in range(tree.topLevelItemCount()):
             item = tree.topLevelItem(i)
             if not item.isHidden():
                 height += item.sizeHint(0).height()
-        # Clip the bottom border of the last item to prevent double-borders
+        # The bottom border of the last item is clipped to avoid a double border.
         if height > 0:
             height -= 1
         else:
-            # If empty, leave a small 8px transparent area to indicate it is open but empty
+            # An empty tree leaves an 8px transparent area, so it reads as open and empty.
             height = 8
         tree.setMinimumHeight(height)
         tree.setMaximumHeight(height)
@@ -224,19 +218,17 @@ class HierarchyView(QWidget):
             return
         modifiers = QApplication.keyboardModifiers()
         if not (modifiers & Qt.KeyboardModifier.ControlModifier) and not (modifiers & Qt.KeyboardModifier.ShiftModifier):
-            # Clear selection in OTHER trees if not multi-selecting across them
+            # The selection of the other trees is cleared unless the selection spans them.
             self._updating_selection = True
             for t in self.trees.values():
                 if t != changed_tree:
                     t.clearSelection()
             self._updating_selection = False
         self._updating_selection = True
-        # Gather all selected nodes across all trees
         selected_nodes = []
         for t in self.trees.values():
             selected_items = t.selectedItems()
             selected_nodes.extend([item.data(0, Qt.UserRole) for item in selected_items if item.data(0, Qt.UserRole)])
-        # Update model selection state
         for node in self.model.nodes:
             if node.is_selected != (node in selected_nodes):
                 node.is_selected = (node in selected_nodes)
@@ -249,7 +241,7 @@ class HierarchyView(QWidget):
                 item.setHidden(False)
             else:
                 item.setHidden(True)
-        # Adjust tree heights to reflect hidden items
+        # Adjust the tree heights to the hidden items.
         for class_name, block in self.blocks.items():
             tree = self.trees[class_name]
             self._adjust_tree_height(tree)

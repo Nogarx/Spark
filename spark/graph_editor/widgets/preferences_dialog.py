@@ -22,10 +22,9 @@ from spark.graph_editor.styles.manager import STYLES
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# NOTE: The dialog is generated from the style configuration, so a new token shows up without touching this
-# file. What is declared here is only what the configuration cannot say about itself: how the categories are
-# grouped and named for a human ("pipe" is an edge), and what a value means when its type is ambiguous (a
-# list of four numbers is a set of margins, not a colour).
+# The dialog is generated from the style configuration. What is declared here is what the configuration
+# cannot say about itself: how the categories are grouped and named ("pipe" is an edge), and what a value
+# means when its type is ambiguous (a list of four numbers is a set of margins, not a colour).
 
 SECTIONS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     ('Canvas', 'Background, grid and the area the graph lives in.', ('graph', 'viewer')),
@@ -74,7 +73,7 @@ HINTS: dict[str, str] = {
     'hierarchy.min_width': 'Smallest width of the hierarchy panel.',
 }
 
-# Keys whose value is a set of edge distances rather than anything else.
+# Keys whose value is a set of edge distances.
 _MARGIN_PATTERN = re.compile(r'(margins|rect|scene_rect)$')
 _CSS_SIZE_PATTERN = re.compile(r'^(-?\d+)px$')
 _SHAPE_OPTIONS = ('circle', 'polygon', 'star')
@@ -146,10 +145,7 @@ class ColorButton(QPushButton):
 class NumberListEdit(QWidget):
     """
         Editor for a fixed list of numbers, such as margins or a scene rectangle.
-
-        NOTE: These used to be handed to the colour picker, because a list of four numbers looks like an RGBA
-        tuple. Margins were therefore impossible to edit and were shown as a meaningless swatch.
-    """
+        """
 
     LABELS = {4: ('left', 'top', 'right', 'bottom'), 3: ('x', 'y', 'z'), 2: ('x', 'y')}
 
@@ -271,7 +267,7 @@ class PreferencesDialog(QDialog):
 
     def _build_pages(self) -> None:
         declared = {key for _, _, keys in SECTIONS for key in keys}
-        # Anything not placed by hand still gets a home, so a new category is never invisible.
+        # Categories not placed by hand are appended, so a new one is never invisible.
         leftovers = tuple(key for key in self.config_data if key not in declared)
         sections = list(SECTIONS) + ([('Other', 'Categories with no section of their own.', leftovers)] if leftovers else [])
 
@@ -298,7 +294,7 @@ class PreferencesDialog(QDialog):
             form.setSpacing(STYLES.get_val('preferences', 'form_spacing', default=10))
             form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
             for key in present:
-                # The category name is only worth showing when a section holds several of them.
+                # The category name is only shown when a section holds several of them.
                 if len(present) > 1:
                     header = QLabel(key.replace('_', ' ').title())
                     header.setObjectName('prefsGroupLabel')
@@ -380,7 +376,7 @@ class PreferencesDialog(QDialog):
 
     def _commit_library(self) -> None:
         """
-            Writes the location of the library, which is settled the moment it is applied.
+            Writes the location of the library.
         """
         from spark.graph_editor.models import model_library
         chosen = self.library_path_edit.text().strip()
@@ -408,15 +404,15 @@ class PreferencesDialog(QDialog):
                 label.setToolTip(hint)
                 widget.setToolTip(hint)
             form.addRow(label, widget)
-            # NOTE: The section name and its synonyms are searchable too, so looking for "edge" finds the
-            # settings the configuration calls "pipe".
+            # The section name and its synonyms are searchable too, so looking for "edge" finds the settings
+            # the configuration calls "pipe".
             haystack = ' '.join((label_text, dotted, section, SYNONYMS.get(path[0], ''), hint)).lower()
             self._rows.append((page, form, form.rowCount() - 1, haystack))
             self.widgets_map[path] = widget
 
     def _build_widget(self, path: tuple[str, ...], value: tp.Any) -> QWidget:
         """
-            Chooses the editor a value deserves.
+            Returns the editor matching a value.
         """
         if _is_colour(path, value):
             return ColorButton(value, is_hex=isinstance(value, str))
@@ -465,7 +461,7 @@ class PreferencesDialog(QDialog):
         needle = text.strip().lower()
         matches_per_page: dict[int, int] = {}
         for page, form, row, haystack in self._rows:
-            # Group headers carry no searchable text: they follow their section.
+            # Group headers carry no searchable text, they follow their section.
             visible = (not needle) or (bool(haystack) and needle in haystack)
             form.setRowVisible(row, visible)
             if haystack and visible:
@@ -525,7 +521,7 @@ class PreferencesDialog(QDialog):
 
     def _target_path(self) -> str | None:
         """
-            File the changes are written to, asking for one the first time.
+            File the changes are written to. A location is asked for the first time.
         """
         active = STYLES._active_path
         if active != STYLES._default_path:
@@ -579,9 +575,7 @@ class PreferencesDialog(QDialog):
     def _reload_values(self) -> None:
         """
             Rebuilds the whole dialog from the style that is now active.
-
-            NOTE: Loading or resetting used to ask the user to close and reopen the dialog to see the values.
-        """
+            """
         self.config_data = json.loads(json.dumps(STYLES._config))
         self.widgets_map.clear()
         self._rows.clear()

@@ -5,7 +5,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    #from spark.graph_editor.models.port_model import PortModel
     from spark.core.config import SparkConfig
     from spark.graph_editor.models.edge_model import EdgeModel
     from spark.nn.components.base import Component
@@ -125,7 +124,7 @@ class NodeModel(BaseModel):
 
     @classmethod
     def from_dict(cls, data) -> tp.Self | NodeModel | tp.Any:
-        # Allow dynamic subclass instantiation
+        # Dynamic subclass instantiation.
         class_name = data.get('class', 'NodeModel')
         
         target_cls = cls
@@ -140,7 +139,6 @@ class NodeModel(BaseModel):
         if 'pos' in data:
             node.pos = (data['pos'][0], data['pos'][1])
             
-        # Reconstruct compartments
         node.compartments.clear()
         
         if 'call_section' in data:
@@ -157,7 +155,7 @@ class NodeModel(BaseModel):
 
 class SourceNodeModel(NodeModel):
     """
-        Source node model
+        Node standing for one input of the controller.
     """
 
     def __init__(self, name: str | None = None, type_name: str = 'Source Node', pos=(0, 0), parent=None) -> None:
@@ -182,7 +180,7 @@ class SourceNodeModel(NodeModel):
 
 class SinkNodeModel(NodeModel):
     """
-        Sink node model
+        Node standing for one output of the controller.
     """
     
     def __init__(self, name: str | None = None, type_name: str = 'Sink Node', pos=(0, 0), parent=None) -> None:
@@ -207,7 +205,7 @@ class SinkNodeModel(NodeModel):
 
 class SelfPropertyNodeModel(NodeModel):
     """
-        Property node model
+        Node standing for one property the controller exposes to its modules.
     """
 
     def __init__(self, name: str | None = None, type_name: str = 'Controller Property', pos=(0, 0), parent=None,
@@ -229,7 +227,7 @@ class SelfPropertyNodeModel(NodeModel):
 
 class InterfaceNodeModel(NodeModel):
     """
-        Abstract Interface node model.
+        Node model of an Interface.
     """
     _cls: type[Component]
 
@@ -240,12 +238,10 @@ class InterfaceNodeModel(NodeModel):
             type_name = utils.to_human_readable(self._cls.__name__)
         super().__init__(name=name, type_name=type_name, pos=pos, parent=parent)
         self._setup_ports()
-        # Instantiate partial config
         config_cls: type[SparkConfig] = self._cls.get_config_spec()
         self.config = config_cls.partial()
 
     def _setup_ports(self) -> None:
-        # Get port info
         try:
             input_specs = self._cls._get_input_specs()
             output_specs = self._cls._get_output_specs()
@@ -277,8 +273,7 @@ class InterfaceNodeModel(NodeModel):
                 multi_connection=True, 
             )
             self.call_section.add_port(port)
-        # Populate Properties. A property that does not define a setter is read only: it can be read by
-        # other modules but nothing can write into it, so it only gets an output port.
+        # Populate Properties. A property without a setter is read only and gets an output port alone.
         for port_name, spec in property_specs.items():
             if port_name not in readonly_properties:
                 port = PortModel(
@@ -300,7 +295,7 @@ class InterfaceNodeModel(NodeModel):
 
 class ControllerNodeModel(NodeModel):
     """
-        Abstract node model for a nested controller (a Neuron placed inside a Brain).
+        Node model of a nested controller (a Neuron placed inside a Brain).
     """
 
     _cls: type
@@ -311,13 +306,12 @@ class ControllerNodeModel(NodeModel):
         if type_name is None:
             type_name = utils.to_human_readable(self._cls.__name__)
         super().__init__(name=name, type_name=type_name, pos=pos, parent=parent)
-        # Instantiate the configuration first, the ports of a controller are derived from its modules.
+        # The configuration comes first, the ports of a controller are derived from its modules.
         config_cls: type[SparkConfig] = self._cls.get_config_spec()
         self.config = config_cls.partial()
         self._setup_ports()
 
     def _setup_ports(self) -> None:
-        # Get port info
         try:
             modules_specs = getattr(self.config, 'modules_specs', ())
             input_specs = self._cls._get_controller_input_specs(modules_specs)
@@ -350,8 +344,7 @@ class ControllerNodeModel(NodeModel):
                     port_type=spec.payload_type
                 )
             )
-        # Populate Properties. A property that does not define a setter is read only: it can be read by
-        # other modules but nothing can write into it, so it only gets an output port.
+        # Populate Properties. A property without a setter is read only and gets an output port alone.
         for port_name, spec in property_specs.items():
             if port_name not in readonly_properties:
                 self.props_section.add_port(
@@ -375,7 +368,7 @@ class ControllerNodeModel(NodeModel):
 
 class ComponentNodeModel(NodeModel):
     """
-        Abstract Component node model.
+        Node model of a Component.
     """
 
     _cls: type[Component]
@@ -387,12 +380,10 @@ class ComponentNodeModel(NodeModel):
             type_name = utils.to_human_readable(self._cls.__name__)
         super().__init__(name=name, type_name=type_name, pos=pos, parent=parent)
         self._setup_ports()
-        # Instantiate partial config
         config_cls: type[SparkConfig] = self._cls.get_config_spec()
         self.config = config_cls.partial()
 
     def _setup_ports(self) -> None:
-        # Get port info
         try:
             input_specs = self._cls._get_input_specs()
             output_specs = self._cls._get_output_specs()
@@ -424,8 +415,7 @@ class ComponentNodeModel(NodeModel):
                 port_type=spec.payload_type
             )
             self.call_section.add_port(port)
-        # Populate Properties. A property that does not define a setter is read only: it can be read by
-        # other modules but nothing can write into it, so it only gets an output port.
+        # Populate Properties. A property without a setter is read only and gets an output port alone.
         for port_name, spec in property_specs.items():
             if port_name not in readonly_properties:
                 port = PortModel(
