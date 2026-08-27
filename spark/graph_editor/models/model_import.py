@@ -26,11 +26,10 @@ logger = logging.getLogger('spark')
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# NOTE: Importing a model is not the same thing as placing one. Which of the two happens is decided by the
-# controller profile: a Neuron placed in a Brain is a single node (the Brain really does hold a Neuron), while
-# the same Neuron opened in Neuron mode is the graph itself and has to be expanded into the components it is
-# made of. This module implements the second case. It is additive: a model can be imported into a graph that
-# already holds nodes, as many times as wanted, and every import lands on free canvas.
+# Importing a model is not the same thing as placing one, and the controller profile decides which of the
+# two happens: a Neuron placed in a Brain is a single node, while the same Neuron opened in Neuron mode is
+# the graph itself and is expanded into the components it is made of. This module implements the second
+# case. It is additive: a model can be imported any number of times, and every import lands on free canvas.
 
 _CALL_ORIGIN = '__call__'
 _SELF_ORIGIN = '__self__'
@@ -77,9 +76,6 @@ def _as_position(pos: tp.Any) -> tuple[float, float] | None:
 def _controller_metadata(config: tp.Any) -> dict:
     """
         Editor metadata stored at the controller level, keyed by node name.
-
-        NOTE: This is where the editor keeps the nodes that are not modules (the controller inputs, outputs
-        and properties), since they have nowhere else to live in a configuration.
     """
     metadata = getattr(config, '__graph_editor_metadata__', None)
     return metadata if isinstance(metadata, dict) else {}
@@ -89,9 +85,6 @@ def _controller_metadata(config: tp.Any) -> dict:
 def _stored_position(config: tp.Any) -> tuple[float, float] | None:
     """
         Position saved with a module, when the model carries editor metadata.
-
-        NOTE: Only files written by the editor hold positions. Models declared in code never do, which is why
-        a computed layout is always needed as a fallback.
     """
     return _as_position(_controller_metadata(config).get('pos', None))
 
@@ -121,15 +114,21 @@ def expand_controller_config(
     """
         Expands a controller configuration into the nodes and edges of its modules.
 
-        Input:
-            config: SparkConfig, configuration of the controller to expand.
-            graph_model: GraphModel, graph the result is destined to. Only read, never modified.
-            profile: ControllerProfile, active profile. Used to type the controller properties.
-            layout: dict[str, tuple[float, float]], positions by node name. This is how a session restores
-                its layout: a configuration cannot carry it (see session_io).
+        Parameters
+        ----------
+        config : SparkConfig
+            Configuration of the controller to expand.
+        graph_model : GraphModel
+            Graph the result is destined to. Only read, never modified.
+        profile : ControllerProfile, optional
+            Active profile. Used to type the controller properties.
+        layout : dict of str to tuple of float, optional
+            Positions by node name. A configuration cannot carry the layout by itself (see session_io).
 
-        Returns:
-            ImportedGraph, the nodes and edges to add, already positioned.
+        Returns
+        -------
+        ImportedGraph
+            The nodes and edges to add, already positioned.
     """
     specs: tuple[ModuleSpecs, ...] = tuple(getattr(config, 'modules_specs', ()) or ())
     if not specs:
@@ -244,8 +243,7 @@ def _place_nodes(result: ImportedGraph, graph_model: GraphModel, stored: dict[st
         The rules, in order:
             1. A node saved with a position keeps it, untouched.
             2. The rest is laid out by dependency depth, under whatever was saved.
-            3. If the canvas already holds nodes, the whole block is moved below them. Importing is additive,
-               so a second import never lands on top of the first one.
+            3. If the canvas already holds nodes, the whole block is moved below them.
     """
     sizes = {node.id: graph_layout.estimate_node_size(node) for node in result.nodes}
     placed = [node for node in result.nodes if node.id in stored]
@@ -258,7 +256,7 @@ def _place_nodes(result: ImportedGraph, graph_model: GraphModel, stored: dict[st
             if edge.source_port is not None and edge.target_port is not None
             and edge.source_port.node is not None and edge.target_port.node is not None
         ]
-        # The layout runs over the whole model so that connections to already placed nodes still order it.
+        # The layout runs over the whole model, so connections to already placed nodes still order it.
         computed = graph_layout.layered_layout([node.id for node in result.nodes], edges, sizes)
         for node in missing:
             stored[node.id] = computed.get(node.id, (0.0, 0.0))

@@ -22,7 +22,12 @@ from spark.nn.interfaces.input.base import InputInterface, InputInterfaceConfig,
 @register_config
 class PoissonSpikerConfig(InputInterfaceConfig):
     """
-        PoissonSpiker model configuration class.
+        Configuration for `PoissonSpiker`.
+
+        Parameters
+        ----------
+        max_freq : float, default 100.0
+            Firing rate reached by an input of 1.0, in Hz.
     """
 
     max_freq: float = dc.field(
@@ -40,18 +45,39 @@ class PoissonSpikerConfig(InputInterfaceConfig):
 
 @register_interface
 class PoissonSpiker(InputInterface):
-    """
-        Transforms a continuous signal to a spiking signal.
-        This transformation assumes a very simple poisson neuron model without any type of adaptation or plasticity.
+    r"""
+        Stochastic rate encoding of a continuous signal.
 
-        Init:
-            max_freq: float [Hz]
+        Each unit emits a spike on a step with a probability proportional to its input, drawn
+        independently every step. Repeated presentations of the same input give different spike
+        trains with the same expected rate.
 
-        Input:
-            signal: FloatArray
+        Parameters
+        ----------
+        config : PoissonSpikerConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
 
-        Output:
-            spikes: SpikeArray
+        Input Ports
+        -----------
+        signal : FloatArray
+            Value to encode, expected in ``[0, 1]``.
+
+        Output Ports
+        ------------
+        spikes : SpikeArray
+            One spike train per input, of the same shape as ``signal``.
+
+        Notes
+        -----
+        .. math::
+            P(s_i = 1) = \frac{f_{\max} \Delta t}{1000} x_i
+
+        with ``dt`` in ms. Inputs above 1.0 saturate at one spike per step, and the encoding is
+        only linear while :math:`f_{\max} \Delta t / 1000 \le 1`.
+
+        See Also
+        --------
+        LinearSpiker : Deterministic encoding of the same signal.
     """
     config: PoissonSpikerConfig
 
@@ -68,12 +94,17 @@ class PoissonSpiker(InputInterface):
 
     def __call__(self, signal: FloatArray) -> InputInterfaceOutput:
         """
-            Input interface operation.
+            Encodes the signal as spikes.
 
-            Input: 
-                A FloatArray of values in the range [0,1].
-            Output: 
-                A SpikeArray of the same shape as the input.
+            Parameters
+            ----------
+            signal : FloatArray
+                Value to encode, expected in ``[0, 1]``.
+
+            Returns
+            -------
+            InputInterfaceOutput
+                Dictionary with one entry, ``spikes``, of the same shape as ``signal``.
         """
         spikes = (jax.random.uniform(self.get_rng_keys(1), shape=self._shape) < self._scale * signal.value).astype(self._dtype)
         return {

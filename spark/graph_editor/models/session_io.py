@@ -79,8 +79,17 @@ def save_session(graph_model: GraphModel, path: str | pl.Path) -> pl.Path:
     """
         Writes the graph as a session, however incomplete it is.
 
-        Returns:
-            pl.Path, the path actually written.
+        Parameters
+        ----------
+        graph_model : GraphModel
+            The graph to write.
+        path : str or pathlib.Path
+            Where to write it. The session suffix is applied.
+
+        Returns
+        -------
+        pathlib.Path
+            The path actually written.
     """
     profile = graph_model.profile
     if profile is None:
@@ -116,7 +125,7 @@ def load_session(path: str | pl.Path) -> LoadedSession:
     config = payload.get('config', None)
     if not isinstance(config, SparkConfig):
         raise ValueError(f'"{path.name}" does not contain a controller configuration.')
-    # The controller comes from the file, the user is never asked when opening a session.
+    # The controller comes from the file.
     profile = get_controller_profile(payload.get('profile', None)) or profile_for_config(config)
     return LoadedSession(profile=profile, config=config, layout=_read_layout(payload.get('layout')))
 
@@ -140,8 +149,15 @@ def check_model(graph_model: GraphModel) -> list[str]:
     """
         Reports what keeps the graph from being a model, without writing anything.
 
-        Returns:
-            list[str], every problem found. Empty when the graph can be exported as it stands.
+        Parameters
+        ----------
+        graph_model : GraphModel
+            The graph to check.
+
+        Returns
+        -------
+        list of str
+            Every problem found. Empty when the graph can be exported as it stands.
     """
     exported = build_controller_config(graph_model, strict=True)
     return [] if exported.is_complete else list(exported.problems)
@@ -152,8 +168,22 @@ def export_model(graph_model: GraphModel, path: str | pl.Path) -> pl.Path:
     """
         Writes the graph as a model the framework can instantiate.
 
-        Raises:
-            ValueError, listing everything that keeps the graph from being a valid model.
+        Parameters
+        ----------
+        graph_model : GraphModel
+            The graph to write.
+        path : str or pathlib.Path
+            Where to write it. The model suffix is applied.
+
+        Returns
+        -------
+        pathlib.Path
+            The path actually written.
+
+        Raises
+        ------
+        ValueError
+            Listing everything that keeps the graph from being a valid model.
     """
     path = pl.Path(path).with_suffix(MODEL_SUFFIX)
     exported = build_controller_config(graph_model, strict=True)
@@ -174,16 +204,19 @@ def _layout_metadata(layout: dict[str, tuple[float, float]]) -> dict[str, tp.Any
 
 def model_layout(path: str | pl.Path) -> dict[str, tuple[float, float]]:
     """
-        Answers with where a model file was left, by node name.
+        Node positions stored in a model file, by node name.
 
-        A file written by something other than the editor says nothing about it, and is answered with
-        nothing, which is what asks for the model to be laid out as it is read.
+        Files not written by the editor carry none, and the model is laid out on import instead.
 
-        Args:
-            path: str | pl.Path, the file to read.
+        Parameters
+        ----------
+        path : str or pathlib.Path
+            The file to read.
 
-        Returns:
-            dict[str, tuple[float, float]], the positions, empty when the file carries none.
+        Returns
+        -------
+        dict of str to tuple of float
+            The positions. Empty when the file carries none.
     """
     try:
         metadata = SparkConfig.metadata_from_file(pl.Path(path))

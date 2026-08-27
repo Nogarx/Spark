@@ -23,7 +23,13 @@ from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceC
 @register_config
 class SamplerConfig(ControlInterfaceConfig):
     """
-        Sampler configuration class.
+        Configuration for `Sampler`.
+
+        Parameters
+        ----------
+        sample_size : tuple of int
+            Shape of the result. May be larger than the input, in which case entries are drawn
+            more than once.
     """
     
     sample_size: int = dc.field(
@@ -40,17 +46,34 @@ class SamplerConfig(ControlInterfaceConfig):
 @register_interface
 class Sampler(ControlInterface):
     """
-        Sample a single input streams of inputs of the same type into a single stream.
-        Indices are selected randomly and remain fixed.
+        Draws a fixed set of entries from its inputs.
 
-        Init:
-            sample_size: int
-            
-        Input:
-            input: type[SparkPayload]
-            
-        Output:
-            output: type[SparkPayload]
+        The inputs are flattened, concatenated and indexed by a set of indices drawn once at build
+        time and held for the lifetime of the module. The same entries are read on every step, so
+        this is a fixed projection rather than a fresh sample per step.
+
+        Indices are drawn with replacement, so ``sample_size`` may exceed the size of the input
+        and an entry may appear more than once.
+
+        Parameters
+        ----------
+        config : SamplerConfig
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        **inputs : SparkPayload
+            Any number of inputs, all of the same payload type. Named by the graph.
+
+        Output Ports
+        ------------
+        output : SparkPayload
+            The drawn entries, of shape ``sample_size`` and of the same payload type as the inputs.
+
+        Properties
+        ----------
+        indices : jax.Array
+            Flat indices drawn at build time and read on every step. Read only.
     """
     config: SamplerConfig
 
@@ -94,7 +117,18 @@ class Sampler(ControlInterface):
 
     def __call__(self, **inputs: SparkPayload) -> ControlInterfaceOutput:
         """
-            Sub/Super-sample the input stream to get the pre-specified number of samples.
+            Reads the drawn entries out of the inputs.
+
+            Parameters
+            ----------
+            **inputs : SparkPayload
+                Any number of inputs, all of the same payload type.
+
+            Returns
+            -------
+            ControlInterfaceOutput
+                Dictionary with one entry, ``output``, of shape ``sample_size`` and of the payload
+                type of the inputs.
         """
         # Control flow operation
         return {

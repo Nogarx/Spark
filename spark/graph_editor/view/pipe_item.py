@@ -60,8 +60,8 @@ class PipeRouteContext:
     """
         Shared state of one routing pass.
 
-        Collecting the node rectangles and the lanes already in use once per pass, instead of once per pipe,
-        is what keeps routing a whole scene linear in the number of pipes.
+        The node rectangles and the lanes already in use are collected once per pass rather than once per
+        pipe, which keeps routing a whole scene linear in the number of pipes.
     """
 
     def __init__(self, obstacles: list[tuple[NodeItem, QRectF]], bundles: dict[tuple[int, int], list[int]] | None = None) -> None:
@@ -78,8 +78,8 @@ class PipeRouteContext:
             for item in scene.items():
                 if isinstance(item, NodeItem) and isValid(item):
                     obstacles.append((item, item.sceneBoundingRect().adjusted(-margin, -margin, margin, margin)))
-            # Pipes joining the same two nodes form a bundle and are given one lane each. The ranking is
-            # computed from the whole scene so that it does not depend on what is being redrawn.
+            # Pipes joining the same two nodes form a bundle and are given one lane each. The ranking is computed
+            # from the whole scene, so it does not depend on what is being redrawn.
             for item in scene.items():
                 if not isinstance(item, PipeItem) or not isValid(item):
                     continue
@@ -136,8 +136,8 @@ class PipeRouteContext:
 
 class PipeItem(QGraphicsPathItem):
 
-    # NOTE: Routing priority. A pipe only avoids the lanes claimed by older pipes, never the other way round,
-    # so routing the scene is a fixed point instead of an endless negotiation.
+    # NOTE: Routing priority. A pipe only avoids the lanes claimed by older pipes, never the other way
+    # round, so routing the scene converges.
     _priority_counter = itertools.count()
 
     def __init__(self, source_port_item: PortItem, target_port_item: PortItem, model: EdgeModel | None = None, parent: QWidget | None = None) -> None:
@@ -151,8 +151,8 @@ class PipeItem(QGraphicsPathItem):
         self.setAcceptHoverEvents(True)
         self._hovered = False
         self.pivots = []
-        # NOTE: A pipe routes itself until the user edits it. From then on its waypoints are respected as they
-        # are, which is why manual overlaps stay untouched while automatic ones are avoided.
+        # NOTE: A pipe routes itself until the user edits it. From then on its waypoints are respected as
+        # they are, overlaps included.
         self._auto_routed = True
         self._route_priority = next(PipeItem._priority_counter)
         self.gizmo = SegmentGizmo(self)
@@ -160,13 +160,12 @@ class PipeItem(QGraphicsPathItem):
         self.full_pts = []
         if self.model:
             self.model.waypoints_changed.connect(self.on_waypoints_changed)
-            # Initialize pivots from model if they exist
             if self.model.waypoints:
                 self.pivots = [QPointF(x, y) for x, y in self.model.waypoints]
                 self._auto_routed = False
         self.update_path()
 
-    # Signature overwrite
+    # Narrows the return type of QGraphicsItem.scene().
     def scene(self) -> GraphScene:
         return super().scene()
 
@@ -185,10 +184,9 @@ class PipeItem(QGraphicsPathItem):
         self.prepareGeometryChange()
         p1 = self.source_port.scenePos() if self.source_port else QPointF(0,0)
         p2 = self.target_port.scenePos() if self.target_port else QPointF(100,0)
-        # Initialize Pivots
         if self._auto_routed or not self.pivots:
-            # NOTE: Routing the whole scene shares one context, which is what keeps it O(pipes) instead of
-            # rescanning the scene for every pipe.
+            # NOTE: Routing the whole scene shares one context, which keeps it O(pipes) instead of rescanning
+            # the scene for every pipe.
             owned_context = context is None
             if owned_context:
                 context = PipeRouteContext.for_pipe(self)
@@ -207,7 +205,7 @@ class PipeItem(QGraphicsPathItem):
         if self.model and not self._auto_routed:
             model_pts = [(float(p.x()), float(p.y())) for p in self.pivots]
             if self.model.waypoints != model_pts:
-                # We don't want to trigger signals here to avoid loops, but we need consistency
+                # Written without emitting signals to avoid a loop.
                 self.model._waypoints = model_pts 
         # Path Generation with Jumps
         path = QPainterPath()
@@ -240,17 +238,23 @@ class PipeItem(QGraphicsPathItem):
     # Automatic routing
     #-------------------------------------------------------------------------------------------------------#
 
-    # NOTE: Pipes are routed around the nodes instead of through them, and never along a lane another pipe is
-    # already using. Only the automatic route is affected: a pipe the user has edited keeps its waypoints,
-    # overlaps included.
-
     def pipe_color(self, active: bool = False) -> QColor:
         """
             Colour of the payload the pipe carries.
 
-            NOTE: A connection is drawn in the colour of the ports it joins, so a payload type can be followed
-            across the graph without reading a single label. Both ends always share a type, connections
-            between different payloads are rejected.
+            Parameters
+            ----------
+            active : bool, default False
+                Return the highlighted variant of the colour.
+
+            Returns
+            -------
+            QColor
+                The colour of the payload.
+
+            Notes
+            -----
+            Both ends always share a type, connections between different payloads are rejected.
         """
         port = self.source_port if self.source_port is not None else self.target_port
         color = None
@@ -263,9 +267,8 @@ class PipeItem(QGraphicsPathItem):
             color = color.lighter(factor)
         if not active:
             return color
-        # NOTE: The active colour must stay recognisable as the same payload. Plain lightening cannot do it:
-        # it scales the HSV value and clamps, so anything already bright ends up white. Lifting the value and
-        # trimming the saturation keeps the hue while reading as highlighted (the pen also gets wider).
+        # NOTE: Plain lightening scales the HSV value and clamps, turning anything already bright into white.
+        # The value is lifted and the saturation trimmed instead, which keeps the hue.
         hue, saturation, value, alpha = color.getHsv()
         if hue < 0:
             return color.lighter(120)
@@ -307,7 +310,7 @@ class PipeItem(QGraphicsPathItem):
         for position, start, end in tracks:
             if abs(position - value) >= separation:
                 continue
-            # Only an actual shared stretch counts, touching at a corner does not.
+            # Only a shared stretch counts, touching at a corner does not.
             if min(high, end) - max(low, start) > separation:
                 return False
         return True
@@ -317,7 +320,7 @@ class PipeItem(QGraphicsPathItem):
             Separation given to pipes that share the same pair of nodes.
 
             Two modules can be connected twice in opposite directions (a plasticity rule reading a kernel and
-            writing it back), and both connections would otherwise be drawn along the very same lane.
+            writing it back), and both connections would otherwise be drawn along the same lane.
         """
         source_node, target_node = self._end_nodes()
         if source_node is None or target_node is None:
@@ -340,8 +343,8 @@ class PipeItem(QGraphicsPathItem):
         """
             First x, walking away from a node, where a vertical run between two heights is free.
 
-            Searching by fixed increments is not enough: a column can be blocked by a whole node, so the
-            search jumps straight past whatever is in the way.
+            A column can be blocked by a whole node, so the search jumps past whatever is in the way rather
+            than stepping by fixed increments.
         """
         low, high = min(y_a, y_b), max(y_a, y_b)
         x = start_x
@@ -383,7 +386,7 @@ class PipeItem(QGraphicsPathItem):
 
         obstacles = context.obstacles_excluding(source_node, target_node)
         lanes, channels = context.lanes, context.channels
-        # Best effort fallback: the least colliding route seen, used only if nothing is fully free.
+        # Fallback: the least colliding route seen, used only if nothing is fully free.
         best_score, best_route = None, None
 
         def _consider(route: list[QPointF]) -> list[QPointF] | None:
@@ -407,8 +410,8 @@ class PipeItem(QGraphicsPathItem):
             for rect in obstacles:
                 candidates.extend((rect.left(), rect.right(), rect.left() - margin, rect.right() + margin))
             for channel_x in candidates:
-                # NOTE: The window is the whole span between the two ports, not the comfortable one. A
-                # channel hugging a node is still better than a pipe drawn straight through it.
+                # NOTE: The window is the whole span between the two ports. A channel hugging a node is
+                # accepted, a pipe drawn through it is not.
                 if not (p1.x() <= channel_x <= p2.x()):
                     continue
                 if not self._track_is_free(channel_x, p1.y(), p2.y(), channels, separation):
@@ -424,9 +427,8 @@ class PipeItem(QGraphicsPathItem):
         ) if rect is not None]
         exit_x, entry_x = p1.x() + margin + lane, p2.x() - margin - lane
         span_low, span_high = min(exit_x, entry_x), max(exit_x, entry_x)
-        # NOTE: The free lanes are the borders of the obstacles themselves. Stepping blindly away from the
-        # graph is not enough: a second imported model sits right below the first one, and a fixed number of
-        # steps cannot clear it.
+        # NOTE: The free lanes are the borders of the obstacles themselves. A fixed number of steps away
+        # from the graph cannot clear a second imported model sitting below the first one.
         blocking = [rect for rect in obstacles if rect.right() > span_low and rect.left() < span_high]
         spread = involved + blocking
         lane_candidates = [
@@ -442,8 +444,8 @@ class PipeItem(QGraphicsPathItem):
                 y = lane_y + nudge + (lane if lane_y >= p1.y() else -lane)
                 if not self._track_is_free(y, exit_x, entry_x, lanes, separation):
                     continue
-                # The columns used to leave and to enter are resolved independently, so that a crowded side
-                # does not invalidate the lane, and two pipes reaching the same node do not share the stub.
+                # The columns used to leave and to enter are resolved independently, so a crowded side does not
+                # invalidate the lane and two pipes reaching the same node do not share the stub.
                 column_out = self._free_column(exit_x, p1.y(), y, 1.0, obstacles, channels, margin, step, separation)
                 column_in = self._free_column(entry_x, p2.y(), y, -1.0, obstacles, channels, margin, step, separation)
                 route = _consider([
@@ -457,7 +459,7 @@ class PipeItem(QGraphicsPathItem):
                 if route is not None:
                     return route[1:-1]
 
-        # 3) Nothing is completely free: keep the least colliding route rather than a blind one.
+        # 3) Nothing is completely free: keep the least colliding route.
         if best_route is not None:
             return best_route[1:-1]
         mid_x = (p1.x() + p2.x()) / 2.0 + lane
@@ -468,7 +470,7 @@ class PipeItem(QGraphicsPathItem):
         if not self.scene(): 
             return crossings
         x, y_min, y_max = v_start.x(), min(v_start.y(), v_end.y()), max(v_start.y(), v_end.y())
-        # Use BSP tree to only check items in the segment's vicinity
+        # The BSP tree restricts the check to the items near the segment.
         rect = QRectF(x - 1, y_min, 2, y_max - y_min)
         for item in self.scene().items(rect):
             if isinstance(item, PipeItem) and item != self:
@@ -490,7 +492,7 @@ class PipeItem(QGraphicsPathItem):
                     if abs(pos.y() - p1.y()) <= eps: 
                         return i, True
             else: 
-                # Verttical
+                # Vertical
                 if min(p1.y(), p2.y()) - eps <= pos.y() <= max(p1.y(), p2.y()) + eps:
                     if abs(pos.x() - p1.x()) <= eps: 
                         return i, False
@@ -506,7 +508,7 @@ class PipeItem(QGraphicsPathItem):
         else: self.gizmo.setVisible(False)
 
     def clean_loops(self) -> None:
-        # Disable loop cleaning for self connections to prevent erratic behavior
+        # Loop cleaning is disabled for self connections.
         if self.source_port and self.target_port:
             if not isValid(self.source_port) or not isValid(self.target_port):
                 return
@@ -525,7 +527,7 @@ class PipeItem(QGraphicsPathItem):
             for j in range(i + 2, len(pts) - 1):
                 res, ipt = l1.intersects(QLineF(pts[j], pts[j+1]))
                 if res == QLineF.BoundedIntersection:
-                    # To maintain Manhattan parity, we must insert an even number of pivots.
+                    # Manhattan parity requires an even number of pivots.
                     self.pivots = self.pivots[:i] + [ipt, ipt] + self.pivots[j:]
                     self.update_path(); return
 
@@ -551,7 +553,7 @@ class PipeItem(QGraphicsPathItem):
         src_node = self.source_port.parentItem().parentItem() if self.source_port else None
         dst_node = self.target_port.parentItem().parentItem() if self.target_port else None
         is_self = (src_node == dst_node and src_node is not None)
-        # Default self-connection has 4 pivots. We shouldn't reduce below this.
+        # A self connection has 4 pivots and is never reduced below that.
         if is_self and len(self.pivots) <= 4:
             return 
         if len(self.pivots) > 2:
@@ -576,7 +578,7 @@ class PipeItem(QGraphicsPathItem):
                 RemoveEdgeCommand(self.scene().model, self.model)
             )
         elif self.scene() and isValid(self.scene()):
-            # Fallback if no model (temp pipes etc, though they shouldn't call this)
+            # Fallback for a pipe without a model (temporary pipes).
             self.scene().removeItem(self)
 
     def shape(self) -> QPainterPath:
@@ -657,7 +659,7 @@ class PipeItem(QGraphicsPathItem):
         pen.setWidth(STYLES.get_val('pipe', 'active_width') if is_active else STYLES.get_val('pipe', 'width'))
         painter.setPen(pen)
         painter.drawPath(self.path())
-        # Draw clear port stubs so it's visually obvious the port is in use
+        # Port stubs, drawn so that a port in use is visible.
         if self.full_pts:
             stub_len = 10.0
             p1 = self.full_pts[0]
@@ -666,7 +668,7 @@ class PipeItem(QGraphicsPathItem):
             painter.setPen(stub_pen)
             p1_dir = -1.0 if (self.source_port and self.source_port.model.is_input) else 1.0
             p2_dir = -1.0 if (self.target_port and self.target_port.model.is_input) else 1.0
-            # If target_port is missing (during temp creation or somehow detached), default to input behavior (-1)
+            # A missing target_port (a temporary or detached pipe) defaults to input behaviour (-1).
             painter.drawLine(p1, QPointF(p1.x() + (stub_len * p1_dir), p1.y()))
             painter.drawLine(p2, QPointF(p2.x() + (stub_len * p2_dir), p2.y()))
             # Draw directional arrows

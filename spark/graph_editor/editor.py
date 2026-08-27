@@ -32,8 +32,6 @@ from spark.graph_editor.styles import resources as icons
 
 logger = logging.getLogger('spark')
 
-#from debug import register_debug_port_types, populate_debug_graph
-
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
@@ -48,9 +46,8 @@ class EditorDocument:
     view: GraphView
     session_path: pathlib.Path | None = None
     model_path: pathlib.Path | None = None
-    # NOTE: Two sessions can legitimately carry the same name (the same file imported twice). The window
-    # hands each one a copy number so the tabs stay tellable apart, and it is kept here so that a number,
-    # once given, does not move under the user when another tab closes.
+    # NOTE: Two sessions can carry the same name (the same file opened twice). The window hands each one a
+    # copy number, kept here so that a number, once given, does not change when another tab closes.
     copy_index: int = 0
     copy_name: str = ''
 
@@ -68,8 +65,8 @@ class EditorDocument:
 
     @property
     def is_modified(self) -> bool:
-        # NOTE: A stack still reports its clean state while the document it belongs to is being destroyed,
-        # so the C++ side is asked before it is trusted.
+        # NOTE: A stack still reports its clean state while the document it belongs to is destroyed, so the
+        # C++ side is asked first.
         try:
             stack = self.model.undo_stack
             return isValid(stack) and not stack.isClean()
@@ -94,14 +91,12 @@ class SparkGraphEditor:
 
     def __init__(self) -> None:
 
-        # Check if the editor was launched in the CLI or is using IPykernel
         self._is_interactive = 'ipykernel' in sys.modules
         if self._is_interactive:
-            # Integrate Qt event loop to avoid the %gui qt in the terminal
+            # Integrating the Qt event loop avoids the %gui qt magic in the terminal.
             from IPython import get_ipython
             get_ipython().enable_gui('qt')
 
-        # QApplication instance.
         self.app = QApplication.instance()
         if self.app is None:
             self.app = QApplication(sys.argv)
@@ -112,21 +107,15 @@ class SparkGraphEditor:
         """
             Creates and shows the editor window without blocking.
         """
-        # If a previous window exists, explicitly delete it (safe)
         if self.window is not None:
             self.window.close()
             self.window.deleteLater()
             del self.window
 
-        # Set app style
         STYLES.init()
         STYLES.reloaded.connect(lambda app=self.app: STYLES.apply(app))
         STYLES.apply(self.app)
 
-        # Ask for controller type
-        #controller_type = self.set_session_controller_type(True)
-        #if controller_type is not None:self._scene
-        # Create base window.
         self.window = GraphEditorWindow()
         self.window.windowClosed.connect(self.exit_editor)
         
@@ -140,12 +129,11 @@ class SparkGraphEditor:
 
         self.window.showMaximized()
 
-        # Start loop
         self.app.exec_()
     
     def exit_editor(self,) -> None:
         """
-            Exit editor.
+            Exits the editor.
         """
         self.app.quit()
 
@@ -159,13 +147,11 @@ class GraphEditorWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle('Spark Graph Editor')
         self.setDockNestingEnabled(True)
-        # Central Canvas (Graph Editor)
-        # NOTE: The editor holds several models at once, one per tab. The canvas only becomes available once
-        # the user picks a controller, since it dictates the palette and the exported configuration.
+        # The editor holds several models at once, one per tab. The canvas becomes available once a controller
+        # is picked, which dictates the palette and the exported configuration.
         self._documents: list[EditorDocument] = []
-        # Stand in for "no document open", so the rest of the window can always ask the current graph
-        # something without checking first. It carries no profile, which is what disables the document
-        # actions.
+        # Stands in for "no document open", so the rest of the window can query the current graph without
+        # checking first. It carries no profile, which disables the document actions.
         self._empty_scene = GraphScene()
         self._undo_group = QUndoGroup(self)
         self._tabs = QTabWidget()
@@ -178,7 +164,7 @@ class GraphEditorWindow(QMainWindow):
         self._tabs.tabBar().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._tabs.tabBar().customContextMenuRequested.connect(self._on_tab_menu_requested)
         # NOTE: Cycling is a window shortcut rather than the tab widget's own, which only answers while the
-        # canvas has the focus. Coming back from the inspector and pressing Ctrl+Tab has to work.
+        # canvas has the focus.
         QShortcut(QKeySequence('Ctrl+Tab'), self, activated=lambda: self._cycle_document(1))
         QShortcut(QKeySequence('Ctrl+Shift+Tab'), self, activated=lambda: self._cycle_document(-1))
         self._start_view = StartView()
@@ -189,7 +175,6 @@ class GraphEditorWindow(QMainWindow):
         self._stack.addWidget(self._start_view)
         self._stack.addWidget(self._tabs)
         self.setCentralWidget(self._stack)
-        # Setup Status Bar
         self._statusBar = QStatusBar()
         self._statusBar.setObjectName('statusBar')
         self.setStatusBar(self._statusBar)
@@ -201,11 +186,9 @@ class GraphEditorWindow(QMainWindow):
         self._controller_label = QLabel('')
         self._controller_label.setObjectName('statusControllerLabel')
         self._statusBar.addPermanentWidget(self._controller_label)
-        # Setup Docks
         self._setup_docks()
-        # Connect double-click on hierarchy to canvas centering
         self.dock_hierarchy.widget().node_double_clicked.connect(self._center_on_node)
-        # Setup menus (must be after docks so they can be toggled)
+        # Menus, set up after the docks so they can be toggled.
         self._setup_menus()
         self._update_document_state()
         self._register_library()
@@ -216,8 +199,8 @@ class GraphEditorWindow(QMainWindow):
     # Documents
     #-------------------------------------------------------------------------------------------------------#
 
-    # NOTE: The window works on "the current document". Exposing its parts as properties keeps every action
-    # (saving, exporting, importing, the inspector) written against one graph, with no idea that others exist.
+    # The window works on "the current document". Its parts are exposed as properties, so that every action
+    # (saving, exporting, importing, the inspector) is written against a single graph.
 
     @property
     def document(self) -> EditorDocument | None:
@@ -311,9 +294,9 @@ class GraphEditorWindow(QMainWindow):
 
     def _refresh_tab(self, document: EditorDocument | None = None) -> None:
         """
-            Relabels every tab. The label of one depends on the others, so they are always done together.
+            Relabels every tab. The label of one depends on the others, so they are done together.
         """
-        # NOTE: The clean state of a stack can still be reported while a document is being torn down.
+        # NOTE: Tabs and stacks still answer while the window is torn down, so the C++ side is checked.
         if not isValid(self._tabs):
             return
         taken: dict[str, set[int]] = {}
@@ -393,7 +376,7 @@ class GraphEditorWindow(QMainWindow):
         self._refresh_inspector()
 
     def closeEvent(self, event) -> None:
-        # NOTE: Every open session gets its say before the window goes away.
+        # Every open session is offered a chance to save before the window goes away.
         while self._documents:
             if not self.close_document(self._tabs.currentIndex() if self._tabs.currentIndex() >= 0 else 0):
                 event.ignore()
@@ -412,7 +395,7 @@ class GraphEditorWindow(QMainWindow):
         """
             Rebuilds the inspector even when the selection did not move.
 
-            Choosing a controller, or adopting settings from a file, changes what "nothing selected" means.
+            Choosing a controller, or adopting settings from a file, changes what "nothing selected" shows.
         """
         self.dock_inspector.widget().invalidate()
         self._on_selection_changed()
@@ -421,7 +404,6 @@ class GraphEditorWindow(QMainWindow):
         if not isValid(self._scene): 
             return
         selected_nodes = [item.model for item in self._scene.selectedItems() if isinstance(item, NodeItem)]
-        # If exactly one node is selected, show it in the inspector
         if len(selected_nodes) == 1:
             self.dock_inspector.widget().set_node(selected_nodes[0], self._scene.model)
         else:
@@ -433,7 +415,7 @@ class GraphEditorWindow(QMainWindow):
         return label
 
     def _setup_docks(self) -> None:
-        # Set corners so left and right docks extend to the bottom, sandwiching the console
+        # The corners let the left and right docks extend to the bottom, around the console.
         self.setCorner(Qt.Corner.BottomLeftCorner, Qt.DockWidgetArea.LeftDockWidgetArea)
         self.setCorner(Qt.Corner.BottomRightCorner, Qt.DockWidgetArea.RightDockWidgetArea)
         # Left: Hierarchy
@@ -463,8 +445,8 @@ class GraphEditorWindow(QMainWindow):
 
     def _setup_menus(self) -> None:
         menubar = self.menuBar()
-        # NOTE: Menus are kept as attributes so they stay addressable from code without going through the
-        # menu bar (reaching them through temporaries invalidates the PySide wrapper).
+        # NOTE: Menus are kept as attributes to stay addressable from code without going through the menu
+        # bar. Reaching them through temporaries invalidates the PySide wrapper.
         # File Menu
         self._file_menu = file_menu = menubar.addMenu('&File')
         new_action = QAction('New Session', self)
@@ -477,8 +459,7 @@ class GraphEditorWindow(QMainWindow):
         load_action.triggered.connect(lambda _checked=False: self.load_session())
         file_menu.addAction(load_action)
         self._recent_menu = file_menu.addMenu('Open Recent')
-        # NOTE: Rebuilt every time it is shown. The list changes from anywhere in the window, and a menu that
-        # is only correct until the next save is worse than no menu.
+        # Rebuilt every time it is shown: the list changes from anywhere in the window.
         self._recent_menu.aboutToShow.connect(self._refresh_recent_menu)
         save_action = QAction('Save Session', self)
         save_action.setShortcut('Ctrl+S')
@@ -489,8 +470,8 @@ class GraphEditorWindow(QMainWindow):
         save_as_action.triggered.connect(lambda _checked=False: self.save_session_as())
         file_menu.addAction(save_as_action)
         file_menu.addSeparator()
-        # NOTE: A session is work in progress and always saves. A model is a finished controller and only
-        # exports once the graph describes something the framework can instantiate.
+        # A session is work in progress and always saves. A model is a finished controller and only exports
+        # once the graph describes something the framework can instantiate.
         export_action = QAction('Export Model', self)
         export_action.triggered.connect(lambda _checked=False: self.export_model())
         file_menu.addAction(export_action)
@@ -524,7 +505,7 @@ class GraphEditorWindow(QMainWindow):
         file_menu.addAction(quit_action)
         # Edit Menu
         self._edit_menu = edit_menu = menubar.addMenu('&Edit')
-        # NOTE: The actions come from the group, so they always drive the stack of the current document.
+        # The actions come from the group, so they drive the stack of the current document.
         undo_action = self._undo_group.createUndoAction(self, '&Undo')
         undo_action.setShortcut('Ctrl+Z')
         edit_menu.addAction(undo_action)
@@ -551,7 +532,7 @@ class GraphEditorWindow(QMainWindow):
         """
             Starts a new model. The controller is asked for whenever it was not provided.
         """
-        # Guard against signals that carry an unrelated payload (e.g. QAction.triggered(bool)).
+        # Guards against a signal carrying an unrelated payload (e.g. QAction.triggered(bool)).
         if not isinstance(profile, ControllerProfile):
             profile = None
         if profile is None:
@@ -561,7 +542,7 @@ class GraphEditorWindow(QMainWindow):
             profile = dialog.selected_profile
         if not isinstance(profile, ControllerProfile):
             return
-        # NOTE: A new session is always a new tab. The one being edited is never replaced.
+        # A new session is always a new tab, the one being edited is never replaced.
         document = self.add_document()
         document.model.clear()
         document.model.set_profile(profile, force=True)
@@ -583,12 +564,9 @@ class GraphEditorWindow(QMainWindow):
         """
             The current tab when nothing has been done to it yet.
 
-            Opening a file fills the session being edited whenever that session is still empty, exactly as it
-            did before tabs existed, and only opens another tab once there is something to preserve. Having
-            picked a controller does not count as work: the file brings its own. Anything on the canvas, a
-            file name, or an edit that reached the undo stack (the controller settings among them) does.
-
-            Creating a new session never reuses anything: the user asked for another document.
+            Opening a file fills the session being edited while that session is still empty, and opens another
+            tab once there is something to preserve. Picking a controller does not count as work, since the file
+            brings its own. Anything on the canvas, a file name, or an edit that reached the undo stack does.
         """
         document = self.document
         if document is None:
@@ -615,7 +593,6 @@ class GraphEditorWindow(QMainWindow):
         """
         profile = self._scene.model.profile
         has_document = profile is not None and self.document is not None
-        # Canvas or start screen.
         if not has_document:
             self._start_view.set_recent_files(recent_files.recent_files())
         self._stack.setCurrentWidget(self._tabs if has_document else self._start_view)
@@ -629,7 +606,6 @@ class GraphEditorWindow(QMainWindow):
         else:
             self._controller_icon.clear()
             self._controller_label.setText('')
-        # Document dependent actions.
         for action in getattr(self, '_document_actions', []):
             action.setEnabled(has_document)
         if hasattr(self, '_controller_action'):
@@ -639,9 +615,9 @@ class GraphEditorWindow(QMainWindow):
     # Sessions and models
     #-------------------------------------------------------------------------------------------------------#
 
-    # NOTE: A session (.sge) is the document being edited: it always saves, however incomplete it is, and it
-    # remembers where the nodes are. A model (.scfg) is the finished controller handed to the framework: it
-    # only exports when the graph describes something that can actually be instantiated.
+    # A session (.sge) is the document being edited: it always saves, however incomplete it is, and it
+    # remembers where the nodes are. A model (.scfg) is the finished controller handed to the framework,
+    # and only exports when the graph describes something that can be instantiated.
 
     def save_session(self) -> bool:
         if self._scene.model.profile is None:
@@ -653,8 +629,8 @@ class GraphEditorWindow(QMainWindow):
     def save_session_as(self) -> bool:
         if self._scene.model.profile is None:
             return False
-        # Passing None as parent detaches the dialog from the main window's Qt style tree,
-        # forcing the OS native dialog to be used instead.
+        # Passing None as parent detaches the dialog from the Qt style tree of the main window, which
+        # forces the native dialog of the OS.
         file_name, _ = QFileDialog.getSaveFileName(None, 'Save Session As', '', session_io.SESSION_FILTER)
         if not file_name:
             return False
@@ -668,7 +644,6 @@ class GraphEditorWindow(QMainWindow):
             return False
         self._session_path = written
         recent_files.remember(written)
-        # The tab drops its modified marker until the graph changes again.
         self._scene.model.undo_stack.setClean()
         self._update_document_state()
         self._statusBar.showMessage(f'Session saved to {written}')
@@ -676,7 +651,6 @@ class GraphEditorWindow(QMainWindow):
         return True
 
     def load_session(self) -> None:
-        # Passing None as parent forces the OS native dialog.
         file_name, _ = QFileDialog.getOpenFileName(None, 'Load Session', '', session_io.SESSION_FILTER)
         if not file_name:
             return
@@ -719,18 +693,26 @@ class GraphEditorWindow(QMainWindow):
         """
             Opens a file of either kind, telling them apart by their suffix.
 
-            NOTE: This is what the recent list hands back. A path that is gone is dropped from it rather than
-            reported as a failure of the editor: files move, and a stale menu entry is not news.
+            A path that is gone is dropped from the recent list rather than reported as an error.
         """
         path = pathlib.Path(path)
-        if not path.exists():
+        if not path.is_file():
             recent_files.forget(path)
-            self._refresh_recent_menu()
-            self._report_error('Unable to open the file', f'"{path}" is no longer there.')
+            self._refresh_recent()
+            message = f'"{path}" is no longer there, it was dropped from the recent files.'
+            self._statusBar.showMessage(message)
+            logging.getLogger('spark').warning(message)
             return False
         if path.suffix == session_io.MODEL_SUFFIX:
             return self.open_model_file(path)
         return self.load_session_file(path)
+
+    def _refresh_recent(self) -> None:
+        """
+            Brings the recent list up to date wherever it is shown, the menu and the start screen.
+        """
+        self._refresh_recent_menu()
+        self._start_view.set_recent_files(recent_files.recent_files())
 
     def _refresh_recent_menu(self) -> None:
         """
@@ -744,8 +726,7 @@ class GraphEditorWindow(QMainWindow):
             self._recent_menu.addAction(empty_action)
             return
         for path in paths:
-            # NOTE: The kind of file is worth showing. Both open, but one resumes work and the other starts
-            # a session from a finished model.
+            # The kind of file is shown: one resumes work, the other starts a session from a finished model.
             kind = 'model' if path.suffix == session_io.MODEL_SUFFIX else 'session'
             action = QAction(f'{path.stem}  ({kind})', self)
             action.setToolTip(str(path))
@@ -758,7 +739,7 @@ class GraphEditorWindow(QMainWindow):
 
     def _clear_recent(self) -> None:
         recent_files.clear()
-        self._start_view.set_recent_files([])
+        self._refresh_recent()
 
     def check_model(self) -> bool:
         """
@@ -790,8 +771,7 @@ class GraphEditorWindow(QMainWindow):
         """
             Opens a model as a session of its own.
 
-            NOTE: Opening is not importing. The question of adding the modules to the session being edited
-            belongs to "Import Model...", where the user came in with a session in mind.
+            Adding the modules to the session being edited is what "Import Model..." does instead.
         """
         path = pathlib.Path(path)
         try:
@@ -825,7 +805,7 @@ class GraphEditorWindow(QMainWindow):
         try:
             written = session_io.export_model(self._scene.model, path)
         except ValueError as error:
-            # An incomplete graph is not a failure of the editor, it is something the user still has to do.
+            # An incomplete graph is reported rather than raised.
             problems = str(error).splitlines()
             self._report_error(
                 'This model cannot be exported yet',
@@ -851,14 +831,12 @@ class GraphEditorWindow(QMainWindow):
         """
             Imports a model saved as a Spark configuration.
 
-            NOTE: A model can be opened as a session of its own, or its modules can be added to the session
-            being edited. The second is what importing a registered model does: a convenience that
-            pre-populates the controller, never a second controller.
+            A model can be opened as a session of its own, or its modules can be added to the session being
+            edited. Importing does the second, and never adds a second controller.
         """
         model = self._scene.model
         if model.profile is None:
             return
-        # Passing None as parent forces the OS native dialog.
         file_name, _ = QFileDialog.getOpenFileName(None, 'Import Model', '', session_io.MODEL_FILTER)
         if not file_name:
             return
@@ -874,41 +852,104 @@ class GraphEditorWindow(QMainWindow):
             return
         layout = session_io.model_layout(path)
         same_controller = source_profile is model.profile
+        # A model of another controller can still belong on the canvas: a Brain hosts Neurons, placed as a
+        # single node rather than as the modules they are made of.
+        hosted = model.profile.hosts(source_profile)
         if same_controller and not model.nodes:
             self._open_model_as_session(config, path, source_profile, layout=layout)
             return
-        choice = self._ask_import_mode(path, source_profile, allow_merge=same_controller)
+        choice = self._ask_import_mode(
+            path, source_profile, allow_merge=same_controller, allow_node=hosted,
+        )
         if choice == 'new':
             self._open_model_as_session(config, path, source_profile, layout=layout)
         elif choice == 'merge':
             self.view.import_config(config, label=path.stem, layout=layout)
+        elif choice == 'node':
+            self._add_model_as_node(config, path, source_profile)
 
-    def _ask_import_mode(self, path: pathlib.Path, source_profile: ControllerProfile, allow_merge: bool) -> str | None:
+    def _ask_import_mode(
+            self,
+            path: pathlib.Path,
+            source_profile: ControllerProfile,
+            allow_merge: bool,
+            allow_node: bool = False,
+        ) -> str | None:
         """
-            Asks whether a model should replace the session or be added to it.
+            Asks how a model should join the session.
         """
+        profile = self._scene.model.profile
         box = QMessageBox(self)
         box.setWindowTitle('Import Model')
         box.setText(f'"{path.name}" describes a {source_profile.label}.')
-        if allow_merge:
+        if allow_node:
+            box.setInformativeText(
+                f'Open it as a new session, or add it to the {profile.label} being edited as a single node?'
+            )
+        elif allow_merge:
             box.setInformativeText(
                 'Open it as a new session, or add its modules to the one being edited?'
             )
         else:
             box.setInformativeText(
-                f'The session being edited builds a {self._scene.model.profile.label}, so its modules cannot '
-                f'be added to it. It can be opened as a new session instead.'
+                f'The session being edited builds a {profile.label}, which does not hold a '
+                f'{source_profile.label}. It can be opened as a new session instead.'
             )
         new_button = box.addButton('New Session', QMessageBox.ButtonRole.AcceptRole)
+        node_button = box.addButton('Add as Node', QMessageBox.ButtonRole.ActionRole) if allow_node else None
         merge_button = box.addButton('Add to Session', QMessageBox.ButtonRole.ActionRole) if allow_merge else None
         box.addButton(QMessageBox.StandardButton.Cancel)
         box.exec()
         clicked = box.clickedButton()
         if clicked is new_button:
             return 'new'
+        if node_button is not None and clicked is node_button:
+            return 'node'
         if merge_button is not None and clicked is merge_button:
             return 'merge'
         return None
+
+    def _add_model_as_node(self, config, path: pathlib.Path, source_profile: ControllerProfile) -> None:
+        """
+            Places a model on the canvas as a single node.
+
+            A node needs a registered class, so the model is registered under the name of its file. A model
+            already registered under that name is reused rather than replaced.
+        """
+        from spark.core.registry import REGISTRY, register_neuron_from_config
+
+        namespace = source_profile.model_namespace
+        if namespace is None:
+            self._report_error(
+                'Unable to import the model', f'A {source_profile.label} cannot be placed as a node.',
+            )
+            return
+        subregistry = getattr(REGISTRY, namespace.name)
+        name = path.stem
+        entry = subregistry.get(name)
+        reused = entry is not None
+        if not reused:
+            try:
+                register_neuron_from_config(name, config)
+            except Exception as error:
+                self._report_error('Unable to import the model', f'{path.name}: {error}')
+                return
+            entry = subregistry.get(name)
+        if entry is None:
+            self._report_error('Unable to import the model', f'"{name}" could not be registered.')
+            return
+        try:
+            self.view.add_node_for(entry.get_cls(), label=f'Import {path.stem}')
+        except Exception as error:
+            self._report_error('Unable to import the model', f'{path.name}: {error}')
+            return
+        self._update_document_state()
+        self._refresh_inspector()
+        note = 'already registered, the available model was used' if reused else 'registered'
+        self._statusBar.showMessage(f'"{name}" added as a node ({note}).', 4000)
+        logging.getLogger('spark').log(
+            MessageLevel.SUCCESS.value, f'Model "{name}" added to the session as a node.',
+        )
 
     def _open_model_as_session(
             self,
@@ -950,9 +991,8 @@ class GraphEditorWindow(QMainWindow):
 
     def add_model_to_library(self) -> None:
         """
-            Takes a model file into the library, so that it is available to every model built from now on.
+            Takes a model file into the library, making it available to every model built from now on.
         """
-        # Passing None as parent forces the OS native dialog.
         file_name, _ = QFileDialog.getOpenFileName(
             None, 'Add Model to Library', '', session_io.MODEL_FILTER,
         )
@@ -984,7 +1024,7 @@ class GraphEditorWindow(QMainWindow):
 
     def open_preferences(self) -> None:
         dialog = PreferencesDialog(self)
-        # Applying without closing rebuilds the editor too, so the effect is visible while adjusting.
+        # Applying without closing rebuilds the editor, so the effect is visible while adjusting.
         dialog.applied.connect(self.reload_ui)
         dialog.exec()
 
@@ -999,7 +1039,7 @@ class GraphEditorWindow(QMainWindow):
             document.scene = GraphScene(document.model)
             document.view = GraphView(document.scene)
             document.scene.selectionChanged.connect(self._on_selection_changed)
-            # NOTE: The tab holds the view, so it is replaced in place to keep the order and the labels.
+            # The tab holds the view, so it is replaced in place to keep the order and the labels.
             self._tabs.removeTab(index)
             self._tabs.insertTab(index, document.view, document.title)
             old_view.deleteLater()

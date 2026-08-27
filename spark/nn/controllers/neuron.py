@@ -25,7 +25,7 @@ from spark.nn.controllers.base import ControllerConfig, ControllerMeta, Controll
 
 class NeuronMeta(ControllerMeta):
 	"""
-		Neuron metaclass.
+		Metaclass for `Neuron`.
 	"""
 	pass
 
@@ -34,7 +34,26 @@ class NeuronMeta(ControllerMeta):
 @register_config
 class NeuronConfig(ControllerConfig):
 	"""
-		Configuration class for Neuron's.
+		Configuration for `Neuron`.
+
+		Parameters
+		----------
+		modules_specs : tuple of ModuleSpecs
+			The components the neuron holds, and how their ports are wired.
+		units : tuple of int
+			Shape of the pool of neurons.
+		inhibitory_rate : float, default 0.2
+			Fraction of the pool that is inhibitory. Must lie in ``[0, 1]``.
+		seed : int, optional
+			Seed for the random draws of the neuron and its modules. Drawn from the operating
+			system when omitted.
+		dt : float, default 1.0
+			Integration step, in ms.
+
+		Notes
+		-----
+		``dt`` and ``units`` are handed down to every configuration the neuron contains, so a pool
+		is sized and clocked in one place. Both names are reserved for that purpose.
 	"""
 	units: tuple[int, ...] = dc.field(
 		metadata = {
@@ -68,9 +87,54 @@ class NeuronConfig(ControllerConfig):
 @register_module
 class Neuron(Controller, metaclass=NeuronMeta):
 	"""
-		Neuron model.
+		Pool of neurons built from components.
 
-		A neuron is a pipeline object used to represent and coordinate a collection of neurons and interfaces.
+		A neuron holds the components one neuron model is made of, such as delays, synapses, a
+		soma and a plasticity rule, and steps them in dependency order within a single timestep.
+		A module therefore reads what the modules before it produced on the same step, rather than
+		on the previous one.
+
+		Because the step is ordered, a cycle in the wiring can only be resolved if the module
+		closing it declares a recurrent contract, which states what its outputs look like before
+		it has run.
+
+		Parameters
+		----------
+		config : NeuronConfig
+				Controller configuration. Its fields may also be given as keyword arguments.
+
+		Input Ports
+		-----------
+		**inputs : SparkPayload
+			Derived from the modules: a module input wired to ``__call__`` becomes an input port of
+			the controller, under the name the port map gives it.
+
+		Output Ports
+		------------
+		**outputs : SparkPayload
+			Derived from the modules: a module output named in ``outputs`` becomes an output port of
+			the controller.
+
+		Properties
+		----------
+		inhibition_mask : BooleanMask
+			Marks the inhibitory units of the pool. Read only, and supplied to any module declaring
+			an ``inhibition_mask`` input without being wired.
+
+		Notes
+		-----
+		Which units are inhibitory is a property of the pool, not of the module that emits the
+		spikes. The mask is drawn once from ``inhibitory_rate`` and handed to any module declaring
+		an ``inhibition_mask`` input, without being wired. From there the spikes carry the
+		distinction themselves. A declared connection takes precedence.
+
+		``inhibition_mask`` is exposed as a read-only property, so it can be read by the graph but
+		not written.
+
+		See Also
+		--------
+		Brain : Controller that steps its modules against a cache of the previous step.
+		LIFNeuron : Prebuilt leaky integrate-and-fire neuron.
 	"""
 	config: NeuronConfig
 
@@ -139,6 +203,21 @@ class Neuron(Controller, metaclass=NeuronMeta):
 	def inhibition_mask(self,) -> BooleanMask:
 		return BooleanMask(self._inhibition_mask.value)
 
+	def _implicit_inputs(self, module_name: str) -> dict[str, SparkPayload]:
+		"""
+			Supplies the inhibition mask to any module that declares it.
+
+			Which units of the pool are inhibitory is a property of the neuron, not of the
+			module that emits the spikes, so it is not wired. A module that declares an
+			"inhibition_mask" input receives it here and stamps it onto the spikes it emits;
+			from that point the spikes are signed and the rest of the graph carries the
+			distinction on its own. A declared connection still takes precedence.
+		"""
+		module = getattr(self, module_name)
+		if 'inhibition_mask' not in type(module)._get_input_specs():
+			return {}
+		return {'inhibition_mask': BooleanMask(self._inhibition_mask.value)}
+
 	def build(self, **abc_args: SparkPayload) -> None:
 		# Get build order.
 		self._order = self._execution_order(self._modules_specs)
@@ -147,7 +226,20 @@ class Neuron(Controller, metaclass=NeuronMeta):
 
 	def __call__(self, **inputs: SparkPayload) -> dict[str, SparkPayload]:
 		"""
-			Update neuron's states.
+			Advances every module one step, in dependency order.
+
+			A module reads what the modules before it produced on this same step. Effects are applied
+			once every module has run.
+
+			Parameters
+			----------
+			**inputs : SparkPayload
+				One entry per input port of the neuron, as derived from the modules.
+
+			Returns
+			-------
+			dict of str to SparkPayload
+				One entry per output port of the neuron, as derived from the modules.
 		"""
 		# Iterate over execution order groups
 		outputs = {}
@@ -169,13 +261,19 @@ class Neuron(Controller, metaclass=NeuronMeta):
 						else:
 							input_args_list.append(outputs[port_map.origin][port_map.port])
 					input_args[port_name] = self._concatenate_payloads(input_args_list)
+				for port_name, value in self._implicit_inputs(name).items():
+					input_args.setdefault(port_name, value)
 				outputs[name] = getattr(self, name)(**input_args)
 		# Compute effects
 		# TODO: Currently effects require the ports to be defined inside a list. This is probably not desirable.
 		for name, effects in self._modules_effects_map.items():
 			for property_name, ports_list in effects.items():
 				port_map = ports_list[0]
-				setattr(getattr(self, name), property_name, outputs[port_map.origin][port_map.port])
+				if port_map.is_property:
+					value = getattr(getattr(self, port_map.origin), port_map.port)
+				else:
+					value = outputs[port_map.origin][port_map.port]
+				setattr(getattr(self, name), property_name, value)
 		# Gather output
 		return {
 			name: outputs[origin][port] for name, origin, port in self._contoller_output_map 

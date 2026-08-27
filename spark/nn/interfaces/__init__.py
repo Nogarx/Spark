@@ -5,6 +5,11 @@ from spark.nn.interfaces.base import Interface, InterfaceConfig
 from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceConfig, ControlInterfaceOutput
 from spark.nn.interfaces.control.concat import Concat, ConcatConfig, ConcatReshape, ConcatReshapeConfig
 from spark.nn.interfaces.control.sampler import Sampler, SamplerConfig
+from spark.nn.interfaces.control.trace import (
+    SignalTrace, SignalTraceConfig, SignalTraceOutput,
+    SignalAccumulator, SignalAccumulatorConfig,
+    SignalAverage, SignalAverageConfig,
+)
 
 # Input
 from spark.nn.interfaces.input.base import InputInterface, InputInterfaceConfig, InputInterfaceOutput
@@ -27,6 +32,9 @@ __all__ = [
     'Concat', 'ConcatConfig', 
     'ConcatReshape', 'ConcatReshapeConfig', 
     'Sampler', 'SamplerConfig', 
+    'SignalTrace', 'SignalTraceConfig', 'SignalTraceOutput', 
+    'SignalAccumulator', 'SignalAccumulatorConfig', 
+    'SignalAverage', 'SignalAverageConfig', 
     # Input
     'OutputInterface', 'OutputInterfaceConfig', 'OutputInterfaceOutput',
     'ExponentialIntegrator', 'ExponentialIntegratorConfig',

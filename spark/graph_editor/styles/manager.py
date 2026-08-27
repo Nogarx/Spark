@@ -41,14 +41,12 @@ class StyleManager(QObject):
         """
             Gives QSettings somewhere to write.
 
-            NOTE: Without an organisation and an application name, QSettings falls back to
-            "Unknown Organization/PySideApp" and reports an access error, so a chosen style was applied for
-            the session and silently forgotten on the next launch.
-
-            NOTE: The name is set rather than defaulted. Qt derives it from the program that was started, so
-            leaving it alone files the settings under whatever launched the editor ("test.ipynb", "-c", a
-            script name), and a style or a recent file chosen from one launcher would be invisible from
-            another. The editor is one application wherever it is started from.
+            Notes
+            -----
+            Without an organisation and an application name QSettings falls back to
+            "Unknown Organization/PySideApp" and reports an access error. The name is set rather than
+            defaulted: Qt derives it from the program that was started, which would file the settings under
+            whatever launched the editor ("test.ipynb", "-c", a script name).
         """
         QCoreApplication.setOrganizationName('Spark')
         QCoreApplication.setApplicationName('SparkGraphEditor')
@@ -94,8 +92,7 @@ class StyleManager(QObject):
 
     def stylesheet(self) -> str:
         if self._qss is None:
-            # NOTE: The stylesheet ships with the editor, only its values are configurable. Looking for it
-            # next to the active configuration broke as soon as a custom style was saved anywhere else.
+            # The stylesheet ships with the editor, only its values are configurable.
             path = self._default_path.parent / 'app.qss'
             self._qss = Template(path.read_text()).safe_substitute(self._flatten_tokens())
         return self._qss
@@ -128,7 +125,6 @@ class StyleManager(QObject):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-# Global access
 STYLES = StyleManager()
 
 #################################################################################################################################################

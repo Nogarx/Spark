@@ -32,15 +32,26 @@ from spark.core.backend import Module
 
 def contract_tracer_args(axes: tuple[int, ...], shape: tuple[int, ...], **values: tp.Any) -> tuple[dict[str, tp.Any], bool]:
 	"""
-		Tries to contract tracer arguments in order to save memory.
+		Reduces the arguments of a tracer over the axes its output is summed on.
 
-		Args:
-			axes: tuple[int, ...], axes of shape the trace is summed over.
-			shape: tuple[int, ...], shape of the trace before reducing.
-			values: tp.Any, arguments of the tracer.
+		A tracer whose arguments are constant along the summed axes gives the same result when it
+		is applied to the summed value instead of to each entry, which holds far less state.
 
-		Returns:
-			tuple[dict[str, tp.Any], bool], the arguments and whether they were reduced.
+		Parameters
+		----------
+		axes : tuple of int
+			Axes the trace is summed over.
+		shape : tuple of int
+			Shape of the trace before the sum.
+		**values : Any
+			Arguments of the tracer.
+
+		Returns
+		-------
+		reduced : dict of str to Any
+			The arguments, contracted when possible.
+		contracted : bool
+			True when every argument was contracted, so the caller may build the smaller tracer.
 	"""
 	count = prod(shape[axis] for axis in axes)
 	contracted_values = {}
@@ -57,7 +68,19 @@ def contract_tracer_args(axes: tuple[int, ...], shape: tuple[int, ...], **values
 
 class BaseTracer(Module, abc.ABC):
 	"""
-		Base Tracer class
+		Base class for exponential traces.
+
+		A tracer holds a value that decays towards a base between calls and is driven by whatever
+		is passed in. Subclasses provide `_update`, which advances the trace one step.
+
+		Parameters
+		----------
+		shape : tuple of int
+			Shape of the trace.
+		dt : float, default 1.0
+			Integration step, in ms.
+		dtype : DTypeLike, optional
+			Dtype of the trace.
 	"""
 
 	def __init__(
@@ -105,8 +128,30 @@ class BaseTracer(Module, abc.ABC):
 #################################################################################################################################################
 
 class Tracer(BaseTracer):
-	"""
-		Multipurpose exponential tracer.
+	r"""
+		Single exponential trace.
+
+		Parameters
+		----------
+		shape : tuple of int
+			Shape of the trace.
+		tau : jax.Array or float
+			Decay constant, in ms.
+		scale : jax.Array or float, default 1
+			Factor applied to the incoming value.
+		base : jax.Array or float, default 0
+			Value the trace decays towards.
+
+		Notes
+		-----
+		With :math:`\lambda = 1 - \exp(-\Delta t / \tau)`,
+
+		.. math::
+			T \leftarrow T + \lambda (T_{\mathrm{base}} - T) + c \, x
+
+		See Also
+		--------
+		RDTracer : Difference of two exponentials.
 	"""
 
 	def __init__(
@@ -146,10 +191,39 @@ class Tracer(BaseTracer):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class RDTracer(BaseTracer):
-	"""
-		Rise-Decay Tracer.
+	r"""
+		Rise-and-decay trace.
 
-		Multipurpose double exponential tracer.
+		The difference of two single exponentials, which rises over ``tau_rise`` and falls over
+		``tau_decay`` instead of jumping on the step a value arrives.
+
+		Parameters
+		----------
+		shape : tuple of int
+			Shape of the trace.
+		tau_rise : jax.Array or float
+			Rise constant, in ms.
+		tau_decay : jax.Array or float
+			Decay constant, in ms.
+		scale_rise, scale_decay : jax.Array or float, default 1
+			Factors applied to the incoming value in each component.
+		base_rise, base_decay : jax.Array or float, default 0
+			Values each component decays towards.
+
+		Notes
+		-----
+		The rise constant is coupled to the decay constant as
+
+		.. math::
+			\tau_r' = \frac{\tau_r \tau_d}{\tau_r + \tau_d}
+
+		which keeps the peak at the intended height as the two constants approach each other. The
+		trace is the decay component minus the rise component.
+
+		See Also
+		--------
+		Tracer : Single exponential.
+		RFSTracer : Rise with a fast and a slow decay.
 	"""
 
 	def __init__(
@@ -195,10 +269,35 @@ class RDTracer(BaseTracer):
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class RFSTracer(BaseTracer):
-	"""
-		Rise-Fast-Slow Tracer
+	r"""
+		Rise, fast decay and slow decay trace.
 
-		Multipurpose triple exponential tracer.
+		A blend of two `RDTracer` traces that share a rise constant and differ in their decay
+		constants, so one input leaves both a fast transient and a slow tail.
+
+		Parameters
+		----------
+		shape : tuple of int
+			Shape of the trace.
+		alpha : jax.Array or float
+			Weight of the fast component. The slow component takes ``1 - alpha``.
+		tau_rise : jax.Array or float
+			Rise constant shared by both components, in ms.
+		tau_fast_decay, tau_slow_decay : jax.Array or float
+			Decay constants of the two components, in ms.
+		scale_rise, scale_fast_decay, scale_slow_decay : jax.Array or float, default 1
+			Factors applied to the incoming value.
+		base_rise, base_fast_decay, base_slow_decay : jax.Array or float, default 0
+			Values each component decays towards.
+
+		Notes
+		-----
+		.. math::
+			T = \alpha T_{\mathrm{fast}} + (1 - \alpha) T_{\mathrm{slow}}
+
+		See Also
+		--------
+		RDTracer : One rise and one decay constant.
 	"""
 
 	def __init__(

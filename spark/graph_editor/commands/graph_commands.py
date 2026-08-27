@@ -61,7 +61,7 @@ class RemoveNodeCommand(QUndoCommand):
         self.node_model = node_model
         self.associated_edges = []
         
-        # Identify all edges connected to this node
+        # Edges connected to this node.
         for port in node_model.get_all_ports():
             for edge in port.edges:
                 if edge not in self.associated_edges:
@@ -74,7 +74,7 @@ class RemoveNodeCommand(QUndoCommand):
         logger.info(f'Undo: Restored node "{self.node_model.name}" and {len(self.associated_edges)} edges')
 
     def redo(self) -> None:
-        # Edges are automatically removed by graph_model.remove_node
+        # graph_model.remove_node removes the edges on its own.
         self.graph_model.remove_node(self.node_model)
         logger.info(f'Removed node "{self.node_model.name}"')
 
@@ -147,7 +147,7 @@ class RenameNodeCommand(QUndoCommand):
     def mergeWith(self, command) -> bool:
         if command.id() != self.id():
             return False
-        # Merge by updating the new name, keeping the original old_name
+        # Merging keeps the original old_name and takes the new name.
         self.new_name = command.new_name
         return True
 

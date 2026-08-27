@@ -22,9 +22,26 @@ from spark.nn.components.plasticity.hebbian_rule import HebbianRule, HebbianRule
 @register_config
 class AdExNeuronConfig(NeuronConfig):
 	"""
-        Standard Adaptive Exponential (AdEx) neuron model with traced synapses, neuron-to-neuron delays and Hebbian learning.
-		
-		NOTE: Parameter calibration is still necessary.
+		Configuration for `AdExNeuron`.
+
+		Parameters
+		----------
+		modules_specs : tuple of ModuleSpecs
+			The four components listed under `AdExNeuron`, prewired. Replace an entry to swap a
+			component, or edit its configuration to retune one.
+		units : tuple of int
+			Shape of the pool of neurons.
+		inhibitory_rate : float, default 0.2
+			Fraction of the pool that is inhibitory.
+		seed : int, optional
+			Seed for the random draws of the neuron and its modules.
+		dt : float, default 1.0
+			Integration step, in ms.
+
+		Notes
+		-----
+		The default parameters of the components have not been calibrated against any particular
+		dataset or firing regime.
 	"""
 	
 	modules_specs: tuple[ModuleSpecs, ...] = dc.field(
@@ -50,18 +67,17 @@ class AdExNeuronConfig(NeuronConfig):
 				},
 				config = TracedSynapsesConfig.partial(),
 			),
-			# Leaky soma
+			# Exponential soma with a spike triggered and subthreshold adaptation current
 			ModuleSpecs(
 				name ='soma', 
 				module_cls = AdaptiveExponentialSoma, 
 				inputs = {
 					'current': [PortMap(origin='synapses', port='currents')],
-					'inhibition_mask': [PortMap(origin='__self__', port='inhibition_mask', is_property=True)],
 				},
 				outputs = {
 					'out_spikes': 'spikes', 
 				},
-				config = AdaptiveExponentialSomaConfig.partial(),
+				config = AdaptiveExponentialSomaConfig.partial(adaptation_delta=7.0),
 			),
 			# Hebbian plasticity
 			ModuleSpecs(
@@ -83,6 +99,46 @@ class AdExNeuronConfig(NeuronConfig):
 
 @register_neuron
 class AdExNeuron(Neuron):
+	"""
+		Adaptive exponential integrate-and-fire neuron with plastic synapses.
+
+		A prewired `Neuron` holding four components:
+
+		* ``delays``, an `N2NDelays` conduction delay, one per connection.
+		* ``synapses``, `TracedSynapses`, giving each spike an exponential postsynaptic current.
+		* ``soma``, an `AdaptiveExponentialSoma` with an adaptation current rising by 7 pA per
+		  spike.
+		* ``hebbian_rule``, a `HebbianRule` reading the delayed presynaptic spikes, the emitted
+		  spikes and the current weights.
+
+		The adaptation current subtracts from the input as the unit fires, which is the AdEx
+		mechanism behind spike-frequency adaptation and bursting.
+
+		Parameters
+		----------
+		config : AdExNeuronConfig, optional
+				Controller configuration. Its fields may also be given as keyword arguments.
+
+		Input Ports
+		-----------
+		in_spikes : SpikeArray
+			Spikes arriving at the pool.
+
+		Output Ports
+		------------
+		out_spikes : SpikeArray
+			Spikes emitted by the pool on this step.
+
+		Properties
+		----------
+		inhibition_mask : BooleanMask
+			Marks the inhibitory units of the pool. Read only.
+
+		See Also
+		--------
+		ALIFNeuron : Adaptation through the threshold rather than through a current.
+		LIFNeuron : Leaky soma without adaptation.
+	"""
 	config: AdExNeuronConfig
 
 #################################################################################################################################################

@@ -20,7 +20,14 @@ from spark.nn.initializers.base import Initializer, InitializerConfig
 @register_config
 class ConstantInitializerConfig(InitializerConfig):
     """
-        ConstantInitializer configuration class.
+        Configuration for `ConstantInitializer`.
+
+        Parameters
+        ----------
+        dtype : DTypeLike, default jnp.float16
+            Dtype of the produced array.
+        scale : int or float, default 1
+            The value every entry takes.
     """
     __class_ref__: tp.ClassVar[str] = 'ConstantInitializer'
 
@@ -29,18 +36,31 @@ class ConstantInitializerConfig(InitializerConfig):
 @register_initializer
 class ConstantInitializer(Initializer):
     """
-        Initializer that returns real uniformly-distributed random arrays.
+        Fills the array with one value: ``scale``.
 
-        Init:
-            scale: numeric, value for the output array (default = 1).
-
-        Input:
-            key: jax.Array, key for the random generator (jax.random.key).
-            shape: tuple[int, ...],shaoe fir the output array.
+        Parameters
+        ----------
+        config : ConstantInitializerConfig, optional
+            Initializer configuration. Its fields may also be given as keyword arguments.
     """
     config: ConstantInitializerConfig
 
     def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
+        """
+            Returns an array filled with ``scale``.
+
+            Parameters
+            ----------
+            key : jax.Array
+                PRNG key. Unused, and accepted only to match the initializer signature.
+            shape : tuple of int
+                Shape of the array.
+
+            Returns
+            -------
+            jax.Array
+                The array, cast to ``dtype``.
+        """
         array: jax.Array = self.config.scale * jnp.ones(shape, dtype=self.config.dtype)
         return array.astype(self.config.dtype)
 
@@ -49,7 +69,18 @@ class ConstantInitializer(Initializer):
 @register_config
 class UniformInitializerConfig(InitializerConfig):
     """
-        UniformInitializer configuration class.
+        Configuration for `UniformInitializer`.
+
+        Parameters
+        ----------
+        dtype : DTypeLike, default jnp.float16
+            Dtype of the produced array.
+        scale : int or float, default 1
+            Upper end of the range drawn from.
+        min_value : int or float or None, default None
+            Lower clip applied after drawing.
+        max_value : int or float or None, default None
+            Upper clip applied after drawing.
     """
     __class_ref__: tp.ClassVar[str] = 'UniformInitializer'
 
@@ -58,20 +89,40 @@ class UniformInitializerConfig(InitializerConfig):
 @register_initializer
 class UniformInitializer(Initializer):
     """
-        Initializer that returns real uniformly-distributed random arrays.
+        Draws every entry uniformly from ``[0, scale)``.
 
-        Init:
-            scale: numeric, multiplicative factor for the output array (default = 1).
-            min_value: numeric, minimum value for the output array (default = None).
-            max_value: numeric, maximum value for the output array (default = None).
+        Parameters
+        ----------
+        config : UniformInitializerConfig, optional
+            Initializer configuration. Its fields may also be given as keyword arguments.
 
-        Input:
-            key: jax.Array, key for the random generator (jax.random.key).
-            shape: tuple[int, ...],shaoe fir the output array.
+        Notes
+        -----
+        ``min_value`` and ``max_value`` clip the result, so they narrow the range rather than
+        shift it.
+
+        See Also
+        --------
+        SparseUniformInitializer : The same draw with a fraction of the entries zeroed.
     """
     config: UniformInitializerConfig
 
     def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
+        """
+            Draws every entry uniformly from ``[0, scale)``.
+
+            Parameters
+            ----------
+            key : jax.Array
+                PRNG key.
+            shape : tuple of int
+                Shape of the array to draw.
+
+            Returns
+            -------
+            jax.Array
+                The drawn array, clipped to ``[min_value, max_value]`` and cast to ``dtype``.
+        """
         array = self.config.scale * jax.random.uniform(key, shape)
         # Clip Min-Max
         array = jnp.clip(array, min=self.config.min_value, max=self.config.max_value)
@@ -82,7 +133,20 @@ class UniformInitializer(Initializer):
 @register_config
 class SparseUniformInitializerConfig(UniformInitializerConfig):
     """
-        SparseUniformInitializer configuration class.
+        Configuration for `SparseUniformInitializer`.
+
+        Parameters
+        ----------
+        dtype : DTypeLike, default jnp.float16
+            Dtype of the produced array.
+        scale : int or float, default 1
+            Upper end of the range drawn from.
+        density : float, default 0.2
+            Expected fraction of non-zero entries.
+        min_value : int or float or None, default None
+            Lower clip applied after drawing.
+        max_value : int or float or None, default None
+            Upper clip applied after drawing.
     """
     __class_ref__: tp.ClassVar[str] = 'SparseUniformInitializer'
 
@@ -101,23 +165,44 @@ class SparseUniformInitializerConfig(UniformInitializerConfig):
 @register_initializer
 class SparseUniformInitializer(UniformInitializer):
     """
-        Initializer that returns a real sparse uniformly-distributed random arrays.
-        
-        Note that the output will contain zero values even if min_value > 0.
+        Draws every entry uniformly, then zeroes a fraction of them.
 
-        Init:
-            scale: numeric, multiplicative factor for the output array (default = 1).
-            min_value: numeric, minimum value for the output array (default = None).
-            max_value: numeric, maximum value for the output array (default = None).
-            density: float, expected ratio of non-zero entries (default = 0.2).
+        Each entry is kept with probability ``density`` and set to zero otherwise, so the number
+        of non-zero entries varies between draws around its expected value.
 
-        Input:
-            key: jax.Array, key for the random generator (jax.random.key).
-            shape: tuple[int, ...],shaoe fir the output array.
+        Parameters
+        ----------
+        config : SparseUniformInitializerConfig, optional
+            Initializer configuration. Its fields may also be given as keyword arguments.
+
+        Notes
+        -----
+        The zeroing is applied before the clip, so a ``min_value`` above zero fills the zeroed
+        entries back in.
+
+        See Also
+        --------
+        NormalizedSparseUniformInitializer : The same draw, normalized along chosen axes.
     """
     config: SparseUniformInitializerConfig
 
     def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
+        """
+            Draws every entry uniformly, then zeroes a fraction of them.
+
+            Parameters
+            ----------
+            key : jax.Array
+                PRNG key. Split once, for the values and for the zeroing mask.
+            shape : tuple of int
+                Shape of the array to draw.
+
+            Returns
+            -------
+            jax.Array
+                The drawn array, with each entry kept with probability ``density``, clipped to
+                ``[min_value, max_value]`` and cast to ``dtype``.
+        """
         key1, key2 = jax.random.split(key, 2)
         # Get uniform array
         array = self.config.scale * jax.random.uniform(key1, shape)
@@ -133,7 +218,23 @@ class SparseUniformInitializer(UniformInitializer):
 @register_config
 class NormalizedSparseUniformInitializerConfig(SparseUniformInitializerConfig):
     """
-        NormalizedSparseUniformInitializer configuration class.
+        Configuration for `NormalizedSparseUniformInitializer`.
+
+        Parameters
+        ----------
+        dtype : DTypeLike, default jnp.float16
+            Dtype of the produced array. Must be a float type.
+        scale : int or float, default 1
+            Factor applied after normalization, so each normalized group sums to ``scale``.
+        density : float, default 0.2
+            Expected fraction of non-zero entries.
+        norm_axes : tuple of int, default (0,)
+            Axes the sums are taken over. Set by the module that requests the array; a synapse
+            passes its postsynaptic axes.
+        min_value : int or float or None, default None
+            Lower clip applied after normalization.
+        max_value : int or float or None, default None
+            Upper clip applied after normalization.
     """
     __class_ref__: tp.ClassVar[str] = 'NormalizedSparseUniformInitializer'
 
@@ -152,36 +253,62 @@ class NormalizedSparseUniformInitializerConfig(SparseUniformInitializerConfig):
 @register_initializer
 class NormalizedSparseUniformInitializer(SparseUniformInitializer):
     """
-        Initializer that returns a real sparse uniformly-distributed random arrays.
-        This is a variation of the SparseUniformInitializer that normalizes the array, which may be useful to prevent quiescent neurons.
-        Entries in the array are normalized by contracting the array over to the norm_axes and rescaled back to [min_value, max_value].
-        
-        Normalization example 
-        array -> ijk; 
-        norm_axes -> (i,k)
-        contraction = \'ijk->ik\'
-        sum(norm_array[i,:,k]) = 1
+        Sparse uniform draw normalized along chosen axes.
 
-        Note that the output will contain zero values even if min_value > 0.
+        `SparseUniformInitializer` followed by a division by the sum over ``norm_axes``, so every
+        group along those axes sums to ``scale``. For a synaptic kernel this fixes the total input
+        a postsynaptic unit receives, independent of how many presynaptic units survived the
+        sparsification.
 
-        Init:
-            scale: numeric, multiplicative factor for the output array (default = 1).
-            min_value: numeric, minimum value for the output array (default = None).
-            max_value: numeric, maximum value for the output array (default = None).
-            density: float, expected ratio of non-zero entries (default = 0.2).
-            norm_axes: tuple[int, ...], axes used for normalization (default = (0,)): 
+        Parameters
+        ----------
+        config : NormalizedSparseUniformInitializerConfig, optional
+            Initializer configuration. Its fields may also be given as keyword arguments.
 
-        Input:
-            key: jax.Array, key for the random generator (jax.random.key).
-            shape: tuple[int, ...], shape for the output array.
+        Raises
+        ------
+        ValueError
+            If the shape is one dimensional, or if ``norm_axes`` holds a repeated or
+            out-of-range axis.
+        TypeError
+            If ``dtype`` is not a float type.
 
-        Output:
-            jax.Array[dtype]
+        Notes
+        -----
+        A group that sums to zero is left as it is rather than divided.
+
+        See Also
+        --------
+        SparseUniformInitializer : The same draw, without normalization.
     """
     config: NormalizedSparseUniformInitializerConfig
 
     def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
         # Normalize
+        """
+            Draws a sparse uniform array normalized along ``norm_axes``.
+
+            Parameters
+            ----------
+            key : jax.Array
+                PRNG key. Split once, for the values and for the zeroing mask.
+            shape : tuple of int
+                Shape of the array to draw. Must have two dimensions or more.
+
+            Returns
+            -------
+            jax.Array
+                The drawn array, with every group along ``norm_axes`` summing to ``scale``, clipped
+                to ``[min_value, max_value]`` and cast to ``dtype``.
+
+            Raises
+            ------
+            ValueError
+                If ``shape`` is one dimensional, or if ``norm_axes`` holds a repeated or
+                out-of-range axis.
+            TypeError
+                If ``dtype`` is not a float type.
+        """
         num_dims = len(shape)
         # Sanity checks  
         if not num_dims > 1:

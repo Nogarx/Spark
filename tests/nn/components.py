@@ -46,6 +46,32 @@ data_test = [
     ),
     # Control interfaces
     (
+        spark.nn.interfaces.SignalAccumulator, 
+        {'signal': spark.FloatArray(jnp.array(np.random.rand(4,), dtype=jnp.float16)),}, 
+        {'tau': 5.0,}
+    ),
+    (
+        spark.nn.interfaces.SignalAccumulator, 
+        {
+            'signal': spark.FloatArray(jnp.array(np.random.rand(4,), dtype=jnp.float16)),
+            'trace': spark.FloatArray(jnp.array(np.random.rand(4,), dtype=jnp.float16)),
+        }, 
+        {'tau': 5.0,}
+    ),
+    (
+        spark.nn.interfaces.SignalAverage, 
+        {'signal': spark.FloatArray(jnp.array(np.random.rand(4,), dtype=jnp.float16)),}, 
+        {'tau': 5.0,}
+    ),
+    (
+        spark.nn.interfaces.SignalAverage, 
+        {
+            'signal': spark.FloatArray(jnp.array(np.random.rand(4,), dtype=jnp.float16)),
+            'trace': spark.FloatArray(jnp.array(np.random.rand(4,), dtype=jnp.float16)),
+        }, 
+        {'tau': 5.0,}
+    ),
+    (
         spark.nn.interfaces.Concat, 
         {f'input_{idx}': spark.FloatArray(jnp.array(np.random.rand(*s), dtype=jnp.float16)) for idx, s in enumerate([(5,5,5),(50,),(10,10)])}, 
         {},
@@ -109,27 +135,7 @@ data_test = [
         {'units':(2,3),}
     ),
     (
-        spark.nn.somas.RefractoryLeakySoma, 
-        {'current': spark.CurrentArray(jnp.array(np.random.rand(2,3), dtype=jnp.float16)),}, 
-        {'units':(2,3),}
-    ),
-    (
-        spark.nn.somas.AdaptiveLeakySoma, 
-        {'current': spark.CurrentArray(jnp.array(np.random.rand(2,3), dtype=jnp.float16)),}, 
-        {'units':(2,3),}
-    ),
-    (
         spark.nn.somas.ExponentialSoma, 
-        {'current': spark.CurrentArray(jnp.array(np.random.rand(2,3), dtype=jnp.float16)),}, 
-        {'units':(2,3),}
-    ),
-    (
-        spark.nn.somas.RefractoryExponentialSoma, 
-        {'current': spark.CurrentArray(jnp.array(np.random.rand(2,3), dtype=jnp.float16)),}, 
-        {'units':(2,3),}
-    ),
-    (
-        spark.nn.somas.AdaptiveExponentialSoma, 
         {'current': spark.CurrentArray(jnp.array(np.random.rand(2,3), dtype=jnp.float16)),}, 
         {'units':(2,3),}
     ),
@@ -137,6 +143,37 @@ data_test = [
         spark.nn.somas.IzhikevichSoma, 
         {'current': spark.CurrentArray(jnp.array(np.random.rand(2,3), dtype=jnp.float16)),}, 
         {'units':(2,3),}
+    ),
+    # Adaptive somas
+    (
+        spark.nn.somas.AdaptiveLeakySoma, 
+        {'current': spark.CurrentArray(jnp.array(np.random.rand(2,3), dtype=jnp.float16)),}, 
+        {'units':(2,3),}
+    ),
+    (
+        spark.nn.somas.AdaptiveLeakySoma, 
+        {'current': spark.CurrentArray(jnp.array(np.random.rand(2,3), dtype=jnp.float16)),}, 
+        {'units':(2,3), 'cooldown': 2.0}
+    ),
+    (
+        spark.nn.somas.AdaptiveLeakySoma, 
+        {'current': spark.CurrentArray(jnp.array(np.random.rand(2,3), dtype=jnp.float16)),}, 
+        {'units':(2,3), 'cooldown': 2.0, 'clamp_duration': 1.0, 'threshold_delta': 100.0, 'adaptation_delta': 7.0}
+    ),
+    (
+        spark.nn.somas.AdaptiveExponentialSoma, 
+        {'current': spark.CurrentArray(jnp.array(np.random.rand(2,3), dtype=jnp.float16)),}, 
+        {'units':(2,3), 'adaptation_delta': 7.0}
+    ),
+    (
+        spark.nn.somas.AdaptiveExponentialSoma, 
+        {'current': spark.CurrentArray(jnp.array(np.random.rand(2,3), dtype=jnp.float16)),}, 
+        {'units':(2,3), 'cooldown': 2.0, 'clamp_duration': 1.0, 'threshold_delta': 100.0, 'adaptation_delta': 7.0}
+    ),
+    (
+        spark.nn.somas.AdaptiveIzhikevichSoma, 
+        {'current': spark.CurrentArray(jnp.array(np.random.rand(2,3), dtype=jnp.float16)),}, 
+        {'units':(2,3), 'cooldown': 2.0, 'clamp_duration': 1.0, 'threshold_delta': 100.0, 'adaptation_delta': 7.0}
     ),
     # Learning rules
     (
@@ -193,9 +230,101 @@ data_test = [
         }, 
         {'units':(2,3),}
     ),
+    (
+    spark.nn.plasticity.QuadrupletRule, 
+        {
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+        }, 
+        {'units':(2,3),}
+    ),
+    # Modulated learning rules
+    (
+    spark.nn.plasticity.ModulatedHebbianRule, 
+        {
+            'modulation': spark.FloatArray(jnp.array(np.random.rand(), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+        }, 
+        {'units':(2,3),}
+    ),
+    (
+    spark.nn.plasticity.ModulatedHebbianRule, 
+        {
+            'modulation': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5), async_spikes=True),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+        }, 
+        {'units':(2,3),}
+    ),
+    (
+    spark.nn.plasticity.ModulatedQuadrupletRule, 
+        {
+            'modulation': spark.FloatArray(jnp.array(np.random.rand(), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+        }, 
+        {'units':(2,3),}
+    ),
+    (
+    spark.nn.plasticity.ModulatedOjaRule, 
+        {
+            'modulation': spark.FloatArray(jnp.array(np.random.rand(), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+        }, 
+        {'units':(2,3),}
+    ),
+    (
+    spark.nn.plasticity.ModulatedOjaRule, 
+        {
+            'modulation': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5), async_spikes=True),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+        }, 
+        {'units':(2,3),}
+    ),
+    (
+    spark.nn.plasticity.ModulatedZenkeRule, 
+        {
+            'modulation': spark.FloatArray(jnp.array(np.random.rand(), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+        }, 
+        {'units':(2,3),}
+    ),
+    (
+    spark.nn.plasticity.ModulatedZenkeRule, 
+        {
+            'modulation': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5), async_spikes=True),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+        }, 
+        {'units':(2,3),}
+    ),
 ]
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def assert_finite(payload: spark.SparkPayload) -> None:
+    """
+        Validate that every floating point leaf of a payload is free of nan/inf.
+        Payloads may carry several channels, so the check walks the pytree instead of
+        assuming a single "value" array.
+    """
+    for leaf in jax.tree.leaves(payload):
+        if not jnp.issubdtype(jnp.asarray(leaf).dtype, jnp.inexact):
+            continue
+        assert jnp.sum(jnp.isnan(leaf)) == 0
+        assert jnp.sum(jnp.isinf(leaf)) == 0
 
 @spark.jit
 def run_module_simplified(
@@ -219,8 +348,7 @@ def test_jax_jit_simplified(
     module(**module_inputs)
     output, new_module = run_module_simplified(module, module_inputs)
     for payloads in output.values():
-        assert jnp.sum(jnp.isnan(payloads.value)) == 0
-        assert jnp.sum(jnp.isinf(payloads.value)) == 0
+        assert_finite(payloads)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -251,8 +379,7 @@ def test_jax_jit_split(
     graph, state = spark.split((module))
     output, new_state = run_module_split(graph, state, module_inputs)
     for payloads in output.values():
-        assert jnp.sum(jnp.isnan(payloads.value)) == 0
-        assert jnp.sum(jnp.isinf(payloads.value)) == 0
+        assert_finite(payloads)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

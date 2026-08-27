@@ -1,33 +1,34 @@
-from spark.nn.components.somas.base import Soma, SomaOutput
+from spark.nn.components.somas.base import (
+    Soma, SomaConfig, SomaOutput,
+)
+from spark.nn.components.somas.adaptive import (
+    AdaptiveSoma, AdaptiveSomaConfig,
+)
 from spark.nn.components.somas.leaky import (
     LeakySoma, LeakySomaConfig,
-    RefractoryLeakySoma, RefractoryLeakySomaConfig,
-    StrictRefractoryLeakySoma, StrictRefractoryLeakySomaConfig,
     AdaptiveLeakySoma, AdaptiveLeakySomaConfig,
 )
 from spark.nn.components.somas.exponential import (
     ExponentialSoma, ExponentialSomaConfig,
-    RefractoryExponentialSoma, RefractoryExponentialSomaConfig,
     AdaptiveExponentialSoma, AdaptiveExponentialSomaConfig,
-    SimplifiedAdaptiveExponentialSoma, SimplifiedAdaptiveExponentialSomaConfig,
 )
 from spark.nn.components.somas.izhikevich import (
-    IzhikevichSoma, IzhikevichSomaConfig
+    IzhikevichSoma, IzhikevichSomaConfig,
+    AdaptiveIzhikevichSoma, AdaptiveIzhikevichSomaConfig,
 )
 
 __all__ = [
     # Base
-    'Soma', 'SomaOutput',
+    'Soma', 'SomaConfig', 'SomaOutput',
+    # Adaptation extension
+    'AdaptiveSoma', 'AdaptiveSomaConfig',
     # Leaky
     'LeakySoma', 'LeakySomaConfig',
-    'RefractoryLeakySoma', 'RefractoryLeakySomaConfig',
-    'StrictRefractoryLeakySoma', 'StrictRefractoryLeakySomaConfig',
     'AdaptiveLeakySoma', 'AdaptiveLeakySomaConfig',
     # Exponential
     'ExponentialSoma', 'ExponentialSomaConfig',
-    'RefractoryExponentialSoma', 'RefractoryExponentialSomaConfig',
     'AdaptiveExponentialSoma', 'AdaptiveExponentialSomaConfig',
-    'SimplifiedAdaptiveExponentialSoma', 'SimplifiedAdaptiveExponentialSomaConfig',
     # Izhikevich
     'IzhikevichSoma', 'IzhikevichSomaConfig',
+    'AdaptiveIzhikevichSoma', 'AdaptiveIzhikevichSomaConfig',
 ]

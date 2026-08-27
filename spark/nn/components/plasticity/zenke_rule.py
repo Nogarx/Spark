@@ -16,6 +16,7 @@ from spark.core.backend import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.plasticity.base import Plasticity, PlasticityConfig, PlasticityOutput
+from spark.nn.components.plasticity.modulated import ModulatedPlasticity, ModulatedPlasticityConfig
 from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
@@ -25,7 +26,31 @@ from spark.nn.initializers.base import Initializer
 @register_config
 class ZenkeRuleConfig(PlasticityConfig):
     """
-       ZenkeRule configuration class.
+        Configuration for `ZenkeRule`.
+
+        Parameters
+        ----------
+        pre_tau : float or jax.Array or Initializer, default 20.0
+            Decay constant of the presynaptic trace, in ms.
+        post_tau : float or jax.Array or Initializer, default 20.0
+            Decay constant of the fast postsynaptic trace, in ms.
+        post_slow_tau : float or jax.Array or Initializer, default 100.0
+            Decay constant of the slow postsynaptic trace, in ms.
+        target_tau : float or jax.Array or Initializer, default 1200000.0
+            Decay constant of the weight target, in ms. Much slower than the other traces, so the
+            target moves on the time scale of consolidation rather than of activity.
+        a : float, default 2.0
+            Weight of the triplet potentiation term.
+        b : float, default -0.02
+            Weight of the doublet depression term. Negative.
+        c : float, default -400.0
+            Weight of the heterosynaptic term. Negative.
+        d : float, default 2e-05
+            Weight of the transmitter-induced term.
+        p : float, default 20.0
+            Depth of the double-well potential that holds the weight target.
+        eta : float, default 0.1
+            Learning rate.
     """
 
     pre_tau: float | jax.Array | Initializer = dc.field(
@@ -121,28 +146,64 @@ class ZenkeRuleConfig(PlasticityConfig):
 
 @register_module
 class ZenkeRule(Plasticity):
-    """
-        Zenke plasticy rule model. This model is an extension of the classic Hebbian Rule.
+    r"""
+        Zenke triplet rule with homeostatic consolidation.
 
-        Init:
-            pre_tau: float | jax.Array
-            post_tau: float | jax.Array
-            post_slow_tau: float | jax.Array
-            target_tau: float | jax.Array
-            a: float | jax.Array
-            b: float | jax.Array
-            c: float | jax.Array
-            d: float | jax.Array
-            P: float | jax.Array
-            eta: float | jax.Array
+        A triplet rule extended with two terms that keep the weights bounded on their own: a
+        heterosynaptic term that pulls each weight towards a slowly moving target, and a
+        transmitter-induced term that potentiates on presynaptic activity alone. The combination
+        is stable without an external constraint on the weights.
 
-        Input:
-            pre_spikes: SpikeArray
-            post_spikes: SpikeArray
-            kernel: FloatArray
-            
-        Output:
-            kernel: FloatArray
+        Parameters
+        ----------
+        config : ZenkeRuleConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        pre_spikes : SpikeArray
+            Presynaptic spikes, after any conduction delay.
+        post_spikes : SpikeArray
+            Postsynaptic spikes emitted on this step.
+        kernel : FloatArray
+            Current synaptic weights, read from the synapse.
+
+        Output Ports
+        ------------
+        kernel : FloatArray
+            The updated weights, written back onto the synapse as an effect.
+
+        Notes
+        -----
+        With :math:`x` the presynaptic trace, :math:`y` and :math:`\bar{y}` the fast and slow
+        postsynaptic traces and :math:`\tilde{W}` the weight target,
+
+        .. math::
+            \Delta W = \eta \left(
+                a \, x \bar{y} \, s_{\mathrm{post}}
+              + b \, y \, s_{\mathrm{pre}}
+              + c \, (W - \tilde{W}) \, y^3 s_{\mathrm{post}}
+              + d \, s_{\mathrm{pre}} \right)
+
+        applied as :math:`W \leftarrow \max(W + \Delta t \, \Delta W, 0)`. The target follows
+
+        .. math::
+            \tilde{W} \leftarrow \tilde{W} + \lambda_{\tilde{W}} \left(
+                W - p \, \tilde{W} \left(\tfrac{1}{4} - \tilde{W}\right)
+                                    \left(\tfrac{1}{2} - \tilde{W}\right) - \tilde{W} \right)
+
+        a double-well potential with minima that separate weak from strong synapses, so a weight
+        settles into one of the two rather than drifting between them.
+
+        References
+        ----------
+        .. [1] F. Zenke, E. J. Agnes and W. Gerstner, "Diverse Synaptic Plasticity Mechanisms
+               Orchestrated to Form and Retrieve Memories in Spiking Neural Networks", Nature
+               Communications 6, 6922, 2015. https://doi.org/10.1038/ncomms7922
+
+        See Also
+        --------
+        HebbianRule : Pair-based potentiation without the homeostatic terms.
     """
     config: ZenkeRuleConfig
 
@@ -190,10 +251,7 @@ class ZenkeRule(Plasticity):
         self.post_slow_trace.reset()
         self.target_trace.reset()
 
-    def _compute_kernel_update(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> jax.Array:
-        """
-            Computes next kernel update.
-        """
+    def _kernel_delta(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> jax.Array:
         # Extract and reshape inputs
         _pre_spikes = pre_spikes.spikes.reshape(self._pre_shape)
         _post_spikes = post_spikes.spikes.reshape(self._post_shape)
@@ -214,16 +272,83 @@ class ZenkeRule(Plasticity):
         # Transmitter induced.
         d = self.d.value * _pre_spikes
         # Compute rule
-        dK = self.eta.value * (a + b + c + d)
-        return jnp.clip(_kernel + self._dt * dK, min=0.0)
-        
-    def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> PlasticityOutput:
-        """
-            Computes and returns the next kernel update.
-        """
-        return {
-            'kernel': FloatArray(self._compute_kernel_update(pre_spikes, post_spikes, kernel))
-        }
+        return (a + b + c + d)
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+@register_config
+class ModulatedZenkeRuleConfig(ModulatedPlasticityConfig, ZenkeRuleConfig):
+    """
+        Configuration for `ModulatedZenkeRule`.
+
+        Union of `ZenkeRuleConfig` and `ModulatedPlasticityConfig`. It declares no field of its
+        own, so the defaults are those of `ZenkeRuleConfig`.
+    """
+    pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_module
+class ModulatedZenkeRule(ModulatedPlasticity, ZenkeRule):
+    r"""
+        Zenke triplet rule scaled by a third factor.
+
+        `ZenkeRule` composed with `ModulatedPlasticity`. The signal on the ``modulation`` port
+        scales the whole update, the homeostatic terms included.
+
+        Parameters
+        ----------
+        config : ModulatedZenkeRuleConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        modulation : FloatArray
+            Third factor scaling the whole update.
+        pre_spikes : SpikeArray
+            Presynaptic spikes, after any conduction delay.
+        post_spikes : SpikeArray
+            Postsynaptic spikes emitted on this step.
+        kernel : FloatArray
+            Current synaptic weights, read from the synapse.
+
+        Output Ports
+        ------------
+        kernel : FloatArray
+            The updated weights, written back onto the synapse as an effect.
+
+        Notes
+        -----
+        .. math::
+            W \leftarrow \max\left(
+                W + \Delta t \, (\eta M) \, \Delta W, 0 \right)
+
+        with :math:`\Delta W` the four terms of `ZenkeRule`.
+
+        The heterosynaptic and transmitter-induced terms are what bound the weights, and they are
+        scaled along with the rest. A modulation of zero therefore suspends the homeostasis as
+        well as the learning, and a sustained negative modulation removes the bound rather than
+        reversing it. The weight target keeps advancing on its own in either case, since it
+        follows the weights rather than the update.
+
+        References
+        ----------
+        .. [1] F. Zenke, E. J. Agnes and W. Gerstner, "Diverse Synaptic Plasticity Mechanisms
+               Orchestrated to Form and Retrieve Memories in Spiking Neural Networks", Nature
+               Communications 6, 6922, 2015. https://doi.org/10.1038/ncomms7922
+
+        See Also
+        --------
+        ZenkeRule : The same rule without the third factor.
+        ModulatedPlasticity : The mixin supplying the third factor.
+    """
+    config: ModulatedZenkeRuleConfig
+
+    def __init__(self, config: ModulatedZenkeRuleConfig | None = None, **kwargs) -> None:
+        # Initialize super.
+        super().__init__(config=config, **kwargs)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

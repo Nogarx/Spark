@@ -21,7 +21,6 @@ from spark.graph_editor.models.base_model import BaseModel
 
 class PortModel(BaseModel):
 
-    # Signals
     from spark.graph_editor.models.edge_model import EdgeModel
     connected = Signal(EdgeModel)
     disconnected = Signal(EdgeModel)

@@ -15,11 +15,9 @@ class ScrollMarginBalancer(QObject):
     """
         Keeps the content of a scroll area optically centered.
 
-        NOTE: A QScrollArea reserves the vertical scroll bar outside of its viewport, so the visible gap on
-        the right of the content is the right margin plus the width of the bar. Padding the right margin (the
-        previous approach) makes that worse rather than better. Instead the right margin is reduced by exactly
-        the width of the bar while it is visible, so both gutters look identical whether the panel scrolls or
-        not.
+        A QScrollArea reserves the vertical scroll bar outside of its viewport, so the gap on the right of
+        the content is the right margin plus the width of the bar. The right margin is reduced by the width
+        of the bar while it is visible, leaving both gutters equal.
     """
 
     def __init__(self, scroll_area: QScrollArea, layout: QLayout, margins: tuple[int, int, int, int]) -> None:
@@ -41,9 +39,8 @@ class ScrollMarginBalancer(QObject):
             Recomputes the right margin from the current scroll bar state.
         """
         bar = self._scroll_area.verticalScrollBar()
-        # NOTE: The visibility flag cannot be used here. Qt updates it later in the same layout pass, so at
-        # the time this runs it still reports the previous state. The scroll range is the criterion Qt itself
-        # uses to decide whether the bar is needed, and it is already up to date.
+        # NOTE: The visibility flag still reports the previous state here, Qt updates it later in the same
+        # layout pass. The scroll range is the criterion Qt uses to decide whether the bar is needed.
         is_needed = bar.maximum() > bar.minimum()
         reserved = bar.sizeHint().width() if is_needed else 0
         left, top, right, bottom = self._margins

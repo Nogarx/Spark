@@ -23,7 +23,12 @@ from spark.core.config_validation import TypeValidator
 
 class NeuronOutput(tp.TypedDict):
     """
-       Generic Neuron model output spec.
+        Output ports of a neuron model.
+
+        Attributes
+        ----------
+        out_spikes : SpikeArray
+            Spikes emitted by the pool on this step.
     """
     out_spikes: SpikeArray
 
@@ -31,7 +36,18 @@ class NeuronOutput(tp.TypedDict):
 
 class NeuronModuleConfig(DefaultSparkConfig):
     """
-        Abstract Neuron model configuration class.
+        Base configuration for neuron models written as a single module.
+
+        Parameters
+        ----------
+        units : tuple of int
+            Shape of the pool of neurons.
+        seed : int, optional
+            Seed for internal random draws. Drawn from the operating system when omitted.
+        dtype : DTypeLike, default jnp.float16
+            Dtype used for the internal state.
+        dt : float, default 1.0
+            Integration step, in ms.
     """
     units: tuple[int, ...] = dc.field(
         metadata = {
@@ -55,10 +71,35 @@ ConfigT = tp.TypeVar("ConfigT", bound=NeuronModuleConfig)
 
 class NeuronModule(SparkModule, abc.ABC, tp.Generic[ConfigT]):
     """
-        Abstract Neuron model.
+        Base class for neuron models written as a single module.
 
-        This is a convenience class used to synchronize data more easily.
-        Can be thought as the equivalent of Sequential in standard ML frameworks.
+        A neuron assembled in Python rather than declared as a wiring of components. The
+        components are held as plain attributes and stepped by `__call__`, which is the fallback
+        for a model that a `Neuron` controller cannot express.
+
+        Parameters
+        ----------
+        config : NeuronModuleConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        in_spikes : SpikeArray
+            Spikes arriving at the pool.
+
+        Output Ports
+        ------------
+        out_spikes : SpikeArray
+            Spikes emitted by the pool on this step.
+
+        Notes
+        -----
+        Use this neuron model only when looking for specific information flows that may not be
+        implemented with the default neuron controller.
+
+        See Also
+        --------
+        Neuron : Controller-based neuron, declared as a wiring of components.
     """
     config: ConfigT
 
@@ -109,6 +150,19 @@ class NeuronModule(SparkModule, abc.ABC, tp.Generic[ConfigT]):
 
     @abc.abstractmethod
     def __call__(self, in_spikes: SpikeArray) -> NeuronOutput:
+        """
+            Advances the neuron one step.
+
+            Parameters
+            ----------
+            in_spikes : SpikeArray
+                Spikes arriving at the pool.
+
+            Returns
+            -------
+            NeuronOutput
+                Dictionary with one entry, ``out_spikes``, the spikes emitted by the pool.
+        """
         pass
 
 #################################################################################################################################################

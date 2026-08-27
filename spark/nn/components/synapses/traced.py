@@ -25,7 +25,20 @@ from spark.nn.initializers.base import Initializer
 @register_config
 class TracedSynapsesConfig(LinearSynapsesConfig):
     """
-        TracedSynapses model configuration class.
+        Configuration for `TracedSynapses`.
+
+        Parameters
+        ----------
+        units : tuple of int
+            Shape of the postsynaptic pool.
+        kernel : jax.Array or Initializer, default SparseUniformInitializerConfig()
+            Synaptic weights, in pA.
+        tau : float or jax.Array or Initializer, default 5.0
+            Decay constant of the postsynaptic current, in ms.
+        scale : float or jax.Array, default 1.0
+            Factor applied to the weighted spikes entering the trace.
+        base : float or jax.Array, default 0.0
+            Value the trace decays to.
     """
 
     tau: float | jax.Array | Initializer = dc.field(
@@ -60,22 +73,50 @@ class TracedSynapsesConfig(LinearSynapsesConfig):
 
 @register_module
 class TracedSynapses(LinearSynapses):
-    """
-        Traced synaptic model. 
-        Output currents are computed as the trace of the dot product of the kernel with the input spikes.
+    r"""
+        Linear synapse with an exponential postsynaptic current.
 
-        Init:
-            units: tuple[int, ...]
-            kernel: KernelInitializerConfig
-            tau: float | jax.Array
-            scale: float | jax.Array
-            base: float | jax.Array
+        The weighted spikes are passed through a single exponential trace, so one spike
+        contributes a current that decays over ``tau`` rather than over a single step.
 
-        Input:
-            spikes: SpikeArray
-            
-        Output:
-            currents: CurrentArray
+        Parameters
+        ----------
+        config : TracedSynapsesConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        spikes : SpikeArray
+            Presynaptic spikes.
+
+        Output Ports
+        ------------
+        currents : CurrentArray
+            Current delivered to each postsynaptic unit, of shape ``units``.
+
+        Properties
+        ----------
+        kernel : FloatArray
+            Synaptic weights, in pA, of shape ``units + input_shape``. Writable, which is how a
+            plasticity rule updates them.
+
+        Notes
+        -----
+        With :math:`\lambda = 1 - \exp(-\Delta t / \tau)` the trace is
+
+        .. math::
+            T \leftarrow T + \lambda (T_{\mathrm{base}} - T) + c \, W s
+
+        and the current is the sum of :math:`T` over the presynaptic axes.
+
+        When ``tau``, ``scale`` and ``base`` are uniform along the summed axes, the trace is
+        applied to the already summed current instead of to each connection. That holds one state
+        entry per postsynaptic unit rather than one per weight, and gives the same result.
+
+        See Also
+        --------
+        LinearSynapses : Weighted sum without a postsynaptic current.
+        RDTracedSynapses : Separate rise and decay constants.
     """
     config: TracedSynapsesConfig
 
@@ -126,7 +167,26 @@ class TracedSynapses(LinearSynapses):
 @register_config
 class RDTracedSynapsesConfig(LinearSynapsesConfig):
     """
-        RDTracedSynapses model configuration class.
+        Configuration for `RDTracedSynapses`.
+
+        Parameters
+        ----------
+        units : tuple of int
+            Shape of the postsynaptic pool.
+        kernel : jax.Array or Initializer, default SparseUniformInitializerConfig()
+            Synaptic weights, in pA.
+        tau_rise : float or jax.Array or Initializer, default 1.0
+            Rise constant of the postsynaptic current, in ms.
+        scale_rise : float or jax.Array, default 1.0
+            Factor applied to the weighted spikes entering the rise trace.
+        base_rise : float or jax.Array, default 0.0
+            Value the rise trace decays to.
+        tau_decay : float or jax.Array or Initializer, default 5.0
+            Decay constant of the postsynaptic current, in ms.
+        scale_decay : float or jax.Array, default 1.0
+            Factor applied to the weighted spikes entering the decay trace.
+        base_decay : float or jax.Array, default 0.0
+            Value the decay trace decays to.
     """
 
     tau_rise: float | jax.Array | Initializer = dc.field(
@@ -188,25 +248,51 @@ class RDTracedSynapsesConfig(LinearSynapsesConfig):
 
 @register_module
 class RDTracedSynapses(LinearSynapses):
-    """
-        Rise-Decay traced synaptic model. 
-        Output currents are computed as the RDTrace of the dot product of the kernel with the input spikes.
+    r"""
+        Linear synapse with a rise-and-decay postsynaptic current.
 
-        Init:
-            units: tuple[int, ...]
-            kernel: KernelInitializerConfig
-            tau_rise: float | jax.Array
-            scale_rise: float | jax.Array
-            base_rise: float | jax.Array
-            tau_decay: float | jax.Array
-            scale_decay: float | jax.Array
-            base_decay: float | jax.Array
+        The weighted spikes are passed through the difference of two exponentials, which gives a
+        current that rises over ``tau_rise`` and falls over ``tau_decay`` instead of jumping on
+        the step a spike arrives.
 
-        Input:
-            spikes: SpikeArray
-            
-        Output:
-            currents: CurrentArray
+        Parameters
+        ----------
+        config : RDTracedSynapsesConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        spikes : SpikeArray
+            Presynaptic spikes.
+
+        Output Ports
+        ------------
+        currents : CurrentArray
+            Current delivered to each postsynaptic unit, of shape ``units``.
+
+        Properties
+        ----------
+        kernel : FloatArray
+            Synaptic weights, in pA, of shape ``units + input_shape``. Writable, which is how a
+            plasticity rule updates them.
+
+        Notes
+        -----
+        The trace is the decay exponential minus the rise exponential. The rise constant is
+        coupled to the decay constant as
+
+        .. math::
+            \tau_r' = \frac{\tau_r \tau_d}{\tau_r + \tau_d}
+
+        which is what keeps the peak at the intended height as the two constants approach each
+        other.
+
+        The contraction described in `TracedSynapses` applies here as well.
+
+        See Also
+        --------
+        TracedSynapses : Single exponential.
+        RFSTracedSynapses : Rise with a fast and a slow decay.
     """
     config: RDTracedSynapsesConfig
 
@@ -261,7 +347,35 @@ class RDTracedSynapses(LinearSynapses):
 @register_config
 class RFSTracedSynapsesConfig(LinearSynapsesConfig):
     """
-        RFSTracedSynapses model configuration class.
+        Configuration for `RFSTracedSynapses`.
+
+        Parameters
+        ----------
+        units : tuple of int
+            Shape of the postsynaptic pool.
+        kernel : jax.Array or Initializer, default SparseUniformInitializerConfig()
+            Synaptic weights, in pA.
+        alpha : float or jax.Array, default 0.8
+            Weight of the fast component. The slow component takes ``1 - alpha``. Must lie in
+            ``[0, 1]``.
+        tau_rise : float or jax.Array or Initializer, default 1.0
+            Rise constant shared by both components, in ms.
+        scale_rise : float or jax.Array, default 1.0
+            Factor applied to the weighted spikes entering the rise traces.
+        base_rise : float or jax.Array, default 0.0
+            Value the rise traces decay to.
+        tau_fast_decay : float or jax.Array or Initializer, default 5.0
+            Decay constant of the fast component, in ms.
+        scale_fast_decay : float or jax.Array, default 1.0
+            Factor applied to the weighted spikes entering the fast decay trace.
+        base_fast_decay : float or jax.Array, default 0.0
+            Value the fast decay trace decays to.
+        tau_slow_decay : float or jax.Array or Initializer, default 50.0
+            Decay constant of the slow component, in ms.
+        scale_slow_decay : float or jax.Array, default 1.0
+            Factor applied to the weighted spikes entering the slow decay trace.
+        base_slow_decay : float or jax.Array, default 0.0
+            Value the slow decay trace decays to.
     """
     alpha: float | jax.Array = dc.field(
         default = 0.8, 
@@ -358,29 +472,45 @@ class RFSTracedSynapsesConfig(LinearSynapsesConfig):
 
 @register_module
 class RFSTracedSynapses(LinearSynapses):
-    """
-        Traced synaptic model. 
-        Output currents are computed as the trace of the dot product of the kernel with the input spikes.
+    r"""
+        Linear synapse with a two-component postsynaptic current.
 
-        Init:
-            units: tuple[int, ...]
-            kernel: KernelInitializerConfig
-            alpha: float | jax.Array
-            tau_rise: float | jax.Array
-            scale_rise: float | jax.Array
-            base_rise: float | jax.Array
-            tau_fast_decay: float | jax.Array
-            scale_fast_decay: float | jax.Array
-            base_fast_decay: float | jax.Array
-            tau_slow_decay: float | jax.Array
-            scale_slow_decay: float | jax.Array
-            base_slow_decay: float | jax.Array
+        A blend of two rise-and-decay traces that share a rise constant and differ in their decay
+        constants. One spike then leaves both a fast transient and a slow tail, which a single
+        decay constant cannot produce.
 
-        Input:
-            spikes: SpikeArray
-            
-        Output:
-            currents: CurrentArray
+        Parameters
+        ----------
+        config : RFSTracedSynapsesConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        spikes : SpikeArray
+            Presynaptic spikes.
+
+        Output Ports
+        ------------
+        currents : CurrentArray
+            Current delivered to each postsynaptic unit, of shape ``units``.
+
+        Properties
+        ----------
+        kernel : FloatArray
+            Synaptic weights, in pA, of shape ``units + input_shape``. Writable, which is how a
+            plasticity rule updates them.
+
+        Notes
+        -----
+        .. math::
+            T = \alpha T_{\mathrm{fast}} + (1 - \alpha) T_{\mathrm{slow}}
+
+        where each component is a `RDTracedSynapses` trace built on the shared ``tau_rise``. The
+        contraction described in `TracedSynapses` applies here as well.
+
+        See Also
+        --------
+        RDTracedSynapses : One rise and one decay constant.
     """
     config: RFSTracedSynapsesConfig
 

@@ -10,14 +10,13 @@ if TYPE_CHECKING:
 import jax
 import jax.numpy as jnp
 import dataclasses as dc
-from spark.core.tracers import Tracer
-from spark.core.payloads import SpikeArray, CurrentArray, SparkPayload
-from spark.core.backend import Variable, Constant
+from spark.core.payloads import SparkPayload
+from spark.core.backend import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.core.backend import data
 from spark.nn.components.somas.base import Soma, SomaConfig
 from spark.nn.initializers.base import Initializer
+from spark.nn.components.somas.adaptive import AdaptiveSoma, AdaptiveSomaConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -26,28 +25,47 @@ from spark.nn.initializers.base import Initializer
 @register_config
 class ExponentialSomaConfig(SomaConfig):
     """
-        ExponentialSoma model configuration class.
+        Configuration for `ExponentialSoma`.
+
+        Parameters
+        ----------
+        potential_rest : float or jax.Array or Initializer, default -70.0
+            Membrane rest potential, in mV.
+        potential_reset : float or jax.Array or Initializer, default -51.0
+            Membrane potential after a spike, in mV.
+        potential_tau : float or jax.Array or Initializer, default 5.0
+            Membrane potential decay constant, in ms.
+        resistance : float or jax.Array or Initializer, default 0.5
+            Membrane resistance, in GΩ.
+        threshold : float or jax.Array or Initializer, default -30.0
+            Potential at which a spike is registered, in mV. This is the cutoff of the exponential
+            upswing, not the point where firing begins.
+        rheobase_threshold : float or jax.Array or Initializer, default -50.0
+            Rheobase threshold, in mV. The potential above which the exponential term dominates
+            and the upswing becomes irreversible.
+        spike_slope : float or jax.Array or Initializer, default 2.0
+            Sharpness of spike initiation, in mV. Smaller values approach a hard threshold.
     """
     potential_rest: float | jax.Array | Initializer = dc.field(
-        default = -70.0, 
+        default = -70.0,
         metadata = {
             'units': 'mV',
             'validators': [
                 TypeValidator,
-            ], 
+            ],
             'description': 'Membrane rest potential.',
         })
     potential_reset: float | jax.Array | Initializer = dc.field(
-        default = -51.0, 
+        default = -51.0,
         metadata = {
             'units': 'mV',
             'validators': [
                 TypeValidator,
-            ], 
+            ],
             'description': 'Membrane after spike reset potential.',
         })
     potential_tau: float | jax.Array | Initializer = dc.field(
-        default = 5.0, 
+        default = 5.0,
         metadata = {
             'units': 'ms',
             'validators': [
@@ -62,34 +80,34 @@ class ExponentialSomaConfig(SomaConfig):
             'units': 'GΩ', # [1/nS]
             'validators': [
                 TypeValidator,
-            ], 
+            ],
             'description': 'Membrane resistance.',
         })
     threshold: float | jax.Array | Initializer = dc.field(
-        default = -30.0, 
+        default = -30.0,
         metadata = {
             'units': 'mV',
             'validators': [
                 TypeValidator,
-            ], 
+            ],
             'description': 'Action potential threshold base value.',
         })
     rheobase_threshold: float | jax.Array | Initializer = dc.field(
-        default = -50.0, 
+        default = -50.0,
         metadata = {
             'units': 'mV',
             'validators': [
                 TypeValidator,
-            ], 
+            ],
             'description': 'Rheobase threshold (exponential term threshold).',
         })
     spike_slope: float | jax.Array | Initializer = dc.field(
-        default = 2.0, 
+        default = 2.0,
         metadata = {
             'units': 'mV',
             'validators': [
                 TypeValidator,
-            ], 
+            ],
             'description': 'Sharpness of action potential initiation.',
         })
 
@@ -97,32 +115,60 @@ class ExponentialSomaConfig(SomaConfig):
 
 @register_module
 class ExponentialSoma(Soma):
-    """
-        Exponential soma model.
+    r"""
+        Exponential integrate-and-fire soma.
 
-        Init:
-            units: tuple[int, ...]
-            potential_rest: float | jax.Array
-            potential_reset: float | jax.Array
-            potential_tau: float | jax.Array
-            resistance: float | jax.Array
-            threshold: float | jax.Array
+        A leaky membrane with an added exponential term, which reproduces the upswing of a spike
+        rather than firing on a hard threshold crossing. A spike is registered when the potential
+        reaches ``threshold``, after which the potential is set to ``potential_reset``.
 
-        Input:
-            in_spikes: SpikeArray
-            
-        Output:
-            out_spikes: SpikeArray
+        Note that this is not the adaptive exponential (AdEx) model.
 
-        Reference: 
-            How Spike Generation Mechanisms Determine the Neuronal Response to Fluctuating Inputs
-            Nicolas Fourcaud-Trocmé, David Hansel, Carl van Vreeswijk, and Nicolas Brunel
-            The Journal of Neuroscience, December 17, 2003
-            https://www.jneurosci.org/content/23/37/11628
-            Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition. 
-            Gerstner W, Kistler WM, Naud R, Paninski L. 
-            Chapter 5.2 Exponential Integrate-and-Fire Model
-            https://neuronaldynamics.epfl.ch/online/Ch5.S2.html
+        Parameters
+        ----------
+        config : ExponentialSomaConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        current : CurrentArray
+            Current delivered to the membrane, in pA.
+        inhibition_mask : BooleanMask, optional
+            Marks the inhibitory units. Supplied by the enclosing `Neuron`.
+
+        Output Ports
+        ------------
+        spikes : SpikeArray
+            Non-zero where the potential crossed the threshold on this step.
+
+        Properties
+        ----------
+        potential : PotentialArray
+            Membrane potential, relative to ``potential_rest``. Read only.
+
+        Notes
+        -----
+        Potentials are stored relative to ``potential_rest``, so a stored value of zero is rest.
+        With :math:`\Delta_T` the slope factor and :math:`V_{rh}` the rheobase threshold, the step
+        is a forward Euler integration:
+
+        .. math::
+            V_{t+1} = V_t + \frac{\Delta t}{\tau_V} \left(
+                -V_t + \Delta_T \exp\!\left(\frac{V_t - V_{rh}}{\Delta_T}\right) + R I_t \right)
+
+        References
+        ----------
+        .. [1] N. Fourcaud-Trocmé, D. Hansel, C. van Vreeswijk and N. Brunel, "How Spike Generation
+               Mechanisms Determine the Neuronal Response to Fluctuating Inputs", Journal of
+               Neuroscience 23(37), 11628-11640, 2003.
+               https://www.jneurosci.org/content/23/37/11628
+        .. [2] W. Gerstner, W. M. Kistler, R. Naud and L. Paninski, "Neuronal Dynamics: From
+               Single Neurons to Networks and Models of Cognition", Chapter 5.2, Exponential
+               Integrate-and-Fire Model. https://neuronaldynamics.epfl.ch/online/Ch5.S2.html
+
+        See Also
+        --------
+        AdaptiveExponentialSoma : This model with the adaptation mechanisms (AdEx).
     """
     config: ExponentialSomaConfig
 
@@ -153,202 +199,73 @@ class ExponentialSoma(Soma):
         # Spike slope.
         self.spike_slope = Constant(_spike_slope, dtype=self._dtype)
 
-    def _update_states(self, current: CurrentArray) -> None:
+    def _integrate(self, potential: jax.Array, current: jax.Array) -> jax.Array:
         """
-            Update neuron's soma states variables.
+            Membrane integration.
         """
-        self._potential.value += self.potential_scale.value * (
-            - self._potential.value
-            + self.spike_slope.value * jnp.exp((self._potential.value - self.rheobase_threshold.value)/self.spike_slope.value)
-            + self.resistance.value * current.value
+        return potential + self.potential_scale.value * (
+            - potential
+            + self.spike_slope.value * jnp.exp((potential - self.rheobase_threshold.value) / self.spike_slope.value)
+            + self.resistance.value * current
         )
 
-    def _compute_spikes(self,) -> SpikeArray:
-        """
-            Compute neuron's spikes.
-        """
-        # Compute spikes.
-        spikes = jnp.greater(self._potential.value, self.threshold.value).astype(self._dtype)
-        # Reset neurons.
-        self._potential.value = spikes * self.potential_reset.value + (1 - spikes) * self._potential.value
-        return SpikeArray(spikes)
-    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
 @register_config
-class RefractoryExponentialSomaConfig(ExponentialSomaConfig):
+class AdaptiveExponentialSomaConfig(AdaptiveSomaConfig, ExponentialSomaConfig):
     """
-        RefractoryExponentialSoma model configuration class.
+        Configuration for `AdaptiveExponentialSoma`.
+
+        Union of `ExponentialSomaConfig` and `AdaptiveSomaConfig`. It declares no field of its own.
     """
-    cooldown: float | jax.Array | Initializer = dc.field(
-        default = 2.0, 
-        metadata = {
-            'units': 'ms',
-            'validators': [
-                TypeValidator,
-            ], 
-            'description': 'Soma refractory period.',
-        })
+    pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class RefractoryExponentialSoma(ExponentialSoma):
+class AdaptiveExponentialSoma(AdaptiveSoma, ExponentialSoma):
     """
-        Exponential soma with refractory time model.
+        Adaptive exponential integrate-and-fire soma (AdEx).
 
-        Init:
-            units: tuple[int, ...]
-            potential_rest: float | jax.Array
-            potential_reset: float | jax.Array
-            potential_tau: float | jax.Array
-            resistance: float | jax.Array
-            threshold: float | jax.Array
-            cooldown: float | jax.Array
+        `ExponentialSoma` composed with `AdaptiveSoma`. Setting ``adaptation_delta`` and
+        ``adaptation_subthreshold`` gives the adaptation current of the AdEx model; the refractory
+        period, the potential clamp and the adaptive threshold are available on the same terms as
+        for any other soma.
 
-        Input:
-            in_spikes: SpikeArray
-            
-        Output:
-            out_spikes: SpikeArray
+        Parameters
+        ----------
+        config : AdaptiveExponentialSomaConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
 
-        Reference: 
-            How Spike Generation Mechanisms Determine the Neuronal Response to Fluctuating Inputs
-            Nicolas Fourcaud-Trocmé, David Hansel, Carl van Vreeswijk, and Nicolas Brunel
-            The Journal of Neuroscience, December 17, 2003
-            https://www.jneurosci.org/content/23/37/11628
-            Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition. 
-            Gerstner W, Kistler WM, Naud R, Paninski L. 
-            Chapter 5.2 Exponential Integrate-and-Fire Model
-            https://neuronaldynamics.epfl.ch/online/Ch5.S2.html
-    """
-    config: RefractoryExponentialSomaConfig
+        Input Ports
+        -----------
+        current : CurrentArray
+            Current delivered to the membrane, in pA.
+        inhibition_mask : BooleanMask, optional
+            Marks the inhibitory units. Supplied by the enclosing `Neuron`.
 
-    def __init__(self, config: RefractoryExponentialSomaConfig | None = None, **kwargs) -> None:
-        # Initialize super.
-        super().__init__(config=config, **kwargs)
+        Output Ports
+        ------------
+        spikes : SpikeArray
+            Non-zero where the potential crossed the threshold on this step.
 
-    # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, **abc_args: SparkPayload) -> None:
-        super().build(**abc_args)
-        # Initialize variables.
-        _cooldown = self.config.init.cooldown(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        # Refractory period.
-        self.cooldown = Constant(jnp.round(_cooldown / self._dt).astype(jnp.uint16), dtype=jnp.uint16)
-        self.refractory = Variable(self.cooldown.value * jnp.ones(self.units), dtype=jnp.uint16)
-        self.is_ready = Variable(jnp.ones(self.units), dtype=jnp.bool)
+        Properties
+        ----------
+        potential : PotentialArray
+            Membrane potential, relative to ``potential_rest``. Read only.
 
-    def reset(self) -> None:
-        """
-            Resets component state.
-        """
-        super().reset()
-        self.refractory.value = jnp.array(self.cooldown.value * jnp.ones(self.units), dtype=self._dtype)
+        References
+        ----------
+        .. [1] R. Brette and W. Gerstner, "Adaptive Exponential Integrate-and-Fire Model as an
+               Effective Description of Neuronal Activity", Journal of Neurophysiology 94(5),
+               3637-3642, 2005. https://doi.org/10.1152/jn.00686.2005
 
-    def _update_states(self, current: CurrentArray) -> None:
-        """
-            Update neuron's soma states variables.
-        """
-        self.is_ready.value = jnp.greater(self.refractory.value, self.cooldown)
-        is_ready = self.is_ready.value.astype(self._dtype)
-        
-        self._potential.value += self.potential_scale.value * (
-            -self._potential.value + 
-            self.spike_slope.value * jnp.exp((self._potential.value - self.rheobase_threshold.value)/self.spike_slope.value) +
-            is_ready * self.resistance.value * current.value
-        )
-
-    def _compute_spikes(self,) -> SpikeArray:
-        """
-            Compute neuron's spikes.
-        """
-        # Compute spikes.
-        spikes = jnp.logical_and(
-            jnp.greater(self._potential.value, self.threshold.value), 
-            jnp.greater(self.refractory.value, self.cooldown)
-        ).astype(self._dtype)
-        # Reset neurons.
-        self._potential.value = spikes * self.potential_reset.value + (1 - spikes) * self._potential.value
-        # Set neuron refractory period.
-        self.refractory.value = (1 - spikes).astype(jnp.uint16) * (self.refractory.value + 1)
-        return SpikeArray(spikes)
-    
-#################################################################################################################################################
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-#################################################################################################################################################
-
-@register_config
-class AdaptiveExponentialSomaConfig(ExponentialSomaConfig):
-    """
-        AdaptiveExponentialSoma model configuration class.
-    """
-
-    adaptation_tau: float | jax.Array | Initializer = dc.field(
-        default = 100.0, 
-        metadata = {
-            'units': 'ms',
-            'validators': [
-                TypeValidator,
-                PositiveValidator,
-            ],
-            'description': 'Adaptation current decay constant.',
-        })
-    adaptation_delta: float | jax.Array | Initializer = dc.field(
-        default = 7.0, 
-        metadata = {
-            'units': 'pA',
-            'validators': [
-                TypeValidator,
-            ], 
-            'description': 'Adaptation current after spike increment.',
-        })
-    adaptation_subthreshold: float | jax.Array | Initializer = dc.field(
-        default = 0.5, 
-        metadata = {
-            'units': 'nS', # 1/GΩ
-            'validators': [
-                TypeValidator,
-            ], 
-            'description': 'Scale factor of the subthreshold adaptation (potential-based adaptation).',
-        })
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-@register_module
-class AdaptiveExponentialSoma(ExponentialSoma):
-    """
-        Adaptive Exponential soma model.
-
-        Init:
-            units: tuple[int, ...]
-            potential_rest: float | jax.Array
-            potential_reset: float | jax.Array
-            potential_tau: float | jax.Array
-            resistance: float | jax.Array
-            threshold: float | jax.Array
-            cooldown: float | jax.Array
-            threshold_tau: float | jax.Array
-            threshold_delta: float | jax.Array
-
-        Input:
-            in_spikes: SpikeArray
-            
-        Output:
-            out_spikes: SpikeArray
-
-        Reference: 
-
-            Adaptive Exponential Integrate-and-Fire Model as an Effective Description of Neuronal Activity.
-            Romain Brette and Gerstner Wulfram
-            Gerstner W, Kistler WM, Naud R, Paninski L. 
-            Journal of Neurophysiology vol. 94, no. 5, pp. 3637-3642, 2005
-            https://doi.org/10.1152/jn.00686.2005
-            Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition. 
-            Gerstner W, Kistler WM, Naud R, Paninski L. 
-            Chapter 5.2 Exponential Integrate-and-Fire Model
-            https://neuronaldynamics.epfl.ch/online/Ch5.S2.html
+        See Also
+        --------
+        ExponentialSoma : The membrane integration, without the mechanisms.
+        AdaptiveSoma : The mechanisms and their equations.
     """
     config: AdaptiveExponentialSomaConfig
 
@@ -356,152 +273,6 @@ class AdaptiveExponentialSoma(ExponentialSoma):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
-    # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, **abc_args: SparkPayload) -> None:
-        super().build(**abc_args)
-        # Initialize variables.
-        _adaptation_delta = self.config.init.adaptation_delta(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        _adaptation_subthreshold = self.config.init.adaptation_subthreshold(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        _adaptation_tau = self.config.init.adaptation_tau(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        # Overwrite constant threshold with a tracer.
-        self.adaptation = Variable(jnp.zeros(self.units, dtype=self._dtype), dtype=self._dtype)
-        self.adaptation_delta = Constant(_adaptation_delta, dtype=self._dtype)
-        self.adaptation_subthreshold = Constant(_adaptation_subthreshold, dtype=self._dtype)
-        self.adaptation_scale = Constant(self._dt / _adaptation_tau, dtype=self._dtype)
-
-    def reset(self, ):
-        super().reset()
-        self.adaptation.value = jnp.zeros(self.units, dtype=self._dtype)
-
-    def _update_states(self, current: CurrentArray) -> None:
-        """
-            Update neuron's soma states variables.
-        """
-        self._potential.value += self.potential_scale.value * (
-            - self._potential.value
-            + self.spike_slope.value * jnp.exp((self._potential.value - self.rheobase_threshold.value)/self.spike_slope.value)
-            - self.resistance.value * self.adaptation.value
-            + self.resistance.value * current.value
-        )
-
-
-    def _compute_spikes(self,) -> SpikeArray:
-        """
-            Compute neuron's spikes.
-        """
-        # Compute spikes.
-        spikes = super()._compute_spikes()
-        # Update adaptation
-        self.adaptation.value += self.adaptation_scale.value * (
-            - self.adaptation.value 
-            + self.adaptation_subthreshold.value * self._potential.value
-        ) + self.adaptation_delta.value * spikes.spikes.astype(self._dtype)
-        return spikes
-    
-#################################################################################################################################################
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-#################################################################################################################################################
-
-@register_config
-class SimplifiedAdaptiveExponentialSomaConfig(RefractoryExponentialSomaConfig):
-    """
-        SimplifiedAdaptiveExponentialSoma model configuration class.
-    """
-
-    threshold_tau: float | jax.Array  | Initializer = dc.field(
-        default = 20.0, 
-        metadata = {
-            'units': 'ms',
-            'validators': [
-                TypeValidator,
-                PositiveValidator,
-            ],
-            'description': 'Adaptive action potential threshold decay constant.',
-        })
-    threshold_delta: float | jax.Array  | Initializer = dc.field(
-        default = 100.0, 
-        metadata = {
-            'units': 'mV',
-            'validators': [
-                TypeValidator,
-            ], 
-            'description': 'Adaptive action potential threshold after spike increment.',
-        })
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-@register_module
-class SimplifiedAdaptiveExponentialSoma(RefractoryExponentialSoma):
-    """
-        Simplified Adaptive Exponential soma model. This model drops the subthreshold adaptation.
-
-        Init:
-            units: tuple[int, ...]
-            potential_rest: float | jax.Array
-            potential_reset: float | jax.Array
-            potential_tau: float | jax.Array
-            resistance: float | jax.Array
-            threshold: float | jax.Array
-            cooldown: float | jax.Array
-            threshold_tau: float | jax.Array
-            threshold_delta: float | jax.Array
-
-        Input:
-            in_spikes: SpikeArray
-            
-        Output:
-            out_spikes: SpikeArray
-
-        Reference: 
-
-            Adaptive Exponential Integrate-and-Fire Model as an Effective Description of Neuronal Activity.
-            Romain Brette and Gerstner Wulfram
-            Gerstner W, Kistler WM, Naud R, Paninski L. 
-            Journal of Neurophysiology vol. 94, no. 5, pp. 3637-3642, 2005
-            https://doi.org/10.1152/jn.00686.2005
-            Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition. 
-            Gerstner W, Kistler WM, Naud R, Paninski L. 
-            Chapter 5.2 Exponential Integrate-and-Fire Model
-            https://neuronaldynamics.epfl.ch/online/Ch5.S2.html
-    """
-    config: SimplifiedAdaptiveExponentialSomaConfig
-
-    def __init__(self, config: SimplifiedAdaptiveExponentialSomaConfig | None = None, **kwargs) -> None:
-        # Initialize super.
-        super().__init__(config=config, **kwargs)
-
-    # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, **abc_args: SparkPayload) -> None:
-        super().build(**abc_args)
-        # Initialize variables.
-        _threshold_tau = self.config.init.threshold_tau(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        _threshold_delta = self.config.init.threshold_delta(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        # Replace constant threshold with a tracer.
-        self.threshold = data(Tracer(
-            self.units,
-            tau=_threshold_tau, 
-            base=(self.threshold), 
-            scale=_threshold_delta, 
-            dt=self._dt, dtype=self._dtype
-        ))
-
-    def reset(self) -> None:
-        """
-            Resets component state.
-        """
-        super().reset()
-        self.threshold.reset()
-
-    def _compute_spikes(self,) -> SpikeArray:
-        """
-            Compute neuron's spikes.
-        """
-        # Compute spikes.
-        spikes = super()._compute_spikes()
-        # Update thresholds
-        self.threshold(spikes.spikes)
-        return spikes
-    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

@@ -47,8 +47,8 @@ DEFAULT_DTYPES = [
     jnp.bool,
 ]
 
-# Spin box bounds. Doubles represent integers exactly below 2**53, so a single widget can safely cover both
-# integer and float fields (seeds are unsigned 32 bit integers and do not fit in a QSpinBox).
+# Spin box bounds. Doubles represent integers exactly below 2**53, so a single widget covers both integer
+# and float fields (seeds are unsigned 32 bit integers and do not fit in a QSpinBox).
 _INT_RANGE = (-1e15, 1e15)
 _FLOAT_RANGE = (-1e12, 1e12)
 _FLOAT_DECIMALS = 6
@@ -86,8 +86,7 @@ def _array_summary(value: tp.Any) -> str:
     """
         Short human readable description of a value that cannot be edited inline.
     """
-    # NOTE: A missing value is always rendered as an empty field, never as a placeholder word that could be
-    # mistaken for the value itself.
+    # A missing value is rendered as an empty field.
     if value is None:
         return ''
     shape = getattr(value, 'shape', None)
@@ -105,8 +104,7 @@ class QDimsEdit(QWidget):
     """
         Editor for variable length numeric tuples (e.g. tuple[int, ...] shapes).
 
-        The number of entries is tunable through the add/remove buttons and the widget always reports a valid
-        tuple, never a partially typed string.
+        The number of entries is set through the add/remove buttons. The widget always reports a valid tuple.
     """
 
     value_changed = Signal(object)
@@ -135,7 +133,6 @@ class QDimsEdit(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(spacing)
         self._layout = layout
-        # Container for the dimension spin boxes.
         self._dims_widget = QWidget()
         self._dims_layout = QHBoxLayout(self._dims_widget)
         self._dims_layout.setContentsMargins(0, 0, 0, 0)
@@ -166,14 +163,14 @@ class QDimsEdit(QWidget):
         spin.setValue(value)
         spin.wheelEvent = lambda event: event.ignore()
         spin.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        # An explicit minimum, otherwise a shape with several dimensions cannot be narrowed at all.
+        # An explicit minimum, otherwise a shape with several dimensions cannot be narrowed.
         spin.setMinimumWidth(STYLES.get_val('inspector', 'dims_min_width', default=40))
         spin.valueChanged.connect(lambda _: self._emit())
         return spin
 
     def _refresh_buttons(self) -> None:
         self._add_btn.setEnabled(len(self._spins) < self.max_dims)
-        # NOTE: An empty shape is not a valid Spark shape, so the editor never drops below min_dims.
+        # An empty shape is not a valid Spark shape, so the editor never drops below min_dims.
         self._remove_btn.setEnabled(len(self._spins) > self.min_dims)
 
     def _emit(self) -> None:
@@ -196,9 +193,6 @@ class QDimsEdit(QWidget):
     def set_value(self, value: tp.Iterable | None) -> None:
         """
             Rebuilds the editor from a value, without emitting change notifications.
-
-            NOTE: An unset field still renders min_dims entries. Nothing is written to the configuration
-            until the user edits one of them, so the "not set" warning stays until then.
         """
         entries: list[float] = []
         if value is not None:
@@ -271,7 +265,7 @@ class QAttrControls(QWidget):
         layout.setSpacing(STYLES.get_val('inspector', 'ctrl_spacing', default=2))
         icon_size = STYLES.get_val('inspector', 'icon_pixmap_size', default=12)
         # Warning Icon
-        # NOTE: There is no warning asset in the editor resources, so this one stays a themeable glyph.
+        # There is no warning asset in the editor resources, so this one is a themeable glyph.
         self.warning_btn = self._make_button(
             'No errors', text='⚠', object_name='warningBtn', checkable=False
         )
@@ -284,8 +278,8 @@ class QAttrControls(QWidget):
         )
         layout.addWidget(self.init_btn)
         # Inheritance Toggle
-        # NOTE: The unchecked state must still draw something. An empty icon on a transparent button makes an
-        # available cascade invisible, which reads as "this field cannot inherit".
+        # The unchecked state still draws something: an empty icon on a transparent button would make an
+        # available cascade invisible.
         self._inherit_icon = icons.get_toggle_icon(
             icons.LINK, icons.LINK, icon_size,
             off_opacity=STYLES.get_val('inspector', 'icon_idle_opacity', default=0.35),
@@ -303,7 +297,7 @@ class QAttrControls(QWidget):
             self.init_btn.setVisible(True)
             self.init_btn.setChecked(bool(self.node.is_initializer_active or self._init_required))
             if self._init_required:
-                # An array cannot be typed in, so these fields are permanently in initializer mode.
+                # An array cannot be typed in, so these fields stay in initializer mode.
                 self.init_btn.setEnabled(False)
                 self.init_btn.setToolTip('This field holds an array and can only be defined through an initializer')
             else:
@@ -316,13 +310,12 @@ class QAttrControls(QWidget):
         else:
             self.inherit_btn.toggled.connect(self._on_inherit_toggled)
 
-        # Connect to node state changes
         self.node.errors_changed.connect(self._on_errors_changed)
         self.node.inheritance_changed.connect(self._on_node_inheritance_changed)
         self.node.initializer_changed.connect(self._on_node_init_changed)
         if self.graph_model and self.config_path:
             self.graph_model.inheritance_updated.connect(self._on_inheritance_tree_updated)
-        # Initial state
+        # Initial state.
         self._on_errors_changed(self.node, self.node.errors)
         self._on_inheritance_tree_updated()
 
@@ -347,7 +340,7 @@ class QAttrControls(QWidget):
             button.setIconSize(QSize(icon_size, icon_size))
         button.setCheckable(checkable)
         button.setToolTip(tooltip)
-        # Keep the icon column aligned even when a button does not apply to the field.
+        # Keep the icon column aligned when a button does not apply to the field.
         policy = button.sizePolicy()
         policy.setRetainSizeWhenHidden(True)
         button.setSizePolicy(policy)
@@ -371,7 +364,7 @@ class QAttrControls(QWidget):
         return path
 
     def _update_inherit_icon(self, is_linked: bool) -> None:
-        # The state aware icon already follows the checked state, this only restores it after a lock.
+        # The state aware icon follows the checked state, this only restores it after a lock.
         self.inherit_btn.setIcon(self._inherit_icon)
 
     #-------------------------------------------------------------------------------------------------------#
@@ -387,7 +380,7 @@ class QAttrControls(QWidget):
         if self._is_init_child:
             return
         can_inherit = bool(leaf is not None and leaf.can_inherit())
-        # A driven field shows a lock: the editor is read-only and the reason has to be visible.
+        # A driven field shows a lock, and its editor is read-only.
         if is_driven:
             self.inherit_btn.setVisible(True)
             self.inherit_btn.setEnabled(False)
@@ -397,10 +390,10 @@ class QAttrControls(QWidget):
             self.inherit_btn.blockSignals(False)
             self.inherit_btn.setToolTip('This value is inherited from a parent field')
             return
-        # Cascading is only offered when the value can actually reach a nested field.
+        # Cascading is only offered when the value can reach a nested field.
         self.inherit_btn.setVisible(can_inherit)
         if not can_inherit:
-            # A leaf without descendants cannot cascade, drop any leftover state.
+            # A leaf without descendants cannot cascade, so any leftover state is dropped.
             self.inherit_btn.blockSignals(True)
             self.inherit_btn.setChecked(False)
             self._update_inherit_icon(False)
@@ -413,7 +406,7 @@ class QAttrControls(QWidget):
         self.inherit_btn.setToolTip(
             f'{"Stop cascading" if is_inheriting else "Cascade"} this value to {childs} nested field(s)'
         )
-        # Sync checked state without emitting signals
+        # Sync the checked state without emitting signals.
         self.inherit_btn.blockSignals(True)
         self.inherit_btn.setChecked(is_inheriting)
         self._update_inherit_icon(is_inheriting)
@@ -479,7 +472,7 @@ class QAttribute(QWidget):
         self._init_block = None
         self._init_state_model = None
         self._is_updating_programmatically = False
-        # Field typing. The metadata "valid_types" entry is authoritative, the annotation is only a fallback.
+        # Field typing. The metadata "valid_types" entry is authoritative, the annotation is a fallback.
         self._tokens = type_tokens(node.type_hint, node.metadata.get('valid_types'))
         self._kind = classify(tokens=self._tokens)
         self._optional = is_optional(self._tokens)
@@ -505,8 +498,8 @@ class QAttribute(QWidget):
             self.graph_model.config_value_changed.connect(self._on_global_config_changed)
             self.graph_model.inheritance_updated.connect(self._on_inheritance_tree_updated)
             self._on_inheritance_tree_updated()
-        # NOTE: A mandatory initializer is activated without touching the configuration: the selector opens on
-        # a placeholder entry, so an unset field stays unset (and keeps warning) until the user picks one.
+        # A mandatory initializer is activated without touching the configuration: the selector opens on a
+        # placeholder entry, so an unset field stays unset until one is picked.
         if self._init_required and not self.node.is_initializer_active:
             self.node._is_initializer_active = True
         if self.node.is_initializer_active:
@@ -554,12 +547,12 @@ class QAttribute(QWidget):
         if self._is_updating_programmatically:
             return
         new_val = coerce(self._kind, new_val)
-        # Don't push if value hasn't actually changed
+        # Nothing is pushed when the value did not change.
         if values_equal(getattr(self.node, 'value', None), new_val):
             return
         # NOTE: A driven field is owned by the field cascading into it. The editor is disabled in that state,
-        # but the value is refused here as well so that no rejected write reaches the state model nor the
-        # undo stack (which would leave the inspector showing a value the configuration does not hold).
+        # and the value is refused here as well, so that no rejected write reaches the state model or the
+        # undo stack.
         if self.graph_model and self.config_path and self.graph_model.is_driven(self._inheritance_path()):
             logger.debug(f'Ignored edit of "{"/".join(self.config_path)}": the field inherits its value.')
             self._resync_widget()
@@ -574,17 +567,17 @@ class QAttribute(QWidget):
         if path != self.config_path or not self._node_alive():
             return
         is_init = isinstance(value, InitializerConfig)
-        # Update the underlying node value first
+        # Update the value held by the node first.
         self._is_updating_programmatically = True
         try:
             self.node.value = value
         finally:
             self._is_updating_programmatically = False
-        # Then trigger visual mode switch if necessary
+        # Switch the visual mode when needed.
         if self.node.is_initializer_active != is_init:
             self.node.is_initializer_active = is_init
         elif is_init and self._init_combo:
-            # If already an initializer but the specific type changed (e.g., Constant -> Uniform)
+            # Already an initializer, but of a different type (e.g. Constant -> Uniform).
             if self._init_combo.currentData() is not type(value):
                 for i in range(self._init_combo.count()):
                     if self._init_combo.itemData(i) is type(value):
@@ -643,9 +636,8 @@ class QAttribute(QWidget):
         builders.get(self._kind, self._build_readonly_input)()
         self._input_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         # NOTE: Spin boxes size themselves after their widest representable number and combo boxes after their
-        # widest entry, which would make a field with a large range or a long initializer name impossible to
-        # shrink. An explicit minimum takes precedence over those content driven hints, so the inspector can
-        # always narrow down and the text elides instead of overflowing.
+        # widest entry. An explicit minimum takes precedence over those content driven hints, so the inspector
+        # can be narrowed and the text elides instead of overflowing.
         self._input_widget.setMinimumWidth(STYLES.get_val('inspector', 'input_min_width', default=60))
         # Documentation. Descriptions and units are declared in the field metadata of the configuration.
         description = self.node.metadata.get('description', None)
@@ -682,7 +674,7 @@ class QAttribute(QWidget):
         if current_key is None:
             combo.addItem('', None)
         elif current_key not in keys:
-            # Keep the current value visible even when it is not part of the declared options.
+            # The current value stays visible when it is not part of the declared options.
             options.append(self.node.value)
             keys.append(current_key)
         for option, key in zip(options, keys):
@@ -705,9 +697,8 @@ class QAttribute(QWidget):
         low, high = _numeric_bounds(self._kind, self.node.metadata)
         spin = QDoubleSpinBox()
         spin.setDecimals(0 if self._kind is FieldKind.INT else _FLOAT_DECIMALS)
-        # NOTE: Partial configurations leave unset fields as None, so every numeric editor reserves its first
-        # tick to represent that state instead of silently displaying a value the configuration does not hold.
-        # That tick renders as an empty field and maps back to None.
+        # NOTE: Partial configurations leave unset fields as None. Every numeric editor reserves its first
+        # tick for that state, which renders as an empty field and maps back to None.
         step = 1.0 if self._kind is FieldKind.INT else 10.0 ** (-_FLOAT_DECIMALS)
         spin.setRange(low - step, high)
         spin.setSpecialValueText(' ')
@@ -746,7 +737,7 @@ class QAttribute(QWidget):
         line.setObjectName('readonlyInput')
         self._input_widget = line
         # NOTE: An array cannot be typed in, so the plain editor of an array field is always "unset". Turning
-        # the initializer off therefore clears the field instead of silently keeping the old initializer.
+        # the initializer off clears the field.
         self._read_value = lambda: None
         self._apply_value = lambda value: line.setText(_array_summary(value))
 
@@ -754,7 +745,7 @@ class QAttribute(QWidget):
         combo = QComboBox()
         combo.setView(QListView())
         combo.wheelEvent = lambda event: event.ignore()
-        # Stop the size hint from tracking the longest entry. The popup still shows the full text.
+        # The size hint does not track the longest entry. The popup still shows the full text.
         combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         combo.setMinimumContentsLength(STYLES.get_val('inspector', 'combo_min_chars', default=6))
         return combo
@@ -785,8 +776,8 @@ class QAttribute(QWidget):
         self._init_combo = self._make_combo()
         self._init_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self._init_combo.setMinimumWidth(STYLES.get_val('inspector', 'input_min_width', default=60))
-        # A mandatory initializer on an unset field opens on a placeholder, so that merely selecting the node
-        # never writes a value the user did not choose.
+        # A mandatory initializer on an unset field opens on a placeholder, so selecting the node writes
+        # nothing.
         if self._init_required and not isinstance(self.node.value, InitializerConfig):
             self._init_combo.addItem('Select an initializer...', userData=None)
         for name, entry in REGISTRY.Initializers.items():
@@ -805,7 +796,7 @@ class QAttribute(QWidget):
         new_config = config_cls()
         self._build_initializer_block(new_config)
         self._user_changed_value(new_config)
-        # Drop the placeholder entry once a real initializer has been chosen.
+        # The placeholder entry is dropped once an initializer is chosen.
         if self._init_combo.itemData(0) is None:
             self._init_combo.blockSignals(True)
             self._init_combo.removeItem(0)

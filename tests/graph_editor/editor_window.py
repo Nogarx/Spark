@@ -34,6 +34,26 @@ def _pump(qapp, times: int = 4) -> None:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@pytest.fixture(autouse=True)
+def clean_recents(qapp) -> tp.Generator[None, tp.Any, None]:
+    """
+        An empty recent list, so that a test never reads back what another one remembered.
+    """
+    recent_files.clear()
+    yield
+    recent_files.clear()
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _recent_cards(editor) -> list:
+    """
+        The cards the start screen is offering.
+    """
+    from spark.graph_editor.widgets.controller_selection import RecentCard
+    return editor._start_view._recent_box.findChildren(RecentCard)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def _fill_shapes(model, units=(8,)) -> None:
     """
         Sets every shape a user would set, on the controller and on the modules that ask for one.
@@ -230,10 +250,38 @@ class TestFiles:
         assert editor.open_path(missing) is False
         assert missing not in recent_files.recent_files(existing_only=False)
 
+    def test_a_file_that_is_gone_is_not_reported_as_an_error(self, editor, qapp, answers, tmp_path) -> None:
+        # A stale entry is not a failure of the editor. It is dropped, not put in front of the user.
+        recent_files.remember(tmp_path / 'not_there.sge')
+        assert editor.open_path(tmp_path / 'not_there.sge') is False
+        assert answers.reported == []
+
+    def test_the_start_screen_stops_offering_a_file_that_is_gone(self, imported, qapp, answers, tmp_path) -> None:
+        answers.picks(tmp_path / 'work.sge')
+        imported.save_session_as()
+        imported._refresh_recent()
+        _pump(qapp)
+        assert [card.path.name for card in _recent_cards(imported)] == ['work.sge']
+        (tmp_path / 'work.sge').unlink()
+        assert imported.open_path(tmp_path / 'work.sge') is False
+        _pump(qapp)
+        assert _recent_cards(imported) == []
+
     def test_what_was_written_is_remembered(self, imported, qapp, answers, tmp_path) -> None:
         answers.picks(tmp_path / 'work.sge')
         imported.save_session_as()
         assert (tmp_path / 'work.sge').resolve() in [p.resolve() for p in recent_files.recent_files()]
+
+    def test_a_deleted_file_gives_its_place_back(self, imported, qapp, answers, tmp_path) -> None:
+        # A file that is only filtered out of the answer keeps its slot, and enough of them push out every
+        # file that is still there.
+        for index in range(recent_files.MAX_RECENT):
+            recent_files.remember(tmp_path / f'gone_{index}.sge')
+        answers.picks(tmp_path / 'work.sge')
+        imported.save_session_as()
+        _pump(qapp)
+        assert [p.name for p in recent_files.recent_files()] == ['work.sge']
+        assert recent_files.recent_files(existing_only=False) == [(tmp_path / 'work.sge').resolve()]
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

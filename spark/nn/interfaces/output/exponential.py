@@ -25,7 +25,25 @@ from spark.nn.interfaces.output.base import OutputInterface, OutputInterfaceConf
 @register_config
 class ExponentialIntegratorConfig(OutputInterfaceConfig):
     """
-        ExponentialIntegrator configuration class.
+        Configuration for `ExponentialIntegrator`.
+
+        Parameters
+        ----------
+        num_outputs : int
+            Number of output signals. The input units are split equally among them.
+        saturation_freq : float, default 50.0
+            Population firing rate at which an output reaches 1.0, in Hz.
+        tau : float, default 5.0
+            Decay constant of the integrator, in ms.
+        output_map : jax.Array or None, default None
+            Index of the output each input unit contributes to. Must have one entry per input
+            unit. Assigned automatically when None.
+        shuffle : bool, default True
+            Draw the automatic assignment at random rather than in order. Only read when
+            ``output_map`` is None.
+        smooth_trace : bool, default True
+            Use a rise-and-decay trace instead of a single exponential, which removes the step
+            each spike would otherwise leave in the output.
     """
 
     num_outputs: int = dc.field(
@@ -88,22 +106,35 @@ class ExponentialIntegratorConfig(OutputInterfaceConfig):
 @register_interface
 class ExponentialIntegrator(OutputInterface):
     """
-        Transforms a discrete spike signal to a continuous signal.
-        This transformation assumes a very simple integration model model without any type of adaptation or plasticity.
-        Spikes are grouped into k non-overlaping clusters and every neuron contributes the same amount to the ouput.
+        Decodes spikes into a continuous signal.
 
-        Init:
-            num_outputs: int
-            saturation_freq: float [Hz]
-            tau: float [ms]
-            shuffle: bool
-            smooth_trace: bool
-            
-        Input:
-            spikes: SpikeArray
-            
-        Output:
-            signal: FloatArray
+        The input units are split into ``num_outputs`` groups. The spikes of each group are
+        counted per step and passed through an exponential trace, so each output tracks the firing
+        rate of its group.
+
+        Parameters
+        ----------
+        config : ExponentialIntegratorConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        spikes : SpikeArray
+            Spikes of the pool being read out.
+
+        Output Ports
+        ------------
+        signal : FloatArray
+            One value per group, of shape ``(num_outputs,)``. Reads 1.0 at ``saturation_freq``.
+
+        Notes
+        -----
+        The trace is scaled so that a group firing at ``saturation_freq`` reads 1.0. Rates above
+        it are not clipped and read above 1.0.
+
+        Assignment is by ``output_map`` when given. Otherwise the units are dealt out evenly,
+        shuffled when ``shuffle`` is set, which spreads each output over the pool rather than
+        over one contiguous block of it.
     """
     config: ExponentialIntegratorConfig
 
@@ -165,6 +196,19 @@ class ExponentialIntegrator(OutputInterface):
 
     def __call__(self, spikes: SpikeArray) -> OutputInterfaceOutput:
         # Flat array
+        """
+            Counts the spikes of each group and integrates them.
+
+            Parameters
+            ----------
+            spikes : SpikeArray
+                Spikes of the pool being read out.
+
+            Returns
+            -------
+            OutputInterfaceOutput
+                Dictionary with one entry, ``signal``, of shape ``(num_outputs,)``.
+        """
         x = spikes.spikes.reshape(-1).astype(self._dtype)
         # Count spikes in each output group.
         x = jax.ops.segment_sum(

@@ -215,6 +215,14 @@ copybutton_prompt_text = r'>>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: 
 copybutton_prompt_is_regexp = True
 
 # Tell sphinx autodoc how to render type aliases.
+# Spark modules declare their ports in the docstring. Registering them as parameter-style
+# sections is what makes napoleon render them as field lists rather than as section titles.
+napoleon_custom_sections = [
+    ('Input Ports', 'params_style'),
+    ('Output Ports', 'params_style'),
+    ('Properties', 'params_style'),
+]
+
 autodoc_typehints = 'description'
 autodoc_typehints_description_target = 'all'
 autodoc_type_aliases = {

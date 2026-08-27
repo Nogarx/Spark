@@ -57,8 +57,10 @@ def set_library_path(path: str | pl.Path | None) -> None:
     """
         Sets the location of the editor's model library.
 
-        Args:
-            path: str | pl.Path | None, the location.
+        Parameters
+        ----------
+        path : str or pathlib.Path or None
+            The location. None restores the default.
     """
     if not path:
         _settings().remove(SETTINGS_KEY)
@@ -71,11 +73,15 @@ def model_files(path: str | pl.Path | None = None) -> list[pl.Path]:
     """
         Returns a list of model files in the editor's model library.
 
-        Args:
-            path: str | pl.Path | None, a location to read instead of the chosen one.
+        Parameters
+        ----------
+        path : str or pathlib.Path, optional
+            A location to read instead of the chosen one.
 
-        Returns:
-            list[pl.Path], the files.
+        Returns
+        -------
+        list of pathlib.Path
+            The files.
     """
     root = pl.Path(path).expanduser() if path else library_path()
     if not root.is_dir():
@@ -94,13 +100,17 @@ def model_name(path: str | pl.Path) -> str:
 
 def read_model(path: str | pl.Path) -> tp.Any:
     """
-        Reads a file as a model
+        Reads a file as a model.
 
-        Args:
-            path: str | pl.Path, the file to read.
+        Parameters
+        ----------
+        path : str or pathlib.Path
+            The file to read.
 
-        Returns:
-            NeuronConfig, the configuration the file holds.
+        Returns
+        -------
+        SparkConfig
+            The configuration the file holds.
     """
     from spark.nn.controllers.neuron import NeuronConfig
     config = NeuronConfig.from_file(pl.Path(path))
@@ -115,13 +125,17 @@ def read_model(path: str | pl.Path) -> tp.Any:
 
 def register_file(path: str | pl.Path) -> str | None:
     """
-        Registers a model from a file
+        Registers a model from a file.
 
-        Args:
-            path: str | pl.Path, the file to read.
+        Parameters
+        ----------
+        path : str or pathlib.Path
+            The file to read.
 
-        Returns:
-            str | None, the name the model answers to, or nothing if it was already taken.
+        Returns
+        -------
+        str or None
+            The name the model answers to, or None if the name was already taken.
     """
     path = pl.Path(path)
     name = model_name(path)
@@ -137,11 +151,17 @@ def register_library(path: str | pl.Path | None = None) -> tuple[list[str], list
     """
         Registers all models in the editor's model library.
 
-        Args:
-            path: str | pl.Path | None, a location to read instead of the chosen one.
+        Parameters
+        ----------
+        path : str or pathlib.Path, optional
+            A location to read instead of the chosen one.
 
-        Returns:
-            tuple[list[str], list[tuple[pl.Path, str]]], the names now available and the files that failed.
+        Returns
+        -------
+        registered : list of str
+            The names now available.
+        failed : list of tuple of (pathlib.Path, str)
+            The files that could not be registered, with the reason.
     """
     registered: list[str] = []
     failed: list[tuple[pl.Path, str]] = []
@@ -162,12 +182,17 @@ def import_model(source: str | pl.Path, overwrite: bool = False) -> pl.Path:
     """
         Appends a model file to the editor's model library.
 
-        Args:
-            source: str | pl.Path, the file to take in.
-            overwrite: bool, whether a file of that name already in the library may be replaced.
+        Parameters
+        ----------
+        source : str or pathlib.Path
+            The file to take in.
+        overwrite : bool, default False
+            Whether a file of that name already in the library may be replaced.
 
-        Returns:
-            pl.Path, where the copy was left.
+        Returns
+        -------
+        pathlib.Path
+            Where the copy was left.
     """
     source = pl.Path(source).expanduser()
     if not source.is_file():

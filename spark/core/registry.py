@@ -28,6 +28,11 @@ logger = logging.getLogger('spark')
 #################################################################################################################################################
 
 class RegistryNamespace(enum.Enum):
+    """
+        The namespaces a class can be registered under.
+
+        Each names one kind of registered class and the base class its members must derive from.
+    """
     Components = enum.auto()
     Initializers = enum.auto()
     Payloads = enum.auto()
@@ -62,7 +67,16 @@ class RegistryNamespace(enum.Enum):
 @dc.dataclass(frozen=True)
 class RegistryEntry:
     """
-        Structured entry for the registry.
+        Registered class.
+
+        Parameters
+        ----------
+        name : str
+            Normalized name the class answers to.
+        path : tuple of str
+            Category path, used to group the class in the palette of the editor.
+        cls : type
+            The registered class, or a thunk resolving to it.
     """
     name: str
     module: str
@@ -79,7 +93,9 @@ class RegistryEntry:
 
 class SubRegistry:
     """
-        One namespace of a registry, as its own mapping of name to entry.
+        One namespace of a registry, as a mapping of name to entry.
+
+        Reached as ``REGISTRY.<Namespace>``, for example ``REGISTRY.Components``.
     """
 
     def __init__(self, instance: Registry,  namespace: RegistryNamespace) -> None:
@@ -89,19 +105,27 @@ class SubRegistry:
     def _entries(self) -> dict[str, RegistryEntry]:
         """
             Entries of this namespace, keyed by their normalized name.
+
+            Returns
+            -------
+            dict of str to RegistryEntry
         """
         return self._instance._registry[self._namespace]
 
     def get(self, key: str | None, default: tp.Any = None) -> RegistryEntry | None:
         """
-            Entry registered under a name.
+            Returns the entry registered under a name.
 
-            Args:
-                key: str | None, name to look up.
-                default: tp.Any, what to answer with when the name is not registered.
+            Parameters
+            ----------
+            key : str or None
+                Name to look up. Normalized before the lookup.
+            default : Any, optional
+                Returned when the name is not registered.
 
-            Returns:
-                RegistryEntry | None, the entry, or the default.
+            Returns
+            -------
+            RegistryEntry or None
         """
         self._instance._require_built()
         if not isinstance(key, str) or not key:
@@ -110,14 +134,18 @@ class SubRegistry:
 
     def get_by_cls(self, cls: type, default: tp.Any = None) -> RegistryEntry | None:
         """
-            Entry a class is registered under.
+            Returns the entry a class is registered under.
 
-            Args:
-                cls: type, the registered class.
-                default: tp.Any, what to answer with when the class is not registered.
+            Parameters
+            ----------
+            cls : type
+                Registered class.
+            default : Any, optional
+                Returned when the class is not registered.
 
-            Returns:
-                RegistryEntry | None, the entry, or the default.
+            Returns
+            -------
+            RegistryEntry or None
         """
         self._instance._require_built()
         if not isinstance(cls, type):
@@ -161,7 +189,14 @@ class SubRegistry:
 
 class Registry:
     """
-        Generic registry implementation.
+        Mapping from a name to the class registered under it.
+
+        Entries are collected as modules are imported and resolved once, when the registry is
+        built. Nothing may be read before that, since a class registered later would be missed.
+
+        See Also
+        --------
+        SparkRegistry : The registry of the framework, with its namespaces.
     """
 
     if tp.TYPE_CHECKING:
@@ -175,7 +210,21 @@ class Registry:
 
     def __getattr__(self, name: str) -> SubRegistry:
         """
-            Serves "REGISTRY.<Namespace>" as a view of that namespace.
+            Serves ``REGISTRY.<Namespace>`` as a view of that namespace.
+
+            Parameters
+            ----------
+            name : str
+                Name of a namespace.
+
+            Returns
+            -------
+            SubRegistry
+
+            Raises
+            ------
+            AttributeError
+                If no namespace goes by that name.
         """
         try:
             namespace = RegistryNamespace[name]
@@ -190,7 +239,12 @@ class Registry:
 
     def _require_built(self) -> None:
         """
-            Raises unless the registry is built.
+            Raises unless the registry has been built.
+
+            Raises
+            ------
+            RuntimeError
+                If the registry is not built yet.
         """
         if not self.__built__:
             raise RuntimeError(
@@ -217,7 +271,16 @@ class Registry:
 
     def register(self, namespace: RegistryNamespace, name: str, cls: type[object], path: list[str] | None = None) -> None:
         """
-            Register new registry_base_type.
+            Registers a class under a namespace.
+
+            Parameters
+            ----------
+            namespace : RegistryNamespace
+                Namespace to register under.
+            cls : type
+                Class to register.
+            path : tuple of str, optional
+                Category path, used to group the class in the palette of the editor.
         """
         if self.__built__:
             self._register(namespace, name, cls, path)
@@ -261,7 +324,9 @@ class Registry:
 
     def _build(self) -> None:
         """
-            Build registry.
+            Resolves every registered class and closes the registry for reading.
+
+            Called once, after the modules declaring the classes have been imported.
         """
         if self.__built__:
             return
@@ -275,7 +340,18 @@ class Registry:
 
     def get(self, namespace: RegistryNamespace | str, name: str, default: tp.Any = None) -> RegistryEntry | None:
         """
-            Safely retrieves a component entry by name.
+            Returns the entry registered under a name, across namespaces.
+
+            Parameters
+            ----------
+            key : str
+                Name to look up.
+            default : Any, optional
+                Returned when the name is not registered.
+
+            Returns
+            -------
+            RegistryEntry or None
         """
         self._require_built()
         if isinstance(namespace, str):
@@ -325,7 +401,10 @@ class Registry:
 
 class SparkRegistry(Registry):
     """
-        Generic registry implementation.
+        The registry of the framework.
+
+        Holds one namespace per kind of registered class: components, initializers, payloads,
+        interfaces, neurons, configurations and validators. The singleton is `REGISTRY`.
     """
 
     if tp.TYPE_CHECKING:
@@ -456,6 +535,7 @@ MRO_PATH_ALIAS_MAP = {
     'InputInterface': ('Input', 'Interfaces'),
     'OutputInterface': ('Output', 'Interfaces'),
     'ControlInterface': ('Control', 'Interfaces'),
+    'SignalTrace': 'Traces',
     'Component': 'Components',
     'Delays': 'Delays',
     'Plasticity': 'Plasticity Rules',
@@ -464,6 +544,8 @@ MRO_PATH_ALIAS_MAP = {
     'Neuron': 'Neurons',
     # Exclusions
     'ValueSparkPayload': None,
+    # Mixins
+    'AdaptiveSoma': None,
 }
 
 INITIALIZERS_ALIAS_MAP = {
@@ -478,13 +560,20 @@ INITIALIZERS_ALIAS_MAP = {
 
 def _bind_to_spark(cls: type) -> type:
     """
-        Publishes a class built at runtime under the "spark" namespace.
+        Publishes a class built at runtime under the ``spark`` namespace.
 
-        Args:
-            cls: type, the class to publish.
+        A model read from a file has no Python definition, so the class built for it is bound to
+        the package to be importable and picklable like any other.
 
-        Returns:
-            type, the same class.
+        Parameters
+        ----------
+        cls : type
+            Class to publish.
+
+        Returns
+        -------
+        type
+            The same class.
     """
     import spark as spark_module
     name = cls.__name__
@@ -501,7 +590,18 @@ def _bind_to_spark(cls: type) -> type:
 
 def _construct_neuron_config_cls(cls_name: str, config: NeuronConfig) -> type[NeuronConfig]:
     """
-        Generate a NeuronConfig subclass programmatically from a NeuronConfig instance.
+        Builds a `NeuronConfig` subclass from a configuration instance.
+
+        Parameters
+        ----------
+        name : str
+            Name the class answers to.
+        config : NeuronConfig
+            Configuration whose modules and values become the defaults of the class.
+
+        Returns
+        -------
+        type of NeuronConfig
     """
     from spark.nn.controllers.neuron import NeuronConfig
     # Shallow copy
@@ -526,7 +626,18 @@ def _construct_neuron_config_cls(cls_name: str, config: NeuronConfig) -> type[Ne
 
 def _construct_neuron_cls(cls_name: str, config_cls: type[NeuronConfig]) -> type[Neuron]:
     """
-        Generate a Neuron subclass programmatically from a NeuronConfig type.
+        Builds a `Neuron` subclass from a configuration class.
+
+        Parameters
+        ----------
+        name : str
+            Name the class answers to.
+        config_cls : type of NeuronConfig
+            Configuration class the neuron is built from.
+
+        Returns
+        -------
+        type of Neuron
     """
     from spark.nn.controllers.neuron import Neuron
     # Cls namespace
@@ -543,7 +654,22 @@ def _construct_neuron_cls(cls_name: str, config_cls: type[NeuronConfig]) -> type
 # TODO: Clean up is necessary in case something fails in order to prevent orphaned pairs.
 def register_neuron_from_config(cls_name: str, config: NeuronConfig) -> None:
     """
-        Generate a (Neuron, NeuronConfig) subclass pair programmatically from a NeuronConfig instance.
+        Registers a (Neuron, NeuronConfig) pair built from a configuration instance.
+
+        This is what turns a model designed in the editor into a class that can be placed in a
+        `Brain` like any other neuron.
+
+        Parameters
+        ----------
+        name : str
+            Name the pair answers to.
+        config : NeuronConfig
+            Configuration whose modules and values become the defaults of the pair.
+
+        Returns
+        -------
+        type of Neuron
+            The registered class.
     """
     from spark.nn.controllers.neuron import NeuronConfig
     if REGISTRY.Neurons.exists(cls_name):
@@ -575,13 +701,20 @@ def register_neuron_from_config(cls_name: str, config: NeuronConfig) -> None:
 
 def register_models_from_payload(payload: tp.Any) -> list[str]:
     """
-        Registers a collection of models from decoded json documents.
+        Registers every model named by a decoded json document.
 
-        Args:
-            payload: tp.Any, a decoded json document, before the spark decoder has read it.
+        Read before the spark decoder runs, so that a file naming models that are not yet
+        registered can be decoded.
 
-        Returns:
-            list[str], names of the models that were registered.
+        Parameters
+        ----------
+        payload : Any
+            A decoded json document.
+
+        Returns
+        -------
+        list of str
+            Names of the models that were registered.
     """
     import json
     from spark.core.serializer import SparkJSONDecoder
@@ -629,7 +762,19 @@ def register_models_from_payload(payload: tp.Any) -> list[str]:
 
 def register_neuron_from_config_file(cls_name: str, path: pl.Path) -> None:
     """
-        Generate a (Neuron, NeuronConfig) subclass pair programmatically from a NeuronConfig file.
+        Registers a (Neuron, NeuronConfig) pair built from a .scfg file.
+
+        Parameters
+        ----------
+        name : str
+            Name the pair answers to.
+        file_path : str
+            File holding the configuration.
+
+        Returns
+        -------
+        type of Neuron
+            The registered class.
     """
     from spark.nn.controllers.neuron import NeuronConfig
     path = pl.Path(path).absolute()

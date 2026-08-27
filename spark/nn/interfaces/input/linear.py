@@ -23,7 +23,16 @@ from spark.nn.interfaces.input.base import InputInterface, InputInterfaceConfig,
 @register_config
 class LinearSpikerConfig(InputInterfaceConfig):
     """
-        LinearSpiker model configuration class.
+        Configuration for `LinearSpiker`.
+
+        Parameters
+        ----------
+        tau : float, default 100.0
+            Decay constant of the internal potential, in ms.
+        cd : float, default 2.0
+            Refractory period, in ms. Bounds the firing rate at ``1000 / cd`` Hz.
+        max_freq : float, default 100.0
+            Firing rate reached by an input of 1.0, in Hz.
     """
     
     tau: float = dc.field(
@@ -62,20 +71,35 @@ class LinearSpikerConfig(InputInterfaceConfig):
 @register_interface
 class LinearSpiker(InputInterface):
     """
-        Transforms a continuous signal to a spiking signal.
-        This transformation assumes a very simple linear neuron model without any type of adaptation or plasticity.
-        Units have a fixed refractory period and at maximum input signal will fire up to some fixed frequency.
+        Deterministic rate encoding of a continuous signal.
 
-        Init:
-            tau: float [ms]
-            cd: float [ms]
-            max_freq: float [Hz]
+        Each unit integrates its input into a potential and fires when the potential reaches a
+        threshold, after which it resets and waits out a refractory period. The same input always
+        produces the same spike train, which makes a run repeatable without fixing a seed.
 
-        Input:
-            signal: FloatArray
-            
-        Output:
-            spikes: SpikeArray
+        Parameters
+        ----------
+        config : LinearSpikerConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        signal : FloatArray
+            Value to encode, expected in ``[0, 1]``.
+
+        Output Ports
+        ------------
+        spikes : SpikeArray
+            One spike train per input, of the same shape as ``signal``.
+
+        Notes
+        -----
+        The input is gated off during the refractory period, so ``cd`` bounds the firing rate at
+        ``1000 / cd`` Hz regardless of ``max_freq``.
+
+        See Also
+        --------
+        PoissonSpiker : Stochastic encoding of the same signal.
     """
     config: LinearSpikerConfig
 
@@ -110,12 +134,17 @@ class LinearSpiker(InputInterface):
 
     def __call__(self, signal: FloatArray) -> InputInterfaceOutput:
         """
-            Input interface operation.
+            Encodes the signal as spikes.
 
-            Input: 
-                A FloatArray of values in the range [0,1].
-            Output: 
-                A SpikeArray of the same shape as the input.
+            Parameters
+            ----------
+            signal : FloatArray
+                Value to encode, expected in ``[0, 1]``.
+
+            Returns
+            -------
+            InputInterfaceOutput
+                Dictionary with one entry, ``spikes``, of the same shape as ``signal``.
         """
         # Update potential
         is_ready = jnp.greater_equal(self._refractory.value, self._cooldown).astype(self._dtype)

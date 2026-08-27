@@ -18,7 +18,12 @@ from spark.nn.interfaces.base import Interface, InterfaceConfig
 
 class InputInterfaceOutput(tp.TypedDict):
     """
-       InputInterface model output spec.
+        Output ports of an input interface.
+
+        Attributes
+        ----------
+        spikes : SpikeArray
+            The encoded signal.
     """
     spikes: SpikeArray
 
@@ -26,7 +31,7 @@ class InputInterfaceOutput(tp.TypedDict):
 
 class InputInterfaceConfig(InterfaceConfig):
     """
-        Abstract InputInterface model configuration class.
+        Base configuration for input interfaces.
     """
     pass
 ConfigT = tp.TypeVar("ConfigT", bound=InputInterfaceConfig)
@@ -35,7 +40,30 @@ ConfigT = tp.TypeVar("ConfigT", bound=InputInterfaceConfig)
 
 class InputInterface(Interface, abc.ABC, tp.Generic[ConfigT]):
     """
-        Abstract input interface model.
+        Base class for input interfaces.
+
+        An input interface encodes a continuous signal as spikes, which is what lets a network
+        read data that did not come from a network.
+
+        Parameters
+        ----------
+        config : InputInterfaceConfig
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        signal : FloatArray
+            Value to encode.
+
+        Output Ports
+        ------------
+        spikes : SpikeArray
+            The encoded signal.
+
+        See Also
+        --------
+        PoissonSpiker : Stochastic rate encoding.
+        LinearSpiker : Deterministic rate encoding.
     """
     config: ConfigT
 
@@ -46,7 +74,19 @@ class InputInterface(Interface, abc.ABC, tp.Generic[ConfigT]):
     @abc.abstractmethod
     def __call__(self, *args: SparkPayload, **kwargs) -> InputInterfaceOutput:
         """
-            Transform the input signal into an Spike signal.
+            Encodes the signal as spikes.
+
+            Parameters
+            ----------
+            *args : SparkPayload
+                Inputs, as declared by the concrete interface.
+            **kwargs
+                Inputs, as declared by the concrete interface.
+
+            Returns
+            -------
+            InputInterfaceOutput
+                Dictionary with one entry, ``spikes``.
         """
         pass
 

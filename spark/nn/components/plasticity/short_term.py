@@ -28,7 +28,16 @@ from spark.nn.initializers.base import Initializer
 @register_config
 class RUShortTermPlasticityConfig(PlasticityConfig):
     """
-        Resource-Usage Short Term Plasticity configuration class.
+        Configuration for `RUShortTermPlasticity`.
+
+        Parameters
+        ----------
+        r_tau : float or jax.Array or Initializer, default 750.0
+            Recovery constant of the resource trace, in ms.
+        u_tau : float or jax.Array or Initializer, default 50.0
+            Decay constant of the usage trace, in ms.
+        u_scale : float or jax.Array or Initializer, default 0.45
+            Fraction of the available resources a spike consumes.
     """
 
     r_tau: float | jax.Array | Initializer = dc.field(
@@ -64,20 +73,50 @@ class RUShortTermPlasticityConfig(PlasticityConfig):
 
 @register_module
 class RUShortTermPlasticity(Plasticity):
-    """
-        Resource-Usage Short Term Plasticity model.
+    r"""
+        Resource-usage short term plasticity.
 
-        Init:
-            r_tau: float | jax.Array
-            u_tau: float | jax.Array
-            u_scale: float | jax.Array
+        Scales the synaptic current by the product of a usage variable and a resource variable.
+        A spike raises usage and drains resources, and both relax back between spikes, so a burst
+        is transmitted at a falling amplitude and recovers once the input pauses. Note that weights 
+        are not touched, this is a gain applied to the current.
 
-        Input:
-            pre_spikes: SpikeArray
-            currents: CurrentArray
-            
-        Output:
-            currents: CurrentArray
+        Parameters
+        ----------
+        config : RUShortTermPlasticityConfig
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        pre_spikes : SpikeArray
+            Presynaptic spikes, after any conduction delay.
+        currents : CurrentArray
+            Synaptic current before the short term gain is applied.
+
+        Output Ports
+        ------------
+        kernel : CurrentArray
+            The scaled current. The port is named ``kernel`` because every plasticity rule writes
+            through that port, but this rule returns a current rather than weights.
+
+        Notes
+        -----
+        With :math:`u` the usage trace, which rises by ``u_scale`` per spike and decays to zero,
+        and :math:`r` the resource trace, which rests at one and is drained by :math:`u r` per
+        spike, the transmitted current is
+
+        .. math::
+            I_{\mathrm{out}} = u \, r \, I_{\mathrm{in}}
+
+        Facilitation and depression are set by the ratio of ``u_tau`` to ``r_tau``: a usage trace
+        that outlives the resource trace facilitates, the reverse depresses.
+
+        References
+        ----------
+        .. [1] M. Tsodyks, K. Pawelzik and H. Markram, "Neural Networks with Dynamic Synapses",
+               Neural Computation 10(4), 821-835, 1998.
+               https://doi.org/10.1162/089976698300017502
+        .. [2] http://www.scholarpedia.org/article/Short-term_synaptic_plasticity
     """
     config: RUShortTermPlasticityConfig
 
@@ -112,6 +151,22 @@ class RUShortTermPlasticity(Plasticity):
         self.r_tracer.reset()
         self.u_tracer.reset()
 
+    def _kernel_delta(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> jax.Array:
+        """
+            Not defined for this component.
+
+            Short term plasticity scales the synaptic current and never touches the weights, so
+            it overrides `__call__` instead of supplying a weight change.
+
+            Raises
+            ------
+            NotImplementedError
+                Always.
+        """
+        raise NotImplementedError(
+            f'"{type(self).__name__}" scales the synaptic current and does not update the weights.'
+        )
+
     def _compute_current_update(self, pre_spikes: SpikeArray, currents: CurrentArray) -> jax.Array:
         """
             Computes next kernel update.
@@ -130,7 +185,19 @@ class RUShortTermPlasticity(Plasticity):
         
     def __call__(self, pre_spikes: SpikeArray, currents: CurrentArray) -> PlasticityOutput:
         """
-            Computes and returns an update current using a Resource-Usage model.
+            Applies the short term gain to the synaptic current.
+
+            Parameters
+            ----------
+            pre_spikes : SpikeArray
+                Presynaptic spikes, after any conduction delay.
+            currents : CurrentArray
+                Synaptic current before the gain is applied.
+
+            Returns
+            -------
+            PlasticityOutput
+                Dictionary with one entry, ``kernel``, carrying the scaled `CurrentArray`.
         """
         return {
             'kernel': CurrentArray(self._compute_current_update(pre_spikes, currents))

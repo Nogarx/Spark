@@ -24,13 +24,17 @@ from collections.abc import MutableMapping
 
 def normalize_str(s: str) -> str:
     """
-        Converts any string into a consistent lowercase_snake_case format.
+        Converts a string to lowercase snake_case.
 
-        Args:
-            s: str, string to normalize
+        Parameters
+        ----------
+        s : str
+            String to normalize.
 
-        Returns:
-            str, normalized string
+        Returns
+        -------
+        str
+            The normalized string.
     """
     if not isinstance(s, str) or not s:
         raise TypeError(
@@ -49,13 +53,19 @@ def normalize_str(s: str) -> str:
 
 def to_human_readable(s: str, capitalize_all: bool = True) -> str:
     """
-    Converts a string from various programming cases into a human-readable format.
+        Converts a string from a programming case into a readable one.
 
-    Input:
-        s: str, string to normalize
-        capitalize_all: bool, title-case every word instead of just the first
-    Output:
-        str, human readable string
+        Parameters
+        ----------
+        s : str
+            String to convert.
+        capitalize_all : bool, default False
+            Title-case every word instead of the first one alone.
+
+        Returns
+        -------
+        str
+            The readable string.
     """
 
     def _looks_like_acronym(w: str) -> bool:
@@ -85,14 +95,19 @@ def to_human_readable(s: str, capitalize_all: bool = True) -> str:
 
 def get_einsum_labels(num_dims: int, offset: int = 0) -> str:
     """
-        Generates labels for a generalized dot product using Einstein notation.
+        Builds a run of einsum labels.
 
-        Args:
-            num_dims: int, number of dimensions (labels) to generate
-            offset: int, initial dimension (label) offset
+        Parameters
+        ----------
+        num_dims : int
+            Number of labels to generate.
+        offset : int, default 0
+            Number of labels to skip before the first one.
 
-        Returns:
-            str, a string with num_dims different labels, skipping the first offset characters 
+        Returns
+        -------
+        str
+            ``num_dims`` distinct labels, starting after ``offset``.
     """
     if (offset + num_dims) > len(string.ascii_letters):
         raise ValueError(
@@ -105,13 +120,25 @@ def get_einsum_labels(num_dims: int, offset: int = 0) -> str:
 
 def get_axes_einsum_labels(axes: tuple[int, ...], ignore_repeated:bool = False) -> str:
     """
-        Generates labels for a generalized dot product using Einstein notation.
+        Builds the einsum labels naming a given set of axes.
 
-        Args:
-            axes: tuple[int, ...], requested dimensions (labels) to generate
+        Parameters
+        ----------
+        axes : tuple of int
+            Axis indices to name.
+        ignore_repeated : bool, default False
+            Allow the same axis to appear more than once.
 
-        Returns:
-            str, a string with num_dims different labels, skipping the first offset characters 
+        Returns
+        -------
+        str
+            One label per entry of ``axes``, in the order given.
+
+        Raises
+        ------
+        ValueError
+            If an axis is negative, beyond the number of available labels, or repeated while
+            ``ignore_repeated`` is False.
     """
     
     if any([ax < 0 for ax in axes]):
@@ -134,18 +161,28 @@ def get_axes_einsum_labels(axes: tuple[int, ...], ignore_repeated:bool = False) 
 
 def get_einsum_dot_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one_dims: bool = True, side: str = 'right') -> str:
     """
-        Generates labels for a generalized dot product using Einstein notation.
-            right:	(c,d)•(a,b,c,d)=(a,b) - cd,abcd->ab     |    (a,b,c,d)•(c,d)=(a,b) - abcd,cd->ab
-            left:	(a,b)•(a,b,c,d)=(c,d) - ab,abcd->cd	    |	 (a,b,c,d)•(c,d)=(c,d) - abcd,ab->cd
+        Builds the einsum string of a generalized dot product.
 
-        Args:
-            x: tuple[int, ...], shape for the first variable of the dot product
-            y: tuple[int, ...], shape for the second variable of the dot product
-            ignore_one_dims: bool, ignore one dimensions when computing the labels (squeeze shapes), default: True
-            side: str, side of the dot product, default: "right"
+        The shared axes are contracted and the remaining ones are kept::
 
-        Returns:
-            str, a string representing the dot product operation
+            right:  (c,d)*(a,b,c,d)=(a,b)  cd,abcd->ab    (a,b,c,d)*(c,d)=(a,b)  abcd,cd->ab
+            left:   (a,b)*(a,b,c,d)=(c,d)  ab,abcd->cd    (a,b,c,d)*(a,b)=(c,d)  abcd,ab->cd
+
+        Parameters
+        ----------
+        x : tuple of int
+            Shape of the first operand.
+        y : tuple of int
+            Shape of the second operand.
+        ignore_one_dims : bool, default True
+            Drop the axes of length one before building the labels.
+        side : {'right', 'left'}, default 'right'
+            Which end of the longer shape the shorter one aligns with.
+
+        Returns
+        -------
+        str
+            The einsum string.
     """
     # Check shape is valid
     if 0 in x or 0 in y:
@@ -189,18 +226,28 @@ def get_einsum_dot_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one_dim
 
 def get_einsum_dot_red_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one_dims: bool = True, side: str = 'right') -> str:
     """
-        Generates labels for a generalized dot reduction product using Einstein notation.
-            right:	(a,b)•(a,b,c,d)=(a,b) - ab,abcd->ab     |    (a,b,c,d)•(a,b)=(a,b) - abcd,ab->ab
-            left:	(c,d)•(a,b,c,d)=(c,d) - cd,abcd->cd	    |	 (a,b,c,d)•(c,d)=(c,d) - abcd,ab->ab
+        Builds the einsum string of a generalized dot product that keeps the shared axes.
 
-        Args:
-            x: tuple[int, ...], shape for the first variable of the dot product
-            y: tuple[int, ...], shape for the second variable of the dot product
-            ignore_one_dims: bool, ignore one dimensions when computing the labels (squeeze shapes), default: True
-            side: str, side of the reduction-dot product, default: "right" 
+        The shared axes are reduced onto themselves rather than contracted away::
 
-        Returns:
-            str, a string representing the dot product operation
+            right:  (a,b)*(a,b,c,d)=(a,b)  ab,abcd->ab    (a,b,c,d)*(a,b)=(a,b)  abcd,ab->ab
+            left:   (c,d)*(a,b,c,d)=(c,d)  cd,abcd->cd    (a,b,c,d)*(c,d)=(c,d)  abcd,cd->cd
+
+        Parameters
+        ----------
+        x : tuple of int
+            Shape of the first operand.
+        y : tuple of int
+            Shape of the second operand.
+        ignore_one_dims : bool, default True
+            Drop the axes of length one before building the labels.
+        side : {'right', 'left'}, default 'right'
+            Which end of the longer shape the shorter one aligns with.
+
+        Returns
+        -------
+        str
+            The einsum string.
     """
     # Check shape is valid
     if 0 in x or 0 in y:
@@ -244,19 +291,30 @@ def get_einsum_dot_red_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one
 
 def get_einsum_dot_exp_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one_dims: bool = True, side: str = 'right') -> str:
     """
-        Generates labels for a generalized dot expansion product using Einstein notation.
-            right:	(a,b)•(a,b,c,d)=(a,b,c,d) - ab,abcd->abcd   |   (a,b,c,d)•(a,b)=(a,b,c,d) - abcd,ab->abcd
-            left:	(c,d)•(a,b,c,d)=(a,b,c,d) - cd,abcd->abcd	|	(c,d)•(a,b,c,d)=(a,b,c,d) - abcd,cd->abcd
-            none: 	(a,b)•(c,d)=(a,b,c,d) - ab,cd->abcd		    | 	(a)•(b,c,d)=(a,b,c,d) - a,bcd->abcd
-            flip:   (a,b)•(c,d)=(c,d,a,b) - cd,ab->abcd		    | 	(a)•(b,c,d)=(b,c,d,a) - bcd,a->abcd
-        Args:
-            x: tuple[int, ...], shape for the first variable of the dot product
-            y: tuple[int, ...], shape for the second variable of the dot product
-            ignore_one_dims: bool, ignore one dimensions when computing the labels (squeeze shapes), default: True
-            side: str, side of the expansion-dot, default: "right"
-                
-        Returns:
-            str, a string representing the dot product operation
+        Builds the einsum string of a generalized outer product.
+
+        Nothing is contracted; the result carries the axes of both operands::
+
+            right:  (a,b)*(a,b,c,d)=(a,b,c,d)  ab,abcd->abcd
+            left:   (c,d)*(a,b,c,d)=(a,b,c,d)  cd,abcd->abcd
+            none:   (a,b)*(c,d)=(a,b,c,d)      ab,cd->abcd
+            flip:   (a,b)*(c,d)=(c,d,a,b)      cd,ab->abcd
+
+        Parameters
+        ----------
+        x : tuple of int
+            Shape of the first operand.
+        y : tuple of int
+            Shape of the second operand.
+        ignore_one_dims : bool, default True
+            Drop the axes of length one before building the labels.
+        side : {'right', 'left', 'none', 'flip'}, default 'right'
+            How the axes of the two operands are laid out in the result.
+
+        Returns
+        -------
+        str
+            The einsum string.
     """
     # Check shape is valid
     if 0 in x or 0 in y:
@@ -310,14 +368,22 @@ def get_einsum_dot_exp_string(x: tuple[int, ...], y: tuple[int, ...], ignore_one
 
 def validate_shape(obj: tp.Any) -> tuple[int, ...]:
     """
-        Verifies that the object is broadcastable to a valid shape (tuple of integers).
-        Returns the shape.
+        Checks that an object reads as a shape and returns it.
 
-        Args:
-            obj: tp.Any: the instance to validate
+        Parameters
+        ----------
+        obj : Any
+            Object to read as a shape.
 
-        Returns:
-            list[tuple[int, ...]], the shape
+        Returns
+        -------
+        tuple of int
+            The shape.
+
+        Raises
+        ------
+        TypeError
+            If the object does not read as a tuple of integers.
     """
     # Sanity checks
     if isinstance(obj, int):
@@ -341,14 +407,22 @@ def validate_shape(obj: tp.Any) -> tuple[int, ...]:
 
 def validate_list_shape(obj: tp.Any) -> list[tuple[int, ...]]:
     """
-        Verifies that the object is broadcastable to a valid list ofshape (a list of tuple of integers).
-        Returns the list of shapes.
+        Checks that an object reads as a list of shapes and returns it.
 
-        Args:
-            obj: tp.Any: the instance to validate
+        Parameters
+        ----------
+        obj : Any
+            Object to read as a list of shapes.
 
-        Returns:
-            list[tuple[int, ...]], the list of shapes
+        Returns
+        -------
+        list of tuple of int
+            The shapes.
+
+        Raises
+        ------
+        TypeError
+            If the object does not read as a list of tuples of integers.
     """
     # Sanity checks
     if not isinstance(obj, collections.abc.Iterable) or len(obj) == 0:
@@ -367,13 +441,17 @@ def validate_list_shape(obj: tp.Any) -> list[tuple[int, ...]]:
 
 def merge_shape_list(shape_list: list[tuple[int, ...]]) -> tuple[int, ...]:
     """
-        Merges a list of shapes into a single shape.
+        Merges a list of shapes into one.
 
-        Args:
-            shape_list: list[tuple[int, ...]]: the list of shapes
+        Parameters
+        ----------
+        shape_list : list of tuple of int
+            Shapes to merge.
 
-        Returns:
-            tuple[int, ...], the merged shape
+        Returns
+        -------
+        tuple of int
+            The merged shape.
     """
     shape_list = validate_list_shape(shape_list)
     return tuple([sum([prod(s) for s in shape_list])])
@@ -382,16 +460,23 @@ def merge_shape_list(shape_list: list[tuple[int, ...]]) -> tuple[int, ...]:
 
 def contract_axes(array: tp.Any, axes: tuple[int, ...], shape: tuple[int, ...]) -> tuple[tp.Any, bool]:
     """
-        Tries to contract an array over the given axes. 
-        Contraction is only sucessful if the array is constant along the given axes.
+        Contracts an array over the given axes when it is constant along them.
 
-        Args:
-            array: tp.Any, the array to reduce
-            axes: tuple[int, ...], axes of shape to reduce over.
-            shape: tuple[int, ...], shape the array is read against.
+        Parameters
+        ----------
+        array : Any
+            Array to contract.
+        axes : tuple of int
+            Axes to contract over.
+        shape : tuple of int
+            Shape the array is read against.
 
-        Returns:
-            tuple[tp.Any, bool], the contracted array, whether it was a constant contraction
+        Returns
+        -------
+        array : Any
+            The contracted array, or the original one when the contraction does not apply.
+        contracted : bool
+            Whether the array was contracted.
     """
     if not isinstance(array, jax.Array) or len(axes) == 0:
         return array, True
@@ -409,14 +494,19 @@ def contract_axes(array: tp.Any, axes: tuple[int, ...], shape: tuple[int, ...]) 
 
 def contracted_shape(shape: tuple[int, ...], axes: tuple[int, ...]) -> tuple[int, ...]:
     """
-        Returns the expected shape after contract_axes
+        Returns the shape `contract_axes` produces.
 
-        Args:
-            shape: tuple[int, ...], the shape to reduce.
-            axes: tuple[int, ...], axes to reduce over.
+        Parameters
+        ----------
+        shape : tuple of int
+            Shape before the contraction.
+        axes : tuple of int
+            Axes contracted over.
 
-        Returns:
-            tuple[int, ...]
+        Returns
+        -------
+        tuple of int
+            The shape with the contracted axes dropped.
     """
     return tuple(1 if axis in axes else size for axis, size in enumerate(shape))
 
@@ -424,13 +514,16 @@ def contracted_shape(shape: tuple[int, ...], axes: tuple[int, ...]) -> tuple[int
 
 def is_shape(obj: tp.Any) -> bool:
     """
-        Checks if the obj is broadcastable to a shape.
+        Whether an object reads as a shape.
 
-        Args:
-            obj: tp.Any: the instance to check.
+        Parameters
+        ----------
+        obj : Any
+            Object to check.
 
-        Returns:
-            bool, True if the object is broadcastable to a shape, False otherwise.
+        Returns
+        -------
+        bool
     """
     try: 
         validate_shape(obj)
@@ -442,13 +535,16 @@ def is_shape(obj: tp.Any) -> bool:
 
 def is_list_shape(obj: tp.Any) -> bool:
     """
-        Checks if the obj is broadcastable to a shape.
+        Whether an object reads as a list of shapes.
 
-        Args:
-            obj: tp.Any: the instance to check.
+        Parameters
+        ----------
+        obj : Any
+            Object to check.
 
-        Returns:
-            bool, True if the object is broadcastable to a list of shapes, False otherwise.
+        Returns
+        -------
+        bool
     """
     try: 
         validate_list_shape(obj)
@@ -461,15 +557,20 @@ def is_list_shape(obj: tp.Any) -> bool:
 
 def is_dict_of(obj: tp.Any, value_cls: type[tp.Any], key_cls: type[tp.Any] = str) -> bool:
     """
-        Check if an object instance is of 'dict[key_cls, value_cls]'.
+        Whether an object is a ``dict[key_cls, value_cls]``.
 
-        Args:
-            obj: tp.Any: the instance to check.
-            key_cls: type[tp.Any], the class to compare keys against.
-            value_cls: type[tp.Any], the class to compare values against.
+        Parameters
+        ----------
+        obj : Any
+            Object to check.
+        value_cls : type
+            Class the values are checked against.
+        key_cls : type, default str
+            Class the keys are checked against.
 
-        Returns:
-            bool, True if the object is an instance of 'dict[key_cls, value_cls]', False otherwise.
+        Returns
+        -------
+        bool
     """
     if not isinstance(key_cls, type):
         raise TypeError(
@@ -488,14 +589,18 @@ def is_dict_of(obj: tp.Any, value_cls: type[tp.Any], key_cls: type[tp.Any] = str
 
 def is_list_of(obj: tp.Any, cls: type[tp.Any]) -> bool:
     """
-        Check if an object instance is of 'list[cls]'.
+        Whether an object is a ``list[cls]``.
 
-        Args:
-            obj: tp.Any, the instance to check.
-            cls: type[tp.Any], the class to compare values against.
+        Parameters
+        ----------
+        obj : Any
+            Object to check.
+        cls : type
+            Class the entries are checked against.
 
-        Returns:
-            bool, True if the object is an instance of 'list[cls]', False otherwise.
+        Returns
+        -------
+        bool
     """
     if not isinstance(cls, type):
         raise TypeError(
@@ -510,12 +615,16 @@ def is_list_of(obj: tp.Any, cls: type[tp.Any]) -> bool:
 
 def is_dtype(obj: tp.Any) -> bool:
     """
-        Check if an object is a 'DTypeLike'.
+        Whether an object is a dtype.
 
-        Args:
-            obj (tp.Any): The instance to check.
-        Returns:
-            bool, True if the object is a 'DTypeLike', False otherwise.
+        Parameters
+        ----------
+        obj : Any
+            Object to check.
+
+        Returns
+        -------
+        bool
     """
     try:
         if np.isdtype(obj, ('numeric', 'bool')):
@@ -528,12 +637,18 @@ def is_dtype(obj: tp.Any) -> bool:
 
 def is_float(obj: tp.Any) -> bool:
     """
-        Check if an object is a 'DTypeLike'.
+        Whether an object is a floating point dtype.
 
-        Args:
-            obj (tp.Any): The instance to check.
-        Returns:
-            bool, True if the object is a 'DTypeLike', False otherwise.
+        Parameters
+        ----------
+        obj : Any
+            Object to check.
+
+        Returns
+        -------
+        bool
+            True for a real floating dtype, False for anything else, including integer and
+            boolean dtypes.
     """
     try:
         if np.isdtype(obj, ('real floating',)):
@@ -546,8 +661,17 @@ def is_float(obj: tp.Any) -> bool:
 
 def ascii_tree(text: str) -> str:
     """
-        Build an ASCII tree from indentation-based text.
-        Each level is inferred from leading spaces.
+        Renders indented text as an ASCII tree.
+
+        Parameters
+        ----------
+        text : str
+            Lines whose depth is given by their leading spaces.
+
+        Returns
+        -------
+        str
+            The tree.
     """
     lines = [l for l in text.splitlines() if l.strip()]
     if not lines:
@@ -603,6 +727,17 @@ _VT = tp.TypeVar('_VT')
 @dc.dataclass(init=False, eq=False)
 class TwoKeyDict(MutableMapping[tuple[_K1, _K2], _VT], tp.Generic[_K1, _K2, _VT]):
 
+    """
+        Mapping addressed by a pair of keys.
+
+        ``d[k1, k2]`` reads one entry and ``d[k1]`` reads the inner mapping under the first key.
+        Used for the values a graph addresses by (module name, port name).
+
+        Parameters
+        ----------
+        data : dict of K1 to dict of K2 to VT, optional
+            Initial contents, as nested mappings.
+    """
     def __init__(self, data: dict[_K1, dict[_K2, _VT]] | None = None) -> None:
         self._data = defaultdict(dict)
         if not data is None:

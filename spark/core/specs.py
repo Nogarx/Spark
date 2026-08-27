@@ -29,7 +29,21 @@ from math import prod
 @dc.dataclass(init=False)
 class PortSpecs:
     """
-        Base specification for a port of an SparkModule.
+        Module port specification.
+
+        Names the payload type, and the shape and dtype once they are known. Shape and dtype are
+        None until the module is built, since they are inferred from the values that reach it.
+
+        Parameters
+        ----------
+        payload_type : type of SparkPayload or None
+            Type the port carries. Two ports connect only if this matches.
+        shape : tuple of int or list of tuple of int or None
+            Shape of the payload. A list when several values arrive on the port.
+        dtype : DTypeLike or None
+            Dtype of the payload.
+        description : str, optional
+            Human readable description of the port.
     """
     payload_type: type[SparkPayload] | None
     shape: tuple[int, ...] | list[tuple[int, ...]] | None
@@ -56,7 +70,12 @@ class PortSpecs:
 
     def to_dict(self,) -> dict[str, tp.Any]:
         """
-            Serialize PortSpecs to dictionary
+            Serializes the specification to a dictionary.
+
+            Returns
+            -------
+            dict
+                The fields of the specification, with the payload type as its registered name.
         """
         reg = REGISTRY.Payloads.get_by_cls(self.payload_type)
         return {
@@ -71,14 +90,32 @@ class PortSpecs:
     @classmethod
     def from_dict(cls, dct: dict[str, tp.Any]) -> tp.Self:
         """
-            Deserialize dictionary to  PortSpecs
+            Builds a specification from a dictionary.
+
+            Parameters
+            ----------
+            dct : dict
+                As produced by `to_dict`.
+
+            Returns
+            -------
+            PortSpecs
         """
         return cls(**dct)
 
     @classmethod
     def from_payload(cls, payload: SparkPayload) -> tp.Self:
         """
-            Deserialize dictionary to  PortSpecs
+            Builds a specification describing an existing payload.
+
+            Parameters
+            ----------
+            payload : SparkPayload
+                Payload to read the type, shape and dtype from.
+
+            Returns
+            -------
+            PortSpecs
         """
         from spark.core.payloads import SpikeArray
         dct = {
@@ -92,7 +129,25 @@ class PortSpecs:
     @classmethod
     def from_portspecs_list(cls, portspec_list: list[PortSpecs]) -> tp.Self:
         """
-            Merges a list of PortSpecs into a single PortSpecs
+            Merges several specifications into one.
+
+            Used for a port fed by more than one source, whose values are concatenated.
+
+            Parameters
+            ----------
+            portspec_list : list of PortSpecs
+                Specifications to merge. All must carry the same payload type.
+
+            Returns
+            -------
+            PortSpecs
+                The shared payload type, the promoted dtype and the merged shape. The list itself is
+                returned unchanged when it holds a single entry.
+
+            Raises
+            ------
+            TypeError
+                If the specifications do not all carry the same payload type.
         """
         # Return original portspec if list contains a single element
         if len(portspec_list) == 1:
@@ -130,7 +185,22 @@ class PortSpecs:
 @dc.dataclass(init=False)
 class PortMap:
     """
-        Specification for an output port of an SparkModule.
+        Module's connections specification.
+
+        A pair of the form (module_name, module_port_name) that specifies a connection within a controller.
+        ``'__call__'`` and ``'__self__'`` are speciail module_names used to refer to the controller's inputs
+        and the same module defining the mapping.
+        
+
+        Parameters
+        ----------
+        origin : str
+            Name of the module the value comes from. ``'__call__'`` for an input of the enclosing
+            controller, ``'__self__'`` for a property of the controller itself.
+        port : str
+            Name of the port on that module.
+        is_property : bool, default False
+            Read a property of the origin rather than one of its outputs.
     """
     origin: str        
     port: str       
@@ -143,7 +213,12 @@ class PortMap:
 
     def to_dict(self,) -> dict[str, tp.Any]:
         """
-            Serialize PortMap to dictionary
+            Serializes the map to a dictionary.
+
+            Returns
+            -------
+            dict
+                The origin, the port and the property flag.
         """
         return {
             'origin': self.origin,
@@ -154,7 +229,16 @@ class PortMap:
     @classmethod
     def from_dict(cls, dct: dict[str, tp.Any]) -> tp.Self:
         """
-            Deserialize dictionary to PortMap
+            Builds a map from a dictionary.
+
+            Parameters
+            ----------
+            dct : dict
+                As produced by `to_dict`.
+
+            Returns
+            -------
+            PortMap
         """
         return cls(**dct)
 
@@ -170,7 +254,29 @@ class PortMap:
 @dc.dataclass(init=False)
 class ModuleSpecs:
     """
-        Specification for SparkModule automatic constructor.
+        Specification of a module within a controller.
+
+        This is what makes a model data rather than code: a controller holds a tuple of these, so
+        it can be written to a file, edited, and instantiated again without a Python definition.
+
+        Parameters
+        ----------
+        name : str
+            Name the module answers to inside the controller. Also the attribute it is bound to.
+        module_cls : type of SparkModule
+            Class to instantiate. Must be registered.
+        inputs : dict of str to PortMap or list of PortMap
+            For each input port of the module, where its value comes from. Several entries for one
+            port are concatenated in order.
+        config : SparkConfig, optional
+            Configuration of the module. The default configuration is used when omitted.
+        outputs : dict of str to str, optional
+            Output ports of the module to expose as output ports of the controller, as
+            ``{controller port: module port}``.
+        effects : dict of str to PortMap or list of PortMap, optional
+            Properties of this module to write after the step, as ``{property: source}``. A
+            plasticity rule writes weights back onto a synapse this way. The property must have a
+            setter.
     """
 
     name: str
@@ -225,7 +331,12 @@ class ModuleSpecs:
 
     def to_dict(self,) -> dict[str, tp.Any]:
         """
-            Serialize ModuleSpecs to dictionary
+            Serializes the specification to a dictionary.
+
+            Returns
+            -------
+            dict
+                The name, the registered name of the module class, the wiring and the configuration.
         """
         reg, subregistry = None, None
         for namespace in (RegistryNamespace.Components, RegistryNamespace.Interfaces, RegistryNamespace.Neurons):
@@ -252,7 +363,16 @@ class ModuleSpecs:
     @classmethod
     def from_dict(cls, dct: dict[str, tp.Any],) -> tp.Self:
         """
-            Deserialize dictionary to ModuleSpecs
+            Builds a specification from a dictionary.
+
+            Parameters
+            ----------
+            dct : dict
+                As produced by `to_dict`. The module class is looked up in the registry by name.
+
+            Returns
+            -------
+            ModuleSpecs
         """
         # Name
         name = dct.get('name', None)
