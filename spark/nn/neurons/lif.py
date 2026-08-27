@@ -12,7 +12,7 @@ from spark.core.specs import PortMap, ModuleSpecs
 from spark.nn.controllers import Neuron, NeuronConfig
 from spark.nn.components.delays.n2n_delays import N2NDelays, N2NDelaysConfig
 from spark.nn.components.synapses.linear import LinearSynapses, LinearSynapsesConfig
-from spark.nn.components.somas.leaky import LeakySoma, LeakySomaConfig 
+from spark.nn.components.somas.leaky import AdaptiveLeakySoma, AdaptiveLeakySomaConfig
 from spark.nn.components.plasticity.hebbian_rule import HebbianRule, HebbianRuleConfig
 
 #################################################################################################################################################
@@ -22,7 +22,8 @@ from spark.nn.components.plasticity.hebbian_rule import HebbianRule, HebbianRule
 @register_config
 class LIFNeuronConfig(NeuronConfig):
 	"""
-        Standard Leaky-and-Integrate (LIF) neuron model with linear synapses, neuron-to-neuron delays and Hebbian learning.
+        Standard Leaky-and-Integrate (LIF) neuron model with linear synapses, neuron-to-neuron delays,
+		an absolute refractory period and Hebbian learning.
 		
 		NOTE: Parameter calibration is still necessary.
 	"""
@@ -50,18 +51,17 @@ class LIFNeuronConfig(NeuronConfig):
 				},
 				config = LinearSynapsesConfig.partial(),
 			),
-			# Leaky soma
+			# Leaky soma with an absolute refractory period
 			ModuleSpecs(
 				name ='soma', 
-				module_cls = LeakySoma, 
+				module_cls = AdaptiveLeakySoma, 
 				inputs = {
 					'current': [PortMap(origin='synapses', port='currents')],
-					'inhibition_mask': [PortMap(origin='__self__', port='inhibition_mask', is_property=True)],
 				},
 				outputs = {
 					'out_spikes': 'spikes', 
 				},
-				config = LeakySomaConfig.partial(),
+				config = AdaptiveLeakySomaConfig.partial(cooldown=3.0),
 			),
 			# Hebbian plasticity
 			ModuleSpecs(

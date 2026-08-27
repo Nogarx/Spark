@@ -472,6 +472,17 @@ class SparkModule(Module, abc.ABC, tp.Generic[ConfigT, InputT], metaclass=SparkM
 
 
 
+    @classmethod
+    def get_readonly_properties(cls,) -> tuple[str, ...]:
+        """
+            Returns all the attributes names wrapped by the spark_property wrapper that do not define a setter.
+        """
+        return tuple(
+            [name  for name, attr in inspect.getmembers(cls) if isinstance(attr, spark_property) and attr.fset is None]
+        )
+
+
+
     @abc.abstractmethod
     def __call__(self, **kwargs: InputT) -> ModuleOutput:
         """

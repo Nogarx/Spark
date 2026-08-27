@@ -32,6 +32,8 @@ logger = logging.getLogger('spark')
 #                         a Brain and a collection of somas/synapses/delays in a Neuron.
 #   - import_namespaces:  which registered models can be expanded into this graph. They are not placed as a
 #                         node: their modules become nodes of the current graph.
+#   - model_namespace:    where models built under this profile are registered, so another profile can tell
+#                         whether it is able to host them. A Brain is not hosted by anything, so it has none.
 # Supporting a new controller is one more registration below.
 
 @dc.dataclass(frozen=True)
@@ -48,6 +50,7 @@ class ControllerProfile:
     palette_namespaces: tuple[RegistryNamespace, ...]
     atomic_namespaces: tuple[RegistryNamespace, ...]
     import_namespaces: tuple[RegistryNamespace, ...] = ()
+    model_namespace: RegistryNamespace | None = None
     cache_based: bool = False
 
     #-------------------------------------------------------------------------------------------------------#
@@ -105,6 +108,18 @@ class ControllerProfile:
             True if members of the namespace are placed as a single node instead of being expanded.
         """
         return namespace in self.atomic_namespaces
+
+    def hosts(self, other: 'ControllerProfile') -> bool:
+        """
+            True if a model built under "other" belongs on this canvas as a single node.
+
+            A Brain hosts Neurons this way. It is not the same as importing: an imported model is
+            expanded into the modules it is made of, a hosted one stays whole.
+        """
+        namespace = other.model_namespace
+        if namespace is None:
+            return False
+        return namespace in self.palette_namespaces and self.is_atomic(namespace)
 
     def allows_cycle(self, module_cls: type | None = None) -> bool:
         """
@@ -191,6 +206,7 @@ NEURON_PROFILE = register_controller_profile(
         palette_namespaces=(RegistryNamespace.Components, RegistryNamespace.Interfaces),
         atomic_namespaces=(RegistryNamespace.Components,),
         import_namespaces=(RegistryNamespace.Neurons,),
+        model_namespace=RegistryNamespace.Neurons,
         cache_based=False,
     )
 )

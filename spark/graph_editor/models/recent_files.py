@@ -16,9 +16,6 @@ logger = logging.getLogger('spark')
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-# NOTE: Sessions and models share one list, in the order they were last touched. Which of the two a path is
-# follows from its suffix, so nothing else has to be remembered about it.
-
 SETTINGS_KEY = 'recent_files'
 
 MAX_RECENT = 8
@@ -43,20 +40,49 @@ def _settings() -> QSettings:
 
 def _stored() -> list[str]:
     """
-        Raw list as it sits in the settings.
+        Raw list as it sits in the settings, without the empty and repeated entries.
     """
     value = _settings().value(SETTINGS_KEY, [])
     # NOTE: A single entry comes back as a plain string on some platforms.
     if isinstance(value, str):
-        return [value] if value else []
-    if value is None:
-        return []
-    return [str(entry) for entry in value]
+        value = [value] if value else []
+    elif value is None:
+        value = []
+    entries = []
+    for entry in value:
+        entry = str(entry).strip()
+        if entry and entry not in entries:
+            entries.append(entry)
+    return entries
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 def _store(paths: list[str]) -> None:
     _settings().setValue(SETTINGS_KEY, paths[:MAX_RECENT])
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _entry(path: str | pl.Path) -> str | None:
+    """
+        The string a path is remembered as, or None when it cannot be one.
+    """
+    try:
+        return str(pl.Path(path).expanduser().resolve())
+    except (OSError, ValueError, RuntimeError) as error:
+        logger.debug(f'"{path}" is not a path that can be remembered: {error}')
+        return None
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _is_file(entry: str) -> bool:
+    """
+        Whether an entry still points at a file that can be opened.
+    """
+    try:
+        return pl.Path(entry).is_file()
+    except OSError as error:
+        logger.debug(f'"{entry}" could not be looked up: {error}')
+        return False
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -70,10 +96,13 @@ def recent_files(existing_only: bool = True) -> list[pl.Path]:
         Returns:
             list[pl.Path], the remembered files.
     """
-    paths = [pl.Path(entry) for entry in _stored()]
+    entries = _stored()
     if not existing_only:
-        return paths
-    return [path for path in paths if path.exists()]
+        return [pl.Path(entry) for entry in entries]
+    kept = [entry for entry in entries if _is_file(entry)]
+    if len(kept) != len(entries):
+        _store(kept)
+    return [pl.Path(entry) for entry in kept]
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -81,10 +110,8 @@ def remember(path: str | pl.Path) -> None:
     """
         Puts a file at the top of the list, moving it there if it was already known.
     """
-    try:
-        resolved = str(pl.Path(path).resolve())
-    except OSError as error:
-        logger.debug(f'"{path}" was not remembered: {error}')
+    resolved = _entry(path)
+    if resolved is None:
         return
     entries = [entry for entry in _stored() if entry != resolved]
     _store([resolved] + entries)
@@ -94,9 +121,15 @@ def remember(path: str | pl.Path) -> None:
 def forget(path: str | pl.Path) -> None:
     """
         Drops a file from the list. Used when it turns out not to be there anymore.
+
+        NOTE: The path is dropped as it was given as well as resolved. An entry that cannot be dropped is one
+        the list keeps offering.
     """
-    resolved = str(pl.Path(path).resolve())
-    _store([entry for entry in _stored() if entry != resolved])
+    dropped = {str(path), str(pl.Path(path))}
+    resolved = _entry(path)
+    if resolved is not None:
+        dropped.add(resolved)
+    _store([entry for entry in _stored() if entry not in dropped])
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

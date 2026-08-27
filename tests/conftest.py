@@ -79,8 +79,30 @@ def pytest_configure(config) -> None:
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+@pytest.fixture(scope='session', autouse=True)
+def settings_of_their_own(tmp_path_factory) -> tp.Generator[tp.Any, tp.Any, None]:
+    """
+        Settings the run writes to, so that it never writes to the ones of whoever started it.
+
+        NOTE: The editor remembers the recent files, the model library and the style in QSettings, under a
+        fixed organisation and application name. Without a location of its own the suite writes into the
+        settings of the user running it, filling their recent files with paths under the temporary directory
+        of the run, which are gone by the time they open the editor again.
+    """
+    pytest.importorskip('PySide6', reason='the graph editor needs PySide6')
+    from PySide6.QtCore import QSettings
+    root = tmp_path_factory.mktemp('settings')
+    # The default format is what the editor asks for, so it is the one that has to be moved. Ini is used
+    # everywhere rather than the native format, which setPath cannot move on macOS or Windows.
+    QSettings.setDefaultFormat(QSettings.Format.IniFormat)
+    for scope in (QSettings.Scope.UserScope, QSettings.Scope.SystemScope):
+        QSettings.setPath(QSettings.Format.IniFormat, scope, str(root))
+    yield root
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @pytest.fixture(scope='session')
-def qapp() -> tp.Generator[QCoreApplication | QApplication, tp.Any, None]:
+def qapp(settings_of_their_own) -> tp.Generator[QCoreApplication | QApplication, tp.Any, None]:
     """
         The one QApplication of the test session.
     """

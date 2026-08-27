@@ -10,13 +10,13 @@ if TYPE_CHECKING:
 import jax
 import jax.numpy as jnp
 import dataclasses as dc
-from spark.core.tracers import Tracer
-from spark.core.payloads import SpikeArray, CurrentArray, SparkPayload
+from spark.core.payloads import SparkPayload
 from spark.core.backend import Variable, Constant
 from spark.core.registry import register_module, register_config
-from spark.core.config_validation import TypeValidator, PositiveValidator
+from spark.core.config_validation import TypeValidator
 from spark.nn.components.somas.base import Soma, SomaConfig
 from spark.nn.initializers.base import Initializer
+from spark.nn.components.somas.adaptive import AdaptiveSoma, AdaptiveSomaConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -29,21 +29,21 @@ class IzhikevichSomaConfig(SomaConfig):
     """
 
     potential_rest: float | jax.Array  | Initializer = dc.field(
-        default = -65.0, 
+        default = -65.0,
         metadata = {
             'units': 'mV',
             'validators': [
                 TypeValidator,
-            ], 
+            ],
             'description': 'Membrane rest potential.',
         })
     potential_reset: float | jax.Array | Initializer = dc.field(
-        default = -65.0, 
+        default = -65.0,
         metadata = {
             'units': 'mV',
             'validators': [
                 TypeValidator,
-            ], 
+            ],
             'description': 'Membrane after spike reset potential. ' +
                            'C parameter for the Izhikevich model.',
         })
@@ -53,55 +53,65 @@ class IzhikevichSomaConfig(SomaConfig):
             'units': 'GΩ', # [1/nS]
             'validators': [
                 TypeValidator,
-            ], 
+            ],
             'description': 'Membrane resistance.',
         })
     threshold: float | jax.Array | Initializer = dc.field(
-        default = 30.0, 
+        default = 30.0,
         metadata = {
             'units': 'mV',
             'validators': [
                 TypeValidator,
-            ], 
-            'description': 'Action potential threshold base value.',
+            ],
+            'description': 'Action potential peak value.',
         })
     recovery_timescale: float | jax.Array | Initializer = dc.field(
-        default = 0.02, 
+        default = 0.02,
         metadata = {
             'units': '',
             'validators': [
                 TypeValidator,
-            ], 
+            ],
             'description': 'Time scale of the recovery variable. ' +
                            'A parameter for the Izhikevich model.',
         })
     recovery_sensitivity: float | jax.Array | Initializer = dc.field(
-        default = 0.2, 
+        default = 0.2,
         metadata = {
             'units': '',
             'validators': [
                 TypeValidator,
-            ], 
+            ],
             'description': 'Sensitivity of the recovery variable to the subthreshold fluctuations of the membrane potential. ' +
                            'B parameter for the Izhikevich model.',
         })
     recovery_update: float | jax.Array | Initializer = dc.field(
-        default = 2, 
+        default = 2,
         metadata = {
             'units': '',
             'validators': [
                 TypeValidator,
-            ], 
+            ],
             'description': 'Recovery increment after spike. ' +
                            'D parameter for the Izhikevich model.',
         })
-    
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
 class IzhikevichSoma(Soma):
     """
         Izhikevich soma model.
+
+        The recovery variable is integrated together with the membrane potential and reads the
+        potential in the middle of the step, so it is part of the model rather than something
+        attached to it: it is updated in _post_integrate and _after_spike. That places nothing
+        in the way of the adaptation extension, and AdaptiveIzhikevichSoma is this model with
+        refractoriness, the potential clamp and threshold adaptation available to it.
+
+        Unlike the current based somas this model is not rebased at zero, since the quadratic
+        term is not translation invariant and rebasing would only cost an extra addition per
+        term.
 
         Init:
             units: tuple[int, ...]
@@ -114,12 +124,12 @@ class IzhikevichSoma(Soma):
             recovery_update: float | jax.Array
 
         Input:
-            in_spikes: SpikeArray
-            
-        Output:
-            out_spikes: SpikeArray
+            current: CurrentArray
 
-        Reference: 
+        Output:
+            spikes: SpikeArray
+
+        Reference:
             Simple Model of Spiking Neurons
             Eugene M. Izhikevich
             IEEE Transactions on Neural Networks, vol. 14, no. 6, pp. 1569-1572, Nov. 2003
@@ -131,7 +141,6 @@ class IzhikevichSoma(Soma):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
-    # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
     def build(self, **abc_args: SparkPayload) -> None:
         super().build(**abc_args)
         # Initialize variables.
@@ -142,56 +151,94 @@ class IzhikevichSoma(Soma):
         _recovery_sensitivity = self.config.init.recovery_sensitivity(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
         _resistance = self.config.init.resistance(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
         _threshold = self.config.init.threshold(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        # Membrane. Substract potential_rest to potential related terms to rebase potential at zero.
-        self.potential_rest = Constant(_potential_reset, dtype=self._dtype)
-        self.potential_reset = Constant(_potential_reset - _potential_rest, dtype=self._dtype)
-        # Recovery
-        self.recovery = Variable(jnp.zeros(self.units, dtype=self._dtype), dtype=self._dtype)
+        # Membrane.
+        self.potential_rest = Constant(_potential_rest, dtype=self._dtype)
+        self.potential_reset = Constant(_potential_reset, dtype=self._dtype)
+        # Recovery.
         self.recovery_update = Constant(_recovery_update, dtype=self._dtype)
         self.recovery_timescale = Constant(_recovery_timescale, dtype=self._dtype)
         self.recovery_sensitivity = Constant(_recovery_sensitivity, dtype=self._dtype)
+        self.recovery = Variable(self._rest_recovery(), dtype=self._dtype)
         # Conductance.
         self.resistance = Constant(_resistance, dtype=self._dtype) # Current is in pA for stability
         # Threshold.
-        self.threshold = Constant(_threshold - _potential_rest, dtype=self._dtype)
+        self.threshold = Constant(_threshold, dtype=self._dtype)
+        # Membrane potential starts at rest rather than at zero.
+        self._potential.value = self._rest_potential()
+
+    def _rest_potential(self) -> jax.Array:
+        return jnp.broadcast_to(self.potential_rest.value, self.units).astype(self._dtype)
+
+    def _rest_recovery(self) -> jax.Array:
+        return jnp.broadcast_to(
+            self.recovery_sensitivity.value * self.potential_rest.value, self.units,
+        ).astype(self._dtype)
 
     def reset(self) -> None:
         """
             Resets component state.
         """
-        super().reset()
-        self.recovery.value = jnp.zeros(self.units, dtype=self._dtype)
+        self._potential.value = self._rest_potential()
+        self.recovery.value = self._rest_recovery()
 
-    def _update_states(self, current: CurrentArray) -> None:
+    def _integrate(self, potential: jax.Array, current: jax.Array) -> jax.Array:
         """
-            Update neuron's soma states variables.
+            Membrane integration.
         """
-        potential_delta = (
-            0.04 * (self._potential.value - self.potential_rest.value)**2
-            + 5 * (self._potential.value - self.potential_rest.value)
-            + 140 
-            - self.resistance.value * self.recovery.value 
-            + self.resistance.value * current.value
-        )
-        self._potential.value += self._dt * potential_delta
-        recovery_delta = self.recovery_timescale.value * (
-            self.recovery_sensitivity.value * (self._potential.value - self.potential_rest.value) 
+        return potential + self._dt * (
+            + 0.04 * potential * potential
+            + 5.0 * potential
+            + 140.0
             - self.recovery.value
+            + self.resistance.value * current
         )
-        self.recovery.value += self._dt * recovery_delta
 
-    def _compute_spikes(self,) -> SpikeArray:
+    def _post_integrate(self, potential: jax.Array) -> jax.Array:
         """
-            Compute neuron's spikes.
+            The recovery variable follows the potential within the same step, which is why it
+            is updated here rather than after the spikes are out.
         """
-        # Compute spikes.
-        spikes = jnp.greater(self._potential.value, self.threshold.value).astype(self._dtype)
-        # Reset neurons.
-        self._potential.value = spikes * self.potential_reset.value + (1 - spikes) * self._potential.value
-        # Update recovery.
-        self.recovery.value = spikes * (self.recovery.value + self.recovery_update.value) + (1 - spikes) * self.recovery.value
-        return SpikeArray(spikes)
-    
+        self.recovery.value = self.recovery.value + self._dt * self.recovery_timescale.value * (
+            self.recovery_sensitivity.value * potential - self.recovery.value
+        )
+        return potential
+
+    def _after_spike(self, spikes: jax.Array) -> None:
+        """
+            Spike triggered increment of the recovery variable.
+        """
+        self.recovery.value = self.recovery.value + spikes * self.recovery_update.value
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+@register_config
+class AdaptiveIzhikevichSomaConfig(AdaptiveSomaConfig, IzhikevichSomaConfig):
+    """
+        AdaptiveIzhikevichSoma model configuration class.
+    """
+    pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_module
+class AdaptiveIzhikevichSoma(AdaptiveSoma, IzhikevichSoma):
+    """
+        Izhikevich soma model with the adaptation extension.
+
+        Input:
+            current: CurrentArray
+
+        Output:
+            spikes: SpikeArray
+    """
+    config: AdaptiveIzhikevichSomaConfig
+
+    def __init__(self, config: AdaptiveIzhikevichSomaConfig | None = None, **kwargs) -> None:
+        # Initialize super.
+        super().__init__(config=config, **kwargs)
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

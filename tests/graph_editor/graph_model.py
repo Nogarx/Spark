@@ -155,7 +155,20 @@ class TestImport:
         names = {node.name for node in imported_graph.nodes}
         assert 'in_spikes' in names
         assert 'out_spikes' in names
+
+    def test_a_wired_self_property_becomes_a_node(self, neuron_graph) -> None:
+        # The shipped models let the neuron supply the inhibition mask, so nothing wires
+        # __self__ any more. A configuration that does wire one still gets its node.
+        config = _lif_config(units=(8,))
+        soma = next(spec for spec in config.modules_specs if spec.name == 'soma')
+        soma.inputs['inhibition_mask'] = [
+            spark.PortMap(origin='__self__', port='inhibition_mask', is_property=True)
+        ]
+        _import_into(neuron_graph, config)
+        names = {node.name for node in neuron_graph.nodes}
         assert 'inhibition_mask' in names
+        wiring = {(e.source_port.node.name, e.target_port.node.name) for e in neuron_graph.edges}
+        assert ('inhibition_mask', 'soma') in wiring
 
     def test_the_wiring_is_carried_over(self, imported_graph) -> None:
         wiring = {(edge.source_port.node.name, edge.target_port.node.name) for edge in imported_graph.edges}

@@ -151,7 +151,7 @@ def build_module_specs(graph_model: GraphModel) -> tuple[list[ModuleSpecs], list
             maps = _incoming(port)
             if maps:
                 inputs[port.name] = maps
-            else:
+            elif not port.is_optional:
                 problems.append(f'Input "{port.name}" of "{node.name}" is not connected.')
         for port in node.props_section.ports:
             # A connection into a property is an effect: the module writes the value it receives.

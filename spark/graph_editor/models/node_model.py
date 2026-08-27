@@ -16,6 +16,7 @@ import logging
 import typing as tp
 from PySide6.QtCore import Signal
 import spark.core.utils as utils
+import spark.core.signature_parser as sig_parser
 from spark.graph_editor.models.compartment_model import CompartmentModel
 from spark.graph_editor.models.base_model import BaseModel
 from spark.graph_editor.models.port_model import PortModel
@@ -164,7 +165,12 @@ class SourceNodeModel(NodeModel):
             name = 'Source'
         super().__init__(name=name, type_name=type_name, pos=pos, parent=parent)
         self.value_port = PortModel(
-            'value', is_input=False, port_type=FloatArray, is_optional=False, multi_connection=True, parent=self
+            'value', 
+            is_input=False, 
+            port_type=FloatArray, 
+            is_optional=False, 
+            multi_connection=True, 
+            parent=self,
         )
         self.call_section.add_port(self.value_port)
         self.value_port.connected.connect(self.on_port_connected)
@@ -184,7 +190,12 @@ class SinkNodeModel(NodeModel):
             name = 'Sink'
         super().__init__(name=name, type_name=type_name, pos=pos, parent=parent)
         self.value_port = PortModel(
-            'value', is_input=True, port_type=FloatArray, is_optional=False, multi_connection=False, parent=self
+            name='value', 
+            is_input=True, 
+            port_type=FloatArray, 
+            is_optional=False, 
+            multi_connection=False, 
+            parent=self,
         )
         self.call_section.add_port(self.value_port)
         self.value_port.connected.connect(self.on_port_connected)
@@ -196,11 +207,7 @@ class SinkNodeModel(NodeModel):
 
 class SelfPropertyNodeModel(NodeModel):
     """
-        Stands for a property the controller itself exposes to its modules.
-
-        NOTE: These are the "__self__" origins of a PortMap (e.g. the inhibition mask a Neuron shares with its
-        somas). They are not modules: the node only exists so the dependency is visible and editable on the
-        canvas. Its name is the name of the property.
+        Property node model
     """
 
     def __init__(self, name: str | None = None, type_name: str = 'Controller Property', pos=(0, 0), parent=None,
@@ -209,8 +216,12 @@ class SelfPropertyNodeModel(NodeModel):
             name = 'property'
         super().__init__(name=name, type_name=type_name, pos=pos, parent=parent)
         self.value_port = PortModel(
-            'value', is_input=False, port_type=payload_type or FloatArray, is_optional=False,
-            multi_connection=True, parent=self,
+            name='value', 
+            is_input=False, 
+            port_type=payload_type or FloatArray, 
+            is_optional=False,
+            multi_connection=True, 
+            parent=self,
         )
         self.call_section.add_port(self.value_port)
 
@@ -239,40 +250,49 @@ class InterfaceNodeModel(NodeModel):
             input_specs = self._cls._get_input_specs()
             output_specs = self._cls._get_output_specs()
             property_specs = self._cls._get_property_specs()
+            readonly_properties = set(self._cls.get_readonly_properties())
+            optional_inputs = set(sig_parser.get_optional_input_names(self._cls))
         except Exception as e:
             logger.warning(f'Could not fully introspect {self._cls.__name__}: {e}')
             input_specs = {}
             output_specs = {}
             property_specs = {}
+            readonly_properties = set()
+            optional_inputs = set()
         # Populate Call
         for port_name, spec in input_specs.items():
             port = PortModel(
                 name=port_name,
                 is_input=True,
                 port_type=spec.payload_type,
-                is_optional=False
+                is_optional=port_name in optional_inputs,
+                multi_connection=True, 
             )
             self.call_section.add_port(port)
         for port_name, spec in output_specs.items():
             port = PortModel(
                 name=port_name,
                 is_input=False,
-                port_type=spec.payload_type
+                port_type=spec.payload_type,
+                multi_connection=True, 
             )
             self.call_section.add_port(port)
-        # Populate Properties
+        # Populate Properties. A property that does not define a setter is read only: it can be read by
+        # other modules but nothing can write into it, so it only gets an output port.
         for port_name, spec in property_specs.items():
-            port = PortModel(
-                name=port_name,
-                is_input=True,
-                port_type=spec.payload_type
-            )
-            self.props_section.add_port(port)
+            if port_name not in readonly_properties:
+                port = PortModel(
+                    name=port_name,
+                    is_input=True,
+                    port_type=spec.payload_type,
+                    multi_connection=False,
+                )
+                self.props_section.add_port(port)
             port = PortModel(
                 name=port_name,
                 is_input=False,
                 multi_connection=True,
-                port_type=spec.payload_type
+                port_type=spec.payload_type,
             )
             self.props_section.add_port(port)
 
@@ -281,9 +301,6 @@ class InterfaceNodeModel(NodeModel):
 class ControllerNodeModel(NodeModel):
     """
         Abstract node model for a nested controller (a Neuron placed inside a Brain).
-
-        NOTE: A Controller is not a SparkModule: its ports are not read from a __call__ signature but derived
-        from the modules it contains, so its introspection differs from a Component/Interface node.
     """
 
     _cls: type
@@ -306,27 +323,52 @@ class ControllerNodeModel(NodeModel):
             input_specs = self._cls._get_controller_input_specs(modules_specs)
             output_specs = {k: v['spec'] for k, v in self._cls._get_controller_output_specs(modules_specs).items()}
             property_specs = self._cls._get_controller_property_specs()
+            readonly_properties = set(self._cls.get_readonly_properties())
         except Exception as e:
             logger.warning(f'Could not fully introspect {self._cls.__name__}: {e}')
             input_specs = {}
             output_specs = {}
             property_specs = {}
+            readonly_properties = set()
         # Populate Call
         for port_name, spec in input_specs.items():
             self.call_section.add_port(
-                PortModel(name=port_name, is_input=True, port_type=spec.payload_type, is_optional=False)
+                PortModel(
+                    name=port_name, 
+                    is_input=True, 
+                    multi_connection=True, 
+                    port_type=spec.payload_type, 
+                    is_optional=False
+                )
             )
         for port_name, spec in output_specs.items():
             self.call_section.add_port(
-                PortModel(name=port_name, is_input=False, port_type=spec.payload_type)
+                PortModel(
+                    name=port_name, 
+                    is_input=False, 
+                    multi_connection=True, 
+                    port_type=spec.payload_type
+                )
             )
-        # Populate Properties
+        # Populate Properties. A property that does not define a setter is read only: it can be read by
+        # other modules but nothing can write into it, so it only gets an output port.
         for port_name, spec in property_specs.items():
+            if port_name not in readonly_properties:
+                self.props_section.add_port(
+                    PortModel(
+                        name=port_name, 
+                        is_input=True, 
+                        multi_connection=False, 
+                        port_type=spec.payload_type
+                    )
+                )
             self.props_section.add_port(
-                PortModel(name=port_name, is_input=True, port_type=spec.payload_type)
-            )
-            self.props_section.add_port(
-                PortModel(name=port_name, is_input=False, multi_connection=True, port_type=spec.payload_type)
+                PortModel(
+                    name=port_name, 
+                    is_input=False, 
+                    multi_connection=True, 
+                    port_type=spec.payload_type
+                )
             )
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -355,35 +397,44 @@ class ComponentNodeModel(NodeModel):
             input_specs = self._cls._get_input_specs()
             output_specs = self._cls._get_output_specs()
             property_specs = self._cls._get_property_specs()
+            readonly_properties = set(self._cls.get_readonly_properties())
+            optional_inputs = set(sig_parser.get_optional_input_names(self._cls))
         except Exception as e:
             logger.warning(f'Could not fully introspect {self._cls.__name__}: {e}')
             input_specs = {}
             output_specs = {}
             property_specs = {}
+            readonly_properties = set()
+            optional_inputs = set()
         # Populate Call
         for port_name, spec in input_specs.items():
             port = PortModel(
                 name=port_name,
                 is_input=True,
                 port_type=spec.payload_type,
-                is_optional=False
+                multi_connection=True, 
+                is_optional=port_name in optional_inputs
             )
             self.call_section.add_port(port)
         for port_name, spec in output_specs.items():
             port = PortModel(
                 name=port_name,
                 is_input=False,
+                multi_connection=True, 
                 port_type=spec.payload_type
             )
             self.call_section.add_port(port)
-        # Populate Properties
+        # Populate Properties. A property that does not define a setter is read only: it can be read by
+        # other modules but nothing can write into it, so it only gets an output port.
         for port_name, spec in property_specs.items():
-            port = PortModel(
-                name=port_name,
-                is_input=True,
-                port_type=spec.payload_type
-            )
-            self.props_section.add_port(port)
+            if port_name not in readonly_properties:
+                port = PortModel(
+                    name=port_name,
+                    is_input=True,
+                    multi_connection=False, 
+                    port_type=spec.payload_type
+                )
+                self.props_section.add_port(port)
             port = PortModel(
                 name=port_name,
                 is_input=False,

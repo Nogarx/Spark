@@ -50,18 +50,17 @@ class ALIFNeuronConfig(NeuronConfig):
 				},
 				config = TracedSynapsesConfig.partial(),
 			),
-			# Leaky soma
+			# Leaky soma with an absolute refractory period and threshold adaptation
 			ModuleSpecs(
 				name ='soma', 
 				module_cls = AdaptiveLeakySoma, 
 				inputs = {
 					'current': [PortMap(origin='synapses', port='currents')],
-					'inhibition_mask': [PortMap(origin='__self__', port='inhibition_mask', is_property=True)],
 				},
 				outputs = {
 					'out_spikes': 'spikes', 
 				},
-				config = AdaptiveLeakySomaConfig.partial(),
+				config = AdaptiveLeakySomaConfig.partial(cooldown=3.0, threshold_delta=100.0),
 			),
 			# Hebbian plasticity
 			ModuleSpecs(

@@ -67,10 +67,7 @@ class NodeRegistry:
 
     def _map(self, entry: RegistryEntry, namespace: RegistryNamespace, base_model: type[NodeModel]) -> type[NodeModel] | None:
         """
-            Builds the node model of an entry and keeps it.
-
-            Answers with nothing for a controller: those are not placed as plain modules, they are the
-            graph itself.
+            Builds the node model of an entry.
         """
         if len(entry.path) > 0 and entry.path[0].lower() == 'controller':
             return None
@@ -81,7 +78,7 @@ class NodeRegistry:
 
     def _adopt(self, node_cls: type) -> type[NodeModel] | None:
         """
-            Builds the node model of a class the framework came to know after this registry was built.
+            Builds the node model of a class, post-initialization.
         """
         for namespace, base_model in self.NAMESPACE_BASE_MODEL.items():
             entry = getattr(REGISTRY, namespace.name).get_by_cls(node_cls)
@@ -95,7 +92,7 @@ class NodeRegistry:
 
     def get_namespace(self, node_cls: type) -> RegistryNamespace | None:
         """
-            Registry namespace a node class was created from.
+            Get node's registry namespace.
         """
         if node_cls not in self._namespaces:
             self._adopt(node_cls)

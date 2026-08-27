@@ -10,14 +10,13 @@ if TYPE_CHECKING:
 import jax
 import jax.numpy as jnp
 import dataclasses as dc
-from spark.core.tracers import Tracer
-from spark.core.payloads import SpikeArray, CurrentArray, SparkPayload
-from spark.core.backend import Variable, Constant
+from spark.core.payloads import SparkPayload
+from spark.core.backend import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.somas.base import Soma, SomaConfig
-from spark.core.backend import data
 from spark.nn.initializers.base import Initializer
+from spark.nn.components.somas.adaptive import AdaptiveSoma, AdaptiveSomaConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -30,25 +29,25 @@ class LeakySomaConfig(SomaConfig):
     """
 
     potential_rest: float | jax.Array | Initializer = dc.field(
-        default = -60.0, 
+        default = -60.0,
         metadata = {
             'units': 'mV',
             'validators': [
                 TypeValidator,
-            ], 
+            ],
             'description': 'Membrane rest potential.',
         })
     potential_reset: float | jax.Array | Initializer = dc.field(
-        default = -50.0, 
+        default = -50.0,
         metadata = {
             'units': 'mV',
             'validators': [
                 TypeValidator,
-            ], 
+            ],
             'description': 'Membrane after spike reset potential.',
         })
     potential_tau: float | jax.Array | Initializer = dc.field(
-        default = 20.0, 
+        default = 20.0,
         metadata = {
             'units': 'ms',
             'validators': [
@@ -63,16 +62,16 @@ class LeakySomaConfig(SomaConfig):
             'units': 'GΩ', # [1/nS]
             'validators': [
                 TypeValidator,
-            ], 
+            ],
             'description': 'Membrane resistance.',
         })
     threshold: float | jax.Array | Initializer = dc.field(
-        default = -40.0, 
+        default = -40.0,
         metadata = {
             'units': 'mV',
             'validators': [
                 TypeValidator,
-            ], 
+            ],
             'description': 'Action potential threshold base value.',
         })
 
@@ -83,6 +82,10 @@ class LeakySoma(Soma):
     """
         Leaky soma model.
 
+        Refractoriness and threshold adaptation are not part of this model.
+        AdaptiveLeakySoma is this model composed with the adaptation extension and is what
+        provides them.
+
         Init:
             units: tuple[int, ...]
             potential_rest: float | jax.Array
@@ -92,14 +95,14 @@ class LeakySoma(Soma):
             threshold: float | jax.Array
 
         Input:
-            in_spikes: SpikeArray
-            
-        Output:
-            out_spikes: SpikeArray
+            current: CurrentArray
 
-        Reference: 
-            Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition. 
-            Gerstner W, Kistler WM, Naud R, Paninski L. 
+        Output:
+            spikes: SpikeArray
+
+        Reference:
+            Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition.
+            Gerstner W, Kistler WM, Naud R, Paninski L.
             Chapter 1.3 Integrate-And-Fire Models
             https://neuronaldynamics.epfl.ch/online/Ch1.S3.html
     """
@@ -128,234 +131,38 @@ class LeakySoma(Soma):
         # Threshold.
         self.threshold = Constant(_threshold - _potential_rest, dtype=self._dtype)
 
-    def _update_states(self, current: CurrentArray) -> None:
+    def _integrate(self, potential: jax.Array, current: jax.Array) -> jax.Array:
         """
-            Update neuron's soma states variables.
+            Membrane integration.
         """
-        self._potential.value = \
-            + self.potential_decay.value * self._potential.value \
-            + self.potential_gain.value * self.resistance.value * current.value
+        return (
+            + self.potential_decay.value * potential
+            + self.potential_gain.value * self.resistance.value * current
+        )
 
-    def _compute_spikes(self,) -> SpikeArray:
-        """
-            Compute neuron's spikes.
-        """
-        # Compute spikes.
-        spikes = jnp.greater(self._potential.value, self.threshold.value).astype(self._dtype)
-        # Reset neurons.
-        self._potential.value = spikes * self.potential_reset.value + (1 - spikes) * self._potential.value
-        return SpikeArray(spikes)
-    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
 @register_config
-class RefractoryLeakySomaConfig(LeakySomaConfig):
+class AdaptiveLeakySomaConfig(AdaptiveSomaConfig, LeakySomaConfig):
     """
-        RefractoryLeakySoma model configuration class.
-    """
-
-    cooldown: float | jax.Array | Initializer = dc.field(
-        default = 2.0, 
-        metadata = {
-            'units': 'ms',
-            'validators': [
-                TypeValidator,
-            ], 
-            'description': 'Soma refractory period.',
-        })
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-@register_module
-class RefractoryLeakySoma(LeakySoma):
-    """
-        Leaky soma with refractory time model.
-
-        Init:
-            units: tuple[int, ...]
-            potential_rest: float | jax.Array
-            potential_reset: float | jax.Array
-            potential_tau: float | jax.Array
-            resistance: float | jax.Array
-            threshold: float | jax.Array
-            cooldown: float | jax.Array
-
-        Input:
-            in_spikes: SpikeArray
-            
-        Output:
-            out_spikes: SpikeArray
-
-        Reference: 
-            Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition. 
-            Gerstner W, Kistler WM, Naud R, Paninski L. 
-            Chapter 1.3 Integrate-And-Fire Models
-            https://neuronaldynamics.epfl.ch/online/Ch1.S3.html
-    """
-    config: RefractoryLeakySomaConfig
-
-    def __init__(self, config: RefractoryLeakySomaConfig | None = None, **kwargs) -> None:
-        # Initialize super.
-        super().__init__(config=config, **kwargs)
-
-    # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, **abc_args: SparkPayload) -> None:
-        super().build(**abc_args)
-        # Initialize variables.
-        _cooldown = self.config.init.cooldown(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        # Refractory period.
-        self.cooldown = Constant(jnp.round(_cooldown / self._dt).astype(jnp.uint16), dtype=jnp.uint16)
-        self.refractory = Variable(self.cooldown.value * jnp.ones(self.units), dtype=jnp.uint16)
-        self.is_ready = Variable(jnp.ones(self.units), dtype=jnp.bool)
-
-    def reset(self) -> None:
-        """
-            Resets component state.
-        """
-        super().reset()
-        self.refractory.value = jnp.array(self.cooldown.value * jnp.ones(self.units), dtype=jnp.uint16)
-
-    def _update_states(self, current: CurrentArray) -> None:
-        """
-            Update neuron's soma states variables.
-        """
-        self.is_ready.value = jnp.greater(self.refractory.value, self.cooldown)
-        is_ready = self.is_ready.value.astype(self._dtype)
-        self._potential.value = \
-            + self.potential_decay.value * self._potential.value \
-            + is_ready * self.potential_gain.value * self.resistance.value * current.value
-
-    def _compute_spikes(self,) -> SpikeArray:
-        """
-            Compute neuron's spikes.
-        """
-        # Compute spikes.
-        spikes = jnp.logical_and(
-            jnp.greater(self._potential.value, self.threshold.value), 
-            self.is_ready.value
-        ).astype(self._dtype)
-        # Reset neurons.
-        self._potential.value = spikes * self.potential_reset.value + (1 - spikes) * self._potential.value
-        # Set neuron refractory period.
-        self.refractory.value = (1 - spikes).astype(jnp.uint16) * (self.refractory.value + 1)
-        return SpikeArray(spikes)
-    
-#################################################################################################################################################
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-#################################################################################################################################################
-
-@register_config
-class StrictRefractoryLeakySomaConfig(RefractoryLeakySomaConfig):
-    """
-        StrictRefractoryLeakySoma model configuration class.
+        AdaptiveLeakySoma model configuration class.
     """
     pass
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
-class StrictRefractoryLeakySoma(RefractoryLeakySoma):
+class AdaptiveLeakySoma(AdaptiveSoma, LeakySoma):
     """
-        Leaky soma with strict refractory time model. 
-        Note: This model is here mostly for didactic/historical reasons.
-
-        Init:
-            units: tuple[int, ...]
-            potential_rest: float | jax.Array
-            potential_reset: float | jax.Array
-            potential_tau: float | jax.Array
-            resistance: float | jax.Array
-            threshold: float | jax.Array
-            cooldown: float | jax.Array
+        Leaky soma model with the adaptation extension.
 
         Input:
-            in_spikes: SpikeArray
-            
+            current: CurrentArray
+
         Output:
-            out_spikes: SpikeArray
-
-        Reference: 
-            Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition. 
-            Gerstner W, Kistler WM, Naud R, Paninski L. 
-            Chapter 1.3 Integrate-And-Fire Models
-            https://neuronaldynamics.epfl.ch/online/Ch1.S3.html
-    """
-    config: StrictRefractoryLeakySomaConfig
-
-    def _update_states(self, current: CurrentArray) -> None:
-        """
-            Update neuron's soma states variables.
-        """
-        self.is_ready.value = jnp.greater_equal(self.refractory.value, self.cooldown)
-        is_ready = self.is_ready.value.astype(self._dtype)
-        self._potential.value = \
-            + is_ready * self.potential_decay.value * self._potential.value \
-            + is_ready * self.potential_gain.value * self.resistance.value * current.value \
-            + (1 - is_ready) * self.potential_reset.value
-    
-#################################################################################################################################################
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-#################################################################################################################################################
-
-@register_config
-class AdaptiveLeakySomaConfig(RefractoryLeakySomaConfig):
-    """
-        AdaptiveLeakySoma model configuration class.
-    """
-
-    threshold_tau: float | jax.Array | Initializer = dc.field(
-        default = 20.0, 
-        metadata = {
-            'units': 'ms',
-            'validators': [
-                TypeValidator,
-                PositiveValidator,
-            ],
-            'description': 'Adaptive action potential threshold decay constant.',
-        })
-    threshold_delta: float | jax.Array | Initializer = dc.field(
-        default = 100.0, 
-        metadata = {
-            'units': 'mV',
-            'validators': [
-                TypeValidator,
-            ], 
-            'description': 'Adaptive action potential threshold after spike increment.',
-        })
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-# TODO: This is not  the standard definition of ALIF, the common definition uses a recovery variable. 
-# We need to redefine this module and add the true ALIF model
-@register_module
-class AdaptiveLeakySoma(RefractoryLeakySoma):
-    """
-        Adaptive leaky soma model.
-
-        Init:
-            units: tuple[int, ...]
-            potential_rest: float | jax.Array
-            potential_reset: float | jax.Array
-            potential_tau: float | jax.Array
-            resistance: float | jax.Array
-            threshold: float | jax.Array
-            cooldown: float | jax.Array
-            threshold_tau: float | jax.Array
-            threshold_delta: float | jax.Array
-
-        Input:
-            in_spikes: SpikeArray
-            
-        Output:
-            out_spikes: SpikeArray
-
-        Reference: 
-            Neuronal Dynamics: From Single Neurons to Networks and Models of Cognition. 
-            Gerstner W, Kistler WM, Naud R, Paninski L. 
-            Chapter 5.1 Thresholds in a nonlinear integrate-and-fire model
-            https://neuronaldynamics.epfl.ch/online/Ch5.S1.html
+            spikes: SpikeArray
     """
     config: AdaptiveLeakySomaConfig
 
@@ -363,38 +170,6 @@ class AdaptiveLeakySoma(RefractoryLeakySoma):
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
-    # NOTE: potential_rest is substracted to potential related terms to rebase potential at zero.
-    def build(self, **abc_args: SparkPayload) -> None:
-        super().build(**abc_args)
-        # Initialize variables.
-        _threshold_tau = self.config.init.threshold_tau(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        _threshold_delta = self.config.init.threshold_delta(key=self.get_rng_keys(1), shape=self.units, dtype=self._dtype)
-        # Replace constant threshold with a tracer.
-        self.threshold = data(Tracer(
-            self.units,
-            tau=_threshold_tau, 
-            base=(self.threshold), 
-            scale=_threshold_delta, 
-            dt=self._dt, dtype=self._dtype
-        ))
-
-    def reset(self) -> None:
-        """
-            Resets component state.
-        """
-        super().reset()
-        self.threshold.reset()
-
-    def _compute_spikes(self,) -> SpikeArray:
-        """
-            Compute neuron's spikes.
-        """
-        # Compute spikes.
-        spikes = super()._compute_spikes()
-        # Update thresholds
-        self.threshold(spikes.spikes)
-        return spikes
-    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

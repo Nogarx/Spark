@@ -139,6 +139,21 @@ class Neuron(Controller, metaclass=NeuronMeta):
 	def inhibition_mask(self,) -> BooleanMask:
 		return BooleanMask(self._inhibition_mask.value)
 
+	def _implicit_inputs(self, module_name: str) -> dict[str, SparkPayload]:
+		"""
+			Supplies the inhibition mask to any module that declares it.
+
+			Which units of the pool are inhibitory is a property of the neuron, not of the
+			module that emits the spikes, so it is not wired. A module that declares an
+			"inhibition_mask" input receives it here and stamps it onto the spikes it emits;
+			from that point the spikes are signed and the rest of the graph carries the
+			distinction on its own. A declared connection still takes precedence.
+		"""
+		module = getattr(self, module_name)
+		if 'inhibition_mask' not in type(module)._get_input_specs():
+			return {}
+		return {'inhibition_mask': BooleanMask(self._inhibition_mask.value)}
+
 	def build(self, **abc_args: SparkPayload) -> None:
 		# Get build order.
 		self._order = self._execution_order(self._modules_specs)
@@ -169,13 +184,19 @@ class Neuron(Controller, metaclass=NeuronMeta):
 						else:
 							input_args_list.append(outputs[port_map.origin][port_map.port])
 					input_args[port_name] = self._concatenate_payloads(input_args_list)
+				for port_name, value in self._implicit_inputs(name).items():
+					input_args.setdefault(port_name, value)
 				outputs[name] = getattr(self, name)(**input_args)
 		# Compute effects
 		# TODO: Currently effects require the ports to be defined inside a list. This is probably not desirable.
 		for name, effects in self._modules_effects_map.items():
 			for property_name, ports_list in effects.items():
 				port_map = ports_list[0]
-				setattr(getattr(self, name), property_name, outputs[port_map.origin][port_map.port])
+				if port_map.is_property:
+					value = getattr(getattr(self, port_map.origin), port_map.port)
+				else:
+					value = outputs[port_map.origin][port_map.port]
+				setattr(getattr(self, name), property_name, value)
 		# Gather output
 		return {
 			name: outputs[origin][port] for name, origin, port in self._contoller_output_map 

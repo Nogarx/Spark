@@ -20,6 +20,7 @@ from spark.graph_editor.models.model_import import expand_controller_config
 from spark.graph_editor.widgets.console_view import MessageLevel
 import spark.core.utils as utils
 from spark.graph_editor.view.graph_context_menu_view import GraphContextMenu
+from spark.graph_editor.models.node_factory import NODE_REGISTRY
 from spark.graph_editor.commands.graph_commands import (
     AddNodeCommand, AddEdgeCommand, RemoveNodeCommand, RemoveEdgeCommand, MoveNodeCommand, ChangeEdgeWaypointsCommand
 )
@@ -346,19 +347,7 @@ class GraphView(QGraphicsView):
                 except Exception as error:
                     logger.error(f'Unable to create a "{action_data.cls.__name__}" node: {error}')
                     return
-                # Rename to prevent collisions
-                name = self.scene().model.get_next_free_name(new_node.name)
-                new_node.name = name
-                # Set new node position
-                scene_pos = self.mapToScene(event.pos())
-                pos_x, pos_y = scene_pos.x(), scene_pos.y()
-                if STYLES.get_val('graph', 'snapping', 'enabled'):
-                    grid = float(STYLES.get_val('graph', 'snapping', 'node_grid'))
-                    pos_x = round(pos_x / grid) * grid
-                    pos_y = round(pos_y / grid) * grid
-                new_node.pos = (pos_x, pos_y)
-                # Push action to undo stack
-                self.scene().model.undo_stack.push(AddNodeCommand(self.scene().model, new_node))
+                self._place_node(new_node, self.mapToScene(event.pos()))
             elif action_data.command == ContextMenuCommand.Import:
                 self.import_model(action_data.entry)
             elif action_data.command == ContextMenuCommand.Copy:
@@ -371,6 +360,32 @@ class GraphView(QGraphicsView):
                 logger.warning(f'Action: {action_data.command} is not tied to any action.')
 
 
+
+    def _place_node(self, node: NodeModel, scene_pos, label: str = 'Add Node') -> None:
+        """
+            Names a node so it does not collide, snaps it to the grid and adds it as one undoable step.
+        """
+        model = self.scene().model
+        node.name = model.get_next_free_name(node.name)
+        pos_x, pos_y = scene_pos.x(), scene_pos.y()
+        if STYLES.get_val('graph', 'snapping', 'enabled'):
+            grid = float(STYLES.get_val('graph', 'snapping', 'node_grid'))
+            pos_x = round(pos_x / grid) * grid
+            pos_y = round(pos_y / grid) * grid
+        node.pos = (pos_x, pos_y)
+        model.undo_stack.push(AddNodeCommand(model, node, description=label))
+
+    def add_node_for(self, module_cls: type, label: str = 'Add Node') -> None:
+        """
+            Places a node for a module class at the centre of the view.
+
+            This is the menu driven counterpart of dropping a node from the context menu, which knows
+            where the pointer was. It is what makes an imported model a node of the graph.
+        """
+        node_cls = NODE_REGISTRY.get(module_cls)
+        if node_cls is None:
+            raise RuntimeError(f'No node model is available for "{module_cls.__name__}".')
+        self._place_node(node_cls(), self.mapToScene(self.viewport().rect().center()), label=label)
 
     def import_model(self, entry) -> None:
         """

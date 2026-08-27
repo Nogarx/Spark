@@ -456,6 +456,7 @@ MRO_PATH_ALIAS_MAP = {
     'InputInterface': ('Input', 'Interfaces'),
     'OutputInterface': ('Output', 'Interfaces'),
     'ControlInterface': ('Control', 'Interfaces'),
+    'SignalTrace': 'Traces',
     'Component': 'Components',
     'Delays': 'Delays',
     'Plasticity': 'Plasticity Rules',
@@ -464,6 +465,8 @@ MRO_PATH_ALIAS_MAP = {
     'Neuron': 'Neurons',
     # Exclusions
     'ValueSparkPayload': None,
+    # Mixins
+    'AdaptiveSoma': None,
 }
 
 INITIALIZERS_ALIAS_MAP = {

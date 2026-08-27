@@ -188,6 +188,17 @@ class Controller(Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerMeta)
 
 
     @classmethod
+    def get_readonly_properties(cls,) -> tuple[str, ...]:
+        """
+            Returns all the attributes names wrapped by the spark_property wrapper that do not define a setter.
+        """
+        return tuple(
+            [name  for name, attr in inspect.getmembers(cls) if isinstance(attr, spark_property) and attr.fset is None]
+        )
+
+
+
+    @classmethod
     def _get_controller_property_specs(cls,) -> dict[str, PortSpecs]:
         """
             Dynamically constructs the property specs of a controller.
@@ -207,13 +218,15 @@ class Controller(Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerMeta)
         for module_specs in modules_specs:
             if issubclass(module_specs.module_cls, Controller):
                 module_input_specs = module_specs.module_cls._get_controller_input_specs(module_specs.config.modules_specs)
+                module_optional_ports = set()
             else:
                 module_input_specs = module_specs.module_cls._get_input_specs()
+                module_optional_ports = set(sig_parser.get_optional_input_names(module_specs.module_cls))
             # Validate that input names are well defined.
             module_input_ports = set(module_input_specs.keys())
             module_defined_input_ports = set(module_specs.inputs.keys())
-            # Missing ports
-            missing_ports = module_input_ports.difference(module_defined_input_ports)
+            # Missing ports. Optional ports may be left unconnected, the module falls back to its default.
+            missing_ports = module_input_ports.difference(module_defined_input_ports).difference(module_optional_ports)
             if len(missing_ports) > 0:
                 raise ValueError(
                     f'Missing input port names "{missing_ports}" in module "{module_specs.name}" specification. '
@@ -387,7 +400,15 @@ class Controller(Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerMeta)
                 module_property_specs = spec.module_cls._get_controller_property_specs()
             else:
                 module_property_specs = spec.module_cls._get_property_specs()
+            module_readonly_properties = set(spec.module_cls.get_readonly_properties())
             for property_name, port_spec_list in spec.effects.items():
+                # Read only properties cannot be written by an effect.
+                if property_name in module_readonly_properties:
+                    raise ValueError(
+                        f'Property port "{property_name}" of module "{spec.name}" is read only and cannot be '
+                        f'the target of an effect. Module "{spec.name}" only defines the following writable '
+                        f'property ports: {sorted(set(module_property_specs.keys()).difference(module_readonly_properties))}'
+                    )
                 # Get module port specs
                 expected_port_specs = module_property_specs[property_name]
                 for port_map in port_spec_list:
@@ -525,6 +546,10 @@ class Controller(Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerMeta)
                             )
                     port_args = self._concatenate_payloads(port_args)
                     module_abc_args[port_name] = port_args
+                # Supply the inputs the controller owns and the graph does not carry. A declared
+                # connection takes precedence.
+                for port_name, value in self._implicit_inputs(module_name).items():
+                    module_abc_args.setdefault(port_name, value)
                 # Initialize module
                 module: SparkModule | Controller = getattr(self, module_name)
                 abc_output = module(**module_abc_args)
@@ -604,6 +629,15 @@ class Controller(Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerMeta)
             module.reset()
 
 
+
+    def _implicit_inputs(self, module_name: str) -> dict[str, SparkPayload]:
+        """
+            Inputs the controller supplies to a module without a declared connection.
+
+            These are quantities the controller owns rather than the graph, so a module that
+            declares one does not have to be wired to it. Returns an empty mapping by default.
+        """
+        return {}
 
     def _concatenate_payloads(self, args: list[SparkPayload]) -> SparkPayload:
         if len(args) == 1:

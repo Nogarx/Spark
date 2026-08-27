@@ -723,14 +723,26 @@ class GraphEditorWindow(QMainWindow):
             reported as a failure of the editor: files move, and a stale menu entry is not news.
         """
         path = pathlib.Path(path)
-        if not path.exists():
+        if not path.is_file():
             recent_files.forget(path)
-            self._refresh_recent_menu()
-            self._report_error('Unable to open the file', f'"{path}" is no longer there.')
+            self._refresh_recent()
+            message = f'"{path}" is no longer there, it was dropped from the recent files.'
+            self._statusBar.showMessage(message)
+            logging.getLogger('spark').warning(message)
             return False
         if path.suffix == session_io.MODEL_SUFFIX:
             return self.open_model_file(path)
         return self.load_session_file(path)
+
+    def _refresh_recent(self) -> None:
+        """
+            Brings the recent list up to date wherever it is shown.
+
+            NOTE: The list is shown in two places. Refreshing only the menu leaves the start screen offering
+            a file that was just dropped, which is the one place the user is most likely to click it again.
+        """
+        self._refresh_recent_menu()
+        self._start_view.set_recent_files(recent_files.recent_files())
 
     def _refresh_recent_menu(self) -> None:
         """
@@ -758,7 +770,7 @@ class GraphEditorWindow(QMainWindow):
 
     def _clear_recent(self) -> None:
         recent_files.clear()
-        self._start_view.set_recent_files([])
+        self._refresh_recent()
 
     def check_model(self) -> bool:
         """
@@ -874,41 +886,105 @@ class GraphEditorWindow(QMainWindow):
             return
         layout = session_io.model_layout(path)
         same_controller = source_profile is model.profile
+        # A model of another controller is not always out of place: a Brain hosts Neurons, and one of
+        # those belongs on the canvas as a single node rather than as the modules it is made of.
+        hosted = model.profile.hosts(source_profile)
         if same_controller and not model.nodes:
             self._open_model_as_session(config, path, source_profile, layout=layout)
             return
-        choice = self._ask_import_mode(path, source_profile, allow_merge=same_controller)
+        choice = self._ask_import_mode(
+            path, source_profile, allow_merge=same_controller, allow_node=hosted,
+        )
         if choice == 'new':
             self._open_model_as_session(config, path, source_profile, layout=layout)
         elif choice == 'merge':
             self.view.import_config(config, label=path.stem, layout=layout)
+        elif choice == 'node':
+            self._add_model_as_node(config, path, source_profile)
 
-    def _ask_import_mode(self, path: pathlib.Path, source_profile: ControllerProfile, allow_merge: bool) -> str | None:
+    def _ask_import_mode(
+            self,
+            path: pathlib.Path,
+            source_profile: ControllerProfile,
+            allow_merge: bool,
+            allow_node: bool = False,
+        ) -> str | None:
         """
-            Asks whether a model should replace the session or be added to it.
+            Asks how a model should join the session.
         """
+        profile = self._scene.model.profile
         box = QMessageBox(self)
         box.setWindowTitle('Import Model')
         box.setText(f'"{path.name}" describes a {source_profile.label}.')
-        if allow_merge:
+        if allow_node:
+            box.setInformativeText(
+                f'Open it as a new session, or add it to the {profile.label} being edited as a single node?'
+            )
+        elif allow_merge:
             box.setInformativeText(
                 'Open it as a new session, or add its modules to the one being edited?'
             )
         else:
             box.setInformativeText(
-                f'The session being edited builds a {self._scene.model.profile.label}, so its modules cannot '
-                f'be added to it. It can be opened as a new session instead.'
+                f'The session being edited builds a {profile.label}, which does not hold a '
+                f'{source_profile.label}. It can be opened as a new session instead.'
             )
         new_button = box.addButton('New Session', QMessageBox.ButtonRole.AcceptRole)
+        node_button = box.addButton('Add as Node', QMessageBox.ButtonRole.ActionRole) if allow_node else None
         merge_button = box.addButton('Add to Session', QMessageBox.ButtonRole.ActionRole) if allow_merge else None
         box.addButton(QMessageBox.StandardButton.Cancel)
         box.exec()
         clicked = box.clickedButton()
         if clicked is new_button:
             return 'new'
+        if node_button is not None and clicked is node_button:
+            return 'node'
         if merge_button is not None and clicked is merge_button:
             return 'merge'
         return None
+
+    def _add_model_as_node(self, config, path: pathlib.Path, source_profile: ControllerProfile) -> None:
+        """
+            Places a model on the canvas as a single node.
+
+            The model has to answer to a name before it can be a node, so it is registered under the
+            name of its file, the same one the model library uses. A model already registered under
+            that name is reused rather than replaced.
+        """
+        from spark.core.registry import REGISTRY, register_neuron_from_config
+
+        namespace = source_profile.model_namespace
+        if namespace is None:
+            self._report_error(
+                'Unable to import the model', f'A {source_profile.label} cannot be placed as a node.',
+            )
+            return
+        subregistry = getattr(REGISTRY, namespace.name)
+        name = path.stem
+        entry = subregistry.get(name)
+        reused = entry is not None
+        if not reused:
+            try:
+                register_neuron_from_config(name, config)
+            except Exception as error:
+                self._report_error('Unable to import the model', f'{path.name}: {error}')
+                return
+            entry = subregistry.get(name)
+        if entry is None:
+            self._report_error('Unable to import the model', f'"{name}" could not be registered.')
+            return
+        try:
+            self.view.add_node_for(entry.get_cls(), label=f'Import {path.stem}')
+        except Exception as error:
+            self._report_error('Unable to import the model', f'{path.name}: {error}')
+            return
+        self._update_document_state()
+        self._refresh_inspector()
+        note = 'already registered, the available model was used' if reused else 'registered'
+        self._statusBar.showMessage(f'"{name}" added as a node ({note}).', 4000)
+        logging.getLogger('spark').log(
+            MessageLevel.SUCCESS.value, f'Model "{name}" added to the session as a node.',
+        )
 
     def _open_model_as_session(
             self,

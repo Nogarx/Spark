@@ -50,18 +50,17 @@ class AdExNeuronConfig(NeuronConfig):
 				},
 				config = TracedSynapsesConfig.partial(),
 			),
-			# Leaky soma
+			# Exponential soma with a spike triggered and subthreshold adaptation current
 			ModuleSpecs(
 				name ='soma', 
 				module_cls = AdaptiveExponentialSoma, 
 				inputs = {
 					'current': [PortMap(origin='synapses', port='currents')],
-					'inhibition_mask': [PortMap(origin='__self__', port='inhibition_mask', is_property=True)],
 				},
 				outputs = {
 					'out_spikes': 'spikes', 
 				},
-				config = AdaptiveExponentialSomaConfig.partial(),
+				config = AdaptiveExponentialSomaConfig.partial(adaptation_delta=7.0),
 			),
 			# Hebbian plasticity
 			ModuleSpecs(
