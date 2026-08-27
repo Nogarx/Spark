@@ -19,6 +19,7 @@ from spark.core.registry import register_module, register_config
 from spark.core.utils import get_einsum_dot_exp_string
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.plasticity.base import Plasticity, PlasticityConfig, PlasticityOutput, PlasticityParamLike
+from spark.nn.components.plasticity.modulated import ModulatedPlasticity, ModulatedPlasticityConfig
 from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
@@ -181,7 +182,7 @@ class QuadrupletRule(Plasticity):
 
         See Also
         --------
-        ThreeFactorHebbianRule : Modulated rule with the two trace terms only.
+        ModulatedHebbianRule : Modulated Hebbian rule, with the two trace terms only.
     """
     config: QuadrupletRuleConfig
 
@@ -190,13 +191,12 @@ class QuadrupletRule(Plasticity):
         super().__init__(config=config, **kwargs)
 
 
-    def build(self, modulation: FloatArray, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> None:
+    def build(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> None:
         # Initialize variables.
         # NOTE: Since variables used for plasticity may have very different shapes and initialization patterns
         # variables should almost always be initialized using self._initialize_variable. This method automatically
         # handles the most common initialization patterns and tries to keep the variable the smallest shape possible
         # that is still compute efficient for plasticity computation (THIS APPRAOCH IS NOT ALWAYS MEMORY EFFICIENT).
-        # NOTE: Modulation is expected to come in the appropiate shape: scaler, _post_shape, _pre_shape or kernel_shape
         kernel_shape = kernel.shape
         pre_shape = pre_spikes.shape
         post_shape = post_spikes.shape
@@ -231,10 +231,23 @@ class QuadrupletRule(Plasticity):
         self.pre_trace.reset()
         self.post_trace.reset()
 
-    def _compute_kernel_update(self, modulation: FloatArray, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> jax.Array:
+    def _clip_kernel(self, kernel: jax.Array) -> jax.Array:
         """
-            Computes next kernel update.
+            The bounds applied to the weights after the update.
+
+            Parameters
+            ----------
+            kernel : jax.Array
+                Weights after the update.
+
+            Returns
+            -------
+            jax.Array
+                The weights, clipped below at zero and above at ``max_clip``.
         """
+        return jnp.clip(kernel, min=0.0, max=self.max_clip.value)
+
+    def _kernel_delta(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> jax.Array:
         # Extract and reshape inputs
         _pre_spikes = pre_spikes.spikes.reshape(self._pre_shape)
         _post_spikes = post_spikes.spikes.reshape(self._post_shape)
@@ -243,39 +256,77 @@ class QuadrupletRule(Plasticity):
         pre_trace = self.pre_trace(_pre_spikes)
         post_trace = self.post_trace(_post_spikes)
         # Compute rule
-        dK = self.eta.value * modulation.value * (
+        return (
             + self.q_alpha.value * _pre_spikes
             + self.q_beta.value * post_trace * _pre_spikes
             + self.q_gamma.value * _post_spikes
             + self.q_delta.value * pre_trace * _post_spikes
         )
-        new_kernel = jnp.clip(_kernel + self._dt * dK, min=0.0, max=self.max_clip.value)
-        return new_kernel
-        
 
-    def __call__(self, modulation: FloatArray, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> PlasticityOutput:
-        """
-            Computes the weights for the next step.
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
 
-            Parameters
-            ----------
-            modulation : FloatArray
-                Third factor scaling the whole update.
-            pre_spikes : SpikeArray
-                Presynaptic spikes, after any conduction delay.
-            post_spikes : SpikeArray
-                Postsynaptic spikes emitted on this step.
-            kernel : FloatArray
-                Current synaptic weights.
+@register_config
+class ModulatedQuadrupletRuleConfig(ModulatedPlasticityConfig, QuadrupletRuleConfig):
+    """
+        Configuration for `ModulatedQuadrupletRule`.
 
-            Returns
-            -------
-            PlasticityOutput
-                Dictionary with one entry, ``kernel``, the updated weights.
-        """
-        return {
-            'kernel': FloatArray(self._compute_kernel_update(modulation, pre_spikes, post_spikes, kernel))
-        }
+        Union of `QuadrupletRuleConfig` and `ModulatedPlasticityConfig`. It declares no field of
+        its own.
+    """
+    pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_module
+class ModulatedQuadrupletRule(ModulatedPlasticity, QuadrupletRule):
+    r"""
+        Four-term rule scaled by a third factor.
+
+        `QuadrupletRule` composed with `ModulatedPlasticity`. The four terms are unchanged and the
+        whole update is scaled by the signal on the ``modulation`` port.
+
+        Parameters
+        ----------
+        config : ModulatedQuadrupletRuleConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        modulation : FloatArray
+            Third factor scaling the whole update.
+        pre_spikes : SpikeArray
+            Presynaptic spikes, after any conduction delay.
+        post_spikes : SpikeArray
+            Postsynaptic spikes emitted on this step.
+        kernel : FloatArray
+            Current synaptic weights, read from the synapse.
+
+        Output Ports
+        ------------
+        kernel : FloatArray
+            The updated weights, written back onto the synapse as an effect.
+
+        Notes
+        -----
+        .. math::
+            W \leftarrow \mathrm{clip}\left(
+                W + \Delta t \, M \, \Delta W, 0, W_{\max} \right)
+
+        with :math:`\Delta W` the four terms of `QuadrupletRule`. The upper bound of the rule is
+        still applied.
+
+        See Also
+        --------
+        QuadrupletRule : The four terms, without the third factor.
+        ModulatedHebbianRule : Modulated Hebbian rule, with the two trace terms only.
+    """
+    config: ModulatedQuadrupletRuleConfig
+
+    def __init__(self, config: ModulatedQuadrupletRuleConfig | None = None, **kwargs) -> None:
+        # Initialize super.
+        super().__init__(config=config, **kwargs)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

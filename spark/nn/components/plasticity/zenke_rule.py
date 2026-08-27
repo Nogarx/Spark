@@ -16,6 +16,7 @@ from spark.core.backend import Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.plasticity.base import Plasticity, PlasticityConfig, PlasticityOutput
+from spark.nn.components.plasticity.modulated import ModulatedPlasticity, ModulatedPlasticityConfig
 from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
@@ -250,10 +251,7 @@ class ZenkeRule(Plasticity):
         self.post_slow_trace.reset()
         self.target_trace.reset()
 
-    def _compute_kernel_update(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> jax.Array:
-        """
-            Computes next kernel update.
-        """
+    def _kernel_delta(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> jax.Array:
         # Extract and reshape inputs
         _pre_spikes = pre_spikes.spikes.reshape(self._pre_shape)
         _post_spikes = post_spikes.spikes.reshape(self._post_shape)
@@ -274,30 +272,83 @@ class ZenkeRule(Plasticity):
         # Transmitter induced.
         d = self.d.value * _pre_spikes
         # Compute rule
-        dK = self.eta.value * (a + b + c + d)
-        return jnp.clip(_kernel + self._dt * dK, min=0.0)
-        
-    def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> PlasticityOutput:
-        """
-            Computes the weights for the next step.
+        return (a + b + c + d)
 
-            Parameters
-            ----------
-            pre_spikes : SpikeArray
-                Presynaptic spikes, after any conduction delay.
-            post_spikes : SpikeArray
-                Postsynaptic spikes emitted on this step.
-            kernel : FloatArray
-                Current synaptic weights.
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
 
-            Returns
-            -------
-            PlasticityOutput
-                Dictionary with one entry, ``kernel``, the updated weights.
-        """
-        return {
-            'kernel': FloatArray(self._compute_kernel_update(pre_spikes, post_spikes, kernel))
-        }
+@register_config
+class ModulatedZenkeRuleConfig(ModulatedPlasticityConfig, ZenkeRuleConfig):
+    """
+        Configuration for `ModulatedZenkeRule`.
+
+        Union of `ZenkeRuleConfig` and `ModulatedPlasticityConfig`. It declares no field of its
+        own, so the defaults are those of `ZenkeRuleConfig`.
+    """
+    pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_module
+class ModulatedZenkeRule(ModulatedPlasticity, ZenkeRule):
+    r"""
+        Zenke triplet rule scaled by a third factor.
+
+        `ZenkeRule` composed with `ModulatedPlasticity`. The signal on the ``modulation`` port
+        scales the whole update, the homeostatic terms included.
+
+        Parameters
+        ----------
+        config : ModulatedZenkeRuleConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        modulation : FloatArray
+            Third factor scaling the whole update.
+        pre_spikes : SpikeArray
+            Presynaptic spikes, after any conduction delay.
+        post_spikes : SpikeArray
+            Postsynaptic spikes emitted on this step.
+        kernel : FloatArray
+            Current synaptic weights, read from the synapse.
+
+        Output Ports
+        ------------
+        kernel : FloatArray
+            The updated weights, written back onto the synapse as an effect.
+
+        Notes
+        -----
+        .. math::
+            W \leftarrow \max\left(
+                W + \Delta t \, (\eta M) \, \Delta W, 0 \right)
+
+        with :math:`\Delta W` the four terms of `ZenkeRule`.
+
+        The heterosynaptic and transmitter-induced terms are what bound the weights, and they are
+        scaled along with the rest. A modulation of zero therefore suspends the homeostasis as
+        well as the learning, and a sustained negative modulation removes the bound rather than
+        reversing it. The weight target keeps advancing on its own in either case, since it
+        follows the weights rather than the update.
+
+        References
+        ----------
+        .. [1] F. Zenke, E. J. Agnes and W. Gerstner, "Diverse Synaptic Plasticity Mechanisms
+               Orchestrated to Form and Retrieve Memories in Spiking Neural Networks", Nature
+               Communications 6, 6922, 2015. https://doi.org/10.1038/ncomms7922
+
+        See Also
+        --------
+        ZenkeRule : The same rule without the third factor.
+        ModulatedPlasticity : The mixin supplying the third factor.
+    """
+    config: ModulatedZenkeRuleConfig
+
+    def __init__(self, config: ModulatedZenkeRuleConfig | None = None, **kwargs) -> None:
+        # Initialize super.
+        super().__init__(config=config, **kwargs)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

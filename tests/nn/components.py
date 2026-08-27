@@ -230,6 +230,86 @@ data_test = [
         }, 
         {'units':(2,3),}
     ),
+    (
+    spark.nn.plasticity.QuadrupletRule, 
+        {
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+        }, 
+        {'units':(2,3),}
+    ),
+    # Modulated learning rules
+    (
+    spark.nn.plasticity.ModulatedHebbianRule, 
+        {
+            'modulation': spark.FloatArray(jnp.array(np.random.rand(), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+        }, 
+        {'units':(2,3),}
+    ),
+    (
+    spark.nn.plasticity.ModulatedHebbianRule, 
+        {
+            'modulation': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5), async_spikes=True),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+        }, 
+        {'units':(2,3),}
+    ),
+    (
+    spark.nn.plasticity.ModulatedQuadrupletRule, 
+        {
+            'modulation': spark.FloatArray(jnp.array(np.random.rand(), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+        }, 
+        {'units':(2,3),}
+    ),
+    (
+    spark.nn.plasticity.ModulatedOjaRule, 
+        {
+            'modulation': spark.FloatArray(jnp.array(np.random.rand(), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+        }, 
+        {'units':(2,3),}
+    ),
+    (
+    spark.nn.plasticity.ModulatedOjaRule, 
+        {
+            'modulation': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5), async_spikes=True),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+        }, 
+        {'units':(2,3),}
+    ),
+    (
+    spark.nn.plasticity.ModulatedZenkeRule, 
+        {
+            'modulation': spark.FloatArray(jnp.array(np.random.rand(), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(4,5) < 0.5), async_spikes=False),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+        }, 
+        {'units':(2,3),}
+    ),
+    (
+    spark.nn.plasticity.ModulatedZenkeRule, 
+        {
+            'modulation': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+            'pre_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3,4,5) < 0.5), async_spikes=True),
+            'post_spikes': spark.SpikeArray(jnp.array(np.random.rand(2,3) < 0.5)),
+            'kernel': spark.FloatArray(jnp.array(np.random.rand(2,3,4,5), dtype=jnp.float16)),
+        }, 
+        {'units':(2,3),}
+    ),
 ]
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

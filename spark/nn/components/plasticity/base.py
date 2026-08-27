@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import abc
 import typing as tp
 import jax
 import jax.numpy as jnp
@@ -92,7 +93,7 @@ class Plasticity(Component, tp.Generic[ConfigT]):
         HebbianRule : Pair-based potentiation.
         OjaRule : Hebbian potentiation with multiplicative normalization.
         QuadrupletRule : Four-term rule driven by an external signal.
-        ThreeFactorHebbianRule : Hebbian rule gated by an external signal.
+        ModulatedHebbianRule : Hebbian rule gated by an external signal.
         ZenkeRule : Triplet rule with heterosynaptic and transmitter-induced terms.
         RUShortTermPlasticity : Short term depression of the current, not of the weights.
     """
@@ -143,6 +144,103 @@ class Plasticity(Component, tp.Generic[ConfigT]):
                 + 3 *    post_inhibition_mask  *    pre_inhibition_mask     # II
             )
             self._synaptic_mask = Constant(synaptic_mask, dtype=jnp.uint8)
+
+    @abc.abstractmethod
+    def _kernel_delta(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> jax.Array:
+        """
+            The terms of this rule, before the learning rate.
+
+            The whole of the rule bar its learning rate, which `_learning_rate` applies. Keeping
+            the two apart lets a mixin fold a factor into the rate rather than into the result,
+            which is what keeps a scaled update bit-identical to an unscaled one.
+
+            Parameters
+            ----------
+            pre_spikes : SpikeArray
+                Presynaptic spikes, after any conduction delay.
+            post_spikes : SpikeArray
+                Postsynaptic spikes emitted on this step.
+            kernel : FloatArray
+                Current synaptic weights.
+
+            Returns
+            -------
+            jax.Array
+                The terms of the rule, of the shape of the kernel.
+        """
+        pass
+
+    def _learning_rate(self) -> jax.Array:
+        """
+            The rate the terms of the rule are scaled by.
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            jax.Array
+                The ``eta`` of the rule. A mixin folds its own factor in here.
+        """
+        return self.eta.value
+
+    def _clip_kernel(self, kernel: jax.Array) -> jax.Array:
+        """
+            The bounds applied to the weights after the update.
+
+            Parameters
+            ----------
+            kernel : jax.Array
+                Weights after the update.
+
+            Returns
+            -------
+            jax.Array
+                The weights, clipped below at zero. A rule with an upper bound overrides this.
+        """
+        return jnp.clip(kernel, min=0.0)
+
+    def _apply_delta(self, kernel: FloatArray, delta: jax.Array) -> PlasticityOutput:
+        """
+            Integrates a weight change and applies the bounds.
+
+            Parameters
+            ----------
+            kernel : FloatArray
+                Current synaptic weights.
+            delta : jax.Array
+                Weight change, as returned by `_kernel_delta`.
+
+            Returns
+            -------
+            PlasticityOutput
+                Dictionary with one entry, ``kernel``, the updated weights.
+        """
+        return {
+            'kernel': FloatArray(self._clip_kernel(kernel.value + self._dt * delta))
+        }
+
+    def __call__(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> PlasticityOutput:
+        """
+            Computes the weights for the next step.
+
+            Parameters
+            ----------
+            pre_spikes : SpikeArray
+                Presynaptic spikes, after any conduction delay.
+            post_spikes : SpikeArray
+                Postsynaptic spikes emitted on this step.
+            kernel : FloatArray
+                Current synaptic weights.
+
+            Returns
+            -------
+            PlasticityOutput
+                Dictionary with one entry, ``kernel``, the updated weights.
+        """
+        delta = self._kernel_delta(pre_spikes, post_spikes, kernel)
+        return self._apply_delta(kernel, self._learning_rate() * delta)
 
     def _initialize_variable(self, variable: PlasticityParamLike, shape: tuple, dtype: jnp.dtype) -> jax.Array:
         """

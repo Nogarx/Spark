@@ -151,6 +151,22 @@ class RUShortTermPlasticity(Plasticity):
         self.r_tracer.reset()
         self.u_tracer.reset()
 
+    def _kernel_delta(self, pre_spikes: SpikeArray, post_spikes: SpikeArray, kernel: FloatArray) -> jax.Array:
+        """
+            Not defined for this component.
+
+            Short term plasticity scales the synaptic current and never touches the weights, so
+            it overrides `__call__` instead of supplying a weight change.
+
+            Raises
+            ------
+            NotImplementedError
+                Always.
+        """
+        raise NotImplementedError(
+            f'"{type(self).__name__}" scales the synaptic current and does not update the weights.'
+        )
+
     def _compute_current_update(self, pre_spikes: SpikeArray, currents: CurrentArray) -> jax.Array:
         """
             Computes next kernel update.
