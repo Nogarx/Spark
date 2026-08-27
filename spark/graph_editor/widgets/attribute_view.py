@@ -105,7 +105,7 @@ class QDimsEdit(QWidget):
         Editor for variable length numeric tuples (e.g. tuple[int, ...] shapes).
 
         The number of entries is set through the add/remove buttons. The widget always reports a valid tuple.
-        """
+    """
 
     value_changed = Signal(object)
 
@@ -193,7 +193,7 @@ class QDimsEdit(QWidget):
     def set_value(self, value: tp.Iterable | None) -> None:
         """
             Rebuilds the editor from a value, without emitting change notifications.
-            """
+        """
         entries: list[float] = []
         if value is not None:
             try:

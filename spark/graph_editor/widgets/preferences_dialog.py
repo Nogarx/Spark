@@ -145,7 +145,7 @@ class ColorButton(QPushButton):
 class NumberListEdit(QWidget):
     """
         Editor for a fixed list of numbers, such as margins or a scene rectangle.
-        """
+    """
 
     LABELS = {4: ('left', 'top', 'right', 'bottom'), 3: ('x', 'y', 'z'), 2: ('x', 'y')}
 
@@ -575,7 +575,7 @@ class PreferencesDialog(QDialog):
     def _reload_values(self) -> None:
         """
             Rebuilds the whole dialog from the style that is now active.
-            """
+        """
         self.config_data = json.loads(json.dumps(STYLES._config))
         self.widgets_map.clear()
         self._rows.clear()

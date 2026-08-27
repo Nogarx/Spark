@@ -76,12 +76,17 @@ class GraphModel(BaseModel):
             The profile determines which modules may be placed and how the graph is exported. It can only
             change while the graph is empty, except when loading a model, where the file dictates it.
 
-            Input:
-                profile: ControllerProfile | None, the new profile.
-                force: bool, applies the profile regardless of the current content. Reserved for loading.
+            Parameters
+            ----------
+            profile : ControllerProfile or None
+                The new profile.
+            force : bool, default False
+                Apply the profile regardless of the current content. Reserved for loading.
 
-            Returns:
-                bool, True if the profile was applied.
+            Returns
+            -------
+            bool
+                True if the profile was applied.
         """
         if profile is self._profile:
             return True
@@ -119,11 +124,19 @@ class GraphModel(BaseModel):
         """
             Takes the controller settings of an existing configuration, and only those.
 
-            NOTE: The modules are dropped. The canvas is the single source of truth for what the controller
-            contains.
+            Parameters
+            ----------
+            config : SparkConfig
+                Configuration to read the settings from.
 
-            Returns:
-                bool, True if the settings were adopted.
+            Returns
+            -------
+            bool
+                True if the settings were adopted.
+
+            Notes
+            -----
+            The modules are dropped. The canvas is the single source of truth for what the controller contains.
         """
         if config is None or self._profile is None:
             return False
@@ -311,10 +324,14 @@ class GraphModel(BaseModel):
         """
             Writes a value into the configuration of a node.
 
-            Input:
-                path: list[str], full config path ([node_id, field, ...]).
-                value: tp.Any, the new value.
-                force: bool, bypasses the inheritance guard. Reserved for cascaded writes.
+            Parameters
+            ----------
+            path : list of str
+                Full config path ([node_id, field, ...]).
+            value : Any
+                The new value.
+            force : bool, default False
+                Bypass the inheritance guard. Reserved for cascaded writes.
         """
         if len(path) < 2:
             return

@@ -145,12 +145,17 @@ def type_tokens(type_hint: tp.Any = None, valid_types: tp.Any = None) -> frozens
     """
         Builds the normalized token set describing a configuration field.
 
-        Input:
-            type_hint: tp.Any, the dataclass field annotation (may be a string).
-            valid_types: tp.Any, the "valid_types" entry of the field metadata.
+        Parameters
+        ----------
+        type_hint : Any, optional
+            The dataclass field annotation. May be a string.
+        valid_types : Any, optional
+            The "valid_types" entry of the field metadata.
 
-        Returns:
-            frozenset[str], normalized type tokens.
+        Returns
+        -------
+        frozenset of str
+            The normalized type tokens.
     """
     tokens: set[str] = set()
     if valid_types is not None:
@@ -223,12 +228,19 @@ def initializer_policy(tokens: frozenset[str], metadata: dict | None = None) -> 
     """
         Decides whether a field may (and must) be defined through an initializer.
 
-        Input:
-            tokens: frozenset[str], normalized type tokens of the field.
-            metadata: dict, field metadata.
+        Parameters
+        ----------
+        tokens : frozenset of str
+            Normalized type tokens of the field.
+        metadata : dict, optional
+            Field metadata.
 
-        Returns:
-            tuple[bool, bool], (an initializer is allowed, an initializer is mandatory).
+        Returns
+        -------
+        allowed : bool
+            True if the field accepts an initializer.
+        mandatory : bool
+            True if the field can only be defined through an initializer.
     """
     metadata = metadata or {}
     if not metadata.get('allows_init', False):
@@ -259,7 +271,7 @@ def type_label(tokens: frozenset[str], type_hint: tp.Any = None) -> str:
 def dtype_key(value: tp.Any) -> str | None:
     """
         Canonical name of a dtype-like value.
-        """
+    """
     if value is None:
         return None
     try:

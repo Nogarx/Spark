@@ -121,7 +121,7 @@ class InheritanceTree:
         Tree-like data structure holding the inheritance status of the variables of a node.
 
         Links variables of the same name and type, so that they are updated simultaneously.
-        """
+    """
 
     def __init__(self, path: list[str] = []) -> None:
         self._is_valid = False
@@ -161,12 +161,18 @@ class InheritanceTree:
         """
             Adds a new leaf to the tree.
 
-            Input:
-                path: list[str], path to the new leaf node, with the last entry the name of the leaf
-                type_string: str, string representation of the types this variable manages
-                inheritance_childs: list[list[str]]=[], list of children that can inherit from this variable (Note: do not set by hand)
-                flags: InheritanceFlags, 4-bit flags that represent inheritance possibilities (Note: do not set by hand)
-                break_inheritance: bool, boolean flag to disconnect this variable from the inheritance dynamics
+            Parameters
+            ----------
+            path : list of str
+                Path to the new leaf, with the last entry the name of the leaf.
+            type_string : str, optional
+                String representation of the types the variable accepts.
+            inheritance_childs : list of list of str, optional
+                Paths that can inherit from this variable. Computed by validate(), not set by hand.
+            flags : InheritanceFlags, optional
+                Four bit flags holding the inheritance state. Computed by validate(), not set by hand.
+            break_inheritance : bool, default False
+                Disconnect the variable from the inheritance dynamics.
         """
         # The path is consumed below, so the list of the caller is left untouched.
         path = copy.deepcopy(path if isinstance(path, list) else list(path))
@@ -200,8 +206,10 @@ class InheritanceTree:
         """
             Adds a new branch to the tree.
 
-            Input:
-                path: list[str], path to the new branch, with the last entry the name of the branch
+            Parameters
+            ----------
+            path : list of str
+                Path to the new branch, with the last entry the name of the branch.
         """
         # The path is consumed below, so the list of the caller is left untouched.
         path = copy.deepcopy(path if isinstance(path, list) else list(path))
@@ -230,9 +238,11 @@ class InheritanceTree:
         """
             Validates the flags and the inheritance childs of the tree.
 
-            Input:
-                inheriting_labels: dict, {(leaf name, leaf type): is_inheriting} entries contributed by the
-                    ancestors of this subtree. Leaves matching an entry are marked as receiving.
+            Parameters
+            ----------
+            inheriting_labels : dict, optional
+                {(leaf name, leaf type): is_inheriting} entries contributed by the ancestors of this subtree.
+                Leaves matching an entry are marked as receiving.
         """
         # NOTE: Labels are keyed by (name, type), so same-named fields of different types never cascade into
         # each other.
@@ -270,13 +280,19 @@ class InheritanceTree:
         """
             Collects the inheritance childs of a tree, relative to the current leaf.
 
-            Input:
-                name: str, leaf node name to search
-                type_key: frozenset[str], normalized type of the leaf node. Only childs describing the same
-                    type are considered valid cascade targets.
+            Parameters
+            ----------
+            name : str
+                Name of the leaf to search for.
+            type_key : frozenset of str
+                Normalized type of the leaf. Only childs describing the same type are valid cascade targets.
+            path : list of str, optional
+                Path walked so far. Used by the recursion.
 
-            Returns:
-                list[list[str]], list of inheritance childs of the leaf node
+            Returns
+            -------
+            list of list of str
+                Paths of the inheritance childs of the leaf.
         """
         path = [] if path is None else path
         inheritance_childs = []
@@ -292,13 +308,22 @@ class InheritanceTree:
 
     def get_leaf(self, path: list[str]) -> InheritanceLeaf:
         """
-            Returns the status of the leaf node.
+            Returns the leaf addressed by a path.
 
-            Input:
-                path: list[str], path to the leaf node, with the last entry the name of the leaf
+            Parameters
+            ----------
+            path : list of str
+                Path to the leaf, with the last entry the name of the leaf.
 
-            Returns:
-                InheritanceLeaf, returns the leaf node instance.
+            Returns
+            -------
+            InheritanceLeaf
+                The leaf the path addresses.
+
+            Raises
+            ------
+            KeyError
+                If no leaf sits at the path.
         """
         if not self._is_valid:
             self.validate()
@@ -324,13 +349,22 @@ class InheritanceTree:
     
     def get_subtree(self, path: list[str]) -> InheritanceTree:
         """
-            Returns a subtree of the leaf node.
+            Returns the subtree addressed by a path.
 
-            Input:
-                path: list[str], path to the subtree node, with the last entry the name of the branch
+            Parameters
+            ----------
+            path : list of str
+                Path to the subtree, with the last entry the name of the branch.
 
-            Returns:
-                InheritanceTree, returns the branch node instance.
+            Returns
+            -------
+            InheritanceTree
+                The branch the path addresses.
+
+            Raises
+            ------
+            KeyError
+                If no branch sits at the path.
         """
         if not self._is_valid:
             self.validate()

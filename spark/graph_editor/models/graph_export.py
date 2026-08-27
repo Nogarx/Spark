@@ -85,7 +85,7 @@ def _port_map_for(port: PortModel) -> PortMap | None:
 def _incoming(port: PortModel) -> list[PortMap]:
     """
         Every connection feeding an input port, in a stable order.
-        """
+    """
     maps = []
     for edge in port.edges:
         source = edge.source_port
@@ -104,8 +104,17 @@ def build_module_specs(graph_model: GraphModel) -> tuple[list[ModuleSpecs], list
     """
         Builds the ModuleSpecs of every module on the canvas.
 
-        Returns:
-            tuple, (specs, problems). Problems describe what would stop the model from being instantiated.
+        Parameters
+        ----------
+        graph_model : GraphModel
+            Graph to read.
+
+        Returns
+        -------
+        specs : list of ModuleSpecs
+            One entry per module node.
+        problems : list of str
+            What would stop the model from being instantiated.
     """
     problems: list[str] = []
     specs: list[ModuleSpecs] = []
@@ -174,7 +183,7 @@ def build_module_specs(graph_model: GraphModel) -> tuple[list[ModuleSpecs], list
 def _unset_required_fields(config: SparkConfig, where: str) -> list[str]:
     """
         Fields left unset that the framework will need.
-        """
+    """
     from spark.core.config import SparkConfig as _SparkConfig
     problems: list[str] = []
     if config is None:
@@ -200,12 +209,17 @@ def build_controller_config(
     """
         Translates a graph into the configuration of its controller.
 
-        Input:
-            graph_model: GraphModel, the graph to translate.
-            strict: bool, also report everything that would stop the framework from instantiating the model.
+        Parameters
+        ----------
+        graph_model : GraphModel
+            Graph to translate.
+        strict : bool, default False
+            Also report everything that would stop the framework from instantiating the model.
 
-        Returns:
-            ExportedGraph, the configuration, the specs, the node layout and the problems found.
+        Returns
+        -------
+        ExportedGraph
+            The configuration, the specs, the node layout and the problems found.
     """
     profile: ControllerProfile | None = graph_model.profile
     result = ExportedGraph()

@@ -22,7 +22,7 @@ class ConfigNode(QObject):
         Base class for all configuration nodes in the inspector state model.
 
         Observable tree structure the UI binds to, wrapping the nested dataclasses and ModuleSpecs.
-        """
+    """
     value_changed = Signal(object, object) 
     errors_changed = Signal(object, list)
     inheritance_changed = Signal(object, bool)
@@ -187,16 +187,25 @@ def collect_field_errors(
     """
         Runs the validators declared by a configuration field against a value.
 
-        Input:
-            name: str, field name, used to build the messages.
-            value: tp.Any, current value of the field.
-            metadata: dict, field metadata. Validators are read from the "validators" entry.
-            field: dc.Field, originating dataclass field. Validators are constructed from it.
-            is_required: bool, True if the field defines neither a default nor a default factory.
-            type_hint: tp.Any, field annotation. Used to detect fields that accept None.
+        Parameters
+        ----------
+        name : str
+            Field name, used to build the messages.
+        value : Any
+            Current value of the field.
+        metadata : dict, optional
+            Field metadata. Validators are read from the "validators" entry.
+        field : dataclasses.Field, optional
+            Originating dataclass field. Validators are constructed from it.
+        is_required : bool, default False
+            True if the field defines neither a default nor a default factory.
+        type_hint : Any, optional
+            Field annotation. Used to detect fields that accept None.
 
-        Returns:
-            list[str], the collected error messages.
+        Returns
+        -------
+        list of str
+            The collected error messages.
     """
     metadata = metadata or {}
     errors: list[str] = []
@@ -238,7 +247,7 @@ def parse_object_to_state(
     ) -> ConfigNode:
     """
         Parses a Python object (SparkConfig, dataclass, ModuleSpecs, list or primitive) into a ConfigNode tree.
-        """
+    """
     metadata = metadata or {}
 
     if isinstance(obj, ModuleSpecs):

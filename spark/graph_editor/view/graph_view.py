@@ -378,7 +378,7 @@ class GraphView(QGraphicsView):
             Places a node for a module class at the centre of the view.
 
             Menu driven counterpart of dropping a node from the context menu, which knows where the pointer was.
-            """
+        """
         node_cls = NODE_REGISTRY.get(module_cls)
         if node_cls is None:
             raise RuntimeError(f'No node model is available for "{module_cls.__name__}".')
@@ -399,9 +399,15 @@ class GraphView(QGraphicsView):
         """
             Expands a controller configuration into nodes and edges, as a single undoable step.
 
-            Input:
-                layout: dict[str, tuple[float, float]], node positions by name. Supplied when a session is
-                    reopened, since a configuration cannot carry the layout by itself.
+            Parameters
+            ----------
+            config : SparkConfig
+                The configuration to expand.
+            label : str, default 'Model'
+                Name the undo entry carries.
+            layout : dict of str to tuple of float, optional
+                Node positions by name. Supplied when a session is reopened, since a configuration cannot
+                carry the layout by itself.
         """
         model = self.scene().model
         # NOTE: The controller keeps a single set of settings, taken from the file only while the canvas is

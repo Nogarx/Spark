@@ -30,14 +30,19 @@ _PIXMAP_CACHE: dict[tuple[str, int], QPixmap] = {}
 
 def get_pixmap(path: str, size: int | None = None) -> QPixmap:
     """
-        Returns a (cached) pixmap from the editor resources.
+        Returns a cached pixmap from the editor resources.
 
-        Input:
-            path: str, resource path (e.g. ":/icons/brain_icon.png").
-            size: int, optional square size the pixmap is scaled to.
+        Parameters
+        ----------
+        path : str
+            Resource path (e.g. ":/icons/brain_icon.png").
+        size : int, optional
+            Square size the pixmap is scaled to.
 
-        Returns:
-            QPixmap, the requested pixmap. Empty if the resource does not exist.
+        Returns
+        -------
+        QPixmap
+            The requested pixmap. Empty if the resource does not exist.
     """
     key = (path, size or 0)
     pixmap = _PIXMAP_CACHE.get(key, None)
@@ -108,11 +113,22 @@ def get_toggle_icon(
     """
         Returns a state aware QIcon that follows the checked state of a button.
 
-        Input:
-            on_path: str | None, resource shown while checked. None renders nothing.
-            off_path: str | None, resource shown while unchecked. None renders nothing.
-            off_opacity: float, dims the unchecked resource. Use it to show that an action is available
-                without implying that it is active.
+        Parameters
+        ----------
+        on_path : str or None
+            Resource shown while checked. None renders nothing.
+        off_path : str or None
+            Resource shown while unchecked. None renders nothing.
+        size : int, optional
+            Square size the icon is scaled to.
+        off_opacity : float, default 1.0
+            Dims the unchecked resource. Use it to show that an action is available without implying that
+            it is active.
+
+        Returns
+        -------
+        QIcon
+            The two state icon.
     """
     icon = QIcon()
     on_pixmap = get_pixmap(on_path, size) if on_path else empty_pixmap(size or 16)

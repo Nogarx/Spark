@@ -86,11 +86,15 @@ def recent_files(existing_only: bool = True) -> list[pl.Path]:
     """
         Files opened or written recently, most recent first.
 
-        Args:
-            existing_only: bool, drops the entries that are no longer on disk.
+        Parameters
+        ----------
+        existing_only : bool, default True
+            Drop the entries that are no longer on disk.
 
-        Returns:
-            list[pl.Path], the remembered files.
+        Returns
+        -------
+        list of pathlib.Path
+            The remembered files.
     """
     entries = _stored()
     if not existing_only:

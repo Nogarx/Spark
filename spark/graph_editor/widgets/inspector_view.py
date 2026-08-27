@@ -77,7 +77,7 @@ class TreeDisplay(QPlainTextEdit):
     def _content_height(self) -> int:
         """
             Height required to show every line of the tree.
-            """
+        """
         lines = max(1, self.document().blockCount())
         text_height = lines * self.fontMetrics().lineSpacing() + 2 * self.document().documentMargin()
         chrome = max(0, self.height() - self.viewport().height())
@@ -264,7 +264,7 @@ class InspectorView(QWidget):
     def invalidate(self) -> None:
         """
             Forces the next set_node() to rebuild, even when it names the same target.
-            """
+        """
         self._is_built = False
 
     def set_node(self, node_model: NodeModel, graph_model: GraphModel | None = None) -> None:

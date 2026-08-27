@@ -76,7 +76,7 @@ def _as_position(pos: tp.Any) -> tuple[float, float] | None:
 def _controller_metadata(config: tp.Any) -> dict:
     """
         Editor metadata stored at the controller level, keyed by node name.
-        """
+    """
     metadata = getattr(config, '__graph_editor_metadata__', None)
     return metadata if isinstance(metadata, dict) else {}
 
@@ -85,7 +85,7 @@ def _controller_metadata(config: tp.Any) -> dict:
 def _stored_position(config: tp.Any) -> tuple[float, float] | None:
     """
         Position saved with a module, when the model carries editor metadata.
-        """
+    """
     return _as_position(_controller_metadata(config).get('pos', None))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -114,15 +114,21 @@ def expand_controller_config(
     """
         Expands a controller configuration into the nodes and edges of its modules.
 
-        Input:
-            config: SparkConfig, configuration of the controller to expand.
-            graph_model: GraphModel, graph the result is destined to. Only read, never modified.
-            profile: ControllerProfile, active profile. Used to type the controller properties.
-            layout: dict[str, tuple[float, float]], positions by node name. A configuration cannot carry
-                the layout by itself (see session_io).
+        Parameters
+        ----------
+        config : SparkConfig
+            Configuration of the controller to expand.
+        graph_model : GraphModel
+            Graph the result is destined to. Only read, never modified.
+        profile : ControllerProfile, optional
+            Active profile. Used to type the controller properties.
+        layout : dict of str to tuple of float, optional
+            Positions by node name. A configuration cannot carry the layout by itself (see session_io).
 
-        Returns:
-            ImportedGraph, the nodes and edges to add, already positioned.
+        Returns
+        -------
+        ImportedGraph
+            The nodes and edges to add, already positioned.
     """
     specs: tuple[ModuleSpecs, ...] = tuple(getattr(config, 'modules_specs', ()) or ())
     if not specs:

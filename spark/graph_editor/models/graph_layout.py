@@ -27,7 +27,7 @@ _DIVIDER = 16.0
 def estimate_node_size(node: NodeModel) -> tuple[float, float]:
     """
         Approximates the rendered size of a node from its ports.
-        """
+    """
     width = float(STYLES.get_val('node', 'width', default=180))
     height = float(STYLES.get_val('node', 'header_height', default=45))
 
@@ -64,7 +64,7 @@ def _break_cycles(keys: list[str], successors: dict[str, list[str]]) -> set[tupl
 
         The dependency graph is not acyclic: recurrent models are legal. Back edges are ignored while
         layering, placing a recurrent module after the modules it feeds forward into.
-        """
+    """
     back_edges: set[tuple[str, str]] = set()
     state = {key: 0 for key in keys}  # 0 unvisited, 1 in progress, 2 done
 
@@ -157,15 +157,23 @@ def layered_layout(
     """
         Places a dataflow graph left to right, by dependency depth.
 
-        Input:
-            keys: list[str], node identifiers, in a stable order.
-            edges: list[tuple[str, str]], directed (source, target) dependencies.
-            sizes: dict[str, tuple[float, float]], rendered size of every node.
-            h_gap: float, free space between two columns.
-            v_gap: float, free space between two nodes of the same column.
+        Parameters
+        ----------
+        keys : list of str
+            Node identifiers, in a stable order.
+        edges : list of tuple of str
+            Directed (source, target) dependencies.
+        sizes : dict of str to tuple of float
+            Rendered size of every node.
+        h_gap : float, optional
+            Free space between two columns. Read from the style when omitted.
+        v_gap : float, optional
+            Free space between two nodes of the same column. Read from the style when omitted.
 
-        Returns:
-            dict[str, tuple[float, float]], top-left position of every node.
+        Returns
+        -------
+        dict of str to tuple of float
+            Top-left position of every node.
     """
     if not keys:
         return {}
@@ -222,7 +230,7 @@ def offset_below(existing: tp.Iterable[NodeModel], incoming: tp.Iterable[NodeMod
         Translation that drops a set of new nodes under everything already on the canvas.
 
         The relative placement of the incoming nodes is preserved, only the block as a whole is moved.
-        """
+    """
     margin = float(STYLES.get_val('graph', 'layout_import_margin', default=120) if margin is None else margin)
     incoming = list(incoming)
     occupied = bounding_box(existing)

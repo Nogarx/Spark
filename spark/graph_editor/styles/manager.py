@@ -41,14 +41,12 @@ class StyleManager(QObject):
         """
             Gives QSettings somewhere to write.
 
-            NOTE: Without an organisation and an application name, QSettings falls back to
-            "Unknown Organization/PySideApp" and reports an access error, so a chosen style was applied for
-            the session and silently forgotten on the next launch.
-
-            NOTE: The name is set rather than defaulted. Qt derives it from the program that was started, so
-            leaving it alone files the settings under whatever launched the editor ("test.ipynb", "-c", a
-            script name), and a style or a recent file chosen from one launcher would be invisible from
-            another. The editor is one application wherever it is started from.
+            Notes
+            -----
+            Without an organisation and an application name QSettings falls back to
+            "Unknown Organization/PySideApp" and reports an access error. The name is set rather than
+            defaulted: Qt derives it from the program that was started, which would file the settings under
+            whatever launched the editor ("test.ipynb", "-c", a script name).
         """
         QCoreApplication.setOrganizationName('Spark')
         QCoreApplication.setApplicationName('SparkGraphEditor')

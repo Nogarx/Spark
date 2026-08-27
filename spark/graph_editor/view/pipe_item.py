@@ -62,7 +62,7 @@ class PipeRouteContext:
 
         The node rectangles and the lanes already in use are collected once per pass rather than once per
         pipe, which keeps routing a whole scene linear in the number of pipes.
-        """
+    """
 
     def __init__(self, obstacles: list[tuple[NodeItem, QRectF]], bundles: dict[tuple[int, int], list[int]] | None = None) -> None:
         self._obstacles = obstacles
@@ -242,7 +242,19 @@ class PipeItem(QGraphicsPathItem):
         """
             Colour of the payload the pipe carries.
 
-            NOTE: Both ends always share a type, connections between different payloads are rejected.
+            Parameters
+            ----------
+            active : bool, default False
+                Return the highlighted variant of the colour.
+
+            Returns
+            -------
+            QColor
+                The colour of the payload.
+
+            Notes
+            -----
+            Both ends always share a type, connections between different payloads are rejected.
         """
         port = self.source_port if self.source_port is not None else self.target_port
         color = None
@@ -309,7 +321,7 @@ class PipeItem(QGraphicsPathItem):
 
             Two modules can be connected twice in opposite directions (a plasticity rule reading a kernel and
             writing it back), and both connections would otherwise be drawn along the same lane.
-            """
+        """
         source_node, target_node = self._end_nodes()
         if source_node is None or target_node is None:
             return 0.0
@@ -333,7 +345,7 @@ class PipeItem(QGraphicsPathItem):
 
             A column can be blocked by a whole node, so the search jumps past whatever is in the way rather
             than stepping by fixed increments.
-            """
+        """
         low, high = min(y_a, y_b), max(y_a, y_b)
         x = start_x
         for _ in range(8):

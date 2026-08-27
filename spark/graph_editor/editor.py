@@ -396,7 +396,7 @@ class GraphEditorWindow(QMainWindow):
             Rebuilds the inspector even when the selection did not move.
 
             Choosing a controller, or adopting settings from a file, changes what "nothing selected" shows.
-            """
+        """
         self.dock_inspector.widget().invalidate()
         self._on_selection_changed()
 
@@ -567,7 +567,7 @@ class GraphEditorWindow(QMainWindow):
             Opening a file fills the session being edited while that session is still empty, and opens another
             tab once there is something to preserve. Picking a controller does not count as work, since the file
             brings its own. Anything on the canvas, a file name, or an edit that reached the undo stack does.
-            """
+        """
         document = self.document
         if document is None:
             return None
@@ -694,7 +694,7 @@ class GraphEditorWindow(QMainWindow):
             Opens a file of either kind, telling them apart by their suffix.
 
             A path that is gone is dropped from the recent list rather than reported as an error.
-            """
+        """
         path = pathlib.Path(path)
         if not path.is_file():
             recent_files.forget(path)
@@ -710,7 +710,7 @@ class GraphEditorWindow(QMainWindow):
     def _refresh_recent(self) -> None:
         """
             Brings the recent list up to date wherever it is shown, the menu and the start screen.
-            """
+        """
         self._refresh_recent_menu()
         self._start_view.set_recent_files(recent_files.recent_files())
 
@@ -772,7 +772,7 @@ class GraphEditorWindow(QMainWindow):
             Opens a model as a session of its own.
 
             Adding the modules to the session being edited is what "Import Model..." does instead.
-            """
+        """
         path = pathlib.Path(path)
         try:
             config = session_io.load_model(path)
@@ -833,7 +833,7 @@ class GraphEditorWindow(QMainWindow):
 
             A model can be opened as a session of its own, or its modules can be added to the session being
             edited. Importing does the second, and never adds a second controller.
-            """
+        """
         model = self._scene.model
         if model.profile is None:
             return
@@ -915,7 +915,7 @@ class GraphEditorWindow(QMainWindow):
 
             A node needs a registered class, so the model is registered under the name of its file. A model
             already registered under that name is reused rather than replaced.
-            """
+        """
         from spark.core.registry import REGISTRY, register_neuron_from_config
 
         namespace = source_profile.model_namespace
