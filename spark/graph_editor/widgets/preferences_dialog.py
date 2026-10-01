@@ -34,6 +34,8 @@ SECTIONS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     ('Inspector', 'The configuration panel on the right.', ('inspector',)),
     ('Hierarchy', 'The node list on the left.', ('hierarchy',)),
     ('Console', 'The message log at the bottom.', ('console',)),
+    ('Run Viewer', 'Plots, rasters, timeline, badges and panels of the run viewer.',
+     ('run_viewer', 'run_viewer_timeline', 'run_viewer_badge', 'run_viewer_status', 'run_viewer_layout')),
     ('Start Screen', 'The controller picker shown when no model is open.', ('start',)),
     ('Window', 'Menus, status bar and scroll bars.', ('main', 'menu_bar', 'menu', 'status_bar', 'scrollbar')),
     ('Preferences', 'This dialog.', ('preferences',)),
@@ -48,6 +50,11 @@ SYNONYMS: dict[str, str] = {
     'viewer': 'canvas background',
     'node': 'module block',
     'start': 'welcome home controller picker',
+    'run_viewer': 'run runs plot plots raster timeline recording',
+    'run_viewer_timeline': 'run runs timeline ruler events tags recording',
+    'run_viewer_badge': 'run runs badge rate firing activity node',
+    'run_viewer_status': 'run runs status running finished failed crashed',
+    'run_viewer_layout': 'run runs panel panels margins spacing window dock',
 }
 
 # What a setting does, when the name alone does not say it.
@@ -71,6 +78,29 @@ HINTS: dict[str, str] = {
     'console.min_height': 'Smallest height of the console panel.',
     'inspector.min_width': 'Smallest width of the inspector panel.',
     'hierarchy.min_width': 'Smallest width of the hierarchy panel.',
+    'run_viewer.background_color': 'Around the axes of a plot.',
+    'run_viewer.area_color': 'Within the axes of a plot.',
+    'run_viewer.raster_event_color': 'Where a unit of a raster spikes. Elsewhere, a raster takes the area colour.',
+    'run_viewer.muted_color': 'Of messages within a plot, and of the names of tags in the timeline.',
+    'run_viewer.frame_color': 'Of the frame around the axes of a plot.',
+    'run_viewer.link_color': 'Of the steps of warnings and errors, which move the cursor there.',
+    'run_viewer.band_alpha': 'Opacity, from 0 to 255, of the band from the lowest to the highest value of a group or a summary.',
+    'run_viewer.spread_alpha': 'Opacity, from 0 to 255, of the band of one standard deviation around a mean.',
+    'run_viewer.faint_alpha': 'Opacity, from 0 to 255, of the runs of a group, when drawn.',
+    'run_viewer.zoom_box_alpha': 'Opacity, from 0 to 255, of the box drawn to zoom.',
+    'run_viewer.plot_margins': 'Space around the axes of a plot, for the ticks and the title.',
+    'run_viewer.panel_height': 'Height of a panel of the workspace.',
+    'run_viewer.series_colors': 'Colours of the series of a plot, in order, repeated past the last.',
+    'run_viewer.run_colors': 'Colours given to runs and groups in order, repeated past the last.',
+    'run_viewer.colormap': 'Colours of rasters of numbers, traces and matrices, from the lowest value to the highest.',
+    'run_viewer_timeline.labels_width': 'Width of the names of the rows.',
+    'run_viewer_timeline.tag_color': 'Of every other value of a tag; the others take the alternate colour.',
+    'run_viewer_timeline.tag_dense_color': 'Of a tag whose values are too narrow to be drawn apart.',
+    'run_viewer_timeline.event_color': 'Of events of kinds without a colour of their own.',
+    'run_viewer_badge.full_scale': 'Firing rate, in Hz, drawn with the high colour.',
+    'run_viewer_status.other_color': 'Of a status without a colour of its own.',
+    'run_viewer_layout.graph_min_width': 'Width the graph can be narrowed to by the Probes panel.',
+    'run_viewer_layout.first_column_width': 'Narrowest width the first column of the runs takes by itself.',
 }
 
 # Keys whose value is a set of edge distances.
@@ -197,12 +227,24 @@ class CssSizeEdit(QSpinBox):
 class PreferencesDialog(QDialog):
     """
         Editor for the presentation of the graph editor.
+
+        Parameters
+        ----------
+        parent : QWidget, optional
+            Parent widget.
+        sections : sequence of str, optional
+            Titles of the sections of `SECTIONS` shown, in their order there. Every section by
+            default, and those of categories no section names.
+        library : bool, default True
+            Whether the page of the model library is shown.
     """
 
     applied = Signal()
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, parent: QWidget | None = None, sections: tp.Sequence[str] | None = None, library: bool = True) -> None:
         super().__init__(parent)
+        self._sections = None if sections is None else tuple(sections)
+        self._library = library
         self.setWindowTitle('Preferences')
         self.resize(
             STYLES.get_val('preferences', 'dialog_width', default=820),
@@ -237,7 +279,8 @@ class PreferencesDialog(QDialog):
         layout.addLayout(body, 1)
 
         self._build_pages()
-        self._build_library_page()
+        if self._library:
+            self._build_library_page()
 
         controls = QHBoxLayout()
         self.path_label = QLabel()
@@ -270,6 +313,8 @@ class PreferencesDialog(QDialog):
         # Categories not placed by hand are appended, so a new one is never invisible.
         leftovers = tuple(key for key in self.config_data if key not in declared)
         sections = list(SECTIONS) + ([('Other', 'Categories with no section of their own.', leftovers)] if leftovers else [])
+        if self._sections is not None:
+            sections = [section for section in sections if section[0] in self._sections]
 
         for title, description, keys in sections:
             present = [key for key in keys if isinstance(self.config_data.get(key), dict)]
@@ -376,8 +421,10 @@ class PreferencesDialog(QDialog):
 
     def _commit_library(self) -> None:
         """
-            Writes the location of the library.
+            Writes the location of the library, when its page is shown.
         """
+        if not self._library:
+            return
         from spark.graph_editor.models import model_library
         chosen = self.library_path_edit.text().strip()
         model_library.set_library_path(chosen or None)

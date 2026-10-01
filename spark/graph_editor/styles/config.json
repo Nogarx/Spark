@@ -48,6 +48,258 @@
         "layout_v_gap": 40,
         "layout_import_margin": 120
     },
+    "run_viewer": {
+        "background_color": "#2b2b2b",
+        "area_color": "#333333",
+        "text_color": "#dcdcdc",
+        "muted_color": [
+            150,
+            150,
+            150
+        ],
+        "grid_color": [
+            255,
+            255,
+            255,
+            25
+        ],
+        "frame_color": [
+            255,
+            255,
+            255,
+            60
+        ],
+        "cursor_color": "#fecf2a",
+        "raster_event_color": "#7cc0f5",
+        "link_color": "#4e9ad8",
+        "font_family": "Segoe UI",
+        "font_size": 7,
+        "title_font_size": 8,
+        "line_width": 1.2,
+        "faint_line_width": 0.8,
+        "band_alpha": 45,
+        "spread_alpha": 100,
+        "faint_alpha": 110,
+        "zoom_box_alpha": 30,
+        "plot_margins": [
+            52,
+            18,
+            10,
+            18
+        ],
+        "axis_label_size": 12,
+        "colorbar_width": 64,
+        "legend_width": 150,
+        "legend_swatch": 8,
+        "series_height": 120,
+        "image_height": 140,
+        "bar_height": 110,
+        "matrix_height": 160,
+        "panel_height": 190,
+        "series_colors": {
+            "1": "#4e9ad8",
+            "2": "#f2a541",
+            "3": "#63b76a",
+            "4": "#e0605e",
+            "5": "#a57fd6",
+            "6": "#50c0c0",
+            "7": "#d88fbf",
+            "8": "#b5b35c"
+        },
+        "run_colors": {
+            "1": "#4e9ad8",
+            "2": "#f2a541",
+            "3": "#63b76a",
+            "4": "#e0605e",
+            "5": "#a57fd6",
+            "6": "#50c0c0",
+            "7": "#d88fbf",
+            "8": "#b5b35c",
+            "9": "#8c8c8c",
+            "10": "#e8c547",
+            "11": "#6a8fd6",
+            "12": "#c96d3a"
+        },
+        "colormap": {
+            "1": "#440154",
+            "2": "#472c7a",
+            "3": "#3b518b",
+            "4": "#2c718e",
+            "5": "#21908d",
+            "6": "#27ad81",
+            "7": "#5cc863",
+            "8": "#aadc32",
+            "9": "#fde725"
+        }
+    },
+    "run_viewer_timeline": {
+        "labels_width": 110,
+        "ruler_height": 18,
+        "row_height": 16,
+        "row_padding": 3,
+        "events_height": 12,
+        "padding": 8,
+        "tick_color": [
+            255,
+            255,
+            255,
+            30
+        ],
+        "tag_color": [
+            255,
+            255,
+            255,
+            34
+        ],
+        "tag_alt_color": [
+            255,
+            255,
+            255,
+            16
+        ],
+        "tag_dense_color": [
+            255,
+            255,
+            255,
+            14
+        ],
+        "tag_text_color": [
+            180,
+            180,
+            180
+        ],
+        "event_color": [
+            160,
+            160,
+            160
+        ],
+        "checkpoint_color": "#63b76a",
+        "warning_color": "#f2a541",
+        "error_color": "#e0605e",
+        "event_width": 1,
+        "notable_event_width": 2,
+        "cursor_width": 1.5
+    },
+    "run_viewer_badge": {
+        "width": 64,
+        "height": 18,
+        "radius": 7,
+        "full_scale": 50.0,
+        "low_color": "#59440d",
+        "high_color": "#f22424",
+        "border_color": [
+            0,
+            0,
+            0,
+            120
+        ],
+        "dark_text_color": [
+            20,
+            20,
+            20
+        ],
+        "light_text_color": [
+            235,
+            235,
+            235
+        ],
+        "font_size": 8
+    },
+    "run_viewer_status": {
+        "running_color": "#63b76a",
+        "finished_color": "#b0b0b0",
+        "failed_color": "#e0605e",
+        "crashed_color": "#e0605e",
+        "preempted_color": "#e0a85e",
+        "other_color": "#dcdcdc"
+    },
+    "run_viewer_layout": {
+        "window_width": 1500,
+        "window_height": 900,
+        "runs_width": 440,
+        "probes_width": 520,
+        "graph_min_width": 80,
+        "runs_margins": [
+            6,
+            6,
+            6,
+            6
+        ],
+        "runs_spacing": 6,
+        "first_column_width": 120,
+        "workspace_margins": [
+            8,
+            8,
+            8,
+            0
+        ],
+        "workspace_spacing": 6,
+        "sections_spacing": 4,
+        "section_margins": [
+            0,
+            0,
+            0,
+            8
+        ],
+        "section_spacing": 4,
+        "panel_spacing": 10,
+        "panel_bar_margins": [
+            4,
+            0,
+            0,
+            0
+        ],
+        "smoothing_width": 110,
+        "smoothing_label_width": 30,
+        "picker_width": 520,
+        "picker_height": 480,
+        "probes_margins": [
+            6,
+            6,
+            6,
+            0
+        ],
+        "probes_spacing": 4,
+        "probes_page_margins": [
+            0,
+            6,
+            4,
+            6
+        ],
+        "probes_page_spacing": 4,
+        "inputs_margins": [
+            6,
+            6,
+            6,
+            6
+        ],
+        "inputs_spacing": 4,
+        "inputs_grid_margins": [
+            8,
+            6,
+            8,
+            6
+        ],
+        "inputs_grid_spacing": 12,
+        "inputs_image_height": 160,
+        "run_margins": [
+            6,
+            6,
+            6,
+            6
+        ],
+        "run_spacing": 6,
+        "notable_spacing": 3,
+        "block_margins": [
+            8,
+            6,
+            8,
+            6
+        ],
+        "block_spacing": 3,
+        "form_horizontal_spacing": 10,
+        "form_vertical_spacing": 4
+    },
     "scrollbar": {
         "width": "14px",
         "handle": "#555555",

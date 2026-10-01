@@ -22,12 +22,24 @@ logger = logging.getLogger('spark')
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+def _merged(defaults: dict, chosen: dict) -> dict:
+    """
+        Returns ``chosen`` completed with the values of ``defaults`` it lacks, group by group.
+    """
+    merged = dict(defaults)
+    for key, value in chosen.items():
+        merged[key] = _merged(defaults[key], value) if isinstance(value, dict) and isinstance(defaults.get(key), dict) else value
+    return merged
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class StyleManager(QObject):
     reloaded = Signal()
 
     def __init__(self) -> None:
         super().__init__()
         self._config: dict = {}
+        self._defaults: dict | None = None
         self._qss = None
         self._default_path = pl.Path(__file__).parent / 'config.json'
         self._active_path = self._default_path
@@ -76,19 +88,29 @@ class StyleManager(QObject):
             return pl.Path(custom)
         return self._default_path
 
+    def defaults(self) -> dict:
+        """
+            Returns the default style, read from ``config.json``.
+        """
+        if self._defaults is None:
+            try:
+                self._defaults = json.loads(self._default_path.read_text())
+            except Exception:
+                logger.error('Default style config unreadable.', exc_info=True)
+                self._defaults = {}
+        return self._defaults
+
     def _load_config(self) -> None:
         path = self._resolve_path()
         try:
-            self._config = json.loads(path.read_text())
+            chosen = json.loads(path.read_text())
             self._active_path = path
         except Exception:
             logger.warning(f'Failed to load style config from {path}. Loading default config.', exc_info=True)
-            try:
-                self._config = json.loads(self._default_path.read_text())
-                self._active_path = self._default_path
-            except Exception:
-                logger.error('Default style config unreadable.', exc_info=True)
-                self._config = {}
+            chosen = {}
+            self._active_path = self._default_path
+        # A style saved before a setting existed takes that setting from the defaults.
+        self._config = _merged(self.defaults(), chosen)
 
     def stylesheet(self) -> str:
         if self._qss is None:
@@ -102,6 +124,7 @@ class StyleManager(QObject):
 
     def reload(self, app: QApplication | None = None) -> None:
         self._qss = None
+        self._defaults = None
         self._load_config()
         if app is not None:
             self.apply(app)
@@ -110,7 +133,7 @@ class StyleManager(QObject):
 
 
     def get_color(self, category, key) -> QColor:
-        rgba = self._config.get(category, {}).get(key, [255, 255, 255, 255])
+        rgba = self.get_val(category, key, default=[255, 255, 255, 255])
         return QColor(*rgba) if isinstance(rgba, list) else QColor(rgba)
 
     def get_port_style(self, port_type: type[SparkPayload]) -> dict:
@@ -118,7 +141,8 @@ class StyleManager(QObject):
         return styles.get(str(port_type.__name__), styles.get('default', {'color': '#ffffff', 'shape': 'circle'}))
 
     def get_val(self, *path: str, default: tp.Any = None) -> dict:
-        v = self._config
+        # Before `init`, the default style.
+        v = self._config or self.defaults()
         for p in path[:-1]:
             v = v.get(p, {})
         return v.get(path[-1], default)

@@ -602,3 +602,194 @@ QLabel#statusControllerLabel {
     color: $start_card_summary_color;
     padding-right: 8px;
 }
+
+/* ===== Run viewer ===== */
+
+QMainWindow#runViewer QToolBar {
+    background-color: $menu_bar_background_color;
+    border-bottom: 1px solid $menu_bar_border_color;
+    spacing: 6px;
+    padding: 3px;
+}
+QMainWindow#runViewer QTabBar::tab {
+    background: $menu_background_color;
+    color: $menu_color;
+    border: 1px solid $main_background_color_separator;
+    padding: 4px 12px;
+}
+QMainWindow#runViewer QTabBar::tab:selected {
+    background: $inspector_background_color;
+    color: $inspector_input_fg;
+}
+QMainWindow#runViewer QTabBar::tab:hover:!selected {
+    background: $inspector_header_hover_bg;
+}
+QTabWidget#runViewerTabs::pane,
+QTabWidget#runViewerCenter::pane {
+    border: none;
+}
+QToolButton#runViewerSectionHeader {
+    background-color: $inspector_header_bg;
+    color: $inspector_header_fg;
+    font-weight: bold;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    text-align: left;
+}
+QToolButton#runViewerSectionHeader:hover {
+    background-color: $inspector_header_hover_bg;
+}
+QToolButton#runViewerPin,
+QToolButton#runViewerRemove {
+    color: $inspector_readonly_fg;
+    background: transparent;
+    border: none;
+    padding: 0px 4px;
+}
+QToolButton#runViewerPin:hover {
+    color: $inspector_input_fg;
+}
+QWidget#runViewerPanel QLabel#runViewerLegend {
+    color: $inspector_label_color;
+    font-size: 10px;
+}
+QMainWindow#runViewer QPushButton#runViewerRemove {
+    padding: 0px;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+}
+QMainWindow#runViewer QPushButton#runViewerRemove:hover,
+QToolButton#runViewerRemove:hover {
+    color: $console_error_color;
+}
+QMainWindow#runViewer QDialog {
+    background-color: $inspector_background_color;
+}
+QMainWindow#runViewer QDialog QLabel {
+    color: $inspector_label_color;
+}
+QScrollArea#runViewerScroll,
+QWidget#runViewerViewport,
+QWidget#runViewerPanel {
+    background-color: $inspector_background_color;
+    border: none;
+}
+QWidget#runViewerPanel QLabel,
+QMainWindow#runViewer QCheckBox {
+    color: $inspector_label_color;
+}
+QLabel#runViewerHeading {
+    background-color: $inspector_header_bg;
+    color: $inspector_header_fg;
+    font-weight: bold;
+    padding: 5px 8px;
+    border-radius: 4px;
+}
+QWidget#runViewerPanel QLabel#runViewerSection {
+    color: $inspector_tree_label_color;
+    font-weight: bold;
+    padding: 8px 2px 0px 2px;
+}
+QWidget#runViewerPanel QLabel#runViewerNote {
+    color: $inspector_readonly_fg;
+}
+QWidget#runViewerBlock {
+    background-color: $inspector_block_bg;
+    border: 1px solid $inspector_block_border;
+    border-radius: $inspector_block_radius;
+}
+QWidget#runViewerPanel QLabel#runViewerWarning {
+    color: $console_warning_color;
+}
+QWidget#runViewerPanel QLabel#runViewerError {
+    color: $console_error_color;
+}
+QWidget#runViewerPanel QLabel#runViewerBlockTitle {
+    font-weight: bold;
+}
+/* The status of a run, by the property `status` of its label. */
+QWidget#runViewerPanel QLabel#runViewerStatus {
+    color: $run_viewer_status_other_color;
+    font-weight: bold;
+}
+QWidget#runViewerPanel QLabel#runViewerStatus[status="running"] {
+    color: $run_viewer_status_running_color;
+}
+QWidget#runViewerPanel QLabel#runViewerStatus[status="finished"] {
+    color: $run_viewer_status_finished_color;
+}
+QWidget#runViewerPanel QLabel#runViewerStatus[status="failed"] {
+    color: $run_viewer_status_failed_color;
+}
+QWidget#runViewerPanel QLabel#runViewerStatus[status="crashed"] {
+    color: $run_viewer_status_crashed_color;
+}
+QWidget#runViewerPanel QLabel#runViewerStatus[status="preempted"] {
+    color: $run_viewer_status_preempted_color;
+}
+QMainWindow#runViewer QPushButton {
+    background-color: $inspector_input_bg;
+    color: $inspector_input_fg;
+    border: 1px solid $inspector_input_border;
+    border-radius: $inspector_input_radius;
+    padding: 3px 10px;
+}
+QMainWindow#runViewer QPushButton:hover {
+    border-color: $inspector_input_focus;
+}
+QMainWindow#runViewer QPushButton:checked {
+    background-color: $inspector_selection_bg;
+    color: $inspector_selection_fg;
+}
+QMainWindow#runViewer QPushButton:disabled {
+    color: $inspector_readonly_fg;
+    border-color: $inspector_block_border;
+}
+QMainWindow#runViewer QSpinBox,
+QMainWindow#runViewer QComboBox,
+QMainWindow#runViewer QTreeWidget,
+QMainWindow#runViewer QListWidget,
+QMainWindow#runViewer QLineEdit {
+    background-color: $inspector_input_bg;
+    color: $inspector_input_fg;
+    border: 1px solid $inspector_input_border;
+    border-radius: $inspector_input_radius;
+    padding: 2px 4px;
+}
+QMainWindow#runViewer QSpinBox:disabled {
+    color: $inspector_readonly_fg;
+}
+QMainWindow#runViewer QHeaderView::section {
+    background-color: $inspector_header_bg;
+    color: $inspector_header_fg;
+    border: none;
+    padding: 3px 6px;
+}
+/* Dividers between the columns of the runs, which are resized by dragging them. */
+QTreeWidget#runViewerRuns QHeaderView::section {
+    border-right: 1px solid $scrollbar_handle;
+}
+QTreeWidget#runViewerRuns QHeaderView::section:hover {
+    border-right: 1px solid $inspector_input_focus;
+}
+QTreeWidget#runViewerRuns QHeaderView::section:last {
+    border-right: none;
+}
+QMainWindow#runViewer QTreeWidget::item:selected {
+    background-color: $inspector_popup_selection_bg;
+}
+QMainWindow#runViewer QListWidget::indicator,
+QMainWindow#runViewer QTreeWidget::indicator {
+    width: 11px;
+    height: 11px;
+    border: 1px solid $scrollbar_handle_hover;
+    border-radius: 2px;
+    background-color: $inspector_block_bg;
+}
+QMainWindow#runViewer QListWidget::indicator:checked,
+QMainWindow#runViewer QTreeWidget::indicator:checked {
+    border-color: $inspector_selection_bg;
+    background-color: $inspector_selection_bg;
+}
