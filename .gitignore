@@ -211,3 +211,5 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Runs written by the recording tutorial
+tutorials/runs/
