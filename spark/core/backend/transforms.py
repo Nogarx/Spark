@@ -8,48 +8,12 @@ import typing as tp
 import types
 import inspect
 import functools
-import contextvars
 
 import jax
 import flax.nnx as nnx
+
+from spark.core.recording_hooks import OPEN_RECORDERS, TRACED_CALL, recording_hooks
 A = tp.TypeVar('A')
-
-#################################################################################################################################################
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-#################################################################################################################################################
-
-OPEN_RECORDERS: dict = {}
-"""
-    The open recorders of `spark.recording`, in the order they were opened, with the thread that opened each.
-"""
-
-TRACED_CALL: contextvars.ContextVar[tp.Any] = contextvars.ContextVar('spark_traced_call', default=None)
-"""
-    The call of a `jit` function traced for a recorder, or None.
-"""
-
-class RecordingHooks(tp.Protocol):
-    """
-        What `spark.recording` provides to `jit` and `scan` while a recorder is open.
-    """
-
-    def call(self, function: Jit, args: tuple, kwargs: dict) -> tp.Any:
-        ...
-
-    def scan(self, f: tp.Callable, init: tp.Any, xs: tp.Any, length: int | None, reverse: bool, unroll: int | bool, split_transpose: bool) -> tp.Any:
-        ...
-
-    def warmup(self, function: Jit, args: tuple, kwargs: dict) -> int:
-        ...
-
-_hooks: RecordingHooks | None = None
-
-def set_recording_hooks(hooks: RecordingHooks) -> None:
-    """
-        Installs the hooks of `spark.recording`. Called once, when it is imported.
-    """
-    global _hooks
-    _hooks = hooks
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -62,6 +26,8 @@ def _as_tuple(value: tp.Any) -> tuple:
         return (value,)
     return tuple(value)
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def _modules_in(args: tuple, kwargs: dict) -> bool:
     """
         Returns whether a module is among the arguments of a call.
@@ -73,6 +39,8 @@ def _modules_in(args: tuple, kwargs: dict) -> bool:
         if isinstance(value, nnx.Module):
             return True
     return False
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 def _static_arguments(fun: tp.Callable, options: dict[str, tp.Any]) -> tuple[tuple[int, ...], tuple[str, ...]]:
     """
@@ -96,6 +64,8 @@ def _static_arguments(fun: tp.Callable, options: dict[str, tp.Any]) -> tuple[tup
     elif names and not numbers:
         numbers = tuple(i for i, p in enumerate(positional) if p.name in names)
     return numbers, names
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class Jit:
     """
@@ -173,7 +143,7 @@ class Jit:
             return self._nnx(*args, **kwargs)
         if not OPEN_RECORDERS:
             return self.jitted(*args, **kwargs)
-        return _hooks.call(self, args, kwargs)
+        return recording_hooks().call(self, args, kwargs)
 
     def warmup(self, *args: tp.Any, **kwargs: tp.Any) -> int:
         """
@@ -200,7 +170,7 @@ class Jit:
         """
         if not OPEN_RECORDERS:
             raise RuntimeError('`warmup` compiles the calls a recorder records; no recorder is open.')
-        return _hooks.warmup(self, args, kwargs)
+        return recording_hooks().warmup(self, args, kwargs)
 
     def __get__(self, instance: tp.Any, owner: type | None = None) -> tp.Any:
         if instance is None:
@@ -297,7 +267,7 @@ def scan(
     """
     if TRACED_CALL.get() is None:
         return jax.lax.scan(f, init, xs, length, reverse, unroll, _split_transpose)
-    return _hooks.scan(f, init, xs, length, reverse, unroll, _split_transpose)
+    return recording_hooks().scan(f, init, xs, length, reverse, unroll, _split_transpose)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

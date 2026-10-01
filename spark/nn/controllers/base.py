@@ -25,7 +25,7 @@ from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
 from spark.core.payloads import SparkPayload, SpikeArray
 from spark.core.decorators import spark_property, limit_recursion
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.core.probe_context import active_probe_context
+from spark.core.recording_hooks import active_probe_context
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
