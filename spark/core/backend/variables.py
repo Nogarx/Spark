@@ -9,97 +9,15 @@ import flax.nnx as nnx
 import typing as tp
 import numpy as np
 import jax.numpy as jnp
-import typing_extensions as tpe
-from jax._src.pjit import JitWrapped
-from flax.nnx.graph import GraphDef, GraphState
-from flax.nnx.variablelib import VariableState
 from collections.abc import Iterable
-A = tp.TypeVar('A')
-
-# NOTE: Currently this code is just a shortcut of all the basic Flax's LAX methods. 
-# Its only purpose is to reduce imports for the final user.
-
-#################################################################################################################################################
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-#################################################################################################################################################
-
-def data(
-        value: A, /
-    ) -> A:
-    return nnx.data(value)
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-def grad(*args, **kwargs) -> (tp.Callable[..., tp.Any] | tp.Callable[[tp.Callable[..., tp.Any]], tp.Callable[..., tp.Any]] ):
-    """
-        Wrapper around flax.nnx.grad, to simplify imports.
-    """
-    return nnx.grad(*args, **kwargs)
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-def jit(*args, **kwargs) -> JitWrapped | tp.Callable[[tp.Callable[..., tp.Any]], JitWrapped]:
-    """
-        Wrapper around flax.nnx.jit, to simplify imports.
-    """
-    return nnx.jit(*args, **kwargs)
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-def eval_shape(*args, **kwargs) -> A:
-    """
-        Wrapper around flax.nnx.eval_shape, to simplify imports.
-    """
-    return nnx.eval_shape(*args, **kwargs)
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-def split(*args, **kwargs) -> tuple[GraphDef[A], GraphState | VariableState, tpe.Unpack[tuple[GraphState | VariableState, ...]],]:
-    """
-        Wrapper around flax.nnx.split, to simplify imports.
-    """
-    return nnx.split(*args, **kwargs)
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-def merge(*args, **kwargs) -> A:
-    """
-        Wrapper around flax.nnx.merge, to simplify imports.
-    """
-    return nnx.merge(*args, **kwargs)
-
-#################################################################################################################################################
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-#################################################################################################################################################
-
-class Module(nnx.Module):
-    """
-        Base class of the module hierarchy.
-
-        Alias of the Flax module, to simplify imports and to give the framework one place to
-        change if the backend does.
-    """
-    pass
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-
-class ModuleMeta(nnx.module.ModuleMeta):
-    """
-        Metaclass of `Module`.
-
-        Alias of the Flax module metaclass, to simplify imports.
-    """
-    pass
-
-#################################################################################################################################################
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
-#################################################################################################################################################
 
 # TODO: Currently we constraint Constant/Variable to cast everything to arrays. 
 # Initially, the plan was to simplify  the use of the class by removing the .value element, 
 # however it may be useful to allow for the full flexibility of the original Variable. 
 
+#################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
 
 def _as_array(value: tp.Any, dtype: tp.Any = None) -> jax.Array:
     """
@@ -232,3 +150,4 @@ class Constant:
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
+
