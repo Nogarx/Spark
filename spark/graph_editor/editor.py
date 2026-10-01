@@ -3,6 +3,7 @@
 #################################################################################################################################################
 
 from __future__ import annotations
+from typing import TYPE_CHECKING
 
 import sys
 import json
@@ -29,6 +30,8 @@ from spark.graph_editor.models.controller_profile import ControllerProfile, prof
 from spark.graph_editor.models import session_io, recent_files, model_library
 from spark.graph_editor.styles.manager import STYLES
 from spark.graph_editor.styles import resources as icons
+if TYPE_CHECKING:
+    from spark.graph_editor.runs.viewer import RunViewerWindow
 
 logger = logging.getLogger('spark')
 
@@ -153,6 +156,7 @@ class GraphEditorWindow(QMainWindow):
         # Stands in for "no document open", so the rest of the window can query the current graph without
         # checking first. It carries no profile, which disables the document actions.
         self._empty_scene = GraphScene()
+        self._run_viewers: list[RunViewerWindow] = []
         self._undo_group = QUndoGroup(self)
         self._tabs = QTabWidget()
         self._tabs.setObjectName('documentTabs')
@@ -489,6 +493,10 @@ class GraphEditorWindow(QMainWindow):
         check_action.triggered.connect(lambda _checked=False: self.check_model())
         file_menu.addAction(check_action)
         file_menu.addSeparator()
+        open_run_action = QAction('Open Runs...', self)
+        open_run_action.triggered.connect(lambda _checked=False: self.open_run())
+        file_menu.addAction(open_run_action)
+        file_menu.addSeparator()
         close_action = QAction('Close Session', self)
         close_action.setShortcut('Ctrl+W')
         close_action.triggered.connect(lambda _checked=False: self.close_document(self._tabs.currentIndex()))
@@ -785,6 +793,36 @@ class GraphEditorWindow(QMainWindow):
             return False
         self._open_model_as_session(config, path, source_profile, layout=session_io.model_layout(path))
         return True
+
+    def open_run(self, path: str | pathlib.Path | None = None) -> RunViewerWindow | None:
+        """
+            Opens a directory of runs written by a `spark.recording.Recorder`, or one of them, in a window of the run
+            viewer.
+
+            Parameters
+            ----------
+            path : str or path-like, optional
+                Directory of runs, or of a run. Asked for when omitted.
+
+            Returns
+            -------
+            RunViewerWindow or None
+                The window, or None when nothing was opened.
+        """
+        if path is None:
+            path = QFileDialog.getExistingDirectory(self, 'Open a Directory of Runs, or a Run', str(pathlib.Path.cwd()))
+            if not path:
+                return None
+        from spark.graph_editor.runs.viewer import RunViewerWindow
+        try:
+            viewer = RunViewerWindow(path)
+        except Exception as error:
+            self._report_error('Unable to open the run', f'{path}: {error}')
+            return None
+        viewer.show()
+        self._run_viewers = [v for v in self._run_viewers if v.isVisible() and v is not viewer] + [viewer]
+        self._statusBar.showMessage(f'Run opened from {path}')
+        return viewer
 
     def export_model(self) -> bool:
         if self._scene.model.profile is None:
