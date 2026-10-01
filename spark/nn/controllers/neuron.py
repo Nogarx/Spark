@@ -241,6 +241,7 @@ class Neuron(Controller, metaclass=NeuronMeta):
 			dict of str to SparkPayload
 				One entry per output port of the neuron, as derived from the modules.
 		"""
+		self._offer_inputs(inputs)
 		# Iterate over execution order groups
 		outputs = {}
 		for module_group in self._order:
@@ -263,7 +264,7 @@ class Neuron(Controller, metaclass=NeuronMeta):
 					input_args[port_name] = self._concatenate_payloads(input_args_list)
 				for port_name, value in self._implicit_inputs(name).items():
 					input_args.setdefault(port_name, value)
-				outputs[name] = getattr(self, name)(**input_args)
+				outputs[name] = self._call_module(name, input_args)
 		# Compute effects
 		# TODO: Currently effects require the ports to be defined inside a list. This is probably not desirable.
 		for name, effects in self._modules_effects_map.items():

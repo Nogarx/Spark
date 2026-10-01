@@ -20,10 +20,12 @@ from spark.core.backend import Variable
 from spark.core.registry import REGISTRY
 from spark.core.config import SparkConfig
 from spark.core.module import SparkModule, SparkMeta
+from spark.core.checkpoint import Checkpointable
 from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
 from spark.core.payloads import SparkPayload, SpikeArray
 from spark.core.decorators import spark_property, limit_recursion
 from spark.core.config_validation import TypeValidator, PositiveValidator
+from spark.core.probe_context import active_probe_context
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -108,7 +110,7 @@ ConfigT = tp.TypeVar("ConfigT", bound=ControllerConfig)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-class Controller(Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerMeta):
+class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerMeta):
     """
         Base class for controllers.
 
@@ -192,6 +194,8 @@ class Controller(Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerMeta)
         input_specs, output_specs = self._validate_modules(self.config.modules_specs)
         self._controller_input_specs = input_specs
         self._controller_output_specs = output_specs
+        # Input specs with the shapes seen at build time.
+        self._input_specs: dict[str, PortSpecs] | None = None
         # Flat output mapping
         self._contoller_output_map: list[tuple[str, str, str]] = []
         for output_name, output_spec in self._controller_output_specs.items():
@@ -626,6 +630,7 @@ class Controller(Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerMeta)
         # Build model.
         self.build(**abc_args)
         self.__built__ = True
+        self._input_specs = {name: PortSpecs.from_payload(payload) for name, payload in abc_args.items()}
 
         # TODO: See _build in spark.Module. 
         abc_output = self.__call__(**abc_args)
@@ -657,6 +662,26 @@ class Controller(Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerMeta)
             Returns the names of the controller's output variables
         """
         return tuple(self._controller_output_specs.keys())
+
+
+
+    def get_input_specs(self) -> dict[str, PortSpecs]:
+        """
+            Returns the input port specifications of this instance.
+
+            Returns
+            -------
+            dict of str to PortSpecs
+                One entry per input port, with the shape and dtype seen at build time.
+
+            Raises
+            ------
+            RuntimeError
+                If the controller has not been built.
+        """
+        if self._input_specs is None:
+            raise RuntimeError('Controller not yet built.')
+        return self._input_specs
 
 
 
@@ -698,6 +723,36 @@ class Controller(Module, abc.ABC, tp.Generic[ConfigT], metaclass=ControllerMeta)
             return payload_type._from_encoding(jnp.concatenate([x._encoding.reshape(-1) for x in args]))
         else:
             return payload_type(jnp.concatenate([x.value.reshape(-1) for x in args]))
+
+
+
+    def _call_module(self, name: str, input_args: dict[str, SparkPayload]) -> dict[str, SparkPayload]:
+        """
+            Calls the module ``name`` and offers its outputs to the open probe context, if any.
+        """
+        module = getattr(self, name)
+        context = active_probe_context()
+        if context is None:
+            return module(**input_args)
+        context.push(name)
+        try:
+            outputs = module(**input_args)
+            context.offer(outputs)
+        finally:
+            context.pop()
+        return outputs
+
+    def _offer_inputs(self, inputs: dict[str, SparkPayload]) -> None:
+        """
+            Offers the inputs of the controller to the open probe context, if any, and reports the
+            call.
+
+            Called first in ``__call__``, before any module runs.
+        """
+        context = active_probe_context()
+        if context is not None:
+            context.offer(inputs, '__call__')
+            context.called(self)
 
 
 
