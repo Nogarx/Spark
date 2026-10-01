@@ -15,4 +15,5 @@ Welcome to the tutorials section! Here you can find guides on the basics of Spar
    tutorials/brains
    tutorials/graph_editor
    tutorials/cartpole
+   tutorials/recording
    tutorials/sharding
