@@ -1,0 +1,1680 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spark.recording.reduce &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=30646c52"></script>
+    <script src="../../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/spark/recording/reduce/index';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="spark.recording.run" href="../run/index.html" />
+    <link rel="prev" title="spark.recording.records" href="../records/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../../../../_static/searchtools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <script src="../../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <img src="../../../../_static/spark_250px.png" class="logo__image only-dark pst-js-only" alt="Spark  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/neurons.html">Tutorial #3: Neurons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/brains.html">Tutorial #4: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/graph_editor.html">Tutorial #5: Graph Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/cartpole.html">Tutorial #6: Solving the CartPole™</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/recording.html">Tutorial #7: Recording</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/sharding.html">Tutorial #8: Sharding</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../index.html">spark</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../core/backend/index.html">spark.core.backend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/checkpoint/index.html">spark.core.checkpoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/decorators/index.html">spark.core.decorators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/recording_hooks/index.html">spark.core.recording_hooks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/validation/index.html">spark.core.validation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/commands/index.html">spark.graph_editor.commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/runs/index.html">spark.graph_editor.runs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/styles/index.html">spark.graph_editor.styles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/view/index.html">spark.graph_editor.view</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../nn/index.html">spark.nn</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/components/index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/controllers/index.html">spark.nn.controllers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../index.html">spark.recording</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../calls/index.html">spark.recording.calls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../current/index.html">spark.recording.current</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../measurements/index.html">spark.recording.measurements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../presets/index.html">spark.recording.presets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../probe/index.html">spark.recording.probe</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../probe_context/index.html">spark.recording.probe_context</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../probe_targets/index.html">spark.recording.probe_targets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../recorder/index.html">spark.recording.recorder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../records/index.html">spark.recording.records</a></li>
+<li class="toctree-l4 current active"><a class="current reference internal" href="#">spark.recording.reduce</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../run/index.html">spark.recording.run</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../runner/index.html">spark.recording.runner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../scan/index.html">spark.recording.scan</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../settings/index.html">spark.recording.settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../store/index.html">spark.recording.store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../triggers/index.html">spark.recording.triggers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../utils/index.html">spark.recording.utils</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">spark</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">spark.recording</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">spark.recording.reduce</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../../_sources/autoapi/spark/recording/reduce/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>spark.recording.reduce</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Layout"><code class="docutils literal notranslate"><span class="pre">Layout</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.HISTOGRAM_LOW_BITS"><code class="docutils literal notranslate"><span class="pre">HISTOGRAM_LOW_BITS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.moduli"><code class="docutils literal notranslate"><span class="pre">moduli()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Start"><code class="docutils literal notranslate"><span class="pre">Start</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Start.phases"><code class="docutils literal notranslate"><span class="pre">Start.phases</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Start.split"><code class="docutils literal notranslate"><span class="pre">Start.split</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Start.tree_flatten"><code class="docutils literal notranslate"><span class="pre">Start.tree_flatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Start.tree_unflatten"><code class="docutils literal notranslate"><span class="pre">Start.tree_unflatten()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.start_of"><code class="docutils literal notranslate"><span class="pre">start_of()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.may_split"><code class="docutils literal notranslate"><span class="pre">may_split()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.warmup_starts"><code class="docutils literal notranslate"><span class="pre">warmup_starts()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.slots"><code class="docutils literal notranslate"><span class="pre">slots()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.ends"><code class="docutils literal notranslate"><span class="pre">ends()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.step_value"><code class="docutils literal notranslate"><span class="pre">step_value()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.StepRecords"><code class="docutils literal notranslate"><span class="pre">StepRecords</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.StepRecords.row"><code class="docutils literal notranslate"><span class="pre">StepRecords.row</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.StepRecords.layout"><code class="docutils literal notranslate"><span class="pre">StepRecords.layout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.StepRecords.tree_flatten"><code class="docutils literal notranslate"><span class="pre">StepRecords.tree_flatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.StepRecords.tree_unflatten"><code class="docutils literal notranslate"><span class="pre">StepRecords.tree_unflatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.StepRecords.unpack"><code class="docutils literal notranslate"><span class="pre">StepRecords.unpack()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.pack_step"><code class="docutils literal notranslate"><span class="pre">pack_step()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.init_spaced"><code class="docutils literal notranslate"><span class="pre">init_spaced()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.write_spaced"><code class="docutils literal notranslate"><span class="pre">write_spaced()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.first_kept"><code class="docutils literal notranslate"><span class="pre">first_kept()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.read_boundary"><code class="docutils literal notranslate"><span class="pre">read_boundary()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.init_captures"><code class="docutils literal notranslate"><span class="pre">init_captures()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.capture"><code class="docutils literal notranslate"><span class="pre">capture()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.uses_rows"><code class="docutils literal notranslate"><span class="pre">uses_rows()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.accumulated_fields"><code class="docutils literal notranslate"><span class="pre">accumulated_fields()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.init_accumulators"><code class="docutils literal notranslate"><span class="pre">init_accumulators()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.accumulate"><code class="docutils literal notranslate"><span class="pre">accumulate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.merge_summaries"><code class="docutils literal notranslate"><span class="pre">merge_summaries()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.finalize"><code class="docutils literal notranslate"><span class="pre">finalize()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.held"><code class="docutils literal notranslate"><span class="pre">held()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.group_values"><code class="docutils literal notranslate"><span class="pre">group_values()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.complete"><code class="docutils literal notranslate"><span class="pre">complete()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed"><code class="docutils literal notranslate"><span class="pre">Packed</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed.buffer"><code class="docutils literal notranslate"><span class="pre">Packed.buffer</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed.layout"><code class="docutils literal notranslate"><span class="pre">Packed.layout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed.probes"><code class="docutils literal notranslate"><span class="pre">Packed.probes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed.held"><code class="docutils literal notranslate"><span class="pre">Packed.held</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed.tree_flatten"><code class="docutils literal notranslate"><span class="pre">Packed.tree_flatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed.tree_unflatten"><code class="docutils literal notranslate"><span class="pre">Packed.tree_unflatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed.nbytes"><code class="docutils literal notranslate"><span class="pre">Packed.nbytes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed.unpack"><code class="docutils literal notranslate"><span class="pre">Packed.unpack()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.pack"><code class="docutils literal notranslate"><span class="pre">pack()</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-spark.recording.reduce">
+<span id="spark-recording-reduce"></span><h1>spark.recording.reduce<a class="headerlink" href="#module-spark.recording.reduce" title="Link to this heading">#</a></h1>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.reduce.Layout" title="spark.recording.reduce.Layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Layout</span></code></a></p></td>
+<td><p>Layout of a byte buffer. One <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">dtype,</span> <span class="pre">shape,</span> <span class="pre">offset,</span> <span class="pre">size)</span></code> entry per value, with</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.reduce.HISTOGRAM_LOW_BITS" title="spark.recording.reduce.HISTOGRAM_LOW_BITS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HISTOGRAM_LOW_BITS</span></code></a></p></td>
+<td><p>Bits of the low word of the histogram counts kept over a call. The counts are two int32 words,</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.reduce.Start" title="spark.recording.reduce.Start"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Start</span></code></a></p></td>
+<td><p>Position of a recorded call on the steps of the run.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.reduce.StepRecords" title="spark.recording.reduce.StepRecords"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StepRecords</span></code></a></p></td>
+<td><p>Values of one step that a call stacks, packed into one byte row.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.reduce.Packed" title="spark.recording.reduce.Packed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Packed</span></code></a></p></td>
+<td><p>Records of a call, packed into one byte buffer, and the values kept on the device.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.reduce.moduli" title="spark.recording.reduce.moduli"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moduli</span></code></a>(probes)</p></td>
+<td><p>Returns the group sizes and strides of <code class="docutils literal notranslate"><span class="pre">probes</span></code>, in steps.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.reduce.start_of" title="spark.recording.reduce.start_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_of</span></code></a>(probes, step[, steps])</p></td>
+<td><p>Returns the position of a recorded call in the groups and strides of <code class="docutils literal notranslate"><span class="pre">probes</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.reduce.may_split" title="spark.recording.reduce.may_split"><code class="xref py py-obj docutils literal notranslate"><span class="pre">may_split</span></code></a>(probes, step, steps)</p></td>
+<td><p>Returns whether calls of <code class="docutils literal notranslate"><span class="pre">steps</span></code> steps may cross the end of a group of <code class="docutils literal notranslate"><span class="pre">probes</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.reduce.warmup_starts" title="spark.recording.reduce.warmup_starts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">warmup_starts</span></code></a>(probes, step, steps)</p></td>
+<td><p>Returns the starts for which calls of <code class="docutils literal notranslate"><span class="pre">steps</span></code> steps from <code class="docutils literal notranslate"><span class="pre">step</span></code> compile apart.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.reduce.slots" title="spark.recording.reduce.slots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">slots</span></code></a>(probe, steps)</p></td>
+<td><p>Returns the number of groups a call can touch, for a summary grouped by steps.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.reduce.ends" title="spark.recording.reduce.ends"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ends</span></code></a>(probe, steps)</p></td>
+<td><p>Returns the number of group ends within a call, for a snapshot or delta grouped by steps.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.reduce.step_value" title="spark.recording.reduce.step_value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">step_value</span></code></a>(probe, value)</p></td>
+<td><p>Returns what one step contributes to the record of a per-step probe.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.reduce.pack_step" title="spark.recording.reduce.pack_step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pack_step</span></code></a>(values)</p></td>
+<td><p>Packs the values of one step into a <cite>StepRecords</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.reduce.init_spaced" title="spark.recording.reduce.init_spaced"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_spaced</span></code></a>(probes, values, steps)</p></td>
+<td><p>Creates the buffers of the traces and rasters that write only the steps they keep.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.reduce.write_spaced" title="spark.recording.reduce.write_spaced"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_spaced</span></code></a>(probes, spaced, values[, firsts])</p></td>
+<td><p>Writes the values of one step to the buffers of <cite>init_spaced</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.reduce.first_kept" title="spark.recording.reduce.first_kept"><code class="xref py py-obj docutils literal notranslate"><span class="pre">first_kept</span></code></a>(stride, phase)</p></td>
+<td><p>Returns the index within a call of the first step a stride keeps.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.reduce.read_boundary" title="spark.recording.reduce.read_boundary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_boundary</span></code></a>(model, probes)</p></td>
+<td><p>Reads the values of the snapshot and delta probes from the current state of the model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.reduce.init_captures" title="spark.recording.reduce.init_captures"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_captures</span></code></a>(probes, values, steps)</p></td>
+<td><p>Creates the buffers of the values at the ends of groups within a call.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.reduce.capture" title="spark.recording.reduce.capture"><code class="xref py py-obj docutils literal notranslate"><span class="pre">capture</span></code></a>(probes, buffers, values, index, start)</p></td>
+<td><p>Writes the values after step <code class="docutils literal notranslate"><span class="pre">index</span></code> of a call to the buffers of <cite>init_captures</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.reduce.uses_rows" title="spark.recording.reduce.uses_rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uses_rows</span></code></a>(probe[, accumulators])</p></td>
+<td><p>Returns whether a call stacks the values of every step of <code class="docutils literal notranslate"><span class="pre">probe</span></code> in its rows.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.reduce.accumulated_fields" title="spark.recording.reduce.accumulated_fields"><code class="xref py py-obj docutils literal notranslate"><span class="pre">accumulated_fields</span></code></a>(probe)</p></td>
+<td><p>Returns the names of the running statistics a summary probe keeps.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.reduce.init_accumulators" title="spark.recording.reduce.init_accumulators"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_accumulators</span></code></a>(probes, values[, steps, split])</p></td>
+<td><p>Creates the initial running statistics of the summary probes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.reduce.accumulate" title="spark.recording.reduce.accumulate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">accumulate</span></code></a>(probes, accumulators, values[, index, start])</p></td>
+<td><p>Updates the running statistics of the summary probes with the values of one step.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.reduce.merge_summaries" title="spark.recording.reduce.merge_summaries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_summaries</span></code></a>(parts)</p></td>
+<td><p>Merges the partials of a summary over several calls, on the host.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.reduce.finalize" title="spark.recording.reduce.finalize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">finalize</span></code></a>(probes, rows, accumulators[, start, end, ...])</p></td>
+<td><p>Builds the records of a call on the device, to move to the host.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.reduce.held" title="spark.recording.reduce.held"><code class="xref py py-obj docutils literal notranslate"><span class="pre">held</span></code></a>(probes, start, end, captured)</p></td>
+<td><p>Returns the values a call keeps on the device for its snapshots and deltas with a group.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.reduce.group_values" title="spark.recording.reduce.group_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">group_values</span></code></a>(probes, ends, end_rows, starts, start_rows)</p></td>
+<td><p>Computes what the snapshots and deltas of a set of measurements record for one group.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.reduce.complete" title="spark.recording.reduce.complete"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complete</span></code></a>(probes, records)</p></td>
+<td><p>Completes the records <cite>finalize</cite> returned, on the host.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.reduce.pack" title="spark.recording.reduce.pack"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pack</span></code></a>(probes, records[, kept])</p></td>
+<td><p>Packs the records of a call into one byte buffer.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.reduce.Layout">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">Layout</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.Layout" title="Link to this definition">#</a></dt>
+<dd><p>Layout of a byte buffer. One <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">dtype,</span> <span class="pre">shape,</span> <span class="pre">offset,</span> <span class="pre">size)</span></code> entry per value, with
+<code class="docutils literal notranslate"><span class="pre">offset</span></code> and <code class="docutils literal notranslate"><span class="pre">size</span></code> in bytes.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.reduce.HISTOGRAM_LOW_BITS">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">HISTOGRAM_LOW_BITS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">30</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.HISTOGRAM_LOW_BITS" title="Link to this definition">#</a></dt>
+<dd><p>Bits of the low word of the histogram counts kept over a call. The counts are two int32 words,
+<code class="docutils literal notranslate"><span class="pre">high</span> <span class="pre">*</span> <span class="pre">2</span> <span class="pre">**</span> <span class="pre">30</span> <span class="pre">+</span> <span class="pre">low</span></code>, combined as int64 on the host.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.moduli">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">moduli</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.moduli" title="Link to this definition">#</a></dt>
+<dd><p>Returns the group sizes and strides of <code class="docutils literal notranslate"><span class="pre">probes</span></code>, in steps.</p>
+<p><cite>Start</cite> holds the first step of a call modulo each of them. <cite>recorded_scan</cite> aligns groups and
+strides on the steps of the run with these phases.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probes of a call.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The distinct group sizes of the probes grouped by steps, and the strides above 1 of
+traces and rasters, sorted.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a> of <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.recording.reduce.Start">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">Start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.Start" title="Link to this definition">#</a></dt>
+<dd><p>Position of a recorded call on the steps of the run.</p>
+<p>A pytree whose leaf is <code class="docutils literal notranslate"><span class="pre">phases</span></code> and whose static part is <code class="docutils literal notranslate"><span class="pre">split</span></code>. <cite>start_of</cite> builds it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>phases</strong> (<em>array</em>) – First step of the call modulo each of <cite>moduli</cite>, as int32.</p></li>
+<li><p><strong>split</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>default True</em>) – Whether the call may cross the end of a group of steps.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Calls that differ only in <code class="docutils literal notranslate"><span class="pre">phases</span></code> share one compiled program. Each value of <code class="docutils literal notranslate"><span class="pre">split</span></code>
+compiles to its own program. With <code class="docutils literal notranslate"><span class="pre">split</span></code> False, a summary keeps one set of statistics,
+and snapshots and deltas keep no values at the ends of groups within the call.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.reduce.Start.phases">
+<span class="sig-name descname"><span class="pre">phases</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.Start.phases" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.reduce.Start.split">
+<span class="sig-name descname"><span class="pre">split</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.Start.split" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.reduce.Start.tree_flatten">
+<span class="sig-name descname"><span class="pre">tree_flatten</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.Start.tree_flatten" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)">bool</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.reduce.Start.tree_unflatten">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">tree_unflatten</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">split</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">children</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.Start.tree_unflatten" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>split</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+<li><p><strong>children</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#spark.recording.reduce.Start" title="spark.recording.reduce.Start">Start</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.start_of">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">start_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.start_of" title="Link to this definition">#</a></dt>
+<dd><p>Returns the position of a recorded call in the groups and strides of <code class="docutils literal notranslate"><span class="pre">probes</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probes of the call.</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Step of the run at which the call starts.</p></li>
+<li><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>optional</em>) – Steps of the call. Without it, the call may cross the end of a group.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Phases of <code class="docutils literal notranslate"><span class="pre">step</span></code> modulo each of <cite>moduli</cite>, and whether the call crosses the end of a
+group of steps.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#spark.recording.reduce.Start" title="spark.recording.reduce.Start">Start</a></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The phases are computed on the host from <code class="docutils literal notranslate"><span class="pre">step</span></code> as a Python integer, exact for any step.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.may_split">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">may_split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.may_split" title="Link to this definition">#</a></dt>
+<dd><p>Returns whether calls of <code class="docutils literal notranslate"><span class="pre">steps</span></code> steps may cross the end of a group of <code class="docutils literal notranslate"><span class="pre">probes</span></code>.</p>
+<p>The calls considered start at the steps <code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">+</span> <span class="pre">k</span> <span class="pre">*</span> <span class="pre">steps</span></code>, for every <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">&gt;=</span> <span class="pre">0</span></code>. Calls
+whose length divides every group never cross one when <code class="docutils literal notranslate"><span class="pre">step</span></code> is a multiple of that length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probes of the calls.</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Step of the run at which the first call starts.</p></li>
+<li><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Steps of every call.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether one of those calls crosses the end of a group of steps.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.warmup_starts">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">warmup_starts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.warmup_starts" title="Link to this definition">#</a></dt>
+<dd><p>Returns the starts for which calls of <code class="docutils literal notranslate"><span class="pre">steps</span></code> steps from <code class="docutils literal notranslate"><span class="pre">step</span></code> compile apart.</p>
+<p>A call that may cross the end of a group compiles apart from one that does not
+(<cite>Start.split</cite>). The second is given only when such calls may cross one (<cite>may_split</cite>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probes of the calls.</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Step of the run at which the first call starts.</p></li>
+<li><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Steps of every call.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The starts to compile the calls with. Their phases are those of step 0.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a> of <a class="reference internal" href="#spark.recording.reduce.Start" title="spark.recording.reduce.Start">Start</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.slots">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">slots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.slots" title="Link to this definition">#</a></dt>
+<dd><p>Returns the number of groups a call can touch, for a summary grouped by steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probe</strong> (<a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probe of the call.</p></li>
+<li><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Steps of the call.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Largest number of groups a call of <code class="docutils literal notranslate"><span class="pre">steps</span></code> steps holds steps of, over all first steps.
+1 for other probes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.ends">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">ends</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.ends" title="Link to this definition">#</a></dt>
+<dd><p>Returns the number of group ends within a call, for a snapshot or delta grouped by steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probe</strong> (<a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probe of the call.</p></li>
+<li><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Steps of the call.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Largest number of ends of groups at the steps of a call of <code class="docutils literal notranslate"><span class="pre">steps</span></code> steps, over all
+first steps. 0 for other probes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.step_value">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">step_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.step_value" title="Link to this definition">#</a></dt>
+<dd><p>Returns what one step contributes to the record of a per-step probe.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probe</strong> (<a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – A probe read on every step.</p></li>
+<li><p><strong>value</strong> (<a class="reference internal" href="../../core/payloads/index.html#spark.core.payloads.SparkPayload" title="spark.core.payloads.SparkPayload"><em>SparkPayload</em></a><em> or </em><a class="reference internal" href="../../core/backend/index.html#spark.core.backend.Variable" title="spark.core.backend.Variable"><em>Variable</em></a><em> or </em><em>array</em>) – The value read on this step.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>One of the following, by mode.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">summary</span></code>: the value, flat.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">raster</span></code>: whether each entry is nonzero, flat.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace</span></code>: the value, flat when <code class="docutils literal notranslate"><span class="pre">units</span></code> is given.</p></li>
+</ul>
+<p>Traces and rasters keep only their <code class="docutils literal notranslate"><span class="pre">units</span></code> when these are selected on every step
+(<cite>SETTINGS.select_per_step</cite>).</p>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – When the probe is not read per step, a summary has no entries, a histogram has
+<code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">**</span> <span class="pre">31</span></code> entries or more, or <code class="docutils literal notranslate"><span class="pre">units</span></code> asks for an index past the entries.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>A float16 or bfloat16 value of a raster is rounded to its dtype before the test
+(<cite>_rounded</cite>).</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.recording.reduce.StepRecords">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">StepRecords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.StepRecords" title="Link to this definition">#</a></dt>
+<dd><p>Values of one step that a call stacks, packed into one byte row.</p>
+<p><cite>recorded_scan</cite> packs the values of the traces, the rasters, and the summaries whose histogram
+is counted after the call (<cite>uses_rows</cite>). A pytree whose only leaf is the row. The layout is
+static. Returned from the body of <code class="docutils literal notranslate"><span class="pre">jax.lax.scan</span></code>, the rows of all the steps stack into one
+output of shape <code class="docutils literal notranslate"><span class="pre">(steps,</span> <span class="pre">bytes)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>row</strong> (<em>array</em>) – uint8 row, or rows stacked along leading axes.</p></li>
+<li><p><strong>layout</strong> (<a class="reference internal" href="../calls/index.html#spark.recording.calls.Layout" title="spark.recording.calls.Layout"><em>Layout</em></a>) – The values of the row, along its last axis.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Bool values take one bit per entry.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.reduce.StepRecords.row">
+<span class="sig-name descname"><span class="pre">row</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.StepRecords.row" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.reduce.StepRecords.layout">
+<span class="sig-name descname"><span class="pre">layout</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.StepRecords.layout" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.reduce.StepRecords.tree_flatten">
+<span class="sig-name descname"><span class="pre">tree_flatten</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.StepRecords.tree_flatten" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>, <a class="reference internal" href="../calls/index.html#spark.recording.calls.Layout" title="spark.recording.calls.Layout">Layout</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.reduce.StepRecords.tree_unflatten">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">tree_unflatten</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">children</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.StepRecords.tree_unflatten" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layout</strong> (<a class="reference internal" href="../calls/index.html#spark.recording.calls.Layout" title="spark.recording.calls.Layout"><em>Layout</em></a>)</p></li>
+<li><p><strong>children</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#spark.recording.reduce.StepRecords" title="spark.recording.reduce.StepRecords">StepRecords</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.reduce.StepRecords.unpack">
+<span class="sig-name descname"><span class="pre">unpack</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.StepRecords.unpack" title="Link to this definition">#</a></dt>
+<dd><p>Unpacks the row into its values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Values by <cite>Probe.key</cite>, with the leading axes of <code class="docutils literal notranslate"><span class="pre">row</span></code> kept.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)">dict</a> of str to array</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.pack_step">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">pack_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.pack_step" title="Link to this definition">#</a></dt>
+<dd><p>Packs the values of one step into a <cite>StepRecords</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>values</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> of </em><em>str to array</em>) – Values of the step, by <cite>Probe.key</cite>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The values in one row, ordered by dtype, wider types first. <code class="docutils literal notranslate"><span class="pre">values</span></code> unchanged when
+empty.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#spark.recording.reduce.StepRecords" title="spark.recording.reduce.StepRecords">StepRecords</a> or <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.init_spaced">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">init_spaced</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.init_spaced" title="Link to this definition">#</a></dt>
+<dd><p>Creates the buffers of the traces and rasters that write only the steps they keep.</p>
+<p>These are the traces and rasters with a <code class="docutils literal notranslate"><span class="pre">stride</span></code> above 1 whose values over the call would take
+more than <cite>SETTINGS.spaced_rows_limit</cite> bytes. The buffers and a step counter are carried through
+the steps of the call. The other traces and rasters with a stride are stacked with the rows of
+every step and strided after the call.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probes of the call.</p></li>
+<li><p><strong>values</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> of </em><em>str to array</em><em> or </em><em>ShapeDtypeStruct</em>) – What <cite>ProbeContext.values</cite> gives on one step, or its shapes.</p></li>
+<li><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Steps of the call.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">(step,</span> <span class="pre">buffers)</span></code>. <code class="docutils literal notranslate"><span class="pre">step</span></code> is the int32 step counter. <code class="docutils literal notranslate"><span class="pre">buffers</span></code> holds, by
+<cite>Probe.key</cite>, one row per step the call can keep and a spare row. An empty tuple when no
+probe needs a buffer.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.write_spaced">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">write_spaced</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spaced</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">firsts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.write_spaced" title="Link to this definition">#</a></dt>
+<dd><p>Writes the values of one step to the buffers of <cite>init_spaced</cite>.</p>
+<p>Step <code class="docutils literal notranslate"><span class="pre">i</span></code> of the call writes row <code class="docutils literal notranslate"><span class="pre">ceil((i</span> <span class="pre">-</span> <span class="pre">first)</span> <span class="pre">/</span> <span class="pre">stride)</span></code>, where <code class="docutils literal notranslate"><span class="pre">first</span></code> is the
+first step the stride keeps. A step kept is the last to write its row. The steps after the
+last one kept write the next row. That row is the spare row, or the last row of the record
+when the call keeps fewer than <code class="docutils literal notranslate"><span class="pre">ceil(steps</span> <span class="pre">/</span> <span class="pre">stride)</span></code> steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probes of the call.</p></li>
+<li><p><strong>spaced</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a>) – As given by <cite>init_spaced</cite>, or by the previous step.</p></li>
+<li><p><strong>values</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> of </em><em>str to array</em>) – What <cite>ProbeContext.values</cite> gave on this step.</p></li>
+<li><p><strong>firsts</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> of </em><em>int to int</em><em> or </em><em>array</em><em>, </em><em>optional</em>) – First step kept by each stride, as <cite>first_kept</cite> gives it. 0 for a stride not in it.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The step counter, advanced by one, and the updated buffers. <code class="docutils literal notranslate"><span class="pre">spaced</span></code> unchanged when
+empty.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.first_kept">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">first_kept</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.first_kept" title="Link to this definition">#</a></dt>
+<dd><p>Returns the index within a call of the first step a stride keeps.</p>
+<p>A stride keeps the steps <code class="docutils literal notranslate"><span class="pre">t</span></code> of the run with <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">%</span> <span class="pre">stride</span> <span class="pre">==</span> <span class="pre">0</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stride</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Stride of a trace or raster.</p></li>
+<li><p><strong>phase</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> or </em><em>array</em>) – First step of the call modulo <code class="docutils literal notranslate"><span class="pre">stride</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Index of that step within the call, from 0. It may lie past the end of a short call.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)">int</a> or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.read_boundary">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">read_boundary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.read_boundary" title="Link to this definition">#</a></dt>
+<dd><p>Reads the values of the snapshot and delta probes from the current state of the model.</p>
+<p><cite>recorded_scan</cite> reads them before and after the steps of a call, and passes them to <cite>finalize</cite>
+as <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code>. It also reads those of <cite>capture</cite> after every step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="../../nn/controllers/base/index.html#spark.nn.controllers.base.Controller" title="spark.nn.controllers.base.Controller"><em>Controller</em></a>) – The model.</p></li>
+<li><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probes of the call. Probes read on every step are skipped.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>One entry per <code class="docutils literal notranslate"><span class="pre">snapshot</span></code> or <code class="docutils literal notranslate"><span class="pre">delta</span></code> probe, by <cite>Probe.key</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)">dict</a> of str to array</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – When a module path is not found, or the value of a delta has no entries.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – When an attribute holds no array.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.init_captures">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">init_captures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.init_captures" title="Link to this definition">#</a></dt>
+<dd><p>Creates the buffers of the values at the ends of groups within a call.</p>
+<p>One buffer per snapshot or delta grouped by steps. The buffers are carried through the steps
+of the call.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probes of the call.</p></li>
+<li><p><strong>values</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> of </em><em>str to array</em><em> or </em><em>ShapeDtypeStruct</em>) – What <cite>read_boundary</cite> gives, or its shapes.</p></li>
+<li><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Steps of the call.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Buffers by <cite>Probe.key</cite>, of shape <code class="docutils literal notranslate"><span class="pre">(ends</span> <span class="pre">+</span> <span class="pre">1,</span> <span class="pre">...)</span></code>. One row per end of a group the
+call can hold (<cite>ends</cite>), and a spare row the other steps write. A snapshot keeps only its
+<code class="docutils literal notranslate"><span class="pre">units</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)">dict</a> of str to array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.capture">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">capture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.capture" title="Link to this definition">#</a></dt>
+<dd><p>Writes the values after step <code class="docutils literal notranslate"><span class="pre">index</span></code> of a call to the buffers of <cite>init_captures</cite>.</p>
+<p>The step ending the <code class="docutils literal notranslate"><span class="pre">e</span></code>-th group of the call, from 0, writes row <code class="docutils literal notranslate"><span class="pre">e</span></code>. The other steps
+write the spare row.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probes of the call.</p></li>
+<li><p><strong>buffers</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> of </em><em>str to array</em>) – As given by <cite>init_captures</cite>, or by the previous step.</p></li>
+<li><p><strong>values</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> of </em><em>str to array</em>) – What <cite>read_boundary</cite> gives after the step.</p></li>
+<li><p><strong>index</strong> (<em>array</em>) – Step within the call, from 0.</p></li>
+<li><p><strong>start</strong> (<a class="reference internal" href="#spark.recording.reduce.Start" title="spark.recording.reduce.Start"><em>Start</em></a><em> or </em><em>array</em><em> or </em><em>None</em>) – Where the call starts, as <cite>start_of</cite> gives it.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The updated buffers.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)">dict</a> of str to array</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Every step writes its value, without a branch.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.uses_rows">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">uses_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accumulators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.uses_rows" title="Link to this definition">#</a></dt>
+<dd><p>Returns whether a call stacks the values of every step of <code class="docutils literal notranslate"><span class="pre">probe</span></code> in its rows.</p>
+<p>True for traces and rasters. Given <code class="docutils literal notranslate"><span class="pre">accumulators</span></code>, also true for summaries whose histogram
+is counted after the call.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probe</strong> (<a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probe of the call.</p></li>
+<li><p><strong>accumulators</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>, </em><em>optional</em>) – As given by <cite>init_accumulators</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.accumulated_fields">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">accumulated_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probe</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.accumulated_fields" title="Link to this definition">#</a></dt>
+<dd><p>Returns the names of the running statistics a summary probe keeps.</p>
+<p><code class="docutils literal notranslate"><span class="pre">n</span></code> counts the steps. <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">m2</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code> and <code class="docutils literal notranslate"><span class="pre">active</span></code> are kept per unit.
+<code class="docutils literal notranslate"><span class="pre">hist</span></code> and <code class="docutils literal notranslate"><span class="pre">hist_high</span></code> are the two words of the histogram counts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>probe</strong> (<a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probe of the call.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Names of the statistics the reductions of <code class="docutils literal notranslate"><span class="pre">probe</span></code> need. Empty for other modes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a> of <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.init_accumulators">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">init_accumulators</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.init_accumulators" title="Link to this definition">#</a></dt>
+<dd><p>Creates the initial running statistics of the summary probes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probes of the call.</p></li>
+<li><p><strong>values</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> of </em><em>str to array</em><em> or </em><em>ShapeDtypeStruct</em>) – What <cite>ProbeContext.values</cite> gives on one step, or its shapes as <code class="docutils literal notranslate"><span class="pre">jax.eval_shape</span></code> gives
+them.</p></li>
+<li><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>optional</em>) – Steps of the call. Without it, every histogram is counted step by step, and a summary
+keeps one set of statistics.</p></li>
+<li><p><strong>split</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>default True</em>) – Whether the call may cross the end of a group. When False, a summary keeps one set of
+statistics.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>One entry per summary probe, by <cite>Probe.key</cite>, with the fields of <cite>accumulated_fields</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)">dict</a> of str to dict of str to array</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>A histogram whose values over the call take at most <cite>SETTINGS.histogram_rows_limit</cite> bytes is
+counted after the call from its rows (<cite>uses_rows</cite>), and keeps no <code class="docutils literal notranslate"><span class="pre">hist</span></code> statistics. A summary
+grouped by steps, in a call that may cross the end of a group, keeps one set of statistics for
+each group the call can touch (<cite>slots</cite>), along a leading axis.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.accumulate">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">accumulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accumulators</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.accumulate" title="Link to this definition">#</a></dt>
+<dd><p>Updates the running statistics of the summary probes with the values of one step.</p>
+<p>The updates are elementwise, except for histograms, which count the values of the step. Mean
+and spread follow Welford’s algorithm. A summary grouped by steps updates the statistics of
+the group holding the step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probes of the call.</p></li>
+<li><p><strong>accumulators</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a>) – As given by <cite>init_accumulators</cite>, or by the previous step.</p></li>
+<li><p><strong>values</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> of </em><em>str to array</em>) – What <cite>ProbeContext.values</cite> gave on this step.</p></li>
+<li><p><strong>index</strong> (<em>array</em><em>, </em><em>optional</em>) – Step within the call, from 0. Needed by summaries grouped by steps.</p></li>
+<li><p><strong>start</strong> (<a class="reference internal" href="#spark.recording.reduce.Start" title="spark.recording.reduce.Start"><em>Start</em></a><em> or </em><em>array</em><em>, </em><em>optional</em>) – Where the call starts, as <cite>start_of</cite> gives it.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The updated statistics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Floating values are rounded to their dtype first (<cite>_rounded</cite>). With at most
+<cite>SETTINGS.masked_slots</cite> groups, the statistics of every group are updated, masked to the group
+of the step. With more, those of the group of the step are read and written at a dynamic index.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.merge_summaries">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">merge_summaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parts</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.merge_summaries" title="Link to this definition">#</a></dt>
+<dd><p>Merges the partials of a summary over several calls, on the host.</p>
+<ul class="simple">
+<li><p>Step counts and <code class="docutils literal notranslate"><span class="pre">active</span></code> counts are added.</p></li>
+<li><p>Means are weighted by steps.</p></li>
+<li><p>Spreads follow the parallel form of Welford’s algorithm.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min</span></code> and <code class="docutils literal notranslate"><span class="pre">max</span></code> take the extremes of the parts.</p></li>
+<li><p>Histogram counts are combined as int64.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>parts</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> of </em><em>str to array</em>) – Partials of one group from each call, on the host.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Partials over all their steps, as <cite>_summary_complete</cite> takes them. A single part is
+returned as is.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)">dict</a> of str to array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.finalize">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accumulators</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spaced</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.finalize" title="Link to this definition">#</a></dt>
+<dd><p>Builds the records of a call on the device, to move to the host.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probes of the call.</p></li>
+<li><p><strong>rows</strong> (<a class="reference internal" href="#spark.recording.reduce.StepRecords" title="spark.recording.reduce.StepRecords"><em>StepRecords</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> of </em><em>str to array</em>) – Rows of every step, as <cite>pack_step</cite> or <cite>ProbeContext.collect</cite> gives them, stacked along a
+leading step axis by <code class="docutils literal notranslate"><span class="pre">jax.lax.scan</span></code>.</p></li>
+<li><p><strong>accumulators</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a>) – Running statistics after the last step.</p></li>
+<li><p><strong>start</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> of </em><em>str to array</em><em>, </em><em>optional</em>) – What <cite>read_boundary</cite> returned before and after the call. The ungrouped <code class="docutils literal notranslate"><span class="pre">delta</span></code> needs
+both, and the ungrouped <code class="docutils literal notranslate"><span class="pre">snapshot</span></code> needs <code class="docutils literal notranslate"><span class="pre">end</span></code>.</p></li>
+<li><p><strong>end</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> of </em><em>str to array</em><em>, </em><em>optional</em>) – What <cite>read_boundary</cite> returned before and after the call. The ungrouped <code class="docutils literal notranslate"><span class="pre">delta</span></code> needs
+both, and the ungrouped <code class="docutils literal notranslate"><span class="pre">snapshot</span></code> needs <code class="docutils literal notranslate"><span class="pre">end</span></code>.</p></li>
+<li><p><strong>spaced</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>, </em><em>optional</em>) – Buffers of <cite>write_spaced</cite> after the last step. Traces and rasters with a stride that are
+not in them are read from <code class="docutils literal notranslate"><span class="pre">rows</span></code>.</p></li>
+<li><p><strong>phases</strong> (<a class="reference internal" href="#spark.recording.reduce.Start" title="spark.recording.reduce.Start"><em>Start</em></a><em> or </em><em>array</em><em>, </em><em>optional</em>) – Where the call starts, as <cite>start_of</cite> gives it. Groups and strides are aligned on the
+steps of the run. Without it, the call starts a group and every stride.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>One entry per probe moved to the host, by <cite>Probe.key</cite>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">trace</span></code> and <code class="docutils literal notranslate"><span class="pre">raster</span></code>: the final records. With a stride, <code class="docutils literal notranslate"><span class="pre">ceil(steps</span> <span class="pre">/</span> <span class="pre">stride)</span></code>
+rows. Rows past the steps kept hold the last step of the call.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">summary</span></code>: the running statistics (<cite>accumulated_fields</cite>), with a leading axis of
+groups for a summary with several groups (<cite>slots</cite>).</p></li>
+<li><p>ungrouped <code class="docutils literal notranslate"><span class="pre">delta</span></code>: the partials per row (<cite>_delta_partials</cite>).</p></li>
+<li><p>ungrouped <code class="docutils literal notranslate"><span class="pre">snapshot</span></code>: the value, restricted to <code class="docutils literal notranslate"><span class="pre">units</span></code>.</p></li>
+</ul>
+<p><cite>complete</cite> finishes them on the host. Snapshots and deltas with a group are kept on the
+device by <cite>held</cite>.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.held">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">held</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">captured</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.held" title="Link to this definition">#</a></dt>
+<dd><p>Returns the values a call keeps on the device for its snapshots and deltas with a group.</p>
+<p>The recorder reads them once it knows where the groups end.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probes of the call.</p></li>
+<li><p><strong>start</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> of </em><em>str to array</em>) – What <cite>read_boundary</cite> returned before and after the call.</p></li>
+<li><p><strong>end</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> of </em><em>str to array</em>) – What <cite>read_boundary</cite> returned before and after the call.</p></li>
+<li><p><strong>captured</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em> of </em><em>str to array</em>) – Buffers of <cite>capture</cite> after the last step.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>By <cite>Probe.key</cite>, values with a leading axis of rows.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">last</span></code>: the value after the last step, one row. It ends a group at the end of the
+call, a group by tag, or a group cut short.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ends</span></code>: the values at the ends of groups within the call, the last row spare.
+Present for a group of steps in a call that may cross the end of one.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">first</span></code>: the value before the first step, one row. Deltas only.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)">dict</a> of str to dict of str to array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.group_values">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">group_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ends</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_rows</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.group_values" title="Link to this definition">#</a></dt>
+<dd><p>Computes what the snapshots and deltas of a set of measurements record for one group.</p>
+<p>Runs on the device, from the values <cite>held</cite> kept, in one call.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Snapshots and deltas with a group. Static.</p></li>
+<li><p><strong>ends</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><em>array</em>) – For each probe, kept values holding the value after the last step of the group.</p></li>
+<li><p><strong>end_rows</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><em>int32</em>) – For each probe, the row of <code class="docutils literal notranslate"><span class="pre">ends</span></code> holding that value.</p></li>
+<li><p><strong>starts</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><em>array</em><em> or </em><em>None</em>) – For each delta, kept values holding the value before the first step of the group. None
+for a snapshot.</p></li>
+<li><p><strong>start_rows</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><em>int32</em>) – For each delta, the row of <code class="docutils literal notranslate"><span class="pre">starts</span></code> holding that value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>For each probe, the snapshot value, or the delta partials (<cite>_delta_partials</cite>) from the
+value before the group to the value after it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Jitted with <code class="docutils literal notranslate"><span class="pre">probes</span></code> static. The rows are traced. Compiles once per set of probes and
+shapes.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.complete">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">complete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">records</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.complete" title="Link to this definition">#</a></dt>
+<dd><p>Completes the records <cite>finalize</cite> returned, on the host.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probes of the call.</p></li>
+<li><p><strong>records</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a>) – As returned by <cite>finalize</cite>, moved to the host.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>One entry per probe of <code class="docutils literal notranslate"><span class="pre">records</span></code>, by <cite>Probe.key</cite>, as NumPy arrays.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">summary</span></code>: one entry per reduction, over steps and units. <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code>,
+<code class="docutils literal notranslate"><span class="pre">active_fraction</span></code> and <code class="docutils literal notranslate"><span class="pre">inactive_unit_fraction</span></code> are float32 scalars. <code class="docutils literal notranslate"><span class="pre">min</span></code> and
+<code class="docutils literal notranslate"><span class="pre">max</span></code> are scalars in float32 for floating values, uint8 for bool, and the integer
+type of integer values. <code class="docutils literal notranslate"><span class="pre">active_fraction_per_unit</span></code> holds one float32 per unit, and
+<code class="docutils literal notranslate"><span class="pre">hist</span></code> the int64 counts. A summary with a leading axis of groups gives a list of
+such entries, one per group holding steps of the call.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace</span></code>: <code class="docutils literal notranslate"><span class="pre">(ceil(steps</span> <span class="pre">/</span> <span class="pre">stride),</span> <span class="pre">...)</span></code>, in the dtype read.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">raster</span></code>: <code class="docutils literal notranslate"><span class="pre">(ceil(steps</span> <span class="pre">/</span> <span class="pre">stride),</span> <span class="pre">units)</span></code> bool.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">snapshot</span></code>: the value at the end, restricted to <code class="docutils literal notranslate"><span class="pre">units</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">delta</span></code>: one entry per reduction of <code class="docutils literal notranslate"><span class="pre">end</span> <span class="pre">-</span> <span class="pre">start</span></code>, in float32.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.recording.reduce.Packed">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">Packed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buffer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">held</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.Packed" title="Link to this definition">#</a></dt>
+<dd><p>Records of a call, packed into one byte buffer, and the values kept on the device.</p>
+<p>A pytree whose leaves are the buffer and the held values. The layout and the probes are
+static. <cite>recorded_scan</cite> returns one, and <cite>Recorder.push</cite> takes it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buffer</strong> (<em>array</em>) – uint8 buffer.</p></li>
+<li><p><strong>layout</strong> (<a class="reference internal" href="../calls/index.html#spark.recording.calls.Layout" title="spark.recording.calls.Layout"><em>Layout</em></a>) – The records in the buffer, keyed by their path in the nested dictionary of records.</p></li>
+<li><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probes the records belong to.</p></li>
+<li><p><strong>held</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>, </em><em>optional</em>) – What <cite>held</cite> keeps on the device, by <cite>Probe.key</cite>. Not part of the buffer.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Returned from a jitted function, the buffer moves to the host in one transfer. Bool records,
+such as rasters, take one bit per entry.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="../../index.html#spark.scan" title="spark.scan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.scan</span></code></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">jax.lax.scan</span></code>, recorded within a call of a <cite>spark.jit</cite> function.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">Recorder.push</span></code></dt><dd><p>Hands over the records of a call.</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.reduce.Packed.buffer">
+<span class="sig-name descname"><span class="pre">buffer</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.Packed.buffer" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.reduce.Packed.layout">
+<span class="sig-name descname"><span class="pre">layout</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.Packed.layout" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.reduce.Packed.probes">
+<span class="sig-name descname"><span class="pre">probes</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.Packed.probes" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.reduce.Packed.held">
+<span class="sig-name descname"><span class="pre">held</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.Packed.held" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.reduce.Packed.tree_flatten">
+<span class="sig-name descname"><span class="pre">tree_flatten</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.Packed.tree_flatten" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.reduce.Packed.tree_unflatten">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">tree_unflatten</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aux</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">children</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.Packed.tree_unflatten" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aux</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a>)</p></li>
+<li><p><strong>children</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#spark.recording.reduce.Packed" title="spark.recording.reduce.Packed">Packed</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.recording.reduce.Packed.nbytes">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nbytes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.Packed.nbytes" title="Link to this definition">#</a></dt>
+<dd><p>Size of the buffer in bytes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.reduce.Packed.unpack">
+<span class="sig-name descname"><span class="pre">unpack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">completed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.Packed.unpack" title="Link to this definition">#</a></dt>
+<dd><p>Unpacks the records as nested dictionaries of NumPy arrays.</p>
+<p>Blocks until the buffer is on the host.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>completed</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>default True</em>) – Whether to complete the records with <cite>complete</cite>. When False, they are returned as
+<cite>finalize</cite> gave them.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Records by <cite>Probe.key</cite>. The held values are not included.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.reduce.pack">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.reduce.</span></span><span class="sig-name descname"><span class="pre">pack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">records</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/reduce.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.reduce.pack" title="Link to this definition">#</a></dt>
+<dd><p>Packs the records of a call into one byte buffer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – Probes passed to <cite>finalize</cite>, stored for <cite>Packed.unpack</cite>.</p></li>
+<li><p><strong>records</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a>) – As returned by <cite>finalize</cite>.</p></li>
+<li><p><strong>kept</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>, </em><em>optional</em>) – As returned by <cite>held</cite>. Kept apart from the buffer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The records in one buffer, with <code class="docutils literal notranslate"><span class="pre">kept</span></code>. <code class="docutils literal notranslate"><span class="pre">records</span></code> unchanged when both are empty.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#spark.recording.reduce.Packed" title="spark.recording.reduce.Packed">Packed</a> or <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../records/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">spark.recording.records</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../run/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">spark.recording.run</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Layout"><code class="docutils literal notranslate"><span class="pre">Layout</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.HISTOGRAM_LOW_BITS"><code class="docutils literal notranslate"><span class="pre">HISTOGRAM_LOW_BITS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.moduli"><code class="docutils literal notranslate"><span class="pre">moduli()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Start"><code class="docutils literal notranslate"><span class="pre">Start</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Start.phases"><code class="docutils literal notranslate"><span class="pre">Start.phases</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Start.split"><code class="docutils literal notranslate"><span class="pre">Start.split</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Start.tree_flatten"><code class="docutils literal notranslate"><span class="pre">Start.tree_flatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Start.tree_unflatten"><code class="docutils literal notranslate"><span class="pre">Start.tree_unflatten()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.start_of"><code class="docutils literal notranslate"><span class="pre">start_of()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.may_split"><code class="docutils literal notranslate"><span class="pre">may_split()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.warmup_starts"><code class="docutils literal notranslate"><span class="pre">warmup_starts()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.slots"><code class="docutils literal notranslate"><span class="pre">slots()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.ends"><code class="docutils literal notranslate"><span class="pre">ends()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.step_value"><code class="docutils literal notranslate"><span class="pre">step_value()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.StepRecords"><code class="docutils literal notranslate"><span class="pre">StepRecords</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.StepRecords.row"><code class="docutils literal notranslate"><span class="pre">StepRecords.row</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.StepRecords.layout"><code class="docutils literal notranslate"><span class="pre">StepRecords.layout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.StepRecords.tree_flatten"><code class="docutils literal notranslate"><span class="pre">StepRecords.tree_flatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.StepRecords.tree_unflatten"><code class="docutils literal notranslate"><span class="pre">StepRecords.tree_unflatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.StepRecords.unpack"><code class="docutils literal notranslate"><span class="pre">StepRecords.unpack()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.pack_step"><code class="docutils literal notranslate"><span class="pre">pack_step()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.init_spaced"><code class="docutils literal notranslate"><span class="pre">init_spaced()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.write_spaced"><code class="docutils literal notranslate"><span class="pre">write_spaced()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.first_kept"><code class="docutils literal notranslate"><span class="pre">first_kept()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.read_boundary"><code class="docutils literal notranslate"><span class="pre">read_boundary()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.init_captures"><code class="docutils literal notranslate"><span class="pre">init_captures()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.capture"><code class="docutils literal notranslate"><span class="pre">capture()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.uses_rows"><code class="docutils literal notranslate"><span class="pre">uses_rows()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.accumulated_fields"><code class="docutils literal notranslate"><span class="pre">accumulated_fields()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.init_accumulators"><code class="docutils literal notranslate"><span class="pre">init_accumulators()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.accumulate"><code class="docutils literal notranslate"><span class="pre">accumulate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.merge_summaries"><code class="docutils literal notranslate"><span class="pre">merge_summaries()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.finalize"><code class="docutils literal notranslate"><span class="pre">finalize()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.held"><code class="docutils literal notranslate"><span class="pre">held()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.group_values"><code class="docutils literal notranslate"><span class="pre">group_values()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.complete"><code class="docutils literal notranslate"><span class="pre">complete()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed"><code class="docutils literal notranslate"><span class="pre">Packed</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed.buffer"><code class="docutils literal notranslate"><span class="pre">Packed.buffer</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed.layout"><code class="docutils literal notranslate"><span class="pre">Packed.layout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed.probes"><code class="docutils literal notranslate"><span class="pre">Packed.probes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed.held"><code class="docutils literal notranslate"><span class="pre">Packed.held</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed.tree_flatten"><code class="docutils literal notranslate"><span class="pre">Packed.tree_flatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed.tree_unflatten"><code class="docutils literal notranslate"><span class="pre">Packed.tree_unflatten()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed.nbytes"><code class="docutils literal notranslate"><span class="pre">Packed.nbytes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.Packed.unpack"><code class="docutils literal notranslate"><span class="pre">Packed.unpack()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.reduce.pack"><code class="docutils literal notranslate"><span class="pre">pack()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
