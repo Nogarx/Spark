@@ -3118,6 +3118,8 @@ _SIGNALS = _Signals()
     The signal handlers of the open recorders.
 """
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 # Closed before the thread pools of the interpreter stop, which the checkpoints written in the background need.
 # Registered after `concurrent.futures`: of these handlers, those registered later run first.
 importlib.import_module('concurrent.futures.thread')
