@@ -33,7 +33,7 @@ from spark.graph_editor.runs.timeline import Timeline, NOTABLE, event_text
 from spark.graph_editor.runs.workspace import Project, Selection, SeriesStore, Spaces, Line, Exploration, STEP, SUFFIX, axis_label
 from spark.graph_editor.runs.workspace_view import RunsTable, WorkspaceView
 from spark.recording.probe import (
-    Probe, SummaryProbe, TraceProbe, RasterProbe, SnapshotProbe, DeltaProbe, CALL, SCALAR_REDUCTIONS,
+    Probe, SummaryProbe, TraceProbe, RasterProbe, SnapshotProbe, DeltaProbe, SummaryReduction, DeltaReduction, CALL,
 )
 from spark.recording.measurements import Measurements, scalar_key
 from spark.recording.run import Run
@@ -496,6 +496,7 @@ class ProbePanel(QWidget):
         name, key = probe.name, probe.key
         detail = f'{measurements} · {key}'
         if isinstance(probe, (SummaryProbe, DeltaProbe)):
+            reductions = SummaryReduction if isinstance(probe, SummaryProbe) else DeltaReduction
             spread = [r for r in self.SPREAD if r in probe.reduce] if isinstance(probe, SummaryProbe) and 'mean' in probe.reduce else []
             if spread:
                 title = 'mean' + (' ± std' if 'std' in spread else '') + (', min to max' if {'min', 'max'} <= set(spread) else '')
@@ -503,7 +504,7 @@ class ProbePanel(QWidget):
             for reduction in probe.reduce:
                 if reduction in spread:
                     continue
-                if reduction in SCALAR_REDUCTIONS:
+                if reductions(reduction).scalar:
                     label = reduction if isinstance(probe, SummaryProbe) else f'change {reduction}'
                     self._add_scalars(layout, SeriesPlot(f'{name} · {label}'), {'value': scalar_key(measurements, key, reduction)}, detail)
                 elif reduction in ('active_fraction_per_unit', 'hist'):
