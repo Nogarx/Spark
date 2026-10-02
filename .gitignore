@@ -1,5 +1,7 @@
 .env/
 _test*
+plans/
+benchmarks/
 spark/core/kernels
 
 # Byte-compiled / optimized / DLL files
