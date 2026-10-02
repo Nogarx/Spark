@@ -47,6 +47,9 @@ Spiking neural networks are not special, why should they require special data?!.
 Design complex SNN architectures by dragging, dropping, and connecting pre-built neural components. 
 No coding required for model design.
 
+📊 <strong>Built-in Visualization:</strong> 
+Tools for recording and visualizing spike trains, membrane potentials, network activity and much more (also available in real-time!).
+
 ## Getting Started
 
 
@@ -161,9 +164,6 @@ We have many exciting features planned.
 
 🔥 <strong>Components, a lot of them:</strong> 
 Spark is built around the idea of modular neurons. Literature is full of really interesting ideas but integrating them to existing code is sometimes annoying and prone to errors. One of our goals is to transform those ideas into modular, reusable and plugable code.
-
-📊 <strong>Built-in Visualization:</strong> 
-(Maybe Coming Soon?) Tools for visualizing spike trains, membrane potentials, and network activity in real-time.
 
 🧮 <strong>Custom kernels:</strong>
 Spark is fast but it can be faster!. Several operations can be further optimized using custom kernels.
