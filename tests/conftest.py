@@ -101,6 +101,20 @@ def settings_of_their_own(tmp_path_factory) -> tp.Generator[tp.Any, tp.Any, None
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@pytest.fixture(scope='session', autouse=True)
+def explorations_of_their_own(tmp_path_factory) -> tp.Generator[tp.Any, tp.Any, None]:
+    """
+        Folder the run viewer keeps explorations in, so that the suite never writes to the one of whoever started it.
+    """
+    pytest.importorskip('PySide6', reason='the run viewer needs PySide6')
+    import spark.graph_editor.runs.workspace as workspace
+    root = tmp_path_factory.mktemp('explorations')
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(workspace, 'explorations_path', lambda: root)
+        yield root
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @pytest.fixture(scope='session')
 def qapp(settings_of_their_own) -> tp.Generator[QCoreApplication | QApplication, tp.Any, None]:
     """
