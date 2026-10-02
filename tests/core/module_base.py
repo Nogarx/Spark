@@ -19,6 +19,7 @@ class CounterOutput(tp.TypedDict):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@spark.register_config
 class CounterConfig(spark.nn.Config):
     start: float = 0.0
     step: float = 1.0
@@ -204,6 +205,39 @@ class TestRegistration:
 
     def test_a_name_is_normalized(self) -> None:
         assert spark.REGISTRY.Components.get('N2NDelays') is spark.REGISTRY.Components.get('n2n_delays')
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TestCheckpoint:
+    """
+        A module saved to a file and built again from it.
+    """
+
+    def test_it_comes_back_in_the_state_it_was_saved_in(self, signal, tmp_path) -> None:
+        module = Counter(start=2.0, step=0.5)
+        for _ in range(3):
+            module(signal=signal)
+        path = module.checkpoint(tmp_path / 'counter', verbose=False)
+        restored = Counter.from_checkpoint(path, verbose=False)
+        assert type(restored) is Counter and path.name == 'counter.spark'
+        np.testing.assert_array_equal(np.asarray(restored.total.value), np.asarray(module.total.value))
+        np.testing.assert_array_equal(np.asarray(restored(signal=signal)['total'].value), np.asarray(module(signal=signal)['total'].value))
+
+    def test_a_file_is_replaced_only_when_asked(self, signal, tmp_path) -> None:
+        module = Counter()
+        module(signal=signal)
+        path = module.checkpoint(tmp_path / 'counter', verbose=False)
+        with pytest.raises(RuntimeError, match='overwrite'):
+            module.checkpoint(path, verbose=False)
+        module(signal=signal)
+        module.checkpoint(path, overwrite=True, verbose=False)
+        np.testing.assert_array_equal(np.asarray(Counter.from_checkpoint(path, verbose=False).total.value), np.asarray(module.total.value))
+        assert [p.name for p in tmp_path.iterdir()] == ['counter.spark']            # nothing left aside
+
+    def test_a_module_not_built_is_not_saved(self, tmp_path) -> None:
+        with pytest.raises(RuntimeError, match='not yet built'):
+            Counter().checkpoint(tmp_path / 'counter', verbose=False)
+        assert list(tmp_path.iterdir()) == []
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
