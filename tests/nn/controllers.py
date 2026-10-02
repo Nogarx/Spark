@@ -167,6 +167,47 @@ class TestNeuronFromSpecs:
         outputs, state = _run_split(graph, state, inputs)
         assert outputs['my_awesome_spikes'].value.shape == (8,)
 
+    def test_a_checkpoint_gives_back_the_neuron(self, spikes, tmp_path) -> None:
+        neuron = ProbeLIFNeuron(units=(8,), inhibitory_rate=0.2)
+        for _ in range(3):
+            neuron(incoming_spikes=spikes(16))
+        restored = spark.nn.Neuron.from_checkpoint(neuron.checkpoint(tmp_path / 'neuron', verbose=False), verbose=False)
+        assert type(restored) is ProbeLIFNeuron
+        for got, want in zip(jax.tree.leaves(spark.split((restored))[1]), jax.tree.leaves(spark.split((neuron))[1])):
+            np.testing.assert_array_equal(np.asarray(got), np.asarray(want))
+
+    def test_a_checkpoint_is_checked_against_its_sha256(self, spikes, tmp_path, capsys) -> None:
+        import hashlib
+        neuron = ProbeLIFNeuron(units=(8,), inhibitory_rate=0.2)
+        neuron(incoming_spikes=spikes(16))
+        path = neuron.checkpoint(tmp_path / 'neuron')
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        # Logged when written, and accepted however it is written out.
+        assert digest in capsys.readouterr().out
+        assert type(spark.nn.Neuron.from_checkpoint(path, verbose=False, sha256=f' {digest.upper()} ')) is ProbeLIFNeuron
+        with pytest.raises(RuntimeError, match='not the file published'):
+            spark.nn.Neuron.from_checkpoint(path, verbose=False, sha256='0' * 64)
+        # Changed after it was published: refused.
+        with open(path, 'ab') as file:
+            file.write(b'\0')
+        with pytest.raises(RuntimeError, match='not the file published'):
+            spark.nn.Neuron.from_checkpoint(path, verbose=False, sha256=digest)
+
+    def test_a_checkpoint_writes_its_sha256_beside_it(self, spikes, tmp_path) -> None:
+        import shutil
+        import subprocess
+        neuron = ProbeLIFNeuron(units=(8,), inhibitory_rate=0.2)
+        neuron(incoming_spikes=spikes(16))
+        path = neuron.checkpoint(tmp_path / 'neuron', verbose=False, sha256=True)
+        hashed = tmp_path / 'neuron.spark.sha256'
+        digest, name = hashed.read_text().split()
+        assert name == 'neuron.spark' and spark.nn.Neuron.from_checkpoint(path, verbose=False, sha256=digest) is not None
+        if shutil.which('sha256sum'):
+            assert subprocess.run(['sha256sum', '-c', hashed.name], cwd=tmp_path, capture_output=True).returncode == 0
+        # Written again without it, the one left no longer matches and is removed.
+        neuron.checkpoint(tmp_path / 'neuron', overwrite=True, verbose=False)
+        assert path.exists() and not hashed.exists()
+
     def test_a_missing_shape_is_refused(self, spikes) -> None:
         with pytest.raises(Exception):
             ProbeLIFNeuron()(incoming_spikes=spikes(16))
@@ -242,6 +283,26 @@ class TestBrain:
         ))
         assert readout['first_pool']['out_spikes'].value.shape == (16,)
         assert readout['second_pool']['out_spikes'].value.shape == (8,)
+
+    def test_a_checkpoint_gives_back_the_brain(self, brain, tmp_path) -> None:
+        signal = spark.FloatArray(jnp.array(np.full((16,), 0.5), dtype=jnp.float16))
+        for _ in range(3):
+            brain(signal=signal)
+        path = brain.checkpoint(tmp_path / 'brain', verbose=False)
+        restored = spark.nn.Brain.from_checkpoint(path, verbose=False)
+        for got, want in zip(jax.tree.leaves(spark.split((restored))[1]), jax.tree.leaves(spark.split((brain))[1])):
+            np.testing.assert_array_equal(np.asarray(got), np.asarray(want))
+        # The values drawn from the seeds at build time, such as the delays, come back too.
+        for _ in range(3):
+            np.testing.assert_array_equal(
+                np.asarray(restored(signal=signal)['my_awesome_signal'].value), np.asarray(brain(signal=signal)['my_awesome_signal'].value),
+            )
+
+    def test_a_checkpoint_of_a_brain_is_not_read_as_a_neuron(self, brain, tmp_path) -> None:
+        brain(signal=self._signal())
+        path = brain.checkpoint(tmp_path / 'brain', verbose=False)
+        with pytest.raises(RuntimeError, match='holds a Brain, not a Neuron'):
+            spark.nn.Neuron.from_checkpoint(path, verbose=False)
 
     def test_a_module_that_names_an_origin_that_is_not_there_is_refused(self) -> None:
         config = spark.nn.BrainConfig(modules_specs=[

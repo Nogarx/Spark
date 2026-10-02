@@ -1,8 +1,10 @@
 name: "Documentation"
-on: 
-  push:
-    branches:
-      - main
+# Built when the version of the package increases, as `publish.yml` publishes it: for each release published. It can
+# also be built by hand, from the Actions tab.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
 permissions:
   contents: write
 

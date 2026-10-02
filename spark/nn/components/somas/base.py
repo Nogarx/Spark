@@ -3,14 +3,11 @@
 #################################################################################################################################################
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from spark.core.specs import PortSpecs
+import typing as tp
 
 import abc
 import jax
 import jax.numpy as jnp
-import typing as tp
 import spark.core.utils as utils
 from spark.core.backend import Variable
 from spark.nn.components.base import Component, ComponentConfig
@@ -106,7 +103,7 @@ class Soma(Component, tp.Generic[ConfigT]):
     """
     config: ConfigT
 
-    def __init__(self, config: ConfigT | None = None, **kwargs):
+    def __init__(self, config: ConfigT | None = None, **kwargs) -> None:
         # Initialize super.
         super().__init__(config = config, **kwargs)
 
@@ -129,7 +126,7 @@ class Soma(Component, tp.Generic[ConfigT]):
     @abc.abstractmethod
     def _integrate(self, potential: jax.Array, current: jax.Array) -> jax.Array:
         """
-            Membrane integration. The only part of the step every model has to provide.
+            Membrane integration.
         """
         pass
 

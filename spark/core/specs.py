@@ -101,6 +101,11 @@ class PortSpecs:
             -------
             PortSpecs
         """
+        payload_type = dct.get('payload_type')
+        if isinstance(payload_type, dict) and '__payload_type__' in payload_type:
+            name = payload_type['__payload_type__']
+            entry = REGISTRY.Payloads.get(name) if name else None
+            dct = {**dct, 'payload_type': entry.get_cls() if entry is not None else None}
         return cls(**dct)
 
     @classmethod

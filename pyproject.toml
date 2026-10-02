@@ -1,6 +1,6 @@
 [project]
 name = "spark_snn"
-version = "1.1.1"
+dynamic = ["version"]
 authors = [
     {name="Mario Franco"},
 ]
@@ -49,8 +49,11 @@ Issues = "https://github.com/Nogarx/Spark/issues"
 
 
 [build-system]
-requires = ["setuptools >= 77.0.3"]
+requires = ["setuptools >= 77.0.3", "setuptools-scm >= 8"]
 build-backend = "setuptools.build_meta"
+[tool.setuptools_scm]
+# The version is the git tag of the release, such as x.y.z or vx.y.z. Between releases, it is the next version with
+# ".dev<n>", n commits after the last tag, and the commit as a local label: x.y.z.dev4+g3138650.
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["spark*"]

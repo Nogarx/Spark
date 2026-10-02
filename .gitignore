@@ -1,5 +1,7 @@
 .env/
 _test*
+plans/
+benchmarks/
 spark/core/kernels
 
 # Byte-compiled / optimized / DLL files
@@ -211,3 +213,5 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Runs written by the recording tutorial
+tutorials/runs/

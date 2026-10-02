@@ -109,6 +109,7 @@ class Brain(Controller, metaclass=BrainMeta):
 			dict of str to SparkPayload
 				One entry per output port of the brain, as derived from the modules.
 		"""
+		self._offer_inputs(inputs)
 		# Update modules
 		outputs = {}
 		for name in self._modules_names:
@@ -128,7 +129,7 @@ class Brain(Controller, metaclass=BrainMeta):
 					else:
 						input_args_list.append(self._cache[port_map.origin, port_map.port])
 				input_args[port_name] = self._concatenate_payloads(input_args_list)
-			outputs[name] = getattr(self, name)(**input_args)
+			outputs[name] = self._call_module(name, input_args)
 		# Update cache
 		for name in self._modules_names:
 			for port_name in self._modules_output_map[name]:

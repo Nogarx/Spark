@@ -21,23 +21,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        # The tags, from which setuptools-scm takes the version.
+        fetch-depth: 0
 
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: "3.13"
         cache: pip
-
-    - name: Check the version against the tag
-      if: github.event_name == 'release'
-      run: |
-        version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
-        tag="${GITHUB_REF_NAME#v}"
-        if [ "$version" != "$tag" ]; then
-          echo "::error::The release is tagged \"${GITHUB_REF_NAME}\" but pyproject.toml says \"${version}\"."
-          exit 1
-        fi
-        echo "Publishing version ${version}."
 
     - name: Install the libraries Qt needs to start
       run: |
@@ -56,6 +48,9 @@ jobs:
       run: pytest -q --device=cpu
 
     - name: Build the distribution
+      env:
+        # A build between releases, published by hand, has no local label: the package indexes refuse them.
+        SETUPTOOLS_SCM_OVERRIDES_FOR_SPARK_SNN: '{local_scheme = "no-local-version"}'
       run: |
         rm -rf build spark_snn.egg-info
         python -m build
@@ -63,7 +58,7 @@ jobs:
     - name: Read back what was built
       run: |
         python - <<'CHECK'
-        import glob, sys, zipfile
+        import glob, os, sys, zipfile
 
         wheel = glob.glob('dist/*.whl')[0]
         with zipfile.ZipFile(wheel) as archive:
@@ -75,8 +70,12 @@ jobs:
         assets = [n for n in names if n.startswith('spark/graph_editor/styles/') and not n.endswith('.py')]
         qt = [line for line in metadata if line.startswith('Requires-Dist: PySide6')]
         optional = [line for line in qt if 'extra == "editor"' in line]
+        version = next(line.split(': ', 1)[1] for line in metadata if line.startswith('Version: '))
+        tag = os.environ.get('GITHUB_REF_NAME', '')
 
         problems = []
+        if os.environ.get('GITHUB_EVENT_NAME') == 'release' and version != tag.removeprefix('v'):
+            problems.append(f'it is version {version}, and the release is tagged "{tag}"')
         if any(n.startswith('spark/core/kernels/') for n in names):
             problems.append('the experimental kernels are in it')
         if not any(n.startswith('spark/nn/') for n in names):
@@ -95,7 +94,7 @@ jobs:
         if problems:
             print(f'::error::{wheel} is not what it should be: {"; ".join(problems)}.')
             sys.exit(1)
-        print(f'{wheel}: {len(names)} entries, {len(assets)} editor assets, {len(optional)} behind [editor]')
+        print(f'{wheel}: version {version}, {len(names)} entries, {len(assets)} editor assets, {len(optional)} behind [editor]')
         CHECK
 
     - name: Check the metadata
