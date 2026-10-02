@@ -2,7 +2,13 @@
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-version = '1.0'
+# The version of the installed distribution.
+import importlib.metadata as _metadata
+try:
+    __version__ = _metadata.version('spark_snn')
+except _metadata.PackageNotFoundError:
+    # Imported from a source tree that was never installed.
+    __version__ = 'unknown'
 
 # Core
 from spark.core.backend import Constant, Variable
