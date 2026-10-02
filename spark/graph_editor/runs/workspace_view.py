@@ -20,7 +20,7 @@ from spark.graph_editor.styles.run_viewer import THEME
 from spark.graph_editor.runs.data import READ_ERRORS
 from spark.graph_editor.runs.plots import SeriesPlot
 from spark.graph_editor.runs.workspace import (
-    Project, Selection, SeriesStore, NATURAL, STEP, WALL, axis_label, short_name,
+    Project, Selection, SeriesStore, NATURAL, STEP, WALL, axis_label, identity,
 )
 
 #################################################################################################################################################
@@ -35,17 +35,33 @@ def _note(text: str = '') -> QLabel:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+ORDER = Qt.ItemDataRole.UserRole + 2
+"""
+    Role of the first column holding the position of a run in the order the runs were created.
+"""
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class _Item(QTreeWidgetItem):
     """
         Row of the table of runs, sorted by the number a column holds when it holds one.
+
+        Runs holding the same value in the column sorted by are sorted by the order they were
+        created in, so that the rows do not change places as the table is rebuilt.
     """
+
+    def _key(self, column: int) -> tuple:
+        value, order = self.data(column, Qt.ItemDataRole.UserRole), self.data(0, ORDER)
+        # A group has no order of its own, and is sorted by its name.
+        tie = (0, order) if order is not None else (1, self.text(0).lower())
+        # The first column holds the path of a run as its data, and is sorted by its text.
+        if column and isinstance(value, (int, float)) and not isinstance(value, bool):
+            return (0, value), tie
+        return (1, self.text(column).lower()), tie
 
     def __lt__(self, other: QTreeWidgetItem) -> bool:
         column = self.treeWidget().sortColumn() if self.treeWidget() is not None else 0
-        mine, theirs = self.data(column, Qt.ItemDataRole.UserRole), other.data(column, Qt.ItemDataRole.UserRole)
-        if column > 0 and isinstance(mine, (int, float)) and isinstance(theirs, (int, float)):
-            return mine < theirs
-        return self.text(column).lower() < other.text(column).lower()
+        return self._key(column) < other._key(column) if isinstance(other, _Item) else self.text(column) < other.text(column)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -56,8 +72,10 @@ class RunsTable(QWidget):
         Every run has an eye, a check box that shows or hides it, and the color it is drawn in.
         Grouped by fields of the runs (Group by), the table is a tree of groups, each with its eye,
         its color and its runs under it. The search field keeps the runs whose name, experiment or
-        parameters hold its text. Columns give the experiment, the steps and status, and the
-        parameters in which the runs differ; more are chosen from Columns. Columns are resized by
+        parameters hold its text. A run is named by the name given to its `Recorder`, next to the
+        time it was created; the runs are sorted by it, the newest first, until sorted by another
+        column. Columns give the experiment, the steps and status, and the parameters in which the
+        runs differ; more are chosen from Columns. Columns are resized by
         dragging the edges of their headers; until it is, the first takes the width the others leave,
         and the last fills what is left after it. A double click on a run
         emits `run_activated` with its path. A right click on a run sets its experiment or its color.
@@ -74,7 +92,7 @@ class RunsTable(QWidget):
 
     run_activated = Signal(str)
 
-    FIXED = ('Run', 'Experiment', 'Steps')
+    FIXED = ('Run', 'Created', 'Experiment', 'Steps')
 
     def __init__(self, project: Project, selection: Selection, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -121,6 +139,9 @@ class RunsTable(QWidget):
         self.tree.setObjectName('runViewerRuns')
         self.tree.setRootIsDecorated(True)
         self.tree.setUniformRowHeights(True)
+        # Sorted by the time the runs were created, the newest first, until sorted by another column.
+        self.tree.setHeaderLabels(list(self.FIXED))
+        self.tree.header().setSortIndicator(self.FIXED.index('Created'), Qt.SortOrder.DescendingOrder)
         self.tree.setSortingEnabled(True)
         self.tree.setSelectionMode(QTreeWidget.SelectionMode.ExtendedSelection)
         self.tree.setTextElideMode(Qt.TextElideMode.ElideMiddle)
@@ -164,6 +185,7 @@ class RunsTable(QWidget):
         header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         grouped = bool(self.selection.group_by)
         colors = {str(run.path): line.color for line in self.selection.lines() for run in line.runs}
+        self._order = {str(run.path): index for index, run in enumerate(self.project.runs)}
         for label, runs in self.selection.groups():
             if grouped and label:
                 parent = _Item([f'{label}  ({len(runs)})'])
@@ -176,6 +198,10 @@ class RunsTable(QWidget):
                 parent.setFont(0, bold)
                 self.tree.addTopLevelItem(parent)
                 parent.setFirstColumnSpanned(True)
+                # Sorted by its newest run when the runs are sorted by the time they were created.
+                created = [stamp for stamp in (self._created(run) for run in runs) if stamp is not None]
+                if created:
+                    parent.setData(self.FIXED.index('Created'), Qt.ItemDataRole.UserRole, max(created))
                 for run in runs:
                     parent.addChild(self._item(run, colors))
                 parent.setExpanded(f'group:{label}' in self._expanded)
@@ -203,21 +229,34 @@ class RunsTable(QWidget):
             status, steps = 'cannot be read', ''
         experiment = self.project.experiment(run) or ''
         values = [self.project.value(run, field) for field in self.columns]
-        item = _Item([short_name(run.path.name), experiment, steps + ('' if status == 'finished' else f' {status}'),
-                      *('' if value is None else str(value) for value in values)])
+        name, created = identity(run)
+        item = _Item([name, '' if created is None else f'{created:%Y-%m-%d %H:%M}', experiment,
+                      steps + ('' if status == 'finished' else f' {status}'), *('' if value is None else str(value) for value in values)])
         for column, value in enumerate(values, start=len(self.FIXED)):
             if isinstance(value, (int, float)) and not isinstance(value, bool):
                 item.setData(column, Qt.ItemDataRole.UserRole, value)
         item.setData(0, Qt.ItemDataRole.UserRole, path)
         item.setData(0, Qt.ItemDataRole.UserRole + 1, f'run:{path}')
+        item.setData(0, ORDER, self._order.get(path, len(self._order)))
         item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
         item.setCheckState(0, Qt.CheckState.Checked if path in self.selection.visible else Qt.CheckState.Unchecked)
         item.setData(0, Qt.ItemDataRole.DecorationRole, colors.get(path, self.selection.color(path)))
-        item.setToolTip(0, f'{run.path.name}\n{run.path}\nDouble click to show it on the Run tab.')
-        item.setToolTip(2, status)
-        # Sorted by the number of steps, not by its text.
-        item.setData(2, Qt.ItemDataRole.UserRole, run.step if steps else -1)
+        item.setToolTip(0, f'{run.path.name}\n{run.path}\nDouble click to show it on the Graph tab.')
+        # Sorted by the time, and by the number of steps, rather than by their text.
+        stamp = self._created(run)
+        if stamp is not None:
+            item.setData(self.FIXED.index('Created'), Qt.ItemDataRole.UserRole, stamp)
+        item.setToolTip(self.FIXED.index('Steps'), status)
+        item.setData(self.FIXED.index('Steps'), Qt.ItemDataRole.UserRole, run.step if steps else -1)
         return item
+
+    @staticmethod
+    def _created(run) -> float | None:
+        """
+            Returns the time a run was created, as a POSIX timestamp, or None when it is not known.
+        """
+        created = identity(run)[1]
+        return None if created is None else created.timestamp()
 
     # Interaction.
 
@@ -372,7 +411,7 @@ class RunsTable(QWidget):
         path = item.data(0, Qt.ItemDataRole.UserRole)
         menu = QMenu(self)
         if path:
-            show = menu.addAction('Show on the Run tab')
+            show = menu.addAction('Show on the Graph tab')
             show.triggered.connect(lambda: self.run_activated.emit(path))
             experiment = menu.addAction('Set experiment...')
             experiment.triggered.connect(lambda: self._set_experiment([p for p in self._selected_paths() or [path]]))

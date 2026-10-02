@@ -2,12 +2,9 @@
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-"""
-    What the run viewer compares: runs of a directory, spaces of their series, groups and bands.
-"""
-
 from __future__ import annotations
 
+import re
 import time
 import pytest
 import numpy as np
@@ -19,15 +16,17 @@ from PySide6.QtGui import QColor
 
 from run_viewer import _brain, SIGNAL
 
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
 R = spark.recording
 EPISODES = {0: ('X', (2, 3, 1)), 1: ('X', (1, 1, 4)), 2: ('Y', (3, 3, 3)), 3: (None, (2, 2, 2))}
 """
     Experiment of every run, by seed, and the calls of 5 steps of each of its three episodes.
 """
 
-#################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
-#################################################################################################################################################
 
 @pytest.fixture(scope='module')
 def root(tmp_path_factory):
@@ -48,17 +47,19 @@ def root(tmp_path_factory):
         runner.close()
     return root
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @pytest.fixture
 def project(qapp, root):
     from spark.graph_editor.runs.workspace import Project
     return Project(root)
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def _by_seed(project):
     return {run.hparams['seed']: run for run in project.runs}
 
-#################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
-#################################################################################################################################################
 
 class TestProject:
 
@@ -209,9 +210,7 @@ class TestSelection:
         selection.show_newest(2)
         assert len(selection.visible) == 2
 
-#################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
-#################################################################################################################################################
 
 class TestRunsTable:
 
@@ -232,7 +231,7 @@ class TestRunsTable:
         assert {'X  (2)', 'Y  (1)'} <= set(top) and len(top) == 3
         assert top['X  (2)'].childCount() == 2 and top['X  (2)'].checkState(0) == Qt.CheckState.Checked
         assert table.columns == ['lr', 'seed']
-        assert [table.tree.headerItem().text(i) for i in range(5)] == ['Run', 'Experiment', 'Steps', 'lr', 'seed']
+        assert [table.tree.headerItem().text(i) for i in range(6)] == ['Run', 'Created', 'Experiment', 'Steps', 'lr', 'seed']
         selection.set_group_by([])
         assert table.tree.topLevelItemCount() == 4
 
@@ -268,31 +267,72 @@ class TestRunsTable:
         assert all(header.sectionResizeMode(i) == QHeaderView.ResizeMode.Interactive for i in range(header.count()))
         assert header.stretchLastSection()
         # Until resized by hand, the first column takes the width the others leave, as the table is resized.
-        table.resize(440, 400)
+        table.resize(560, 400)
         table.show()
         qapp.processEvents()
         from spark.graph_editor.styles.run_viewer import THEME
         assert header.length() <= table.tree.viewport().width() + 1 and table.tree.columnWidth(0) >= THEME.layout.first_column_width
         wide = table.tree.columnWidth(0)
-        table.resize(540, 400)
+        table.resize(660, 400)
         qapp.processEvents()
         assert table.tree.columnWidth(0) == wide + 100 and not table.state()['widths']
-        table.tree.setColumnWidth(1, 173)
+        table.tree.setColumnWidth(2, 173)
         # Built again, as when runs are grouped or columns chosen, the table keeps the width given.
         selection.set_group_by([])
         table.set_columns([*table.columns, 'seed'])
-        assert table.tree.columnWidth(1) == 173 and table.state()['widths'] == {'Experiment': 173}
+        assert table.tree.columnWidth(2) == 173 and table.state()['widths'] == {'Experiment': 173}
         table.tree.setColumnWidth(0, 150)
-        table.resize(640, 400)
+        table.resize(760, 400)
         qapp.processEvents()
         assert table.tree.columnWidth(0) == 150
         table.close()
 
+    def test_runs_are_named_by_their_recorder_and_the_time_they_were_created(self, project, tmp_path) -> None:
+        import json, shutil
+        from spark.graph_editor.runs.workspace import run_names
+        table, selection = self._table(project)
+        selection.set_group_by([])
+        rows = [table.tree.topLevelItem(i) for i in range(table.tree.topLevelItemCount())]
+        # The name given to the recorder, here the class of the model, next to the time; not the id of the directory.
+        assert {row.text(0) for row in rows} == {'Brain'}
+        assert all(re.fullmatch(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}', row.text(1)) for row in rows)
+        # By default, the newest first.
+        times = [row.data(1, Qt.ItemDataRole.UserRole) for row in rows]
+        assert times == sorted(times, reverse=True)
+        # In the legends of the plots, a run is named with its time, the id of its directory left out.
+        assert all(project.name(run).startswith('Brain · ') and run.path.name.rsplit('_', 1)[1] not in project.name(run) for run in project.runs)
+        # Runs of one name created in the same minute are told apart by the second, then by their order.
+        twins = []
+        for index, created in enumerate(('2026-10-02T09:15:05-04:00', '2026-10-02T09:15:40-04:00', '2026-10-02T09:15:40-04:00')):
+            path = tmp_path / f'20261002-0915{index:02d}_cartpole_{index:08x}'
+            shutil.copytree(project.runs[0].path, path)
+            R.store.write_json(path / 'run.json', {**json.loads((path / 'run.json').read_text()), 'name': 'cartpole', 'created': created})
+            twins.append(R.Run(path))
+        assert list(run_names(twins).values()) == ['cartpole · 10-02 09:15:05', 'cartpole · 10-02 09:15:40 (1)', 'cartpole · 10-02 09:15:40 (2)']
+
+    def test_runs_keep_their_places_as_the_table_is_built_again(self, project, qapp) -> None:
+        table, selection = self._table(project)
+        selection.set_group_by([])
+        rows = lambda: [table.tree.topLevelItem(i).data(0, Qt.ItemDataRole.UserRole) for i in range(table.tree.topLevelItemCount())]
+        created = [str(run.path) for run in project.runs]
+        table.tree.sortItems(1, Qt.SortOrder.AscendingOrder)
+        assert rows() == created
+        # Runs holding the same value, such as the runs of an experiment, follow the order they were created in.
+        table.tree.sortItems(2, Qt.SortOrder.AscendingOrder)
+        order = rows()
+        runs = _by_seed(project)
+        experiment_x = [str(runs[0].path), str(runs[1].path)]
+        assert [path for path in order if path in experiment_x] == [path for path in created if path in experiment_x]
+        # Built again, as when a run is hidden, the table keeps its order.
+        table.tree.topLevelItem(0).setCheckState(0, Qt.CheckState.Unchecked)
+        qapp.processEvents()
+        assert rows() == order
+
     def test_runs_sort_by_their_steps(self, project) -> None:
         table, selection = self._table(project)
         selection.set_group_by([])
-        table.tree.sortItems(2, Qt.SortOrder.AscendingOrder)
-        steps = [table.tree.topLevelItem(i).data(2, Qt.ItemDataRole.UserRole) for i in range(4)]
+        table.tree.sortItems(3, Qt.SortOrder.AscendingOrder)
+        steps = [table.tree.topLevelItem(i).data(3, Qt.ItemDataRole.UserRole) for i in range(4)]
         assert steps == sorted(steps)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -438,3 +478,7 @@ class TestExploration:
         assert other.sections['episode'].panels['episode/steps'].zoom() == {'x': [1.0, 2.0], 'y': None}
         other_table.restore({'columns': ['gone', 'seed']})
         assert other_table.columns == ['seed']
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
