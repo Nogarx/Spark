@@ -426,6 +426,37 @@ def test_traced_synapses_contraction(
     assert module._contracted_tracer is contractible
     assert np.max(np.abs(contracted - full)) <= 1e-2 * max(np.max(np.abs(full)), 1e-6)
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+delays_test = [
+    (spark.nn.delays.NDelays, {}),
+    (spark.nn.delays.N2NDelays, {'units': (2,)}),
+]
+
+@pytest.mark.parametrize('module_cls, config_kwargs', delays_test)
+def test_every_delay_releases_its_spike_that_many_steps_later(module_cls, config_kwargs) -> None:
+    """
+        A spike reaches the output after its delay, up to the longest one, ``ceil(max_delay / dt)`` steps.
+    """
+    module = module_cls(max_delay=4.0, **config_kwargs)
+    silent = spark.SpikeArray(jnp.zeros((4,), dtype=jnp.float16))
+    module(in_spikes=silent)
+    module.reset()
+    delays = [1, 2, 3, 4]
+    module._kernel = spark.Constant(jnp.broadcast_to(jnp.array(delays, dtype=jnp.uint8), module.kernel.value.shape), dtype=jnp.uint8)
+    spike = spark.SpikeArray(jnp.ones((4,), dtype=jnp.float16))
+    released = [
+        np.asarray(module(in_spikes=spike if step == 0 else silent)['out_spikes'].spikes).reshape(-1, 4) for step in range(8)
+    ]
+    for unit, delay in enumerate(delays):
+        assert [step for step in range(8) if released[step][:, unit].any()] == [delay]
+
+@pytest.mark.parametrize('module_cls, config_kwargs', delays_test)
+def test_the_drawn_delays_reach_the_longest_and_no_further(module_cls, config_kwargs) -> None:
+    module = module_cls(max_delay=4.0, **config_kwargs)
+    module(in_spikes=spark.SpikeArray(jnp.zeros((256,), dtype=jnp.float16)))
+    assert set(np.unique(np.asarray(module.kernel.value)).tolist()) == {1, 2, 3, 4}
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

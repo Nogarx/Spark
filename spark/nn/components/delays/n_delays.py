@@ -34,10 +34,10 @@ class NDelaysConfig(DelaysConfig):
         ----------
         max_delay : float, default 8.0
             Longest delay the buffer can hold, in ms. The buffer holds ``ceil(max_delay / dt)``
-            steps, which bounds every drawn delay.
+            past steps, which bounds every drawn delay.
         delays : jax.Array or Initializer, default UniformInitializerConfig()
-            Delay of every presynaptic unit, in steps. Drawn over ``[1, buffer_size]`` when an
-            initializer is given.
+            Delay of every presynaptic unit, in steps. Drawn over ``[1, ceil(max_delay / dt)]``
+            when an initializer is given.
     """
 
     max_delay: float = dc.field(
@@ -92,9 +92,10 @@ class NDelays(Delays):
 
         Notes
         -----
-        Spikes are held in a ring buffer of ``ceil(max_delay / dt)`` steps, bit-packed eight units
-        to a byte, so the buffer costs one bit per unit per step. Reading is a gather at the
-        per-unit offset, which makes the cost independent of the delay values.
+        Spikes are held in a ring buffer of ``ceil(max_delay / dt) + 1`` steps, the current one and
+        every step a delay reaches back to, bit-packed eight units to a byte, so the buffer costs one
+        bit per unit per step. Reading is a gather at the per-unit offset, which makes the cost
+        independent of the delay values.
 
         See Also
         --------
@@ -112,7 +113,7 @@ class NDelays(Delays):
         self._units = prod(self._shape)
         # Initialize varibles
         self.max_delay = self.config.max_delay
-        self._buffer_size = int(ceil(self.max_delay / self._dt))
+        self._buffer_size = int(ceil(self.max_delay / self._dt)) + 1
         num_bytes = (self._units + 7) // 8
         self._padding = (0, num_bytes * 8 - self._units)
         self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
@@ -122,7 +123,7 @@ class NDelays(Delays):
             key=self.get_rng_keys(1), 
             shape=(self._units,), 
             dtype=jnp.uint8,
-            scale=self._buffer_size+1, 
+            scale=self._buffer_size, 
             min_value=1,
         )
         self._kernel = Constant(delays_kernel, dtype=jnp.uint8)
