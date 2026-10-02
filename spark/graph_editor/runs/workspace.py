@@ -11,7 +11,9 @@ import json
 import time
 import hashlib
 import pathlib
+import datetime
 import warnings
+import collections
 
 import numpy as np
 from PySide6.QtCore import QObject, Signal
@@ -46,15 +48,61 @@ SUFFIX = '.exploration.json'
     Ending of the files of explorations.
 """
 
+_DIRECTORY = re.compile(r'(?P<stamp>\d{8}-\d{6})_(?P<name>.+)_[0-9a-f]+')
+"""
+    Name of the directory of a run created without a run id, ``<yyyymmdd>-<hhmmss>_<name>_<id>``.
+"""
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
-def short_name(name: str) -> str:
+def identity(run: Run) -> tuple[str, datetime.datetime | None]:
     """
-        Returns the name of a run directory, ``<yyyymmdd>-<hhmmss>_<name>_<id>``, as
-        ``'MM-DD hh:mm <id>'``; other names as they are.
+        Returns the name given to the `Recorder` of a run and the time the run was created.
+
+        Read from ``run.json``, else from the name of its directory, `_DIRECTORY`. The time is the
+        local time of the host that created the run, or None when it cannot be read.
     """
-    match = re.fullmatch(r'\d{4}(\d{2})(\d{2})-(\d{2})(\d{2})\d{2}_.+_([0-9a-f]+)', name)
-    return f'{match[1]}-{match[2]} {match[3]}:{match[4]} {match[5]}' if match else name
+    match = _DIRECTORY.fullmatch(run.path.name)
+    name = run.info.get('name')
+    if not isinstance(name, str) or not name:
+        name = match['name'] if match else run.path.name
+    try:
+        created = datetime.datetime.fromisoformat(str(run.info.get('created')))
+    except ValueError:
+        created = datetime.datetime.strptime(match['stamp'], '%Y%m%d-%H%M%S') if match else None
+    return name, created
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def run_names(runs: tp.Sequence[Run]) -> dict[str, str]:
+    """
+        Returns the name every run is shown by: the name given to its `Recorder` and the minute it
+        was created, as ``'cartpole · 10-01 21:23'``.
+
+        Runs that would share a name are told apart by the second they were created, then by the
+        order they were created in, as ``'cartpole · 10-01 21:23:05 (2)'``.
+
+        Parameters
+        ----------
+        runs : sequence of Run
+            The runs, oldest first.
+
+        Returns
+        -------
+        dict of str to str
+            The names, by path of run.
+    """
+    found = {str(run.path): identity(run) for run in runs}
+    shown = lambda form: {path: f'{name} · {created:{form}}' if created else name for path, (name, created) in found.items()}
+    names, seconds = shown('%m-%d %H:%M'), shown('%m-%d %H:%M:%S')
+    taken = collections.Counter(names.values())
+    names = {path: seconds[path] if taken[name] > 1 else name for path, name in names.items()}
+    taken, counted = collections.Counter(names.values()), collections.Counter()
+    for path, name in list(names.items()):
+        if taken[name] > 1:
+            counted[name] += 1
+            names[path] = f'{name} ({counted[name]})'
+    return names
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -90,6 +138,7 @@ class Project(QObject):
         self.root = pathlib.Path(root).resolve()
         self.runs: list[Run] = []
         self.overrides: dict[str, str | None] = {}
+        self._names: dict[str, str] = {}
         self.refresh()
 
     def refresh(self) -> bool:
@@ -117,8 +166,16 @@ class Project(QObject):
         if added:
             order = {str(run.path): index for index, run in enumerate(found)}
             self.runs = sorted(self.runs + added, key=lambda run: order.get(str(run.path), len(order)))
+            self._names = run_names(self.runs)
             self.changed.emit()
         return bool(added)
+
+    def name(self, run: Run) -> str:
+        """
+            Returns the name ``run`` is shown by, as `run_names` gives it.
+        """
+        name = self._names.get(str(run.path))
+        return name if name is not None else run_names([run])[str(run.path)]
 
     def run(self, path: str | pathlib.Path) -> Run | None:
         """
@@ -695,10 +752,10 @@ class Selection(QObject):
 
     def label(self, run: Run) -> str:
         """
-            Returns the label of a run: its experiment and short name.
+            Returns the label of a run: its experiment and the name it is shown by (`Project.name`).
         """
-        experiment = self.project.experiment(run)
-        return f'{experiment} · {short_name(run.path.name)}' if experiment and 'experiment' not in self.group_by else short_name(run.path.name)
+        experiment, name = self.project.experiment(run), self.project.name(run)
+        return f'{experiment} · {name}' if experiment and 'experiment' not in self.group_by else name
 
     def groups(self) -> list[tuple[str, list[Run]]]:
         """

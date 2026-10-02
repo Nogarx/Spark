@@ -899,15 +899,21 @@ class BarPlot(_Plot):
         super().__init__(title, height, parent)
         self.values = np.zeros(0)
         self.labels: list[str] = []
+        self.color: QColor | None = None
 
-    def set_values(self, values: np.ndarray, x_range: tuple[float, float] | None = None, labels: list[str] | None = None) -> None:
+    def set_values(
+            self, values: np.ndarray, x_range: tuple[float, float] | None = None, labels: list[str] | None = None,
+            color: QColor | None = None,
+        ) -> None:
         """
             Sets the values drawn, flattened.
 
-            ``labels`` are drawn over the bars when there are at most 12.
+            ``labels`` are drawn over the bars when there are at most 12. The bars take ``color``,
+            else the first color of the series.
         """
         self.values = np.asarray(values, np.float64).reshape(-1)
         self.labels = labels or []
+        self.color = None if color is None else QColor(color)
         finite = self.values[np.isfinite(self.values)]
         self.message = '' if len(self.values) else 'Nothing recorded here'
         if len(self.values):
@@ -953,7 +959,7 @@ class BarPlot(_Plot):
         left, bottom = self.to_px(edges[:-1], low, rect)
         right, top = self.to_px(edges[1:], high, rect)
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(THEME.series_color(0))
+        painter.setBrush(self.color or THEME.series_color(0))
         for a, b, y0, y1 in zip(left, right, top, bottom):
             if y1 > y0:
                 painter.drawRect(QRectF(a, y0, max(b - a - gap, 1), y1 - y0))

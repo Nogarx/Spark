@@ -76,9 +76,57 @@ class _ReadOnlyScene(GraphScene):
 class _ReadOnlyView(GraphView):
     """
         View of a `_ReadOnlyScene`, without the editing keys and the context menu of the editor.
+
+        The whole graph is kept in view as the view is resized, as when the window is first laid
+        out, until the view is zoomed, scrolled or panned by hand.
     """
 
+    MARGIN = 60
+    """
+        Margin around the graph when it is fitted, in units of the scene.
+    """
+
+    _MOVING_KEYS = {
+        Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Up, Qt.Key.Key_Down, Qt.Key.Key_PageUp, Qt.Key.Key_PageDown,
+        Qt.Key.Key_Home, Qt.Key.Key_End,
+    }
+    """
+        Keys with which `QGraphicsView` scrolls the view.
+    """
+
+    def __init__(self, scene: QGraphicsScene, parent: QWidget | None = None) -> None:
+        super().__init__(scene, parent)
+        self.fitting = True
+
+    def fit(self) -> None:
+        """
+            Fits the whole graph in the view, and keeps it fitted as the view is resized.
+        """
+        self.fitting = True
+        self._fit()
+
+    def _fit(self) -> None:
+        if self.scene() is not None and self.scene().items():
+            margin = self.MARGIN
+            self.fitInView(self.scene().itemsBoundingRect().adjusted(-margin, -margin, margin, margin), Qt.AspectRatioMode.KeepAspectRatio)
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        if self.fitting:
+            self._fit()
+
+    def wheelEvent(self, event) -> None:
+        self.fitting = False
+        super().wheelEvent(event)
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.MiddleButton:
+            self.fitting = False
+        super().mousePressEvent(event)
+
     def keyPressEvent(self, event) -> None:
+        if event.key() in self._MOVING_KEYS:
+            self.fitting = False
         QGraphicsView.keyPressEvent(self, event)
 
     def contextMenuEvent(self, event) -> None:
@@ -177,7 +225,7 @@ def _note(text: str = '') -> QLabel:
 
 def _value(text: str) -> QLabel:
     """
-        Returns a label of a value of the Run panel, wrapped and selectable.
+        Returns a label of a value of the Details panel, wrapped and selectable.
     """
     label = QLabel(text)
     label.setWordWrap(True)
@@ -564,7 +612,7 @@ class ProbePanel(QWidget):
     def _group_bars(self, plot: BarPlot, measurements: str, key: str, x_range: tuple[float, float] | None) -> tp.Callable[[int], None]:
         def show(found) -> None:
             plot.subtitle = '' if found is None else f'  ·  group from step {found[0]:,}'
-            plot.set_values(np.zeros(0) if found is None else found[1], x_range=x_range)
+            plot.set_values(np.zeros(0) if found is None else found[1], x_range=x_range, color=self._color())
         return self._at_group(measurements, key, show)
 
     def _group_matrix(self, plot: MatrixPlot, measurements: str, key: str) -> tp.Callable[[int], None]:
@@ -622,6 +670,15 @@ class ProbePanel(QWidget):
         self._legend.setVisible(bool(lines))
         self.set_cursor(self.cursor)
 
+    def _color(self) -> QColor:
+        """
+            Returns the color of this run, as the table of runs gives it.
+        """
+        if self.selection is None:
+            return THEME.series_color(0)
+        run = self.selection.project.run(str(self.data.run.path.resolve())) or self.data.run
+        return self.selection.color(str(run.path))
+
     def _lines(self) -> list[Line]:
         """
             Returns the lines drawn with this run: none when the selection shows no other run, else
@@ -635,13 +692,13 @@ class ProbePanel(QWidget):
         lines = self.selection.lines()
         if not any(str(run.path.resolve()) == shown for line in lines for run in line.runs):
             run = self.selection.project.run(shown) or self.data.run
-            lines.insert(0, Line(f'{self.selection.label(run)} · shown', self.selection.color(str(run.path)), [run], False))
+            lines.insert(0, Line(f'{self.selection.label(run)} · shown', self._color(), [run], False))
         return lines
 
     def _draw(self, plot: SeriesPlot, keys: dict[str, str], lines: list[Line]) -> None:
         """
             Draws the series of ``keys`` in ``plot``, in their space: one series, or the spread of a
-            summary, of this run alone, or of every line compared.
+            summary, of this run alone, in its color, or of every line compared.
         """
         space = self._space_of(keys)
         plot.space = space
@@ -652,9 +709,10 @@ class ProbePanel(QWidget):
         if lines:
             self._draw_compared(plot, keys, lines, space, x_range)
             return
+        color = self._color()
         if 'value' in keys:
             x, y = self.store.series(self.data.run, keys['value'], space)
-            plot.set_series([(keys['value'].split('/')[-1], x, y)], x_range=x_range)
+            plot.set_series([(keys['value'].split('/')[-1], x, y, color)], x_range=x_range)
             return
         spaces = self._spaces()
         at = lambda steps: spaces.to_space(steps, space)
@@ -664,12 +722,12 @@ class ProbePanel(QWidget):
             (tl, low), (th, high) = self.data.scalar(keys['min']), self.data.scalar(keys['max'])
             # The rows of both series written for the same groups.
             common, first, second = np.intersect1d(tl, th, return_indices=True)
-            bands.append((('min', 'max'), at(common), low[first], high[second], THEME.with_alpha(THEME.series_color(0), THEME.band_alpha)))
+            bands.append((('min', 'max'), at(common), low[first], high[second], THEME.with_alpha(color, THEME.band_alpha)))
         if 'std' in keys:
             ts, std = self.data.scalar(keys['std'])
             common, first, second = np.intersect1d(t, ts, return_indices=True)
-            bands.append(('std', at(common), mean[first] - std[second], mean[first] + std[second], THEME.with_alpha(THEME.series_color(0), THEME.spread_alpha)))
-        plot.set_series([('mean', at(t), mean, THEME.series_color(0))], x_range=x_range, bands=bands)
+            bands.append(('std', at(common), mean[first] - std[second], mean[first] + std[second], THEME.with_alpha(color, THEME.spread_alpha)))
+        plot.set_series([('mean', at(t), mean, color)], x_range=x_range, bands=bands)
 
     def _draw_compared(self, plot: SeriesPlot, keys: dict[str, str], lines: list[Line], space: str,
                        x_range: tuple[float, float] | None) -> None:
@@ -1027,8 +1085,8 @@ class RunViewerWindow(QMainWindow):
         Opened on a directory, the window shows its Workspace: a panel for every scalar series of its
         runs, drawn for every run or group the Runs table shows, each in the space it was recorded
         in. Opened on a run, it shows that run, compared with nothing until other runs are shown. A
-        double click on a run of the table shows it on the Graph tab, the Run and Probes panels and
-        the timeline. Runs added to the directory are listed as they appear.
+        double click on a run of the table shows it on the Graph tab, the Details and Probes panels
+        and the timeline. Runs added to the directory are listed as they appear.
 
         The exploration of the directory, what the window shows and how, is kept as it changes, in a
         file of the viewer rather than within the directory, and resumed when the directory is opened
@@ -1043,7 +1101,7 @@ class RunViewerWindow(QMainWindow):
         the cursor at the last step. The Probes panel shows what was recorded for the node selected,
         and what the model received, in tabs. The Probes panel and the timeline belong to the Graph
         tab: both are collapsed while the Workspace is shown, and open again with the Graph tab
-        unless closed there. The Runs and Run panels span the height of the window; the timeline lies
+        unless closed there. The Runs and Details panels span the height of the window; the timeline lies
         under the graph and the Probes panel. On the Graph tab, the Probes panel can take all but a
         sliver of the graph.
 
@@ -1354,7 +1412,8 @@ class RunViewerWindow(QMainWindow):
         self.badges = {node.model.name: ActivityBadge(node) for node in nodes}
         self.scene.selectionChanged.connect(self._on_selection)
         self._show_graph(self.view)
-        QTimer.singleShot(0, self._fit)
+        # Fitted again as the window is laid out: its size is not final until it is shown.
+        self.view.fit()
 
     def _show_graph(self, widget: QWidget) -> None:
         """
@@ -1369,17 +1428,14 @@ class RunViewerWindow(QMainWindow):
         self.center.insertTab(1, widget, 'Graph')
         self.center.setCurrentIndex(max(current, 0))
 
-    def _fit(self) -> None:
-        if self.view is not None and self.scene is not None and self.scene.items():
-            self.view.fitInView(self.scene.itemsBoundingRect().adjusted(-60, -60, 60, 60), Qt.AspectRatioMode.KeepAspectRatio)
-
-    def _dock(self, title: str, widget: QWidget, area: Qt.DockWidgetArea) -> QDockWidget:
+    def _dock(self, title: str, widget: QWidget, area: Qt.DockWidgetArea, name: str | None = None) -> QDockWidget:
         dock = QDockWidget(title, self)
         label = QLabel(f' {title.upper()}')
         label.setObjectName('dockTitle')
         dock.setTitleBarWidget(label)
         dock.setWidget(widget)
-        dock.setObjectName(f'dock{title}')
+        # The layouts kept by the explorations name the panels by it.
+        dock.setObjectName(f'dock{name or title}')
         self.addDockWidget(area, dock)
         return dock
 
@@ -1396,7 +1452,7 @@ class RunViewerWindow(QMainWindow):
         self.timeline = Timeline()
         self.timeline.cursor_moved.connect(self.set_cursor)
         self.dock_runs = self._dock('Runs', self.runs_table, Qt.DockWidgetArea.LeftDockWidgetArea)
-        self.dock_run = self._dock('Run', QWidget(), Qt.DockWidgetArea.LeftDockWidgetArea)
+        self.dock_run = self._dock('Details', QWidget(), Qt.DockWidgetArea.LeftDockWidgetArea, name='Run')
         self.tabifyDockWidget(self.dock_runs, self.dock_run)
         # Their tabs name them.
         for dock in (self.dock_runs, self.dock_run):
@@ -1408,7 +1464,7 @@ class RunViewerWindow(QMainWindow):
 
     def _build_run(self) -> None:
         """
-            Builds the Run and Probes panels of the run shown, in place of those of the run before.
+            Builds the Details and Probes panels of the run shown, in place of those of the run before.
         """
         old = getattr(self, 'probe_panel', None)
         if old is not None:
@@ -1431,7 +1487,7 @@ class RunViewerWindow(QMainWindow):
 
     def show_run(self, path: str | pathlib.Path) -> None:
         """
-            Shows the run at ``path`` on the Graph tab, the Run and Probes panels and the timeline.
+            Shows the run at ``path`` on the Graph tab, the Details and Probes panels and the timeline.
 
             A run that cannot be read is reported in a message box.
         """

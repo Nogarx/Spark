@@ -2,10 +2,6 @@
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
-"""
-    The run viewer: a run written by spark.recording, over the graph of its model.
-"""
-
 from __future__ import annotations
 
 import os
@@ -28,14 +24,16 @@ pytest.importorskip('PySide6', reason='the run viewer needs PySide6')
 from PySide6.QtCore import Qt, QEvent
 from PySide6.QtWidgets import QLabel
 
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
 R = spark.recording
 SIGNAL = np.full((8,), 1.0, dtype=np.float16)
 RECORDING_TESTS = str(pathlib.Path(__file__).resolve().parents[1] / 'recording')
 INPUT_RATE = R.SummaryProbe('first_pool.__call__:in_spikes', reduce=('active_fraction',))
 
-#################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
-#################################################################################################################################################
 
 def _brain():
     pool = lambda name, units, origins: spark.ModuleSpecs(
@@ -56,6 +54,8 @@ def _brain():
     brain = spark.nn.Brain(config=config)
     brain(signal=spark.FloatArray(jnp.asarray(SIGNAL)))
     return brain
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 def _record(root, calls=6, hparams=None):
     """
@@ -79,10 +79,14 @@ def _record(root, calls=6, hparams=None):
     runner.close()
     return brain, recorder.path
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def _copy(recorded, tmp_path):
     path = tmp_path / recorded[1].name
     shutil.copytree(recorded[1], path)
     return path
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 def _python(script):
     """
@@ -92,15 +96,21 @@ def _python(script):
     result = subprocess.run([sys.executable, '-c', textwrap.dedent(script)], capture_output=True, text=True, timeout=600, env=env)
     return result.stdout.strip().splitlines()[-1]
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def _wait_for(condition, seconds=10.0):
     deadline = time.monotonic() + seconds
     while not condition():
         assert time.monotonic() < deadline, 'timed out'
         time.sleep(0.05)
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @pytest.fixture(scope='module')
 def recorded(tmp_path_factory):
     return _record(tmp_path_factory.mktemp('runs'))
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @pytest.fixture(autouse=True)
 def _explorations(tmp_path_factory, monkeypatch):
@@ -111,6 +121,8 @@ def _explorations(tmp_path_factory, monkeypatch):
     root = tmp_path_factory.mktemp('explorations')
     monkeypatch.setattr(workspace, 'explorations_path', lambda: root)
     return root
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @pytest.fixture(autouse=True)
 def _close_left_open(qapp):
@@ -129,6 +141,8 @@ def _close_left_open(qapp):
             widget.close()
     qapp.processEvents()
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @pytest.fixture
 def viewer(qapp, recorded):
     from spark.graph_editor.runs.viewer import RunViewerWindow
@@ -139,6 +153,8 @@ def viewer(qapp, recorded):
     window.close()
     qapp.processEvents()
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def _select(viewer, qapp, name):
     from spark.graph_editor.view.node_item import NodeItem
     viewer.scene.clearSelection()
@@ -147,12 +163,12 @@ def _select(viewer, qapp, name):
             item.setSelected(True)
     qapp.processEvents()
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def _plots(panel, kind=None):
     return [w for w in panel.plots() if kind is None or isinstance(w, kind)]
 
-#################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
-#################################################################################################################################################
 
 class TestRunData:
 
@@ -472,6 +488,36 @@ class TestRunViewer:
         items = [item for item in viewer.scene.items() if isinstance(item, (PipeItem, PortItem))]
         assert any(isinstance(item, PipeItem) for item in items)
         assert all(item.acceptedMouseButtons() == Qt.MouseButton.NoButton for item in items)
+
+    def test_the_graph_stays_fitted_as_the_window_is_laid_out(self, qapp, recorded) -> None:
+        from PySide6.QtCore import QPoint, QPointF
+        from PySide6.QtGui import QWheelEvent
+        from spark.graph_editor.runs.viewer import RunViewerWindow
+        viewer = RunViewerWindow(recorded[1])
+        # Fitted first before the window has its size, as when a window is built and shown later.
+        qapp.processEvents()
+        viewer.show()
+        qapp.processEvents()
+        whole = lambda: viewer.view.mapToScene(viewer.view.viewport().rect()).boundingRect().contains(viewer.scene.itemsBoundingRect())
+        assert whole()
+        viewer.resize(viewer.width() - 300, viewer.height() - 200)
+        qapp.processEvents()
+        assert whole()
+        # Zoomed by hand, it is left as it is.
+        position = QPointF(50, 50)
+        viewer.view.wheelEvent(QWheelEvent(position, position, QPoint(0, 0), QPoint(0, 120), Qt.MouseButton.NoButton,
+                                           Qt.KeyboardModifier.ControlModifier, Qt.ScrollPhase.NoScrollPhase, False))
+        zoom = viewer.view.transform().m11()
+        viewer.resize(viewer.width() + 300, viewer.height() + 200)
+        qapp.processEvents()
+        assert viewer.view.transform().m11() == zoom and not viewer.view.fitting
+        viewer.close()
+        qapp.processEvents()
+
+    def test_the_panels_of_the_left_are_runs_and_details(self, viewer) -> None:
+        assert (viewer.dock_runs.windowTitle(), viewer.dock_run.windowTitle()) == ('Runs', 'Details')
+        # The layouts explorations kept before name it as before.
+        assert viewer.dock_run.objectName() == 'dockRun'
 
     def test_badges_show_the_rate_at_the_cursor(self, viewer) -> None:
         key = 'summary/first_pool.soma:spikes/active_fraction'
@@ -835,7 +881,7 @@ class TestCompare:
         qapp.processEvents()
         assert [viewer.center.tabText(i) for i in range(viewer.center.count())] == ['Workspace', 'Graph']
         assert viewer.center.currentWidget() is viewer.workspace
-        # The newest run is shown on the Run tab; every run is drawn in the workspace.
+        # The newest run is shown on the Graph tab; every run is drawn in the workspace.
         assert viewer.data.path == paths[-1]
         assert viewer.selection.visible == {str(path) for path in paths}
         assert viewer.runs_table.tree.topLevelItemCount() == 2
@@ -872,6 +918,25 @@ class TestCompare:
         assert [s[0] for s in rate.series] == [f'{labels[0]} · shown', labels[1]]
         viewer.selection.show_only([first])
         assert [s[0] for s in rate.series] == ['active_fraction']
+        viewer.close()
+        qapp.processEvents()
+
+    def test_a_run_shown_alone_is_drawn_in_its_color(self, qapp, recorded, tmp_path) -> None:
+        from PySide6.QtGui import QColor
+        from spark.graph_editor.runs.plots import SeriesPlot, BarPlot
+        from spark.graph_editor.runs.viewer import RunViewerWindow
+        (first,) = self._runs(recorded, tmp_path, {'lr': 0.1})
+        viewer = RunViewerWindow(first)
+        viewer.selection.set_color(str(first), QColor('#d88fbf'))
+        _select(viewer, qapp, 'first_pool')
+        plots = _plots(viewer.probe_panel, SeriesPlot)
+        rate = [p for p in plots if p.title.endswith('active_fraction')][0]
+        spread = [p for p in plots if p.title.startswith('potential')][0]
+        assert [s[3].name() for s in rate.series] == ['#d88fbf'] and [s[3].name() for s in spread.series] == ['#d88fbf']
+        assert {band[4].rgb() for band in spread.bands} == {QColor('#d88fbf').rgb()}
+        bars = BarPlot('bars')
+        bars.set_values(np.arange(3.0), color=QColor('#d88fbf'))
+        assert bars.color.name() == '#d88fbf'
         viewer.close()
         qapp.processEvents()
 
@@ -1117,8 +1182,8 @@ class TestCompare:
                 item.chmod(0o555 if item.is_dir() else 0o444)
             viewer = RunViewerWindow(first)
             tree = viewer.runs_table.tree
-            statuses = [tree.topLevelItem(i).toolTip(2) for i in range(2)]
-            assert statuses[1] == 'crashed' and viewer.data.status == 'finished'
+            statuses = {tree.topLevelItem(i).data(0, Qt.ItemDataRole.UserRole): tree.topLevelItem(i).toolTip(3) for i in range(2)}
+            assert statuses[str(crashed.resolve())] == 'crashed' and viewer.data.status == 'finished'
             viewer.set_cursor(25)
             viewer.close()
         finally:
