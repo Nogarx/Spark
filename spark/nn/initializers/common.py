@@ -10,7 +10,7 @@ import dataclasses as dc
 import typing as tp
 import spark.core.utils as utils
 from spark.core.registry import register_initializer, register_config
-from spark.core.config_validation import TypeValidator, ZeroOneValidator
+from spark.core.config_validation import TypeValidator, ZeroOneValidator, PositiveValidator
 from spark.nn.initializers.base import Initializer, InitializerConfig
 
 #################################################################################################################################################
@@ -345,6 +345,340 @@ class NormalizedSparseUniformInitializer(SparseUniformInitializer):
         array = jnp.clip(self.config.scale * array, min=self.config.min_value, max=self.config.max_value)
         return array.astype(self.config.dtype)
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_config
+class NormalInitializerConfig(InitializerConfig):
+    """
+        Configuration for `NormalInitializer`.
+
+        Parameters
+        ----------
+        dtype : DTypeLike, default jnp.float16
+            Dtype of the produced array.
+        mu : float, default 0
+            Mean (“centre”) of the distribution.
+        sigma : float, default 1
+            Standard deviation (spread or “width”) of the distribution. Must be non-negative.
+        min_value : int or float or None, default None
+            Lower clip applied after drawing.
+        max_value : int or float or None, default None
+            Upper clip applied after drawing.
+    """
+    __class_ref__: tp.ClassVar[str] = 'NormalInitializer'
+
+    mu: float = dc.field(
+        default = 0, 
+        metadata = {
+            'validators': [
+                TypeValidator,
+            ],
+            'description': 'Mean (“centre”) of the distribution.',
+        })
+    
+    sigma: float = dc.field(
+        default = 1.0, 
+        metadata = {
+            'validators': [
+                TypeValidator,
+                PositiveValidator,
+            ],
+            'description': 'Standard deviation (spread or “width”) of the distribution.',
+        })
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_initializer
+class NormalInitializer(Initializer):
+    """
+        Draws every entry uniformly from ``[0, scale)``.
+
+        Parameters
+        ----------
+        config : NormalInitializerConfig, optional
+            Initializer configuration. Its fields may also be given as keyword arguments.
+
+        Notes
+        -----
+        ``min_value`` and ``max_value`` clip the result, so they narrow the range rather than
+        shift it.
+
+        See Also
+        --------
+        SparseNormalInitializer : The same draw with a fraction of the entries zeroed.
+    """
+    config: NormalInitializerConfig
+
+    def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
+        """
+            Draws every entry uniformly from ``[0, scale)``.
+
+            Parameters
+            ----------
+            key : jax.Array
+                PRNG key.
+            shape : tuple of int
+                Shape of the array to draw.
+
+            Returns
+            -------
+            jax.Array
+                The drawn array, clipped to ``[min_value, max_value]`` and cast to ``dtype``.
+        """
+        array = self.config.mu + self.config.sigma * jax.random.normal(key, shape)
+        # Clip Min-Max
+        array = jnp.clip(array, min=self.config.min_value, max=self.config.max_value)
+        return array.astype(self.config.dtype)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_config
+class SparseNormalInitializerConfig(NormalInitializerConfig):
+    """
+        Configuration for `SparseNormalInitializer`.
+
+        Parameters
+        ----------
+        dtype : DTypeLike, default jnp.float16
+            Dtype of the produced array.
+        mu : float, default 0
+            Mean (“centre”) of the distribution.
+        sigma : float, default 1
+            Standard deviation (spread or “width”) of the distribution. Must be non-negative.
+        min_value : int or float or None, default None
+            Lower clip applied after drawing.
+        max_value : int or float or None, default None
+            Upper clip applied after drawing.
+    """
+    __class_ref__: tp.ClassVar[str] = 'SparseNormalInitializer'
+
+    density: float = dc.field(
+        default = 0.2, 
+        metadata = {
+            'validators': [
+                TypeValidator,
+                ZeroOneValidator,
+            ],
+            'description': 'Expected ratio of non-zero entries in the output array.',
+        })
+    
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_initializer
+class SparseNormalInitializer(NormalInitializer):
+    """
+        Draws every entry uniformly from ``[0, scale)``.
+
+        Parameters
+        ----------
+        config : SparseNormalInitializerConfig, optional
+            Initializer configuration. Its fields may also be given as keyword arguments.
+
+        Notes
+        -----
+        ``min_value`` and ``max_value`` clip the result, so they narrow the range rather than
+        shift it.
+
+        See Also
+        --------
+        SparseSparseNormalInitializer : The same draw with a fraction of the entries zeroed.
+    """
+    config: SparseNormalInitializerConfig
+
+    def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
+        """
+            Draws every entry uniformly from ``[0, scale)``.
+
+            Parameters
+            ----------
+            key : jax.Array
+                PRNG key.
+            shape : tuple of int
+                Shape of the array to draw.
+
+            Returns
+            -------
+            jax.Array
+                The drawn array, clipped to ``[min_value, max_value]`` and cast to ``dtype``.
+        """
+        key1, key2 = jax.random.split(key, 2)
+        array = self.config.mu + self.config.sigma * jax.random.normal(key1, shape)
+        # Zero mask
+        mask = jax.random.uniform(key2, shape, dtype=jnp.float16) < self.config.density
+        array = jnp.where(mask, array, 0)
+        # Clip Min-Max
+        array = jnp.clip(array, min=self.config.min_value, max=self.config.max_value)
+        return array.astype(self.config.dtype)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_config
+class LogNormalInitializerConfig(InitializerConfig):
+    """
+        Configuration for `LogNormalInitializer`.
+
+        Parameters
+        ----------
+        dtype : DTypeLike, default jnp.float16
+            Dtype of the produced array.
+        mu : float, default 0
+            Mean (“centre”) of the distribution.
+        sigma : float, default 1
+            Standard deviation (spread or “width”) of the distribution. Must be non-negative.
+        min_value : int or float or None, default None
+            Lower clip applied after drawing.
+        max_value : int or float or None, default None
+            Upper clip applied after drawing.
+    """
+    __class_ref__: tp.ClassVar[str] = 'LogNormalInitializer'
+
+    mu: float = dc.field(
+        default = 0, 
+        metadata = {
+            'validators': [
+                TypeValidator,
+            ],
+            'description': 'Mean (“centre”) of the distribution.',
+        })
+    
+    sigma: float = dc.field(
+        default = 1.0, 
+        metadata = {
+            'validators': [
+                TypeValidator,
+                PositiveValidator,
+            ],
+            'description': 'Standard deviation (spread or “width”) of the distribution.',
+        })
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_initializer
+class LogNormalInitializer(Initializer):
+    """
+        Draws every entry uniformly from ``[0, scale)``.
+
+        Parameters
+        ----------
+        config : LogNormalInitializerConfig, optional
+            Initializer configuration. Its fields may also be given as keyword arguments.
+
+        Notes
+        -----
+        ``min_value`` and ``max_value`` clip the result, so they narrow the range rather than
+        shift it.
+
+        See Also
+        --------
+        SparseLogNormalInitializer : The same draw with a fraction of the entries zeroed.
+    """
+    config: LogNormalInitializerConfig
+
+    def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
+        """
+            Draws every entry uniformly from ``[0, scale)``.
+
+            Parameters
+            ----------
+            key : jax.Array
+                PRNG key.
+            shape : tuple of int
+                Shape of the array to draw.
+
+            Returns
+            -------
+            jax.Array
+                The drawn array, clipped to ``[min_value, max_value]`` and cast to ``dtype``.
+        """
+        array = self.config.mu + jax.random.lognormal(key, shape=shape, sigma=self.config.sigma)
+        # Clip Min-Max
+        array = jnp.clip(array, min=self.config.min_value, max=self.config.max_value)
+        return array.astype(self.config.dtype)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_config
+class SparseLogNormalInitializerConfig(LogNormalInitializerConfig):
+    """
+        Configuration for `SparseLogNormalInitializer`.
+
+        Parameters
+        ----------
+        dtype : DTypeLike, default jnp.float16
+            Dtype of the produced array.
+        mu : float, default 0
+            Mean (“centre”) of the distribution.
+        sigma : float, default 1
+            Standard deviation (spread or “width”) of the distribution. Must be non-negative.
+        density : float, default 0.2
+            Expected fraction of non-zero entries.
+        min_value : int or float or None, default None
+            Lower clip applied after drawing.
+        max_value : int or float or None, default None
+            Upper clip applied after drawing.
+    """
+    __class_ref__: tp.ClassVar[str] = 'SparseLogNormalInitializer'
+
+    density: float = dc.field(
+        default = 0.2, 
+        metadata = {
+            'validators': [
+                TypeValidator,
+                ZeroOneValidator,
+            ],
+            'description': 'Expected ratio of non-zero entries in the output array.',
+        })
+    
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_initializer
+class SparseLogNormalInitializer(LogNormalInitializer):
+    """
+        Draws every entry uniformly from ``[0, scale)``.
+
+        Parameters
+        ----------
+        config : SparseLogNormalInitializerConfig, optional
+            Initializer configuration. Its fields may also be given as keyword arguments.
+
+        Notes
+        -----
+        ``min_value`` and ``max_value`` clip the result, so they narrow the range rather than
+        shift it.
+
+        See Also
+        --------
+        SparseSparseLogNormalInitializer : The same draw with a fraction of the entries zeroed.
+    """
+    config: SparseLogNormalInitializerConfig
+
+    def __call__(self, key: jax.Array, shape: tuple[int, ...]) -> jax.Array:
+        """
+            Draws every entry uniformly from ``[0, scale)``.
+
+            Parameters
+            ----------
+            key : jax.Array
+                PRNG key.
+            shape : tuple of int
+                Shape of the array to draw.
+
+            Returns
+            -------
+            jax.Array
+                The drawn array, clipped to ``[min_value, max_value]`` and cast to ``dtype``.
+        """
+        key1, key2 = jax.random.split(key, 2)
+        array = self.config.mu + jax.random.lognormal(key1, shape=shape, sigma=self.config.sigma)
+        # Zero mask
+        mask = jax.random.uniform(key2, shape, dtype=jnp.float16) < self.config.density
+        array = jnp.where(mask, array, 0)
+        # Clip Min-Max
+        array = jnp.clip(array, min=self.config.min_value, max=self.config.max_value)
+        return array.astype(self.config.dtype)
+    
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
