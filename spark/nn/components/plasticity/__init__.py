@@ -18,6 +18,10 @@ from spark.nn.components.plasticity.quadruplet_rule import (
     QuadrupletRule, QuadrupletRuleConfig,
     ModulatedQuadrupletRule, ModulatedQuadrupletRuleConfig,
 )
+from spark.nn.components.plasticity.btsp import (
+    BTSPRule, BTSPRuleConfig, 
+    ModulatedBTSPRule, ModulatedBTSPRuleConfig
+)
 
 __all__ = [
     'Plasticity', 'PlasticityConfig', 'PlasticityOutput',
@@ -30,6 +34,8 @@ __all__ = [
     'ModulatedHebbianRule', 'ModulatedHebbianRuleConfig',
     'ModulatedOjaRule', 'ModulatedOjaRuleConfig',
     'ModulatedZenkeRule', 'ModulatedZenkeRuleConfig',
+    'BTSPRule', 'BTSPRuleConfig', 
+    'ModulatedBTSPRule', 'ModulatedBTSPRuleConfig',
 ]
 
 #################################################################################################################################################
