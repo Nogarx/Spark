@@ -332,19 +332,22 @@ class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass
                     else:
                         module_output_ports = module_specs.module_cls._get_output_specs()
                         module_property_ports = module_specs.module_cls._get_property_specs()
-                if not port_name in module_output_ports and not port_name in module_property_ports:
+                # A property is state, not something the step produces: probes record it.
+                if port_name in module_property_ports:
+                    raise ValueError(
+                        f'"{port_name}" is a property of module "{module_specs.name}", not an output port, and cannot be '
+                        f'the output "{out_name}" of the controller. A probe records a property.'
+                    )
+                if not port_name in module_output_ports:
                     raise ValueError(
                         f'Invalid output port name "{port_name}" in module "{module_specs.name}". '
-                        f'Module "{module_specs.name}" only defines the following ports: '
-                        f'\nOutput ports: {list(module_output_ports.keys())}. '
-                        f'\nProperty ports: {list(module_property_ports.keys())}. '
+                        f'Module "{module_specs.name}" only defines the following output ports: '
+                        f'{list(module_output_ports.keys())}.'
                     )
                 # Register output
-                is_property = True if port_name in module_property_ports else False 
-                module_out_spec = module_property_ports[port_name] if is_property else module_output_ports[port_name]
                 controller_output_specs[out_name] = {
-                    'map': PortMap(origin=module_specs.name, port=port_name, is_property=is_property),
-                    'spec': module_out_spec
+                    'map': PortMap(origin=module_specs.name, port=port_name),
+                    'spec': module_output_ports[port_name]
                 }
         return controller_output_specs
 

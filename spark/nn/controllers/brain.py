@@ -140,7 +140,11 @@ class Brain(Controller, metaclass=BrainMeta):
 				# TODO: It is unclear whether it is necessary or ideal to support multi-port inputs for effects.
 				# Currently we only accept the first defined input for a property port. 
 				port_map = ports_list[0]
-				setattr(getattr(self, name), property_name, outputs[port_map.origin, port_map.port])
+				if port_map.is_property:
+					value = getattr(getattr(self, port_map.origin), port_map.port)
+				else:
+					value = outputs[port_map.origin][port_map.port]
+				setattr(getattr(self, name), property_name, value)
 		# Gather output
 		return {
 			name: outputs[origin][port] for name, origin, port in self._contoller_output_map 

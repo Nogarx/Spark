@@ -316,6 +316,74 @@ class TestBrain:
         with pytest.raises(Exception):
             spark.nn.Brain(config=config)(signal=self._signal())
 
+    def test_a_property_named_as_an_output_is_refused(self) -> None:
+        config = spark.nn.BrainConfig(modules_specs=[
+            spark.ModuleSpecs(
+                name = 'spiker',
+                module_cls = spark.nn.interfaces.PoissonSpiker,
+                inputs = {'signal': [spark.PortMap(origin='__call__', port='signal')]},
+            ),
+            spark.ModuleSpecs(
+                name = 'synapses',
+                module_cls = spark.nn.synapses.LinearSynapses,
+                inputs = {'spikes': [spark.PortMap(origin='spiker', port='spikes')]},
+                outputs = {'weights': 'kernel'},
+                config = spark.nn.synapses.LinearSynapsesConfig(units=(4,)),
+            ),
+        ])
+        with pytest.raises(ValueError, match='"kernel" is a property of module "synapses", not an output port'):
+            spark.nn.Brain(config=config)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TestBrainWithEffects:
+    """
+        A brain whose modules include a plasticity rule writing the kernel of a synapse.
+    """
+
+    @pytest.fixture
+    def brain(self):
+        config = spark.nn.BrainConfig(modules_specs=[
+            spark.ModuleSpecs(
+                name = 'spiker',
+                module_cls = spark.nn.interfaces.PoissonSpiker,
+                inputs = {'signal': [spark.PortMap(origin='__call__', port='signal')]},
+            ),
+            spark.ModuleSpecs(
+                name = 'synapses',
+                module_cls = spark.nn.synapses.LinearSynapses,
+                inputs = {'spikes': [spark.PortMap(origin='spiker', port='spikes')]},
+                effects = {'kernel': [spark.PortMap(origin='rule', port='kernel')]},
+                config = spark.nn.synapses.LinearSynapsesConfig(units=(4,), kernel__scale=20000),
+            ),
+            spark.ModuleSpecs(
+                name = 'soma',
+                module_cls = spark.nn.somas.LeakySoma,
+                inputs = {'current': [spark.PortMap(origin='synapses', port='currents')]},
+                outputs = {'spikes': 'spikes'},
+                config = spark.nn.somas.LeakySomaConfig(units=(4,)),
+            ),
+            spark.ModuleSpecs(
+                name = 'rule',
+                module_cls = spark.nn.plasticity.HebbianRule,
+                inputs = {
+                    'pre_spikes': [spark.PortMap(origin='spiker', port='spikes')],
+                    'post_spikes': [spark.PortMap(origin='soma', port='spikes')],
+                    'kernel': [spark.PortMap(origin='synapses', port='kernel', is_property=True)],
+                },
+            ),
+        ])
+        return spark.nn.Brain(config=config)
+
+    def test_the_rule_writes_the_kernel_after_each_step(self, brain) -> None:
+        signal = spark.FloatArray(jnp.ones((8,), dtype=jnp.float16))
+        brain(signal=signal)
+        first = np.asarray(brain.synapses.kernel.value)
+        for _ in range(50):
+            brain(signal=signal)
+            np.testing.assert_array_equal(np.asarray(brain.synapses.kernel.value), np.asarray(brain._cache['rule', 'kernel'].value))
+        assert not np.array_equal(np.asarray(brain.synapses.kernel.value), first)
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class TestBrainWithArrayConfigurations:
