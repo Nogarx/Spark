@@ -73,6 +73,15 @@ class RecordingHooks(tp.Protocol):
     def warmup(self, function: Jit, args: tuple, kwargs: dict) -> int:
         ...
 
+    def parts(
+            self,
+            function: Jit,
+            parts: dict[tp.Hashable, tuple[tuple, dict]],
+            owner: tp.Callable[[tuple[str, ...], str], tp.Hashable],
+            device: tp.Any,
+        ) -> dict[tp.Hashable, tp.Any]:
+        ...
+
 _hooks: RecordingHooks | None = None
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

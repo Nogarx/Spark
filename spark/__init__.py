@@ -26,6 +26,9 @@ from spark.core.registry import (
 # NN submodule
 from spark import nn
 
+# Partition. It lives with the controllers, since it is built on the Brain.
+from spark.nn.controllers.partition import Partition
+
 # Recording
 from spark import recording
 
@@ -76,6 +79,7 @@ __all__ = [
     'property',
     'validation',
     'jit', 'scan', 'eval_shape', 'split', 'merge',
+    'Partition',
     'GraphEditor', 'RunViewer',
     'register_module', 'register_neuron', 'register_initializer', 'register_payload', 'register_config', 'register_cfg_validator', 'register_interface',
     'register_neuron_from_config', 'register_neuron_from_config_file',
