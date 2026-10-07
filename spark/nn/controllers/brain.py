@@ -3,8 +3,11 @@
 #################################################################################################################################################
 
 from __future__ import annotations
+import os
 import typing as tp
+import dataclasses as dc
 from spark.core.backend import data
+from spark.core.config_validation import TypeValidator
 from spark.core.registry import register_module, register_config
 from spark.core.cache import Cache
 from spark.core.specs import PortSpecs, PortMap
@@ -37,8 +40,20 @@ class BrainConfig(ControllerConfig):
 			system when omitted.
 		dt : float, default 1.0
 			Integration step, in ms. Handed down to every module.
+
+		Notes
+		-----
+		A brain holds no controller above it: its seed is drawn when the configuration is made, so a
+		configuration written to a file gives the same brain when read back.
 	"""
-	pass
+	seed: int = dc.field(
+		default_factory=lambda: int.from_bytes(os.urandom(4), 'little'),
+		metadata={
+			'validators': [
+				TypeValidator,
+			],
+			'description': 'Seed for internal random processes.',
+		})
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

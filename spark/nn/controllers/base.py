@@ -49,8 +49,9 @@ class ControllerConfig(SparkConfig):
             The modules the controller holds and how their ports are wired. Each entry names a
             module, its class, its configuration, and where each of its inputs comes from.
         seed : int, optional
-            Seed for the random draws of the controller and its modules. Drawn from the operating
-            system when omitted.
+            Seed for the random draws of the controller and its modules. When omitted, derived
+            from the seed of the controller holding this one and its name, or drawn from the
+            operating system for a controller on its own.
         dt : float, default 1.0
             Integration step, in ms.
 
@@ -59,6 +60,10 @@ class ControllerConfig(SparkConfig):
         ``dt`` is handed down to every configuration the controller contains, so the modules of
         one controller always integrate on the same clock. A ``dt`` set on a module directly is
         overwritten.
+
+        A module given no seed takes one derived from the seed of the controller and the name of
+        the module, so a seeded controller gives the same modules in every process, and two
+        modules of one controller differ. A seed given to a module is kept.
     """
     modules_specs: tuple[ModuleSpecs, ...] = dc.field(
         metadata = {
@@ -66,13 +71,13 @@ class ControllerConfig(SparkConfig):
             ],
             'description': 'Controller modules.',
         })
-    seed: int = dc.field(
-        default_factory=lambda: int.from_bytes(os.urandom(4), 'little'), 
+    seed: int | None = dc.field(
+        default=None,
         metadata={
             'validators': [
                 TypeValidator,
             ], 
-            'description': 'Seed for internal random processes.',
+            'description': 'Seed for internal random processes. Derived from the controller holding this one when unset.',
         })
     dt: float = dc.field(
         default=1.0, 
@@ -105,6 +110,7 @@ class ControllerConfig(SparkConfig):
     def __post_init__(self,) -> None:
         # Every module of a controller integrates on the same clock.
         self._synchronize(_s_dt=self.dt)
+        self._derive_seeds()
 
 ConfigT = tp.TypeVar("ConfigT", bound=ControllerConfig)
 
@@ -174,6 +180,10 @@ class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass
             self.config = self.default_config(**kwargs)
         else:
             self.config = config.merge(**kwargs)
+        # A controller given no seed draws one, kept in its configuration, from which the seeds of its modules
+        # are derived.
+        if getattr(self.config, 'seed', 0) is None:
+            self.config = self.config.merge(seed=int.from_bytes(os.urandom(4), 'little'))
         # Rng
         seed = getattr(self.config, 'seed', None)
         if seed is not None:

@@ -9,6 +9,7 @@ import jax
 import copy
 import lzma
 import json
+import zlib
 import inspect
 import logging
 import warnings
@@ -167,6 +168,14 @@ def is_module_specs_field(field: dc.Field, value: tp.Any = None) -> bool:
 		if all(isinstance(v, dict) and {'name', 'module_cls'} <= v.keys() for v in value):
 			return True
 	return False
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _derived_seed(seed: int, name: str) -> int:
+	"""
+		Generates a deterministic seed from a root seed and the name string.
+	"""
+	return int(np.random.SeedSequence([seed % 2**32, zlib.crc32(name.encode())]).generate_state(1)[0])
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -889,6 +898,55 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 
 
 
+	def _held_configs(self) -> tp.Iterator[tuple[str, 'SparkConfig']]:
+		"""
+			Yields the configurations this one holds, with their names: those of the modules of a controller, by
+			module name, and nested configurations, by field name.
+		"""
+		for field in dc.fields(self):
+			value = getattr(self, field.name, None)
+			if is_module_specs_field(field, value):
+				for spec in value or ():
+					if isinstance(spec.config, SparkConfig):
+						yield spec.name, spec.config
+			elif isinstance(value, SparkConfig):
+				yield field.name, value
+
+
+
+	def _derive_seeds(self) -> None:
+		"""
+			Gives every configuration this one holds, at any depth, that has no seed, the seed `_derived_seed`
+			draws from the seed of the configuration holding it and its name. Does nothing while this one has
+			no seed.
+
+			NOTE: Writes the held configurations in place. Called from ``__post_init__``, on configurations that
+			the construction of this one copied.
+		"""
+		seed = getattr(self, 'seed', None)
+		if seed is None:
+			return
+		for name, config in self._held_configs():
+			if hasattr(config, 'seed') and config.seed is None:
+				config.seed = _derived_seed(seed, name)
+			config._derive_seeds()
+
+
+
+	def _clear_seeds(self) -> None:
+		"""
+			Unsets the seed of this configuration and of every configuration it holds, at any depth, so that each
+			is derived from the configuration holding it.
+
+			NOTE: Writes the configurations in place.
+		"""
+		if hasattr(self, 'seed'):
+			self.seed = None
+		for _, config in self._held_configs():
+			config._clear_seeds()
+
+
+
 	def to_dict(self,) -> dict[str, dict[str, tp.Any]]:
 		"""
 			Serializes the configuration to a dictionary.
@@ -1066,19 +1124,21 @@ class DefaultSparkConfig(SparkConfig):
         Parameters
         ----------
         seed : int, optional
-            Seed for the random draws of the module. Drawn from the operating system when omitted.
+            Seed for the random draws of the module. When omitted, derived from the seed of the
+            controller holding the module and the name of the module, or drawn from the operating
+            system for a module on its own.
         dtype : DTypeLike, default jnp.float16
             Dtype used for the internal state.
         dt : float, default 1.0
             Integration step, in ms.
     """
-    seed: int = dc.field(
-        default_factory=lambda: int.from_bytes(os.urandom(4), 'little'), 
+    seed: int | None = dc.field(
+        default=None,
         metadata={
             'validators': [
                 TypeValidator,
             ], 
-            'description': 'Seed for internal random processes.',
+            'description': 'Seed for internal random processes. Derived from the controller holding the module when unset.',
         })
     dtype: DTypeLike = dc.field(
         default=jnp.float16, 

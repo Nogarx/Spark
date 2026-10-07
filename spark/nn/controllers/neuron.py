@@ -45,8 +45,9 @@ class NeuronConfig(ControllerConfig):
 		inhibitory_rate : float, default 0.2
 			Fraction of the pool that is inhibitory. Must lie in ``[0, 1]``.
 		seed : int, optional
-			Seed for the random draws of the neuron and its modules. Drawn from the operating
-			system when omitted.
+			Seed for the random draws of the neuron and its modules. When omitted, derived from
+			the seed of the brain holding the neuron and its name, or drawn from the operating
+			system for a neuron on its own.
 		dt : float, default 1.0
 			Integration step, in ms.
 
@@ -80,6 +81,7 @@ class NeuronConfig(ControllerConfig):
 		# NOTE: Convinience controller synchronization of dt's and unit's. 
 		# Both are 'reserved' names to denote integration times and the number of neurons in the pool.
 		self._synchronize(_s_dt=self.dt, _s_units=self.units)
+		self._derive_seeds()
 	
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

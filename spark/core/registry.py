@@ -606,6 +606,7 @@ def _construct_neuron_config_cls(cls_name: str, config: NeuronConfig) -> type[Ne
     from spark.nn.controllers.neuron import NeuronConfig
     # Shallow copy
     config = copy.deepcopy(config)
+    config._clear_seeds()
     # Cls namespace
     cls_name = f'{cls_name}Config'
     ns_annotations: dict[str, tp.Any] = {}

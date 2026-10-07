@@ -18,7 +18,7 @@ from functools import wraps
 import spark.core.utils as utils
 import spark.core.signature_parser as sig_parser
 from spark.core.specs import PortSpecs
-from spark.core.config import SparkConfig
+from spark.core.config import SparkConfig, _derived_seed
 from spark.core.checkpoint import Checkpointable
 from spark.core.backend import Variable
 from spark.core.decorators import spark_property
@@ -157,7 +157,9 @@ class SparkModule(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT, InputT], 
         dt = getattr(self.config, 'dt', None)
         if dt is not None:
             self._dt = dt
-        # Random engine key.
+        # Random engine key. A module given no seed draws one, kept in its configuration.
+        if getattr(self.config, 'seed', 0) is None:
+            self.config = self.config.merge(seed=int.from_bytes(os.urandom(4), 'little'))
         seed = getattr(self.config, 'seed', int.from_bytes(os.urandom(4), 'little'))
         self._seed = seed
         self.rng = Variable(jax.random.PRNGKey(self._seed))
@@ -218,6 +220,7 @@ class SparkModule(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT, InputT], 
         # Build model.
         self.build(**abc_kwargs)
         self.__built__ = True
+        self._seed_tracers()
 
         # TODO: The correct approach to build the model is through eval_shape. 
         # However, the SpikeArray doesn't know how to deal with ShapeDtypeStruct's
@@ -235,6 +238,21 @@ class SparkModule(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT, InputT], 
         self._construct_output_specs(abc_output)
         # Contruct property specs.
         self._construct_property_specs()
+
+
+
+    def _seed_tracers(self) -> None:
+        """
+            Sets the seeds of every tracer within the module with a seed derived from the seed of the module.
+        """
+        from spark.core.tracers import BaseTracer
+        def seed(holder: tp.Any, holder_seed: int) -> None:
+            for name, value in list(vars(holder).items()):
+                if isinstance(value, BaseTracer):
+                    value._seed = _derived_seed(holder_seed, name)
+                    value.rng.value = jax.random.PRNGKey(value._seed)
+                    seed(value, value._seed)
+        seed(self, self._seed)
 
 
 
