@@ -17,6 +17,7 @@ from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.somas.base import Soma, SomaConfig
 from spark.nn.initializers.base import Initializer
 from spark.nn.components.somas.adaptive import AdaptiveSoma, AdaptiveSomaConfig
+from spark.nn.components.somas.coupled import CoupledSoma, CoupledSomaConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -270,6 +271,87 @@ class AdaptiveExponentialSoma(AdaptiveSoma, ExponentialSoma):
     config: AdaptiveExponentialSomaConfig
 
     def __init__(self, config: AdaptiveExponentialSomaConfig | None = None, **kwargs) -> None:
+        # Initialize super.
+        super().__init__(config=config, **kwargs)
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+@register_config
+class CoupledAdaptiveExponentialSomaConfig(CoupledSomaConfig, AdaptiveExponentialSomaConfig):
+    """
+        Configuration for `CoupledAdaptiveExponentialSoma`.
+
+        Union of `AdaptiveExponentialSomaConfig` and `CoupledSomaConfig`. It declares no field
+        of its own.
+    """
+    pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_module
+class CoupledAdaptiveExponentialSoma(CoupledSoma, AdaptiveExponentialSoma):
+    r"""
+        Adaptive exponential integrate-and-fire soma coupled to a dendrite.
+
+        `AdaptiveExponentialSoma` composed with `CoupledSoma`. With a `CalciumDendrite` on the
+        other side of the coupling this is the somatic compartment of the Ca-AdEx neuron.
+
+        Parameters
+        ----------
+        config : CoupledAdaptiveExponentialSomaConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        current : CurrentArray
+            Current delivered to the membrane, in pA.
+        inhibition_mask : BooleanMask, optional
+            Marks the inhibitory units. Supplied by the enclosing `Neuron`.
+
+        Output Ports
+        ------------
+        spikes : SpikeArray
+            Non-zero where the potential crossed the threshold on this step.
+
+        Properties
+        ----------
+        potential : PotentialArray
+            Membrane potential, relative to ``potential_rest``. Read only.
+        coupling_current : CurrentArray
+            Current injected by the coupled compartment, in pA. Writable.
+
+        Notes
+        -----
+        The somatic equation of the Ca-AdEx neuron reads
+
+        .. math::
+            C_m \dot V = -g_L (V - E_L) + g_L \Delta_T \exp\frac{V - V_T}{\Delta_T}
+                         - g_w w + I + g_C (V_d - V)
+
+        with :math:`\tau_w \dot w = a (V - E_L) - w` and :math:`w \leftarrow w + b` at a spike.
+        It maps onto this class as ``potential_tau = C_m / g_L``, ``resistance = 1 / g_L``,
+        ``rheobase_threshold`` :math:`= V_T`, ``threshold`` the cutoff of the upswing,
+        ``adaptation_delta`` :math:`= g_w b` and ``adaptation_subthreshold`` :math:`= g_w a`.
+        `CaAdExNeuron` carries the fitted values.
+
+        References
+        ----------
+        .. [1] E. Pastorelli et al., "Simplified two-compartment neuron with calcium dynamics
+               capturing brain-state specific apical-amplification, -isolation and -drive",
+               Frontiers in Computational Neuroscience 19, 1566196, 2025.
+               https://doi.org/10.3389/fncom.2025.1566196
+
+        See Also
+        --------
+        CoupledSoma : The coupling mechanism.
+        AdaptiveExponentialSoma : The membrane integration and the adaptation mechanisms.
+        CalciumDendrite : The distal compartment of the Ca-AdEx neuron.
+    """
+    config: CoupledAdaptiveExponentialSomaConfig
+
+    def __init__(self, config: CoupledAdaptiveExponentialSomaConfig | None = None, **kwargs) -> None:
         # Initialize super.
         super().__init__(config=config, **kwargs)
 

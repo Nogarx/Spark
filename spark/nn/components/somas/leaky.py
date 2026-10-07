@@ -17,6 +17,7 @@ from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.nn.components.somas.base import Soma, SomaConfig
 from spark.nn.initializers.base import Initializer
 from spark.nn.components.somas.adaptive import AdaptiveSoma, AdaptiveSomaConfig
+from spark.nn.components.somas.coupled import CoupledSoma, CoupledSomaConfig
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -224,6 +225,63 @@ class AdaptiveLeakySoma(AdaptiveSoma, LeakySoma):
     config: AdaptiveLeakySomaConfig
 
     def __init__(self, config: AdaptiveLeakySomaConfig | None = None, **kwargs) -> None:
+        # Initialize super.
+        super().__init__(config=config, **kwargs)
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################
+
+@register_config
+class CoupledLeakySomaConfig(CoupledSomaConfig, LeakySomaConfig):
+    """
+        Configuration for `CoupledLeakySoma`.
+
+        Union of `LeakySomaConfig` and `CoupledSomaConfig`. It declares no field of its own.
+    """
+    pass
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@register_module
+class CoupledLeakySoma(CoupledSoma, LeakySoma):
+    """
+        Leaky integrate-and-fire soma coupled to a dendrite.
+
+        `LeakySoma` composed with `CoupledSoma`.
+
+        Parameters
+        ----------
+        config : CoupledLeakySomaConfig, optional
+            Model configuration. Its fields may also be given as keyword arguments.
+
+        Input Ports
+        -----------
+        current : CurrentArray
+            Current delivered to the membrane, in pA.
+        inhibition_mask : BooleanMask, optional
+            Marks the inhibitory units. Supplied by the enclosing `Neuron`.
+
+        Output Ports
+        ------------
+        spikes : SpikeArray
+            Non-zero where the potential crossed the threshold on this step.
+
+        Properties
+        ----------
+        potential : PotentialArray
+            Membrane potential, relative to ``potential_rest``. Read only.
+        coupling_current : CurrentArray
+            Current injected by the coupled compartment, in pA. Writable.
+
+        See Also
+        --------
+        CoupledSoma : The coupling mechanism.
+        LeakySoma : The membrane integration.
+    """
+    config: CoupledLeakySomaConfig
+
+    def __init__(self, config: CoupledLeakySomaConfig | None = None, **kwargs) -> None:
         # Initialize super.
         super().__init__(config=config, **kwargs)
 
