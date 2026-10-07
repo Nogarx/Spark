@@ -27,6 +27,8 @@ def _requested_device() -> str:
 TEST_DEVICE = _requested_device()
 if TEST_DEVICE not in DEVICES:
     raise SystemExit(f'Unknown device "{TEST_DEVICE}". Pick one of: {", ".join(DEVICES)}.')
+# The workers of pytest-xdist do not see the command line: they read the device from here.
+os.environ['SPARK_TEST_DEVICE'] = TEST_DEVICE
 if TEST_DEVICE == 'cpu':
     os.environ['JAX_PLATFORMS'] = 'cpu'
 else:

@@ -34,9 +34,8 @@ jobs:
     - name: Install Spark
       run: |
         python -m pip install --upgrade pip
-        python -m pip install -e ".[editor]"
-        python -m pip install pytest
+        python -m pip install -e ".[editor,test]"
 
     # NOTE: A test that needs a GPU to pass is a test may need a revision.
     - name: Run the tests
-      run: pytest -q --device=cpu
+      run: pytest -q --device=cpu -n auto

@@ -6,10 +6,14 @@ and Flax NNX. This file is a short orientation for agents using or changing the 
 
 ## Install and test
 
-- Python 3.12 or later. From a clone: `pip install -e ".[editor]"`. The `editor` extra adds PySide6, which
-  the graph editor and the run viewer need.
+- Python 3.12 or later. From a clone: `pip install -e ".[editor,test]"`. The `editor` extra adds PySide6,
+  which the graph editor and the run viewer need; `test` adds pytest and pytest-xdist.
 - `pytest` from the root runs `tests/`, where every `*.py` file is a test module. `--device=cpu|gpu|any`
   picks the JAX device. Without a display, Qt tests need `QT_QPA_PLATFORM=offscreen`.
+- `-n <workers>` runs the tests in parallel. A worker holds about 1.7 GB, so memory sets the count, not the
+  cores: `-n 8` runs the suite in about 100 s and 14 GB, against 400 s in one process. The tests of a module
+  that computes a fixture once for all of them are kept on one worker by
+  `pytestmark = pytest.mark.xdist_group('<module>')`.
 - The version is the git tag of the release (setuptools-scm). There is no version number to edit.
 
 ## Models

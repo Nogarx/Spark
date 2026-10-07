@@ -11,6 +11,10 @@ import flax.nnx as nnx
 import spark
 from cases import CASES, STEPS, collect
 
+# The tests of this module share fixtures computed once per worker: with pytest-xdist and --dist loadgroup,
+# they run on one worker.
+pytestmark = pytest.mark.xdist_group('verification')
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
