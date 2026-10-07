@@ -56,6 +56,11 @@ SHARED_DELIMITER = '_s_'
 	Prefix marking an argument that is handed down to every configuration below ("_s_units").
 """
 
+CONFIG_EXTENSION = '.scfg'
+"""
+	Extension of the files written by `SparkConfig.to_file`.
+"""
+
 _MODULE_SPECS_ANNOTATION = re.compile(r'\b(?:list|tuple|set|frozenset|Sequence|Iterable|Collection)\s*\[\s*([\w\.]+)')
 """
 	Reads the element of a collection annotation, whatever container and import alias it was written with.
@@ -1000,14 +1005,14 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 			compress: bool = True,
 			verbose: bool = True,
 			metadata: dict[str, tp.Any] | None = None,
-		) -> None:
+		) -> pl.Path:
 		"""
 			Writes the configuration to a .scfg file.
 
 			Parameters
 			----------
 			file_path : str
-				Where to write.
+				Where to write. ``.scfg`` is added to the name when it does not end with it.
 			compress : bool, default True
 				Compress the file.
 			verbose : bool, default True
@@ -1015,9 +1020,14 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 			metadata : dict, optional
 				Written beside the configuration. `from_file` does not read it back; use
 				`metadata_from_file` for that. The editor stores node positions here.
+
+			Returns
+			-------
+			pathlib.Path
+				The file written.
 		"""
 		# Validate path
-		path = pl.Path(file_path)
+		path = utils.with_extension(file_path, CONFIG_EXTENSION)
 		# Ensure the parent directory exists.
 		path.parent.mkdir(parents=True, exist_ok=True)
 		# Write to file.
@@ -1041,6 +1051,7 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 			temp_path.unlink(missing_ok=True)
 		if verbose:
 			print(f'Configuration saved to "{path}".')
+		return path
 
 
 
@@ -1055,7 +1066,7 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 			Parameters
 			----------
 			file_path : str
-				File to read.
+				File to read, with or without its ``.scfg`` extension.
 
 			Returns
 			-------
@@ -1063,7 +1074,7 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 				What the writer stored, empty when it stored nothing.
 		"""
 		from spark.core.serializer import METADATA_KEY
-		path = pl.Path(file_path)
+		path = utils.file_with_extension(file_path, CONFIG_EXTENSION)
 		if not path.is_file():
 			raise FileNotFoundError(f'No file found at the specified path: "{path}".')
 		with open(path, 'rb') as f:
@@ -1083,13 +1094,13 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 			Parameters
 			----------
 			file_path : str
-				File to read.
+				File to read, with or without its ``.scfg`` extension.
 
 			Returns
 			-------
 			SparkConfig
 		"""
-		path = pl.Path(file_path)
+		path = utils.file_with_extension(file_path, CONFIG_EXTENSION)
 		# Validate path
 		if not path.is_file():
 			raise FileNotFoundError(f'No file found at the specified path: "{path}".')

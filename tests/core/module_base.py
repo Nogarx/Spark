@@ -234,6 +234,20 @@ class TestCheckpoint:
         np.testing.assert_array_equal(np.asarray(Counter.from_checkpoint(path, verbose=False).total.value), np.asarray(module.total.value))
         assert [p.name for p in tmp_path.iterdir()] == ['counter.spark']            # nothing left aside
 
+    def test_a_name_with_a_dot_keeps_it(self, signal, tmp_path) -> None:
+        module = Counter()
+        module(signal=signal)
+        path = module.checkpoint(tmp_path / 'counter.v2', verbose=False)
+        assert path.name == 'counter.v2.spark'
+        assert module.checkpoint(path, overwrite=True, verbose=False) == path
+
+    def test_a_file_is_read_without_its_extension(self, signal, tmp_path) -> None:
+        module = Counter(start=2.0)
+        module(signal=signal)
+        module.checkpoint(tmp_path / 'counter', verbose=False)
+        restored = Counter.from_checkpoint(tmp_path / 'counter', verbose=False)
+        np.testing.assert_array_equal(np.asarray(restored.total.value), np.asarray(module.total.value))
+
     def test_a_module_not_built_is_not_saved(self, tmp_path) -> None:
         with pytest.raises(RuntimeError, match='not yet built'):
             Counter().checkpoint(tmp_path / 'counter', verbose=False)

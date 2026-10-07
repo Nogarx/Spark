@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QSettings, Signal, QSize
 from PySide6.QtGui import QColor
+import spark.core.utils as utils
 from spark.graph_editor.styles.manager import STYLES
 
 #################################################################################################################################################
@@ -580,6 +581,7 @@ class PreferencesDialog(QDialog):
         file_path, _ = QFileDialog.getSaveFileName(self, 'Save Custom Style', 'custom_style.json', 'JSON Files (*.json)')
         if not file_path:
             return None
+        file_path = str(utils.with_extension(file_path, '.json'))
         self.settings.setValue('style_config_path', file_path)
         return file_path
 
@@ -609,6 +611,7 @@ class PreferencesDialog(QDialog):
         file_path, _ = QFileDialog.getSaveFileName(self, 'Export Styles As', 'custom_style.json', 'JSON Files (*.json)')
         if not file_path:
             return
+        file_path = str(utils.with_extension(file_path, '.json'))
         if self._write(file_path):
             self.settings.setValue('style_config_path', file_path)
             self._apply_styles()

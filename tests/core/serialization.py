@@ -100,6 +100,29 @@ class TestRoundTrip:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class TestExtension:
+    """
+        A configuration is written to a file whose name ends with .scfg, and read back with or without it.
+    """
+
+    @pytest.mark.parametrize('name, written', [('spiker', 'spiker.scfg'), ('spiker.scfg', 'spiker.scfg'), ('spiker.v2', 'spiker.v2.scfg')])
+    def test_the_extension_is_added_when_missing(self, tmp_path, spiker_config, name, written) -> None:
+        path = spiker_config.to_file(tmp_path / name, verbose=False)
+        assert path == tmp_path / written
+        assert [p.name for p in tmp_path.iterdir()] == [written]
+
+    def test_a_file_is_read_without_its_extension(self, tmp_path, spiker_config) -> None:
+        spiker_config.to_file(tmp_path / 'spiker', verbose=False, metadata={'note': 1})
+        assert TopologicalLinearSpikerConfig.from_file(tmp_path / 'spiker').resolution == spiker_config.resolution
+        assert TopologicalLinearSpikerConfig.metadata_from_file(tmp_path / 'spiker') == {'note': 1}
+
+    def test_a_file_without_extension_is_read_as_it_is(self, tmp_path, spiker_config) -> None:
+        path = spiker_config.to_file(tmp_path / 'spiker', verbose=False)
+        path.rename(tmp_path / 'plain')
+        assert TopologicalLinearSpikerConfig.from_file(tmp_path / 'plain').resolution == spiker_config.resolution
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class TestOnDisk:
     """
         What the document itself holds.

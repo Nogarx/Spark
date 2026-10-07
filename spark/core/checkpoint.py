@@ -15,8 +15,14 @@ import tempfile
 
 import jax
 
+import spark.core.utils as utils
 from spark.core.config import SparkConfig
 from spark.core.backend import split, merge
+
+CHECKPOINT_EXTENSION = '.spark'
+"""
+    Extension of the files written by `Checkpointable.checkpoint`.
+"""
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -73,7 +79,7 @@ class Checkpointable:
             Parameters
             ----------
             path : str or path-like
-                Where to write. The suffix is replaced by ``.spark``.
+                Where to write. ``.spark`` is added to the name when it does not end with it.
             overwrite : bool, default False
                 Replace an existing file.
             verbose : bool, default True
@@ -101,7 +107,7 @@ class Checkpointable:
         import orbax.checkpoint as ocp
 
         model: tp.Any = self
-        tar_path = pathlib.Path(path).with_suffix('.spark')
+        tar_path = utils.with_extension(path, CHECKPOINT_EXTENSION)
         try:
             # Check if file exists
             if tar_path.exists() and not overwrite:
@@ -158,7 +164,7 @@ class Checkpointable:
             Parameters
             ----------
             path : str or path-like
-                File to read.
+                File to read, with or without its ``.spark`` extension.
             safe : bool, default True
                 Refuse a file whose configuration or state is not where expected, or that holds links.
             verbose : bool, default True
@@ -196,6 +202,7 @@ class Checkpointable:
         def safe_member(m: tarfile.TarInfo) -> bool:
             return not (m.issym() or m.islnk())
 
+        path = utils.file_with_extension(path, CHECKPOINT_EXTENSION)
         temp_dir = None
         try:
             # A file other than the one published is refused before anything in it is read.

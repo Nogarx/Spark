@@ -49,6 +49,11 @@ class TestModelExport:
         assert path.exists()
         assert path.suffix == '.scfg'
 
+    @pytest.mark.parametrize('name, written', [('model', 'model.scfg'), ('model.v2', 'model.v2.scfg')])
+    def test_the_extension_is_added_when_missing(self, tmp_path, qapp, name, written) -> None:
+        assert session_io.export_model(_graph(units=(8,), complete=True), tmp_path / name) == tmp_path / written
+        assert [p.name for p in tmp_path.iterdir()] == [written]
+
     def test_an_empty_graph_is_refused(self, tmp_path, qapp) -> None:
         with pytest.raises(ValueError):
             session_io.export_model(_graph(), tmp_path / 'model.scfg')
@@ -281,6 +286,11 @@ class TestSessionSave:
         path = session_io.save_session(build(), tmp_path / 'session.sge')
         assert path.exists()
         assert path.suffix == '.sge'
+
+    @pytest.mark.parametrize('name, written', [('session', 'session.sge'), ('session.v2', 'session.v2.sge')])
+    def test_the_extension_is_added_when_missing(self, tmp_path, qapp, name, written) -> None:
+        assert session_io.save_session(_graph(units=(8,)), tmp_path / name) == tmp_path / written
+        assert [p.name for p in tmp_path.iterdir()] == [written]
 
     def test_a_graph_missing_a_connection_is_written_too(self, tmp_path, qapp) -> None:
         model = _graph(units=(8,), complete=True)
