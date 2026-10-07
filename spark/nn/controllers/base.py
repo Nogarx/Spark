@@ -600,18 +600,20 @@ class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass
                             # Module was already built grab, get the spec.
                             arg = modules_outputs[port_map.origin, port_map.port]
                             port_args.append(arg)
-                        elif port_map.origin in group:
+                        else:
                             # Module is not built yet, it must define a recurrent spec to be part of a cyclic dependency.
                             origin_module: SparkModule = getattr(self, port_map.origin)
-                            outputs, properties = origin_module.recurrent_contract()
-                            arg = properties[port_map.port] if port_map.is_property else outputs[port_map.port]
-                            port_args.append(arg)
-                        else:
-                            # Something weird happend. The constructor is trying to get something from a module that should have been called later.
-                            raise RuntimeError(
-                                f'Trying to get port from module "{port_map.origin}" for "{module_name}"... '
-                                f'418 I\'m a teapot.'
-                            )
+                            if origin_module.has_recurrent_contract():
+                                outputs, properties = origin_module.recurrent_contract()
+                                arg = properties[port_map.port] if port_map.is_property else outputs[port_map.port]
+                                port_args.append(arg)
+                            else:
+                                # The constructor is trying to get something from a module that should have been called later.
+                                raise RuntimeError(
+                                    f'Trying to get port from module "{port_map.origin}" for "{module_name}". '
+                                    f'However, "{port_map.origin}" does not implement "recurrent_contract". '
+                                    f'418 I\'m a teapot.'
+                                )
                     port_args = self._concatenate_payloads(port_args)
                     module_abc_args[port_name] = port_args
                 # Supply the inputs the controller owns and the graph does not carry. A declared
