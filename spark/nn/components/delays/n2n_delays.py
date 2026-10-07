@@ -18,7 +18,7 @@ from spark.core.backend import Variable, Constant
 from spark.core.registry import register_module, register_config
 from spark.core.config_validation import TypeValidator
 from spark.nn.components.delays.base import Delays, DelaysOutput
-from spark.nn.components.delays.n_delays import NDelaysConfig
+from spark.nn.components.delays.n_delays import NDelaysConfig, delays_kernel
 from spark.nn.initializers.base import Initializer
 
 #################################################################################################################################################
@@ -39,7 +39,8 @@ class N2NDelaysConfig(NDelaysConfig):
             past steps, which bounds every drawn delay.
         delays : jax.Array or Initializer, default UniformInitializerConfig()
             Delay of every (postsynaptic, presynaptic) pair, in steps. Drawn over
-            ``[1, ceil(max_delay / dt)]`` when an initializer is given.
+            ``[1, ceil(max_delay / dt)]`` when an initializer is given. A given array is taken
+            as it is, and every delay in it lies in that range.
     """
 
     units: tuple[int, ...] = dc.field(
@@ -111,14 +112,7 @@ class N2NDelays(Delays):
         self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
         self._current_idx = Variable(0, dtype=jnp.int32)
         # Initialize kernel
-        delays_kernel = self.config.init.delays(
-            key=self.get_rng_keys(1), 
-            shape=self._kernel_shape, 
-            dtype=jnp.uint8,
-            scale=self._buffer_size, 
-            min_value=1,
-        )
-        self._kernel = Constant(delays_kernel, dtype=jnp.uint8)
+        self._kernel = delays_kernel(self.config, self.get_rng_keys(1), self._kernel_shape, self._buffer_size - 1)
 
     def reset(self) -> None:
         """
