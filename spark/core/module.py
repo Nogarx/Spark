@@ -262,8 +262,6 @@ class SparkModule(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT, InputT], 
         """
             Returns what the outputs and properties of this module look like before it has run.
 
-            A module that defines this method may form a closed cycles.
-
             Returns
             -------
             output_contract_specs : dict of str to SparkPayload
@@ -273,7 +271,7 @@ class SparkModule(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT, InputT], 
 
             Raises
             ------
-            NotImplementedError
+            RuntimeError
                 If the module declares no contract. Check `has_recurrent_contract` first.
         """
         raise RuntimeError(

@@ -10,6 +10,7 @@ import abc
 import jax
 import copy
 import inspect
+import numpy as np
 import jax.numpy as jnp
 import dataclasses as dc
 
@@ -367,9 +368,10 @@ class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass
             self, 
         ) -> tuple[dict[str, tp.Any], dict[str, PortSpecs]]:
         """
-            Returns expected-like outputs and properties of the module.
+            Returns what the outputs and properties of this controller look like before it is built.
 
-            This function is a binding contract that allows the modules to accept self connections.
+            See `SparkModule.recurrent_contract`: a controller holding this one asks for it when a module reads this
+            one in a loop before this one is built.
         """
         raise RuntimeError(
             f'Recurrent contract not implemented.'
@@ -518,8 +520,8 @@ class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass
             cls._validate_modules(modules_specs)
         # Gather initial inputs
         available_inputs = set(['__call__', '__self__'])
-        # Gather modules
-        remaining_modules = set([spec.name for spec in modules_specs])
+        # Gather modules, in the order of their specifications, so that the order is the same on every run.
+        remaining_modules = [spec.name for spec in modules_specs]
         output_contracts = {spec.name: spec.module_cls.has_recurrent_contract() for spec in modules_specs}
         inputs_maps = {spec.name: spec.inputs for spec in modules_specs}
         # Compute execution order
@@ -553,20 +555,49 @@ class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass
                 if may_skip_error:
                     # Give execution a pass, it found modules that would be better to initialize later if possible.
                     may_skip_error = False
-                else:
-                    # Model is invalid, some modules are not viable.
-                    raise RuntimeError(
-                        f'Cannot compute execution order. The following modules cannot be safely initialized: "{remaining_modules}".'
-                    )
+                    continue
+                # Model is invalid: the modules left wait on one another.
+                blockers = {
+                    name: [
+                        pm.origin for pm_list in inputs_maps[name].values() for pm in pm_list
+                        if pm.origin in remaining_modules and (ignore_output_contracts or not output_contracts[pm.origin])
+                    ]
+                    for name in remaining_modules
+                }
+                raise RuntimeError(cls._unresolved_loop(blockers))
             # Reset skip
-            if len(next_modules) > 0:
-                may_skip_error = True    
+            may_skip_error = True
             # Update execution order
             execution_order.append(next_modules)
-            for name in next_modules:
-                available_inputs.add(name)
-                remaining_modules.remove(name)
+            available_inputs.update(next_modules)
+            remaining_modules = [name for name in remaining_modules if name not in next_modules]
         return execution_order
+
+
+
+    @staticmethod
+    def _unresolved_loop(blockers: dict[str, list[str]]) -> str:
+        """
+            Returns the message of modules that cannot be ordered, from the modules each of them waits on.
+
+            Every module left waits on another one left, so following them from any module reaches a loop.
+        """
+        path = [next(iter(blockers))]
+        while path.count(path[-1]) < 2 and blockers.get(path[-1]):
+            path.append(blockers[path[-1]][0])
+        loop = path[path.index(path[-1]):] if path.count(path[-1]) == 2 else path
+        reads = ', which reads '.join(f'"{name}"' for name in loop)
+        message = (
+            f'Cannot compute the order of the modules: {reads}, and none of them gives the shapes of its outputs before '
+            f'it is built. One module of this loop needs a recurrent contract (`recurrent_contract`), drawn from its '
+            f'configuration.'
+        )
+        waiting = [f'"{name}"' for name in blockers if name not in loop]
+        if len(waiting) == 1:
+            message += f' The module {waiting[0]} waits on it.'
+        elif waiting:
+            message += f' The modules {", ".join(waiting)} wait on it.'
+        return message
 
 
 
@@ -581,7 +612,9 @@ class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass
         modules_properties = utils.TwoKeyDict()
         # Property specs. Properties should be defined inside __init__, so it is safe to inspect them.
         modules_properties['__self__'] = {k: getattr(self, k, None) for k in self.get_properties()}
-        # Build modules. 
+        # The values taken from recurrent contracts, with the module built from each, checked once every module is built.
+        contracted: list[tuple[PortMap, str, tp.Any]] = []
+        # Build modules.
         for group in execution_order:
             for module_name in group:
                 # Skip __call__
@@ -606,6 +639,7 @@ class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass
                             if origin_module.has_recurrent_contract():
                                 outputs, properties = origin_module.recurrent_contract()
                                 arg = properties[port_map.port] if port_map.is_property else outputs[port_map.port]
+                                contracted.append((port_map, module_name, arg))
                                 port_args.append(arg)
                             else:
                                 # The constructor is trying to get something from a module that should have been called later.
@@ -626,7 +660,32 @@ class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass
                 # Add outputs and properties to list
                 modules_outputs[module_name] = abc_output
                 modules_properties[module_name] = {k: getattr(module, k, None) for k in module.get_properties()}
+        self._check_contracts(contracted, modules_outputs, modules_properties)
         return modules_outputs
+
+
+
+    @staticmethod
+    def _check_contracts(
+            contracted: list[tuple[PortMap, str, tp.Any]],
+            modules_outputs: utils.TwoKeyDict,
+            modules_properties: utils.TwoKeyDict,
+        ) -> None:
+        """
+            Raises a ValueError when a module, once built, gives an output or a property other than its recurrent
+            contract gave the module built from it: another payload type, shape or dtype.
+        """
+        for port_map, reader, promised in contracted:
+            given = (modules_properties if port_map.is_property else modules_outputs)[port_map.origin, port_map.port]
+            if not (isinstance(promised, SparkPayload) and isinstance(given, SparkPayload)):
+                continue
+            expected, found = PortSpecs.from_payload(promised), PortSpecs.from_payload(given)
+            describe = lambda specs: f'{specs.payload_type.__name__} of shape {specs.shape} and dtype {np.dtype(specs.dtype).name}'
+            if (expected.payload_type, expected.shape, np.dtype(expected.dtype)) != (found.payload_type, found.shape, np.dtype(found.dtype)):
+                raise ValueError(
+                    f'The recurrent contract of "{port_map.origin}" gives "{port_map.port}" as a {describe(expected)}, and '
+                    f'"{reader}" was built from it, but "{port_map.origin}" gives a {describe(found)}.'
+                )
 
 
 

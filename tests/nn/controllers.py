@@ -91,6 +91,28 @@ class ProbeHandwired(spark.nn.Module):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@spark.register_interface
+class ContractedIntegrator(spark.nn.interfaces.ExponentialIntegrator):
+    """
+        An integrator giving its output before it is built.
+    """
+
+    def recurrent_contract(self):
+        return {'signal': spark.FloatArray(jnp.zeros((self.config.num_outputs,), dtype=self.config.dtype))}, {}
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@spark.register_interface
+class MiscontractedIntegrator(spark.nn.interfaces.ExponentialIntegrator):
+    """
+        An integrator giving, before it is built, an output larger than the one it gives.
+    """
+
+    def recurrent_contract(self):
+        return {'signal': spark.FloatArray(jnp.zeros((self.config.num_outputs + 1,), dtype=self.config.dtype))}, {}
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @jax.jit
 def _run_split(graph: nnx.GraphDef, state: nnx.State, inputs: dict) -> tuple[dict, nnx.State]:
     model = spark.merge(graph, state)
@@ -383,6 +405,55 @@ class TestBrainWithEffects:
             brain(signal=signal)
             np.testing.assert_array_equal(np.asarray(brain.synapses.kernel.value), np.asarray(brain._cache['rule', 'kernel'].value))
         assert not np.array_equal(np.asarray(brain.synapses.kernel.value), first)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TestLoops:
+    """
+        Modules reading one another in a loop, built in an order the recurrent contracts of some of them allow.
+    """
+
+    @staticmethod
+    def _loop(readout_cls: type = spark.nn.interfaces.ExponentialIntegrator, through_pool: bool = True) -> spark.nn.BrainConfig:
+        """
+            A pool fed back by a spiker reading an integrator. The integrator reads the pool, or the spiker alone.
+        """
+        pm = spark.PortMap
+        return spark.nn.BrainConfig(seed=3, modules_specs=[
+            spark.ModuleSpecs(name='pool', module_cls=spark.nn.neurons.ALIFNeuron, config=spark.nn.neurons.ALIFNeuronConfig(units=(8,)),
+                              inputs={'in_spikes': [pm('__call__', 'in_spikes'), pm('feedback', 'spikes')]}),
+            spark.ModuleSpecs(name='readout', module_cls=readout_cls, outputs={'action': 'signal'},
+                              inputs={'spikes': [pm('pool', 'out_spikes') if through_pool else pm('feedback', 'spikes')]},
+                              config=spark.nn.interfaces.ExponentialIntegratorConfig(num_outputs=2)),
+            spark.ModuleSpecs(name='feedback', module_cls=spark.nn.interfaces.LinearSpiker, inputs={'signal': [pm('readout', 'signal')]}),
+        ])
+
+    def test_a_loop_closes_through_a_pool_read_before_it_is_built(self, spikes) -> None:
+        config = self._loop()
+        assert spark.nn.Brain._execution_order(config.modules_specs) == [['readout'], ['feedback'], ['pool']]
+        brain = spark.nn.Brain(config=config)
+        brain(in_spikes=spikes(4))
+        assert brain.pool.synapses.kernel.value.shape == (8, 6)
+
+    def test_the_modules_of_one_step_keep_the_order_of_their_specifications(self) -> None:
+        specs = tuple(
+            spark.ModuleSpecs(name=name, module_cls=spark.nn.interfaces.PoissonSpiker, inputs={'signal': [spark.PortMap('__call__', 'signal')]})
+            for name in ('b', 'c', 'a')
+        )
+        assert spark.nn.Brain._execution_order(specs) == [['b', 'c', 'a']]
+
+    def test_a_loop_without_a_contract_is_named(self) -> None:
+        with pytest.raises(RuntimeError, match='"feedback", which reads "readout", which reads "feedback".* The module "pool" waits on it'):
+            spark.nn.Brain._execution_order(self._loop(through_pool=False).modules_specs)
+
+    def test_a_contract_closes_a_loop_of_interfaces(self, spikes) -> None:
+        brain = spark.nn.Brain(config=self._loop(ContractedIntegrator, through_pool=False))
+        assert brain(in_spikes=spikes(4))['action'].value.shape == (2,)
+
+    def test_a_contract_other_than_what_the_module_gives_is_refused(self, spikes) -> None:
+        brain = spark.nn.Brain(config=self._loop(MiscontractedIntegrator, through_pool=False))
+        with pytest.raises(ValueError, match=r'contract of "readout" gives "signal" as a FloatArray of shape \(3,\).* gives a FloatArray of shape \(2,\)'):
+            brain(in_spikes=spikes(4))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
