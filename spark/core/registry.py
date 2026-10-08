@@ -702,10 +702,14 @@ def register_neuron_from_config(cls_name: str, config: NeuronConfig) -> None:
 
 def register_models_from_payload(payload: tp.Any) -> list[str]:
     """
-        Registers every model named by a decoded json document.
+        Registers every model a decoded json document defines and the registry lacks.
 
         Read before the spark decoder runs, so that a file naming models that are not yet
-        registered can be decoded.
+        registered can be decoded. The models are neurons defined by their configuration: those
+        the modules of the document are, by the name of their class, and any controller
+        configuration of a type the registry lacks, such as the model the document holds itself,
+        by the name of its configuration less ``_config``. The neurons within a neuron are
+        registered first.
 
         Parameters
         ----------
@@ -724,19 +728,24 @@ def register_models_from_payload(payload: tp.Any) -> list[str]:
     definable = {'Neurons': NeuronConfig}
     missing: dict[str, tuple[str, tp.Any]] = {}
 
+    def add(name: tp.Any, namespace: tp.Any, config_payload: tp.Any) -> None:
+        subregistry = getattr(REGISTRY, namespace, None) if namespace in definable else None
+        if isinstance(name, str) and name and subregistry and not subregistry.get(name) and name not in missing:
+            missing[name] = (namespace, config_payload)
+
     def collect(node: tp.Any) -> None:
         if isinstance(node, dict):
-            data = node.get('__data__') if node.get('__type__') == 'module_specs' else None
-            if isinstance(data, dict):
-                reference = data.get('module_cls') or {}
-                name = reference.get('__module_type__')
-                namespace = reference.get('__subregistry__')
-                subregistry = getattr(REGISTRY, namespace, None) if namespace else None
-                if name and namespace in definable and subregistry and not subregistry.get(name):
-                    if data.get('config') is not None:
-                        missing[name] = (namespace, data['config'])
+            # What a node holds is registered before the node.
             for value in node.values():
                 collect(value)
+            data = node.get('__data__') if node.get('__type__') == 'module_specs' else None
+            if isinstance(data, dict) and data.get('config') is not None:
+                reference = data.get('module_cls') or {}
+                add(reference.get('__module_type__'), reference.get('__subregistry__'), data['config'])
+            config_type, fields = node.get('__type__'), node.get('__cfg__')
+            if (isinstance(config_type, str) and config_type.endswith('_config') and isinstance(fields, dict)
+                    and 'modules_specs' in fields and not REGISTRY.Configs.get(config_type)):
+                add(config_type.removesuffix('_config'), 'Neurons', node)
         elif isinstance(node, list):
             for value in node:
                 collect(value)
