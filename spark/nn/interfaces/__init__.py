@@ -27,6 +27,7 @@ from spark.nn.interfaces.input.topological import (
 # Output
 from spark.nn.interfaces.output.base import OutputInterface, OutputInterfaceConfig, OutputInterfaceOutput
 from spark.nn.interfaces.output.exponential import ExponentialIntegrator, ExponentialIntegratorConfig
+from spark.nn.interfaces.output.tanh import TanhIntegrator, TanhIntegratorConfig
 
 __all__ = [
     # Base
@@ -42,6 +43,7 @@ __all__ = [
     # Input
     'OutputInterface', 'OutputInterfaceConfig', 'OutputInterfaceOutput',
     'ExponentialIntegrator', 'ExponentialIntegratorConfig',
+    'TanhIntegrator', 'TanhIntegratorConfig',
     # Output
     'InputInterface', 'InputInterfaceConfig', 'InputInterfaceOutput',
     'PoissonSpiker', 'PoissonSpikerConfig',
