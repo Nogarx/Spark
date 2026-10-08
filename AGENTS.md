@@ -60,7 +60,8 @@ brain(signal=signal)                                    # builds the brain
 `PortMap('__call__', port)` is an input of the brain. `outputs={'action': 'signal'}` makes the `signal`
 port of the module the `action` output of the brain. Configurations are saved with
 `config.to_file('brain.scfg')` and read with `spark.nn.BrainConfig.from_file('brain.scfg')`; `.scfg` is
-also what the graph editor saves. `config.with_new_seeds(seed)` returns a reseeded copy.
+added when missing, and is also what the graph editor saves. `config.with_new_seeds(seed)` returns a
+reseeded copy.
 
 ## What the package holds
 
@@ -127,6 +128,26 @@ brain = spark.merge(graph, state)                       # a model again, to insp
 
 Inputs that change step by step go in `xs` of `spark.scan`. `spark.recording.Runner` wraps such a loop for
 quick use; it is a convenience, not the main path.
+
+### Several devices
+
+`spark.Partition(brain, {device: [module names], ...})` gives each device a sub-brain holding its modules,
+and `spark.Partition.balanced(brain, devices)` chooses the parts. The sub-brains run one step at a time, side
+by side, and the outputs that cross devices are copied between steps:
+
+```python
+partition = spark.Partition(brain, parts)
+graphs, states = partition.split(brain)
+received = partition.initial(states)
+for _ in range(1000):
+    outputs, states = partition.run(run, graphs, states, received, inputs, steps=1)
+    received = partition.exchange(outputs)
+brain = partition.merge(states)                         # the whole brain again
+```
+
+Modules reading or writing the properties of one another share a device. Over several machines
+(`jax.distributed`), every process builds the same seeded brain and partition; recording a partition works
+within one process. Tutorial #8 covers it.
 
 ## Recording
 
