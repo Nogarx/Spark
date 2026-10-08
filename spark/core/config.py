@@ -48,12 +48,14 @@ class AnnotationWarning(Warning):
 NESTED_DELIMITER = '__'
 """
 	Separator addressing something inside a configuration: a nested configuration ("kernel__scale"), or one
-	module of a "modules_specs" list, by its name ("synapses__kernel__scale").
+	module of a "modules_specs" list, by its name ("synapses__kernel__scale"). It is the dot of an address
+	("synapses.kernel.scale") written in a keyword argument (see `spark.core.addresses`).
 """
 
 SHARED_DELIMITER = '_s_'
 """
-	Prefix marking an argument that is handed down to every configuration below ("_s_units").
+	Prefix marking an argument that is handed down to every configuration below ("_s_units"), as the pattern
+	"**.units" would (see `spark.core.addresses`).
 """
 
 CONFIG_EXTENSION = '.scfg'
@@ -708,7 +710,221 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 	def init(self,):
 		return _InitNamespace(self,)
 
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
+	def update(self, changes: tp.Mapping[str, tp.Any]) -> 'SparkConfig':
+		"""
+			Returns a copy of this configuration with the parts at the given addresses replaced.
+
+			Parameters
+			----------
+			changes : mapping of str to Any
+				Values by address or pattern, applied in order. An address is the dotted chain of names
+				leading to a part: modules by name and nested configurations by field name, then the
+				field, as ``A_excitatory.soma`` or ``A_excitatory.soma.threshold``. A pattern matches
+				several: ``*_excitatory.soma``, ``**.threshold`` (see `spark.core.addresses`). What an
+				address names is replaced by its value:
+
+				* a module, by a configuration of its class, or by a `ModuleSpecs` of the same name,
+				  which also sets its class and its wiring;
+				* a field, by the value, a nested configuration included.
+
+			Returns
+			-------
+			SparkConfig
+				A new configuration. This one, and the values given, are left unchanged.
+
+			Raises
+			------
+			KeyError
+				If an address or a pattern matches nothing.
+			ValueError
+				If a pattern matches both a part and a part within it, or a `ModuleSpecs` has another
+				name than the module it replaces.
+			TypeError
+				If a module is given something else than a configuration of its class or a
+				`ModuleSpecs`.
+
+			Notes
+			-----
+			Each part matched takes a copy of its value. The controllers holding it hand it their
+			``units`` and ``dt`` again, so these are changed on the controller (``A_excitatory.units``):
+			a value set below it is overwritten. A configuration given without a seed takes one derived
+			from the seed of the controller holding it and its name, so that two modules given the same
+			configuration still draw different values. A seed given is kept.
+
+			Examples
+			--------
+			>>> config = config.update({
+			...     '*_excitatory.soma': spark.nn.somas.AdaptiveLeakySomaConfig(threshold=-45.0),
+			...     '**.synapses.kernel.scale': 2000.0,
+			...     'integrator': spark.ModuleSpecs(name='integrator', module_cls=..., inputs=...),
+			... })
+		"""
+		config = self
+		for pattern, value in changes.items():
+			found = config.addresses(pattern)
+			if not found:
+				raise KeyError(config._unmatched(pattern))
+			nested = [(outer, inner) for outer in found for inner in found if inner.startswith(f'{outer}.')]
+			if nested:
+				raise ValueError(
+					f'"{pattern}" matches both "{nested[0][0]}" and "{nested[0][1]}", within it: the part replaced is '
+					f'ambiguous.'
+				)
+			for address in found:
+				config = config._replaced(tuple(address.split('.')), value, address)
+		return config
+
+
+
+	def addresses(self, pattern: str | None = None) -> tuple[str, ...]:
+		"""
+			Returns the addresses of the parts of this configuration.
+
+			Parameters
+			----------
+			pattern : str, optional
+				Keeps the addresses it matches (see `spark.core.addresses`).
+
+			Returns
+			-------
+			tuple of str
+				The address of every module, nested configuration and field, depth first.
+		"""
+		from spark.core import addresses
+		found = tuple(self._walk(''))
+		return found if pattern is None else addresses.select(pattern, found)
+
+
+
+	def __getitem__(self, address: str) -> tp.Any:
+		"""
+			Returns the part of this configuration at an address.
+
+			Parameters
+			----------
+			address : str
+				The dotted chain of names leading to the part, as ``A_excitatory.soma.threshold``.
+
+			Returns
+			-------
+			Any
+				The value of a field, or the configuration of a module.
+
+			Raises
+			------
+			KeyError
+				If nothing is at the address.
+		"""
+		from spark.core import addresses
+		if not isinstance(address, str) or addresses.is_pattern(address):
+			raise KeyError(f'{address!r} is not an address; `addresses(pattern)` lists the addresses a pattern matches.')
+		part = self
+		for depth, name in enumerate(address.split('.')):
+			if not isinstance(part, SparkConfig):
+				raise KeyError(f'"{address}": "{".".join(address.split(".")[:depth])}" holds no configuration.')
+			kind, _, part = part._child(name, address)
+			if kind == 'module':
+				part = part.config
+		return part
+
+
+
+	def _ipython_key_completions_(self) -> tuple[str, ...]:
+		"""
+			The addresses offered by IPython after ``config[``.
+		"""
+		return self.addresses()
+
+
+
+	def _walk(self, prefix: str) -> tp.Iterator[str]:
+		"""
+			Yields the addresses of the parts of this configuration, each preceded by ``prefix``.
+		"""
+		for field in dc.fields(self):
+			if field.name.startswith('__'):
+				continue
+			value = getattr(self, field.name, None)
+			if is_module_specs_field(field, value):
+				for spec in value or ():
+					yield f'{prefix}{spec.name}'
+					if isinstance(spec.config, SparkConfig):
+						yield from spec.config._walk(f'{prefix}{spec.name}.')
+				continue
+			yield f'{prefix}{field.name}'
+			if isinstance(value, SparkConfig):
+				yield from value._walk(f'{prefix}{field.name}.')
+
+
+
+	def _child(self, name: str, address: str) -> tuple[str, str, tp.Any]:
+		"""
+			Returns what ``name`` names in this configuration: its kind (``'module'``, ``'config'`` or
+			``'field'``), the name of the field holding it, and the `ModuleSpecs` of a module or the value
+			of a field.
+		"""
+		found = []
+		for field in dc.fields(self):
+			if field.name.startswith('__'):
+				continue
+			value = getattr(self, field.name, None)
+			if is_module_specs_field(field, value):
+				found += [('module', field.name, spec) for spec in value or () if spec.name == name]
+			elif field.name == name:
+				found.append(('config' if isinstance(value, SparkConfig) else 'field', field.name, value))
+		if not found:
+			raise KeyError(f'"{address}": {type(self).__name__} has no module or field "{name}".')
+		if len(found) > 1:
+			raise KeyError(f'"{address}": "{name}" is both a module and a field of {type(self).__name__}.')
+		return found[0]
+
+
+
+	def _replaced(self, names: tuple[str, ...], value: tp.Any, address: str) -> 'SparkConfig':
+		"""
+			Returns a copy of this configuration with the part at ``names`` replaced by ``value``.
+		"""
+		from spark.core.specs import ModuleSpecs
+		name, rest = names[0], names[1:]
+		kind, field_name, held = self._child(name, address)
+		if kind == 'module':
+			spec = copy.deepcopy(held)
+			if rest:
+				spec.config = held.config._replaced(rest, value, address)
+			elif isinstance(value, ModuleSpecs):
+				if value.name != name:
+					raise ValueError(f'"{address}" is replaced by the module "{value.name}": a module keeps its name.')
+				spec = copy.deepcopy(value)
+			elif isinstance(value, SparkConfig):
+				expected = tp.get_type_hints(spec.module_cls)['config']
+				if not isinstance(value, expected):
+					raise TypeError(
+						f'The module "{address}" is configured by {expected.__name__}, not by {type(value).__name__}. '
+						f'A ModuleSpecs replaces the class of a module.'
+					)
+				spec.config = copy.deepcopy(value)
+			else:
+				raise TypeError(
+					f'The module "{address}" is replaced by a configuration or a ModuleSpecs; got {type(value).__name__}.'
+				)
+			specs = tuple(spec if other.name == name else other for other in getattr(self, field_name))
+			return self.merge(**{field_name: specs})
+		if rest:
+			return self.merge(**{name: held._replaced(rest, value, address)})
+		return self.merge(**{name: copy.deepcopy(value)})
+
+
+
+	def _unmatched(self, pattern: str) -> str:
+		"""
+			Returns the message of a pattern matching nothing in this configuration.
+		"""
+		import difflib
+		message = f'"{pattern}" matches nothing in {type(self).__name__}.'
+		close = difflib.get_close_matches(pattern, self.addresses(), n=3)
+		return f'{message} Did you mean: {", ".join(close)}?' if close else message
+
+
 
 	# TODO: This method is not ideal. It solves the module association problem in a very brittle way. 
 	# There should be another better pattern for this problem.
@@ -1085,6 +1301,8 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 			document = json.load(json_file)
 		metadata = document.get(METADATA_KEY) if isinstance(document, dict) else None
 		return metadata if isinstance(metadata, dict) else {}
+
+
 
 	@classmethod
 	def from_file(cls: type['SparkConfig'], file_path: str) -> 'SparkConfig':

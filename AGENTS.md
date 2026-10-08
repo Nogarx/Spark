@@ -63,6 +63,32 @@ port of the module the `action` output of the brain. Configurations are saved wi
 added when missing, and is also what the graph editor saves. `config.with_new_seeds(seed)` returns a
 reseeded copy.
 
+### Addresses
+
+An address names a part of a model by the dotted chain of names leading to it: module names through
+controllers, then nested configurations and fields by field name (`pool.soma.threshold`,
+`pool.synapses.kernel.density`). Probes use the same chain, ending in a port or an attribute (see Probe
+addresses). Keyword arguments write the same address with `__` (`synapses__kernel__scale=3000`), and
+`_s_units=(16,)` sets every `units` below.
+
+A pattern matches several addresses: `*`, `?` and `[...]` within a name, and `**` for any number of names
+(`*_excitatory.soma`, `**.threshold`). A wildcard does not match a name starting with `__`, as `__call__`.
+
+```python
+config['pool.soma.threshold']                           # reads a part; a module gives its configuration
+config.addresses('**.kernel')                           # the addresses a pattern matches
+config = config.update({                                # a copy, with parts replaced
+    'pool.soma': spark.nn.somas.AdaptiveLeakySomaConfig(threshold=-45.0),   # a module, by a config of its class
+    '**.synapses.kernel.density': 0.1,                                      # a field, wherever it is
+    'readout': spark.ModuleSpecs(name='readout', ...),                      # a module, class and wiring included
+})
+```
+
+A part replaced takes a copy of its value. The controllers holding it hand it their `units` and `dt` again
+(change those on the controller), and a configuration given without a seed derives its seed from its
+controller and its name, so two pools given one configuration still differ. An address or a pattern
+matching nothing raises, naming the closest addresses.
+
 ## What the package holds
 
 Ready-made modules, by where they live. Each takes its parameters as keyword arguments, and its docstring
@@ -323,7 +349,8 @@ class Counter(spark.nn.Module):
 ## Repository map
 
 - `spark/core`: modules, configurations, payloads, specs, the registry, `backend` (`jit`, `scan`, `split`,
-  `merge`), checkpoints, and `recording_hooks` (what `spark.recording` plugs into).
+  `merge`), checkpoints, `addresses` (the patterns of addresses), and `recording_hooks` (what
+  `spark.recording` plugs into).
 - `spark/nn`: controllers, neurons, components, interfaces, initializers.
 - `spark/recording`: probes, measurements, triggers, the recorder and its writer, `Run`, `Runner`;
   `settings.py` holds its tunables and `utils.py` its shared helpers.
