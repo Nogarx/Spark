@@ -246,8 +246,14 @@ usual. A Ctrl-C during a call is held until the call returns, and raised at the 
   `pool.synapses.kernel`.
 
 `path` is the dotted chain of module names from the model. `rec.get_probe_targets` lists every address
-with its shape. `rec.validate` checks probes against a built model; the sizes of the ports of nested
-controllers, as `pool:out_spikes`, are checked when the recorder first traces the call.
+with its shape, and `rec.probe_addresses(model)` the addresses alone. `rec.validate` checks probes against
+a built model; the sizes of the ports of nested controllers, as `pool:out_spikes`, are checked when the
+recorder first traces the call.
+
+A pattern (see Addresses) stands for a probe of every address it matches, with the same fields:
+`rec.SummaryProbe('*_excitatory.soma:spikes')`, `rec.TraceProbe('**.soma.potential', units=range(8))`. It
+is matched against the built model by `rec.validate` and by a `Recorder` given the model, and each match
+is recorded under its own address. `rec.expand(model, probes)` shows what the patterns become.
 
 ### Probe catalogue
 

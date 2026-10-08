@@ -511,6 +511,20 @@ class TestRecorder:
             recorder.push({}, 5)
         recorder.close()
 
+    def test_a_pattern_is_recorded_under_the_addresses_it_matches(self, brain, tmp_path) -> None:
+        measurements = [R.Measurements('a', (R.SummaryProbe('*_pool.soma:spikes', reduce=('active_fraction',)),), trigger=R.Always(), group=5)]
+        runner = R.Runner(brain, R.Recorder(tmp_path, brain, measurements))
+        runner.run(10, {'signal': SIGNAL})
+        runner.close()
+        assert [p.address for p in runner.recorder.measurements[0].probes] == ['first_pool.soma:spikes', 'second_pool.soma:spikes']
+        keys = set(R.load(runner.recorder.path).scalar_keys())
+        assert {'a/first_pool.soma:spikes/active_fraction', 'a/second_pool.soma:spikes/active_fraction'} <= keys
+
+    def test_a_pattern_needs_the_built_model(self, brain, tmp_path) -> None:
+        with pytest.raises(ValueError, match='give the recorder the built model'):
+            R.Recorder(tmp_path, brain.config, [R.Measurements('a', (R.SummaryProbe('*_pool.soma:spikes'),), group=5)])
+        assert list(tmp_path.iterdir()) == []
+
     def test_a_recorder_takes_the_configuration_of_the_model(self, brain, tmp_path) -> None:
         measurements = [R.Measurements('a', R.presets.summary(brain), group=5)]
         with R.Recorder(tmp_path, brain.config, measurements) as recorder:
