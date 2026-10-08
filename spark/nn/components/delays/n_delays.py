@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from spark.core.specs import PortSpecs
     
 import jax
+import numpy as np
 import jax.numpy as jnp
 import dataclasses as dc
 import typing as tp
@@ -34,10 +35,11 @@ class NDelaysConfig(DelaysConfig):
         ----------
         max_delay : float, default 8.0
             Longest delay the buffer can hold, in ms. The buffer holds ``ceil(max_delay / dt)``
-            steps, which bounds every drawn delay.
+            past steps, which bounds every drawn delay.
         delays : jax.Array or Initializer, default UniformInitializerConfig()
-            Delay of every presynaptic unit, in steps. Drawn over ``[1, buffer_size]`` when an
-            initializer is given.
+            Delay of every presynaptic unit, in steps. Drawn over ``[1, ceil(max_delay / dt)]``
+            when an initializer is given. A given array is taken as it is, and every delay in it
+            lies in that range.
     """
 
     max_delay: float = dc.field(
@@ -59,6 +61,52 @@ class NDelaysConfig(DelaysConfig):
             'description': 'Synaptic delays array / initializer method.',
         })
     
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def delays_kernel(config: NDelaysConfig, key: jax.Array, shape: tuple[int, ...], longest: int) -> Constant:
+    """
+        Returns the delay of every entry of a kernel, in steps, within ``[1, longest]``.
+
+        Parameters
+        ----------
+        config : NDelaysConfig
+            Configuration holding the delays, or the initializer drawing them.
+        key : jax.Array
+            PRNG key of the draw.
+        shape : tuple of int
+            Shape of the kernel.
+        longest : int
+            Longest delay, ``ceil(max_delay / dt)`` steps.
+
+        Returns
+        -------
+        Constant
+            The kernel, in the smallest unsigned dtype holding ``longest``.
+
+        Raises
+        ------
+        ValueError
+            If a delay of a given array lies outside ``[1, longest]``.
+
+        Notes
+        -----
+        A given array is taken as it is. An initializer draws the delay less one step, scaled to
+        ``longest``, and the draw is clipped to the range: the default uniform draw covers
+        ``[1, longest]`` evenly, and no initializer gives a delay of zero steps, or one the buffer
+        does not hold.
+    """
+    dtype = np.min_scalar_type(longest)
+    if isinstance(config.delays, (Initializer, InitializerConfig)):
+        drawn = config.init.delays(key=key, shape=shape, dtype=jnp.int32, scale=longest, min_value=0)
+        return Constant(jnp.clip(drawn + 1, 1, longest), dtype=dtype)
+    delays = np.broadcast_to(np.asarray(config.init.delays()), shape)
+    if delays.size and (delays.min() < 1 or delays.max() > longest):
+        raise ValueError(
+            f'Delays are of 1 to {longest} steps, ceil(max_delay / dt); the delays given are of {delays.min()} to '
+            f'{delays.max()} steps.'
+        )
+    return Constant(delays, dtype=dtype)
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 @register_module
@@ -92,9 +140,10 @@ class NDelays(Delays):
 
         Notes
         -----
-        Spikes are held in a ring buffer of ``ceil(max_delay / dt)`` steps, bit-packed eight units
-        to a byte, so the buffer costs one bit per unit per step. Reading is a gather at the
-        per-unit offset, which makes the cost independent of the delay values.
+        Spikes are held in a ring buffer of ``ceil(max_delay / dt) + 1`` steps, the current one and
+        every step a delay reaches back to, bit-packed eight units to a byte, so the buffer costs one
+        bit per unit per step. Reading is a gather at the per-unit offset, which makes the cost
+        independent of the delay values.
 
         See Also
         --------
@@ -112,20 +161,13 @@ class NDelays(Delays):
         self._units = prod(self._shape)
         # Initialize varibles
         self.max_delay = self.config.max_delay
-        self._buffer_size = int(ceil(self.max_delay / self._dt))
+        self._buffer_size = int(ceil(self.max_delay / self._dt)) + 1
         num_bytes = (self._units + 7) // 8
         self._padding = (0, num_bytes * 8 - self._units)
         self._bitmask = Variable(jnp.zeros((self._buffer_size, num_bytes)), dtype=jnp.uint8)
         self._current_idx = Variable(0, dtype=jnp.int32)
         # Initialize kernel
-        delays_kernel = self.config.init.delays(
-            key=self.get_rng_keys(1), 
-            shape=(self._units,), 
-            dtype=jnp.uint8,
-            scale=self._buffer_size+1, 
-            min_value=1,
-        )
-        self._kernel = Constant(delays_kernel, dtype=jnp.uint8)
+        self._kernel = delays_kernel(self.config, self.get_rng_keys(1), (self._units,), self._buffer_size - 1)
 
     def reset(self) -> None:
         """

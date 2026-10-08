@@ -11,6 +11,10 @@ from functools import partial
 
 from cases import CASES, collect
 
+# The tests of this module share fixtures computed once per worker: with pytest-xdist and --dist loadgroup,
+# they run on one worker.
+pytestmark = pytest.mark.xdist_group('probes')
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
@@ -272,6 +276,38 @@ class TestValidate:
     def test_an_unbuilt_model_is_refused(self) -> None:
         with pytest.raises(ValueError, match='not built'):
             R.validate(spark.nn.neurons.LIFNeuron(units=(4,), seed=1), (R.SummaryProbe('soma:spikes'),))
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TestPatterns:
+    """
+        A probe whose address is a pattern stands for a probe of every address it matches.
+    """
+
+    def test_the_addresses_are_those_get_probe_targets_lists(self, brain) -> None:
+        assert set(R.probe_addresses(brain)) == {target.address for target in R.get_probe_targets(brain, {'signal': SIGNAL})}
+
+    def test_a_pattern_gives_a_probe_of_each_match_with_its_fields(self, brain) -> None:
+        probes = R.expand(brain, (R.SummaryProbe('*_pool.soma:spikes', reduce=('mean',)), R.RasterProbe('spiker:spikes')))
+        assert [p.address for p in probes] == ['first_pool.soma:spikes', 'second_pool.soma:spikes', 'spiker:spikes']
+        assert probes[0].reduce == probes[1].reduce == R.SummaryProbe('x:y', reduce=('mean',)).reduce
+
+    @pytest.mark.parametrize('pattern, matched', [
+        ('**.soma.potential', ['first_pool.soma.potential', 'second_pool.soma.potential']),
+        ('*:*', ['spiker:spikes', 'first_pool:out_spikes', 'second_pool:out_spikes', 'integrator:signal']),
+        ('*.__call__:*', ['first_pool.__call__:in_spikes', 'second_pool.__call__:in_spikes']),
+    ])
+    def test_what_a_pattern_matches(self, brain, pattern, matched) -> None:
+        assert [p.address for p in R.expand(brain, (R.TraceProbe(pattern),))] == matched
+
+    def test_every_match_is_validated(self, brain) -> None:
+        R.validate(brain, (R.TraceProbe('*_pool.soma.potential', units=(0, 7)),))
+        with pytest.raises(ValueError, match='second_pool.soma.potential'):
+            R.validate(brain, (R.TraceProbe('*_pool.soma.potential', units=(12,)),))
+
+    def test_a_pattern_matching_nothing_is_refused(self, brain) -> None:
+        with pytest.raises(ValueError, match='matches nothing'):
+            R.validate(brain, (R.SummaryProbe('*_pool.stoma:spikes'),))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

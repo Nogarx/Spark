@@ -2,8 +2,10 @@
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
 
+import sys
 import json
 import pytest
+import subprocess
 import spark
 from spark.core.registry import register_models_from_payload
 
@@ -93,6 +95,41 @@ class TestAFileBringingItsOwnModels:
     def test_a_document_naming_nothing_is_answered_with_nothing(self) -> None:
         assert register_models_from_payload({'__cfg__': {'units': [8]}}) == []
         assert register_models_from_payload([1, 'two', None]) == []
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TestAFileHoldingAModelOfItsOwnType:
+    """
+        A file whose model is itself a neuron defined by a configuration, as the configuration, the checkpoint or the
+        run of one such neuron, defines that neuron too.
+    """
+
+    @staticmethod
+    def _neuron_of_its_own(name: str) -> type:
+        spark.register_neuron_from_config(name, spark.nn.neurons.ALIFNeuronConfig(units=(8,)))
+        return spark.REGISTRY.Neurons.get(name).get_cls()
+
+    def test_reading_the_file_registers_its_model(self, tmp_path) -> None:
+        path = tmp_path / 'bootstrap_own_neuron.scfg'
+        self._neuron_of_its_own('bootstrap_own_neuron').default_config().to_file(path, compress=False, verbose=False)
+        other_path = _under_another_name(path, 'bootstrap_own_neuron', 'bootstrap_own_absent_neuron')
+        assert spark.REGISTRY.Neurons.get('bootstrap_own_absent_neuron') is None
+        config = spark.nn.NeuronConfig.from_file(other_path)
+        neuron_cls = spark.REGISTRY.Neurons.get('bootstrap_own_absent_neuron').get_cls()
+        assert type(config) is neuron_cls.get_config_spec() and config.units == (8,)
+
+    def test_a_checkpoint_is_restored_where_nothing_was_registered(self, tmp_path, spikes) -> None:
+        neuron = self._neuron_of_its_own('bootstrap_saved_neuron')()
+        neuron(in_spikes=spikes(4))
+        path = neuron.checkpoint(tmp_path / 'neuron', verbose=False)
+        script = (
+            'import sys, spark\n'
+            'neuron = spark.nn.Neuron.from_checkpoint(sys.argv[1], verbose=False)\n'
+            'print(type(neuron).__name__, neuron.get_input_specs()["in_spikes"].shape)\n'
+        )
+        restored = subprocess.run([sys.executable, '-c', script, str(path)], capture_output=True, text=True, timeout=600)
+        assert restored.returncode == 0, restored.stderr[-2000:]
+        assert restored.stdout.split()[-2:] == ['bootstrap_saved_neuron', '(4,)']
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

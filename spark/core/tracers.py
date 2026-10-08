@@ -152,6 +152,7 @@ class Tracer(BaseTracer):
 		See Also
 		--------
 		RDTracer : Difference of two exponentials.
+		SaturableTracer: Saturable single exponential trace.
 	"""
 
 	def __init__(
@@ -357,6 +358,61 @@ class RFSTracer(BaseTracer):
 	@property
 	def value(self, ) -> jax.Array:
 		return self.alpha.value * self.tracer_rise_fast.value + (1 - self.alpha.value) * self.tracer_rise_slow.value
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class SaturableTracer(Tracer):
+	r"""
+		Saturable single exponential trace.
+
+		Parameters
+		----------
+		shape : tuple of int
+			Shape of the trace.
+		tau : jax.Array or float
+			Decay constant, in ms.
+		scale : jax.Array or float, default 1
+			Factor applied to the incoming value.
+		base : jax.Array or float, default 0
+			Value the trace decays towards.
+        saturation: jax.Array or float, default 1
+            Value at which the tracer saturates.
+
+		Notes
+		-----
+		With :math:`\lambda = 1 - \exp(-\Delta t / \tau)`,
+
+		.. math::
+			T \leftarrow T + \lambda (T_{\mathrm{base}} - T) + c \, x
+
+		See Also
+		--------
+		Tracer : Single exponential trace.
+		RDTracer : Difference of two exponentials.
+	"""
+
+	def __init__(
+			self, 
+			shape: tuple[int, ...], 
+			tau: jax.Array | float, 
+			scale: jax.Array | float = 1, 
+			base: jax.Array | float = 0,
+			saturation: jax.Array | float = 1,
+			**kwargs
+		) -> None:
+		# Initialize super.
+		super().__init__(shape, tau=tau, scale=scale, base=base, **kwargs)
+		# Main attributes
+		self.saturation = saturation
+
+	def _update(self, x: jax.Array) -> jax.Array:
+		trace = self.trace.value
+		self.trace.value = jnp.clip(
+			trace + self.decay_rate.value * (self.base.value - trace) + self.scale.value * x.astype(self._dtype),
+			min=-self.saturation, 
+            max=self.saturation
+        )
+		return self.trace.value
 	
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

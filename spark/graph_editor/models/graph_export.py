@@ -139,6 +139,12 @@ def build_module_specs(graph_model: GraphModel) -> tuple[list[ModuleSpecs], list
         if origin.origin in (_CALL_ORIGIN, _SELF_ORIGIN):
             problems.append(f'Output "{node.name}" must read from a module.')
             continue
+        if origin.is_property:
+            problems.append(
+                f'Invalid output "{node.name}": property "{origin.port}" of "{origin.origin}". Properties cannot be used as outputs. '
+                f'If this is intended consider exposing the property as an output through a custom model.'
+            )
+            continue
         outputs_by_module.setdefault(origin.origin, {})[node.name] = origin.port
 
     for node in graph_model.nodes:

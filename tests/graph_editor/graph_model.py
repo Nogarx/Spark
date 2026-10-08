@@ -22,6 +22,8 @@ from spark.graph_editor.models.controller_profile import (
     NEURON_PROFILE, BRAIN_PROFILE, get_controller_profile, profile_for_config,
 )
 from spark.graph_editor.models import graph_export
+from spark.graph_editor.models.edge_model import EdgeModel
+from spark.graph_editor.models.node_model import SinkNodeModel
 from spark.graph_editor.models.model_import import ImportedGraph, expand_controller_config
 from spark.core.registry import RegistryNamespace
 
@@ -228,6 +230,30 @@ class TestExport:
         exported = graph_export.build_controller_config(imported_graph, strict=False)
         assert set(exported.layout) >= {'delays', 'synapses', 'soma'}
         assert all(len(position) == 2 for position in exported.layout.values())
+
+    @staticmethod
+    def _kernel_and_output(graph):
+        """
+            The port reading the kernel property of the synapses, and the port of a new output node.
+        """
+        synapses = next(node for node in graph.nodes if node.name == 'synapses')
+        kernel = next(port for port in synapses.props_section.ports if port.name == 'kernel' and not port.is_input)
+        output = SinkNodeModel(name='weights')
+        graph.add_node(output)
+        return kernel, output.value_port
+
+    def test_a_property_cannot_be_wired_to_an_output(self, imported_graph) -> None:
+        kernel, output = self._kernel_and_output(imported_graph)
+        assert kernel.port_type is output.port_type
+        is_valid, message = EdgeModel.validate_connection(kernel, output)
+        assert not is_valid
+        assert 'property' in message
+
+    def test_a_property_wired_to_an_output_is_reported(self, imported_graph) -> None:
+        kernel, output = self._kernel_and_output(imported_graph)
+        imported_graph.add_edge(EdgeModel(kernel, output))
+        problems = graph_export.build_controller_config(imported_graph, strict=True).problems
+        assert any('property "kernel" of "synapses"' in problem for problem in problems)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

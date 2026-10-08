@@ -149,6 +149,11 @@ class Probe(abc.ABC):
             * ``path.__call__:port``: an input port of a controller, ``__call__:port`` for the root.
             * ``path.name``: an attribute of a module.
 
+            A pattern, as ``*_excitatory.soma:spikes`` or ``**.soma.potential``, stands for a probe
+            of every address it matches, with the same fields (see `spark.core.addresses`). It is
+            matched when the probes are checked against a built model: by `validate`, and by a
+            `Recorder` given the model.
+
         Attributes
         ----------
         mode : ProbeMode
@@ -658,13 +663,99 @@ def address(path: tp.Sequence[str], name: str, kind: str) -> str:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+def probe_addresses(controller: Controller) -> tuple[str, ...]:
+    """
+        Returns the address of every value of a built controller that a probe can read.
+
+        Parameters
+        ----------
+        controller : Controller
+            A built controller.
+
+        Returns
+        -------
+        tuple of str
+            The inputs of every controller (``path.__call__:port``), the output ports of every module
+            of a controller (``path:port``), and every attribute holding an array (``path.name``).
+
+        See Also
+        --------
+        get_probe_targets : Lists the same values, with their shapes and dtypes, from example inputs.
+    """
+    from spark.nn.controllers.base import Controller
+    from spark.recording.probe_targets import _attributes
+    found = []
+
+    def ports(node: Controller, path: tuple[str, ...]) -> None:
+        found.extend(address((*path, CALL), port, 'port') for port in node.get_controller_inputs())
+        for child in node._modules_names:
+            found.extend(address((*path, child), port, 'port') for port in node._modules_output_map[child])
+            module = getattr(node, child)
+            if isinstance(module, Controller):
+                ports(module, (*path, child))
+
+    ports(controller, ())
+    for path, name, _ in _attributes(controller):
+        try:
+            get_recorded_array(getattr(resolve(controller, path), name))
+        except (AttributeError, TypeError, ValueError):
+            continue
+        found.append(address(path, name, 'attribute'))
+    return tuple(found)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def expand(controller: Controller, probes: tp.Iterable[Probe]) -> tuple[Probe, ...]:
+    """
+        Returns the probes with every pattern replaced by a probe of each address it matches.
+
+        Parameters
+        ----------
+        controller : Controller
+            A built controller.
+        probes : iterable of Probe
+            Probes, whose addresses may be patterns (see `spark.core.addresses`).
+
+        Returns
+        -------
+        tuple of Probe
+            The probes in the order given, each pattern replaced by probes with the same fields, one for
+            each address it matches, in the order of `probe_addresses`.
+
+        Raises
+        ------
+        ValueError
+            When a pattern matches nothing.
+    """
+    from spark.core import addresses
+    probes = tuple(probes)
+    if not any(addresses.is_pattern(probe.address) for probe in probes):
+        return probes
+    found = probe_addresses(controller)
+    expanded = []
+    for probe in probes:
+        if not addresses.is_pattern(probe.address):
+            expanded.append(probe)
+            continue
+        matched = addresses.select(probe.address, found)
+        if not matched:
+            raise ValueError(
+                f'"{probe.address}" matches nothing in the {type(controller).__name__}. `spark.recording.probe_addresses` '
+                f'lists what a probe can read.'
+            )
+        expanded.extend(dc.replace(probe, address=match) for match in matched)
+    return tuple(expanded)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 def validate(controller: Controller, probes: tp.Iterable[Probe]) -> None:
     """
         Checks that every probe is a valid probe (targets an existing variable within the controller).
 
         The address of each probe must name a module, port or attribute of the controller. ``units`` must
         be within the size of the value, and a `SummaryProbe` or a `DeltaProbe` must have entries to reduce.
-        An attribute must hold an array.
+        An attribute must hold an array. A pattern is checked as the probes of the addresses it matches,
+        and must match one at least.
 
         Parameters
         ----------
@@ -696,10 +787,12 @@ def validate(controller: Controller, probes: tp.Iterable[Probe]) -> None:
         raise TypeError(f'Probes address the modules of a controller, got {type(controller).__name__}.')
     if not getattr(controller, '__built__', False):
         raise ValueError('The controller is not built yet. Call it once with example inputs first.')
-    keys = set()
+    probes = tuple(probes)
     for probe in probes:
         if not isinstance(probe, Probe):
             raise TypeError(f'Expected a Probe, got {type(probe).__name__}.')
+    keys = set()
+    for probe in expand(controller, probes):
         if probe.key in keys:
             raise ValueError(f'Probes share the key "{probe.key}". Expected one probe per address and mode.')
         keys.add(probe.key)

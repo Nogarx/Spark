@@ -1598,6 +1598,42 @@ def pack(probes: tuple[Probe, ...], records: dict[str, tp.Any], kept: dict[str, 
     buffer = jnp.concatenate(parts) if parts else jnp.zeros((0,), jnp.uint8)
     return Packed(buffer, layout, tuple(probes), kept)
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def merge_packed(parts: tp.Sequence[Packed | dict], probes: tuple[Probe, ...], device: jax.Device) -> Packed | dict:
+    """
+        Joins the records of calls of distinct probes into the records of one call of ``probes``.
+
+        The buffers are moved to ``device`` and joined, and the values held on the device are moved
+        there too, so that the end of a group reads them together. The transfers do not wait for the
+        calls.
+
+        Parameters
+        ----------
+        parts : sequence of Packed or dict
+            The records of each call, as `recorded_scan` returns them. No probe is in two of them.
+        probes : tuple of Probe
+            The probes of the call they make up, as `Recorder.probes` returned them.
+        device : jax.Device
+            Where the records are joined.
+
+        Returns
+        -------
+        Packed or dict
+            The joined records, which `Recorder.push` takes as the records of the call. An empty
+            dictionary when no call recorded anything.
+    """
+    parts = [part for part in parts if isinstance(part, Packed)]
+    if not parts:
+        return {}
+    buffers, layout, kept, offset = [], [], {}, 0
+    for part in parts:
+        buffers.append(jax.device_put(part.buffer, device))
+        layout += [(path, dtype, shape, start + offset, size) for path, dtype, shape, start, size in part.layout]
+        offset += int(part.buffer.size)
+        kept.update(jax.device_put(part.held, device))
+    return Packed(jnp.concatenate(buffers), tuple(layout), tuple(probes), kept)
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

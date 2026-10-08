@@ -363,6 +363,83 @@ class TestNewSeeds:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class TestDerivedSeeds:
+    """
+        A module given no seed takes one derived from the controller holding it, which is what makes a seeded brain
+        the same in every process.
+    """
+
+    @staticmethod
+    def _brain(brain_seed: int, **first) -> spark.nn.BrainConfig:
+        pool = lambda name, **kwargs: spark.ModuleSpecs(
+            name=name, module_cls=spark.nn.neurons.ALIFNeuron,
+            inputs={'in_spikes': [spark.PortMap(origin='__call__', port='in_spikes')]},
+            config=spark.nn.neurons.ALIFNeuronConfig(units=(8,), **kwargs))
+        return spark.nn.BrainConfig(seed=brain_seed, modules_specs=[pool('a', **first), pool('b')])
+
+    @staticmethod
+    def _seeds(config) -> list:
+        return [(spec.config.seed, [inner.config.seed for inner in spec.config.modules_specs]) for spec in config.modules_specs]
+
+    def test_a_configuration_on_its_own_leaves_its_seeds_unset(self) -> None:
+        config = spark.nn.neurons.ALIFNeuronConfig(units=(8,))
+        assert config.seed is None
+        assert all(spec.config.seed is None for spec in config.modules_specs)
+
+    def test_a_seeded_brain_seeds_every_level(self) -> None:
+        assert all(seed is not None for pool, components in self._seeds(self._brain(7)) for seed in (pool, *components))
+
+    def test_the_same_seed_gives_the_same_seeds(self) -> None:
+        assert self._seeds(self._brain(7)) == self._seeds(self._brain(7))
+
+    def test_the_seeds_are_the_same_in_every_process(self) -> None:
+        # NOTE: The derivation reads nothing but the seed and the name.
+        from spark.core.config import _derived_seed
+        assert (_derived_seed(7, 'a'), _derived_seed(7, 'b'), _derived_seed(8, 'a')) == (1060464539, 2550262055, 1284789400)
+
+    def test_another_seed_gives_other_seeds(self) -> None:
+        assert self._seeds(self._brain(7)) != self._seeds(self._brain(8))
+
+    def test_two_modules_of_one_brain_differ(self) -> None:
+        (first, first_components), (second, second_components) = self._seeds(self._brain(7))
+        assert first != second
+        assert all(a != b for a, b in zip(first_components, second_components))
+
+    def test_a_seed_given_is_kept(self) -> None:
+        config = self._brain(7, seed=123)
+        assert config.modules_specs[0].config.seed == 123
+        assert self._seeds(config)[1] == self._seeds(self._brain(7))[1]
+
+    def test_a_file_keeps_its_seeds(self, tmp_path) -> None:
+        config = self._brain(7).with_new_seeds(seed=42)
+        config.to_file(str(tmp_path / 'brain.scfg'))
+        assert self._seeds(spark.nn.BrainConfig.from_file(str(tmp_path / 'brain.scfg'))) == self._seeds(config)
+
+    def test_a_module_on_its_own_draws_a_seed_and_keeps_it(self) -> None:
+        soma = spark.nn.somas.LeakySoma(units=(4,))
+        neuron = spark.nn.neurons.ALIFNeuron(units=(8,))
+        assert soma.config.seed is not None
+        assert neuron.config.seed is not None and all(spec.config.seed is not None for spec in neuron.config.modules_specs)
+
+    def test_two_pools_of_one_brain_draw_different_delays_and_weights(self, spikes) -> None:
+        brain = spark.nn.Brain(config=self._brain(7))
+        brain(in_spikes=spikes(4))
+        assert not np.array_equal(brain.a.delays.kernel.value, brain.b.delays.kernel.value)
+        assert not np.array_equal(brain.a.synapses.kernel.value, brain.b.synapses.kernel.value)
+
+    def test_the_pools_of_a_registered_neuron_differ(self, spikes) -> None:
+        name = f'DerivedSeedsNeuron{id(self)}'
+        spark.register_neuron_from_config(name, spark.nn.neurons.ALIFNeuronConfig(units=(8,), seed=5))
+        neuron_cls = spark.REGISTRY.Neurons.get(name).get_cls()
+        pool = lambda pool_name: spark.ModuleSpecs(
+            name=pool_name, module_cls=neuron_cls, config=neuron_cls.default_config(),
+            inputs={'in_spikes': [spark.PortMap(origin='__call__', port='in_spikes')]})
+        brain = spark.nn.Brain(config=spark.nn.BrainConfig(seed=7, modules_specs=[pool('a'), pool('b')]))
+        brain(in_spikes=spikes(4))
+        assert not np.array_equal(brain.a.delays.kernel.value, brain.b.delays.kernel.value)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class TestControllerSharedFields:
     """
         A controller hands its own shape and its own clock to every module it holds.
@@ -475,6 +552,113 @@ class TestClassReference:
 
     def test_by_explicit_reference(self) -> None:
         assert UnconventionalConfig().class_ref is ProbeNamedModule
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TestUpdate:
+    """
+        Parts of a configuration read and replaced by their address, or by a pattern matching several.
+    """
+
+    @staticmethod
+    def _brain() -> spark.nn.BrainConfig:
+        pool = lambda name: spark.ModuleSpecs(
+            name=name, module_cls=spark.nn.neurons.ALIFNeuron,
+            inputs={'in_spikes': [spark.PortMap(origin='__call__', port='in_spikes')]},
+            config=spark.nn.neurons.ALIFNeuronConfig(units=(8,)))
+        return spark.nn.BrainConfig(seed=7, modules_specs=[pool('a_excitatory'), pool('b_excitatory'), pool('a_inhibitory')])
+
+    def test_an_address_reads_a_field_or_the_configuration_of_a_module(self) -> None:
+        config = self._brain()
+        assert config['a_excitatory.soma.threshold'] == -40.0
+        assert type(config['a_excitatory.soma']) is spark.nn.somas.AdaptiveLeakySomaConfig
+        assert config['a_excitatory.synapses.kernel.density'] == 0.2
+
+    def test_the_addresses_are_every_module_nested_configuration_and_field(self) -> None:
+        addresses = self._brain().addresses()
+        assert {'seed', 'a_excitatory', 'a_excitatory.soma', 'a_excitatory.soma.threshold', 'a_excitatory.synapses.kernel',
+                'a_excitatory.synapses.kernel.density'} <= set(addresses)
+        assert not any(address.endswith('modules_specs') for address in addresses)
+
+    def test_a_pattern_selects_addresses(self) -> None:
+        config = self._brain()
+        assert config.addresses('*_excitatory.soma') == ('a_excitatory.soma', 'b_excitatory.soma')
+        assert config.addresses('**.soma.threshold') == ('a_excitatory.soma.threshold', 'b_excitatory.soma.threshold', 'a_inhibitory.soma.threshold')
+
+    def test_a_field_is_set_in_a_copy(self) -> None:
+        config = self._brain()
+        updated = config.update({'a_excitatory.soma.threshold': -45.0})
+        assert updated['a_excitatory.soma.threshold'] == -45.0
+        assert (config['a_excitatory.soma.threshold'], updated['b_excitatory.soma.threshold']) == (-40.0, -40.0)
+
+    def test_a_pattern_sets_every_part_it_matches(self) -> None:
+        updated = self._brain().update({'*_excitatory.soma.threshold': -45.0})
+        assert [updated[f'{pool}.soma.threshold'] for pool in ('a_excitatory', 'b_excitatory', 'a_inhibitory')] == [-45.0, -45.0, -40.0]
+
+    def test_a_module_takes_a_configuration_of_its_class(self) -> None:
+        soma = spark.nn.somas.AdaptiveLeakySomaConfig(threshold=-42.0)
+        updated = self._brain().update({'*_excitatory.soma': soma})
+        assert (updated['a_excitatory.soma.threshold'], updated['b_excitatory.soma.threshold']) == (-42.0, -42.0)
+        assert soma.seed is None
+
+    def test_two_modules_given_one_configuration_take_different_seeds_the_same_each_time(self) -> None:
+        soma = spark.nn.somas.AdaptiveLeakySomaConfig(threshold=-42.0)
+        first, second = (self._brain().update({'*_excitatory.soma': soma}) for _ in range(2))
+        assert first['a_excitatory.soma.seed'] != first['b_excitatory.soma.seed']
+        assert (first['a_excitatory.soma.seed'], first['b_excitatory.soma.seed']) == (second['a_excitatory.soma.seed'], second['b_excitatory.soma.seed'])
+
+    def test_the_controller_hands_its_units_and_dt_again(self) -> None:
+        synapses = spark.nn.synapses.TracedSynapsesConfig.partial(tau=4.0)
+        updated = self._brain().update({'a_excitatory.synapses': synapses})
+        assert (updated['a_excitatory.synapses.units'], updated['a_excitatory.synapses.dt']) == ((8,), 1.0)
+
+    def test_a_module_specs_replaces_the_class_and_the_wiring(self, spikes) -> None:
+        lif = spark.ModuleSpecs(name='a_inhibitory', module_cls=spark.nn.neurons.LIFNeuron,
+                                inputs={'in_spikes': [spark.PortMap(origin='a_excitatory', port='out_spikes')]},
+                                config=spark.nn.neurons.LIFNeuronConfig(units=(8,)))
+        updated = self._brain().update({'a_inhibitory': lif})
+        spec = next(spec for spec in updated.modules_specs if spec.name == 'a_inhibitory')
+        assert spec.module_cls is spark.nn.neurons.LIFNeuron and spec.inputs['in_spikes'][0].origin == 'a_excitatory'
+        brain = spark.nn.Brain(config=updated)
+        brain(in_spikes=spikes(4))
+        assert type(brain.a_inhibitory) is spark.nn.neurons.LIFNeuron
+
+    def test_the_pools_given_one_configuration_draw_different_values(self, spikes) -> None:
+        kernel = spark.nn.initializers.UniformInitializerConfig(scale=3.0)
+        brain = spark.nn.Brain(config=self._brain().update({'*_excitatory.synapses.kernel': kernel}))
+        brain(in_spikes=spikes(4))
+        a, b = (np.asarray(pool.synapses.kernel.value) for pool in (brain.a_excitatory, brain.b_excitatory))
+        assert 0 < a.min() and a.max() <= 3.0 and not np.array_equal(a, b)
+
+    def test_a_module_keeps_its_name(self) -> None:
+        renamed = spark.ModuleSpecs(name='other', module_cls=spark.nn.neurons.LIFNeuron,
+                                    inputs={'in_spikes': [spark.PortMap(origin='__call__', port='in_spikes')]})
+        with pytest.raises(ValueError, match='a module keeps its name'):
+            self._brain().update({'a_inhibitory': renamed})
+
+    @pytest.mark.parametrize('value, match', [
+        (spark.nn.somas.LeakySomaConfig(), 'configured by AdaptiveLeakySomaConfig, not by LeakySomaConfig'),
+        (3, 'replaced by a configuration or a ModuleSpecs'),
+    ])
+    def test_a_module_refuses_anything_else(self, value, match) -> None:
+        with pytest.raises(TypeError, match=match):
+            self._brain().update({'a_excitatory.soma': value})
+
+    def test_an_address_matching_nothing_is_refused_with_the_closest_ones(self) -> None:
+        with pytest.raises(KeyError, match='Did you mean: .*a_excitatory.soma.threshold'):
+            self._brain().update({'a_excitatory.soma.thresold': -45.0})
+
+    def test_a_pattern_matching_a_part_and_a_part_within_it_is_refused(self) -> None:
+        with pytest.raises(ValueError, match='ambiguous'):
+            self._brain().update({'**': 1})
+
+    def test_an_index_is_an_address_not_a_pattern(self) -> None:
+        with pytest.raises(KeyError, match='addresses'):
+            self._brain()['*.soma']
+
+    def test_ipython_completes_the_addresses(self) -> None:
+        config = self._brain()
+        assert config._ipython_key_completions_() == config.addresses()
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

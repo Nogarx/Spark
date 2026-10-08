@@ -41,11 +41,11 @@ jobs:
     - name: Install Spark and the tools that build it
       run: |
         python -m pip install --upgrade pip
-        python -m pip install -e ".[editor]"
-        python -m pip install pytest build twine
+        python -m pip install -e ".[editor,test]"
+        python -m pip install build twine
 
     - name: Run the tests
-      run: pytest -q --device=cpu
+      run: pytest -q --device=cpu -n auto
 
     - name: Build the distribution
       env:

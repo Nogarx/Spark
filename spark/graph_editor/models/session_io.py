@@ -15,6 +15,7 @@ import typing as tp
 import pathlib as pl
 import dataclasses as dc
 
+import spark.core.utils as utils
 from spark.core.config import SparkConfig
 from spark.core.serializer import SparkJSONEncoder, SparkJSONDecoder
 from spark.core.registry import register_models_from_payload
@@ -84,7 +85,7 @@ def save_session(graph_model: GraphModel, path: str | pl.Path) -> pl.Path:
         graph_model : GraphModel
             The graph to write.
         path : str or pathlib.Path
-            Where to write it. The session suffix is applied.
+            Where to write it. ``.sge`` is added to the name when it does not end with it.
 
         Returns
         -------
@@ -94,7 +95,7 @@ def save_session(graph_model: GraphModel, path: str | pl.Path) -> pl.Path:
     profile = graph_model.profile
     if profile is None:
         raise ValueError('There is no open model to save.')
-    path = pl.Path(path).with_suffix(SESSION_SUFFIX)
+    path = utils.with_extension(path, SESSION_SUFFIX)
     exported = build_controller_config(graph_model, strict=False)
     if exported.config is None:
         raise ValueError('; '.join(exported.problems) or 'The graph could not be described.')
@@ -173,7 +174,7 @@ def export_model(graph_model: GraphModel, path: str | pl.Path) -> pl.Path:
         graph_model : GraphModel
             The graph to write.
         path : str or pathlib.Path
-            Where to write it. The model suffix is applied.
+            Where to write it. ``.scfg`` is added to the name when it does not end with it.
 
         Returns
         -------
@@ -185,7 +186,7 @@ def export_model(graph_model: GraphModel, path: str | pl.Path) -> pl.Path:
         ValueError
             Listing everything that keeps the graph from being a valid model.
     """
-    path = pl.Path(path).with_suffix(MODEL_SUFFIX)
+    path = utils.with_extension(path, MODEL_SUFFIX)
     exported = build_controller_config(graph_model, strict=True)
     if not exported.is_complete:
         raise ValueError('\n'.join(exported.problems))

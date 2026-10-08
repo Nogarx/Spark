@@ -28,12 +28,13 @@ import concurrent.futures
 import dataclasses as dc
 import numpy as np
 import jax
+from spark.core import addresses
 from spark.core.backend import split, merge
 from spark.core.config import SparkConfig
 from spark.core.recording_hooks import OPEN_RECORDERS
 from spark.recording.probe import (
     Probe, SummaryProbe, TraceProbe, RasterProbe, SnapshotProbe, 
-    DeltaProbe, SummaryReduction, DeltaReduction, BOUNDARY_PROBES, validate,
+    DeltaProbe, SummaryReduction, DeltaReduction, BOUNDARY_PROBES, validate, expand,
 )
 from spark.recording.reduce import (
     Packed, Start, merge_summaries, group_values, first_kept, 
@@ -1656,8 +1657,17 @@ class Recorder:
         if len(set(names)) != len(names):
             raise ValueError(f'Measurements share names: {sorted({n for n in names if names.count(n) > 1})}.')
         if model is not None and getattr(model, '__built__', False):
+            # A pattern is recorded as the probes of the addresses it matches.
+            self.measurements = tuple(dc.replace(r, probes=expand(model, r.probes)) for r in self.measurements)
             for measurements in self.measurements:
                 validate(model, measurements.probes)
+        else:
+            patterns = [p.address for r in self.measurements for p in r.probes if addresses.is_pattern(p.address)]
+            if patterns:
+                raise ValueError(
+                    f'The probe addresses {", ".join(patterns)} are patterns, matched against the model: give the recorder '
+                    f'the built model.'
+                )
         # Raises when two measurements disagree on a probe they share.
         merge_probes(p for r in self.measurements for p in r.probes)
         self._by_name = {r.name: r for r in self.measurements}

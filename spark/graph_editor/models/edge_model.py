@@ -50,6 +50,10 @@ class EdgeModel(BaseModel):
             return False, 'Cannot connect two inputs or two outputs.'
         if src_port.port_type != dst_port.port_type:
             return False, f'Mismatched port types ({src_port.port_type} -> {dst_port.port_type}).'
+        from spark.graph_editor.models.node_model import SinkNodeModel
+        is_property = src_port.compartment is not None and src_port.compartment is getattr(src_port.node, 'props_section', None)
+        if is_property and isinstance(dst_port.node, SinkNodeModel):
+            return False, 'A property is not an output of the controller: a probe records it.'
         return True, 'Valid.'
 
     def delete(self) -> None:

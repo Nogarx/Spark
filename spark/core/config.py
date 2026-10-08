@@ -9,6 +9,7 @@ import jax
 import copy
 import lzma
 import json
+import zlib
 import inspect
 import logging
 import warnings
@@ -47,12 +48,19 @@ class AnnotationWarning(Warning):
 NESTED_DELIMITER = '__'
 """
 	Separator addressing something inside a configuration: a nested configuration ("kernel__scale"), or one
-	module of a "modules_specs" list, by its name ("synapses__kernel__scale").
+	module of a "modules_specs" list, by its name ("synapses__kernel__scale"). It is the dot of an address
+	("synapses.kernel.scale") written in a keyword argument (see `spark.core.addresses`).
 """
 
 SHARED_DELIMITER = '_s_'
 """
-	Prefix marking an argument that is handed down to every configuration below ("_s_units").
+	Prefix marking an argument that is handed down to every configuration below ("_s_units"), as the pattern
+	"**.units" would (see `spark.core.addresses`).
+"""
+
+CONFIG_EXTENSION = '.scfg'
+"""
+	Extension of the files written by `SparkConfig.to_file`.
 """
 
 _MODULE_SPECS_ANNOTATION = re.compile(r'\b(?:list|tuple|set|frozenset|Sequence|Iterable|Collection)\s*\[\s*([\w\.]+)')
@@ -167,6 +175,14 @@ def is_module_specs_field(field: dc.Field, value: tp.Any = None) -> bool:
 		if all(isinstance(v, dict) and {'name', 'module_cls'} <= v.keys() for v in value):
 			return True
 	return False
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _derived_seed(seed: int, name: str) -> int:
+	"""
+		Generates a deterministic seed from a root seed and the name string.
+	"""
+	return int(np.random.SeedSequence([seed % 2**32, zlib.crc32(name.encode())]).generate_state(1)[0])
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -694,7 +710,221 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 	def init(self,):
 		return _InitNamespace(self,)
 
-#-----------------------------------------------------------------------------------------------------------------------------------------------#
+	def update(self, changes: tp.Mapping[str, tp.Any]) -> 'SparkConfig':
+		"""
+			Returns a copy of this configuration with the parts at the given addresses replaced.
+
+			Parameters
+			----------
+			changes : mapping of str to Any
+				Values by address or pattern, applied in order. An address is the dotted chain of names
+				leading to a part: modules by name and nested configurations by field name, then the
+				field, as ``A_excitatory.soma`` or ``A_excitatory.soma.threshold``. A pattern matches
+				several: ``*_excitatory.soma``, ``**.threshold`` (see `spark.core.addresses`). What an
+				address names is replaced by its value:
+
+				* a module, by a configuration of its class, or by a `ModuleSpecs` of the same name,
+				  which also sets its class and its wiring;
+				* a field, by the value, a nested configuration included.
+
+			Returns
+			-------
+			SparkConfig
+				A new configuration. This one, and the values given, are left unchanged.
+
+			Raises
+			------
+			KeyError
+				If an address or a pattern matches nothing.
+			ValueError
+				If a pattern matches both a part and a part within it, or a `ModuleSpecs` has another
+				name than the module it replaces.
+			TypeError
+				If a module is given something else than a configuration of its class or a
+				`ModuleSpecs`.
+
+			Notes
+			-----
+			Each part matched takes a copy of its value. The controllers holding it hand it their
+			``units`` and ``dt`` again, so these are changed on the controller (``A_excitatory.units``):
+			a value set below it is overwritten. A configuration given without a seed takes one derived
+			from the seed of the controller holding it and its name, so that two modules given the same
+			configuration still draw different values. A seed given is kept.
+
+			Examples
+			--------
+			>>> config = config.update({
+			...     '*_excitatory.soma': spark.nn.somas.AdaptiveLeakySomaConfig(threshold=-45.0),
+			...     '**.synapses.kernel.scale': 2000.0,
+			...     'integrator': spark.ModuleSpecs(name='integrator', module_cls=..., inputs=...),
+			... })
+		"""
+		config = self
+		for pattern, value in changes.items():
+			found = config.addresses(pattern)
+			if not found:
+				raise KeyError(config._unmatched(pattern))
+			nested = [(outer, inner) for outer in found for inner in found if inner.startswith(f'{outer}.')]
+			if nested:
+				raise ValueError(
+					f'"{pattern}" matches both "{nested[0][0]}" and "{nested[0][1]}", within it: the part replaced is '
+					f'ambiguous.'
+				)
+			for address in found:
+				config = config._replaced(tuple(address.split('.')), value, address)
+		return config
+
+
+
+	def addresses(self, pattern: str | None = None) -> tuple[str, ...]:
+		"""
+			Returns the addresses of the parts of this configuration.
+
+			Parameters
+			----------
+			pattern : str, optional
+				Keeps the addresses it matches (see `spark.core.addresses`).
+
+			Returns
+			-------
+			tuple of str
+				The address of every module, nested configuration and field, depth first.
+		"""
+		from spark.core import addresses
+		found = tuple(self._walk(''))
+		return found if pattern is None else addresses.select(pattern, found)
+
+
+
+	def __getitem__(self, address: str) -> tp.Any:
+		"""
+			Returns the part of this configuration at an address.
+
+			Parameters
+			----------
+			address : str
+				The dotted chain of names leading to the part, as ``A_excitatory.soma.threshold``.
+
+			Returns
+			-------
+			Any
+				The value of a field, or the configuration of a module.
+
+			Raises
+			------
+			KeyError
+				If nothing is at the address.
+		"""
+		from spark.core import addresses
+		if not isinstance(address, str) or addresses.is_pattern(address):
+			raise KeyError(f'{address!r} is not an address; `addresses(pattern)` lists the addresses a pattern matches.')
+		part = self
+		for depth, name in enumerate(address.split('.')):
+			if not isinstance(part, SparkConfig):
+				raise KeyError(f'"{address}": "{".".join(address.split(".")[:depth])}" holds no configuration.')
+			kind, _, part = part._child(name, address)
+			if kind == 'module':
+				part = part.config
+		return part
+
+
+
+	def _ipython_key_completions_(self) -> tuple[str, ...]:
+		"""
+			The addresses offered by IPython after ``config[``.
+		"""
+		return self.addresses()
+
+
+
+	def _walk(self, prefix: str) -> tp.Iterator[str]:
+		"""
+			Yields the addresses of the parts of this configuration, each preceded by ``prefix``.
+		"""
+		for field in dc.fields(self):
+			if field.name.startswith('__'):
+				continue
+			value = getattr(self, field.name, None)
+			if is_module_specs_field(field, value):
+				for spec in value or ():
+					yield f'{prefix}{spec.name}'
+					if isinstance(spec.config, SparkConfig):
+						yield from spec.config._walk(f'{prefix}{spec.name}.')
+				continue
+			yield f'{prefix}{field.name}'
+			if isinstance(value, SparkConfig):
+				yield from value._walk(f'{prefix}{field.name}.')
+
+
+
+	def _child(self, name: str, address: str) -> tuple[str, str, tp.Any]:
+		"""
+			Returns what ``name`` names in this configuration: its kind (``'module'``, ``'config'`` or
+			``'field'``), the name of the field holding it, and the `ModuleSpecs` of a module or the value
+			of a field.
+		"""
+		found = []
+		for field in dc.fields(self):
+			if field.name.startswith('__'):
+				continue
+			value = getattr(self, field.name, None)
+			if is_module_specs_field(field, value):
+				found += [('module', field.name, spec) for spec in value or () if spec.name == name]
+			elif field.name == name:
+				found.append(('config' if isinstance(value, SparkConfig) else 'field', field.name, value))
+		if not found:
+			raise KeyError(f'"{address}": {type(self).__name__} has no module or field "{name}".')
+		if len(found) > 1:
+			raise KeyError(f'"{address}": "{name}" is both a module and a field of {type(self).__name__}.')
+		return found[0]
+
+
+
+	def _replaced(self, names: tuple[str, ...], value: tp.Any, address: str) -> 'SparkConfig':
+		"""
+			Returns a copy of this configuration with the part at ``names`` replaced by ``value``.
+		"""
+		from spark.core.specs import ModuleSpecs
+		name, rest = names[0], names[1:]
+		kind, field_name, held = self._child(name, address)
+		if kind == 'module':
+			spec = copy.deepcopy(held)
+			if rest:
+				spec.config = held.config._replaced(rest, value, address)
+			elif isinstance(value, ModuleSpecs):
+				if value.name != name:
+					raise ValueError(f'"{address}" is replaced by the module "{value.name}": a module keeps its name.')
+				spec = copy.deepcopy(value)
+			elif isinstance(value, SparkConfig):
+				expected = tp.get_type_hints(spec.module_cls)['config']
+				if not isinstance(value, expected):
+					raise TypeError(
+						f'The module "{address}" is configured by {expected.__name__}, not by {type(value).__name__}. '
+						f'A ModuleSpecs replaces the class of a module.'
+					)
+				spec.config = copy.deepcopy(value)
+			else:
+				raise TypeError(
+					f'The module "{address}" is replaced by a configuration or a ModuleSpecs; got {type(value).__name__}.'
+				)
+			specs = tuple(spec if other.name == name else other for other in getattr(self, field_name))
+			return self.merge(**{field_name: specs})
+		if rest:
+			return self.merge(**{name: held._replaced(rest, value, address)})
+		return self.merge(**{name: copy.deepcopy(value)})
+
+
+
+	def _unmatched(self, pattern: str) -> str:
+		"""
+			Returns the message of a pattern matching nothing in this configuration.
+		"""
+		import difflib
+		message = f'"{pattern}" matches nothing in {type(self).__name__}.'
+		close = difflib.get_close_matches(pattern, self.addresses(), n=3)
+		return f'{message} Did you mean: {", ".join(close)}?' if close else message
+
+
 
 	# TODO: This method is not ideal. It solves the module association problem in a very brittle way. 
 	# There should be another better pattern for this problem.
@@ -889,6 +1119,55 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 
 
 
+	def _held_configs(self) -> tp.Iterator[tuple[str, 'SparkConfig']]:
+		"""
+			Yields the configurations this one holds, with their names: those of the modules of a controller, by
+			module name, and nested configurations, by field name.
+		"""
+		for field in dc.fields(self):
+			value = getattr(self, field.name, None)
+			if is_module_specs_field(field, value):
+				for spec in value or ():
+					if isinstance(spec.config, SparkConfig):
+						yield spec.name, spec.config
+			elif isinstance(value, SparkConfig):
+				yield field.name, value
+
+
+
+	def _derive_seeds(self) -> None:
+		"""
+			Gives every configuration this one holds, at any depth, that has no seed, the seed `_derived_seed`
+			draws from the seed of the configuration holding it and its name. Does nothing while this one has
+			no seed.
+
+			NOTE: Writes the held configurations in place. Called from ``__post_init__``, on configurations that
+			the construction of this one copied.
+		"""
+		seed = getattr(self, 'seed', None)
+		if seed is None:
+			return
+		for name, config in self._held_configs():
+			if hasattr(config, 'seed') and config.seed is None:
+				config.seed = _derived_seed(seed, name)
+			config._derive_seeds()
+
+
+
+	def _clear_seeds(self) -> None:
+		"""
+			Unsets the seed of this configuration and of every configuration it holds, at any depth, so that each
+			is derived from the configuration holding it.
+
+			NOTE: Writes the configurations in place.
+		"""
+		if hasattr(self, 'seed'):
+			self.seed = None
+		for _, config in self._held_configs():
+			config._clear_seeds()
+
+
+
 	def to_dict(self,) -> dict[str, dict[str, tp.Any]]:
 		"""
 			Serializes the configuration to a dictionary.
@@ -942,14 +1221,14 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 			compress: bool = True,
 			verbose: bool = True,
 			metadata: dict[str, tp.Any] | None = None,
-		) -> None:
+		) -> pl.Path:
 		"""
 			Writes the configuration to a .scfg file.
 
 			Parameters
 			----------
 			file_path : str
-				Where to write.
+				Where to write. ``.scfg`` is added to the name when it does not end with it.
 			compress : bool, default True
 				Compress the file.
 			verbose : bool, default True
@@ -957,9 +1236,14 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 			metadata : dict, optional
 				Written beside the configuration. `from_file` does not read it back; use
 				`metadata_from_file` for that. The editor stores node positions here.
+
+			Returns
+			-------
+			pathlib.Path
+				The file written.
 		"""
 		# Validate path
-		path = pl.Path(file_path)
+		path = utils.with_extension(file_path, CONFIG_EXTENSION)
 		# Ensure the parent directory exists.
 		path.parent.mkdir(parents=True, exist_ok=True)
 		# Write to file.
@@ -983,6 +1267,7 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 			temp_path.unlink(missing_ok=True)
 		if verbose:
 			print(f'Configuration saved to "{path}".')
+		return path
 
 
 
@@ -997,7 +1282,7 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 			Parameters
 			----------
 			file_path : str
-				File to read.
+				File to read, with or without its ``.scfg`` extension.
 
 			Returns
 			-------
@@ -1005,7 +1290,7 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 				What the writer stored, empty when it stored nothing.
 		"""
 		from spark.core.serializer import METADATA_KEY
-		path = pl.Path(file_path)
+		path = utils.file_with_extension(file_path, CONFIG_EXTENSION)
 		if not path.is_file():
 			raise FileNotFoundError(f'No file found at the specified path: "{path}".')
 		with open(path, 'rb') as f:
@@ -1017,6 +1302,8 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 		metadata = document.get(METADATA_KEY) if isinstance(document, dict) else None
 		return metadata if isinstance(metadata, dict) else {}
 
+
+
 	@classmethod
 	def from_file(cls: type['SparkConfig'], file_path: str) -> 'SparkConfig':
 		"""
@@ -1025,13 +1312,13 @@ class SparkConfig(abc.ABC, metaclass=SparkConfigMeta):
 			Parameters
 			----------
 			file_path : str
-				File to read.
+				File to read, with or without its ``.scfg`` extension.
 
 			Returns
 			-------
 			SparkConfig
 		"""
-		path = pl.Path(file_path)
+		path = utils.file_with_extension(file_path, CONFIG_EXTENSION)
 		# Validate path
 		if not path.is_file():
 			raise FileNotFoundError(f'No file found at the specified path: "{path}".')
@@ -1066,19 +1353,21 @@ class DefaultSparkConfig(SparkConfig):
         Parameters
         ----------
         seed : int, optional
-            Seed for the random draws of the module. Drawn from the operating system when omitted.
+            Seed for the random draws of the module. When omitted, derived from the seed of the
+            controller holding the module and the name of the module, or drawn from the operating
+            system for a module on its own.
         dtype : DTypeLike, default jnp.float16
             Dtype used for the internal state.
         dt : float, default 1.0
             Integration step, in ms.
     """
-    seed: int = dc.field(
-        default_factory=lambda: int.from_bytes(os.urandom(4), 'little'), 
+    seed: int | None = dc.field(
+        default=None,
         metadata={
             'validators': [
                 TypeValidator,
             ], 
-            'description': 'Seed for internal random processes.',
+            'description': 'Seed for internal random processes. Derived from the controller holding the module when unset.',
         })
     dtype: DTypeLike = dc.field(
         default=jnp.float16, 

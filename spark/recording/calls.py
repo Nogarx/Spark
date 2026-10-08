@@ -24,7 +24,7 @@ from spark.recording.probe_context import ModelCalls
 from spark.recording.measurements import merge_probes
 from spark.recording.scan import recorded_scan, _first
 from spark.recording.current import open_recorder
-from spark.recording.reduce import start_of, warmup_starts, read_boundary, Start, Packed
+from spark.recording.reduce import start_of, warmup_starts, read_boundary, merge_packed, Start, Packed
 from spark.recording.utils import hold_interrupt
 
 # NOTE: `spark.scan` needs ``_trace_ctx`` within another transformation or JAX will report a leaked tracer.
@@ -228,6 +228,8 @@ class _Calls:
             returned beside its result.
         checked : WeakSet of Recorder
             The recorders whose probes were traced with the function.
+        checked_parts : WeakKeyDictionary of Recorder to set
+            The parts of a partitioned model traced with the probes they record, by recorder.
         compiled : set of tuple
             The calls compiled, by key, probes and whether they may cross the end of a group.
     """
@@ -238,6 +240,7 @@ class _Calls:
         self.shaped = False
         self.recorded = _recorded_variant(function)
         self.checked: weakref.WeakSet[Recorder] = weakref.WeakSet()
+        self.checked_parts: weakref.WeakKeyDictionary[Recorder, set[tp.Hashable]] = weakref.WeakKeyDictionary()
         self.compiled: set[tuple] = set()
 
     def static(self, args: tuple, kwargs: dict) -> tp.Hashable:
@@ -365,6 +368,30 @@ class _Calls:
                 error.add_note('Raised while tracing every probe of the recorder, before the first call.')
                 raise
         self.checked.add(recorder)
+
+    def check_part(
+            self,
+            recorder: Recorder,
+            part: tp.Hashable,
+            args: tuple,
+            kwargs: dict,
+            learned: Learned,
+            probes: tuple[Probe, ...],
+        ) -> None:
+        """
+            Traces the call of the part ``part`` of a partitioned model with ``probes``, the probes of
+            ``recorder`` it records, once per recorder and part.
+        """
+        checked = self.checked_parts.setdefault(recorder, set())
+        if part in checked:
+            return
+        if probes:
+            try:
+                self.trace(args, kwargs, _Call('record', probes, start_of(probes, 0), learned))
+            except Exception as error:
+                error.add_note(f'Raised while tracing the probes of the recorder that the part {part} records, before the first call.')
+                raise
+        checked.add(part)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -524,6 +551,69 @@ class _Hooks:
             pack_steps=call.learned.layout.pack_steps, split_transpose=split_transpose,
         )
         return carry, ys
+
+    def parts(
+            self,
+            function: Jit,
+            parts: dict[tp.Hashable, tuple[tuple, dict]],
+            owner: tp.Callable[[tuple[str, ...], str], tp.Hashable],
+            device: tp.Any,
+        ) -> dict[tp.Hashable, tp.Any]:
+        """
+            Runs one call of ``function`` for each part of a model divided among devices, as one call of
+            the open recorder.
+
+            ``parts`` gives the arguments of the call of each part. Each call records the probes of its
+            own part, which ``owner`` names from the path and the name of a probe. The records of the
+            calls are joined on ``device`` and handed over once, for the steps of one call. Returns the
+            result of each call.
+        """
+        recorder = open_recorder()
+        if recorder is None:
+            return {key: function.jitted(*args, **kwargs) for key, (args, kwargs) in parts.items()}
+        if TRACED_CALL.get() is not None:
+            raise RuntimeError(
+                'The parts of a partitioned model run one call each, from the loop: they are not called within a '
+                '`spark.jit` function.'
+            )
+        calls = _calls(function)
+        learned = {key: calls.learn(args, kwargs)[1] for key, (args, kwargs) in parts.items()}
+        steps = {part.steps for part in learned.values()}
+        if steps == {0}:
+            return {key: function.jitted(*args, **kwargs) for key, (args, kwargs) in parts.items()}
+        if len(steps) > 1:
+            raise RuntimeError(
+                f'The parts of a partitioned model run {sorted(steps)} steps in one call. The calls of the parts are one '
+                f'call of the recorder, of the same steps.'
+            )
+        steps = steps.pop()
+        mine = lambda probes, key: tuple(probe for probe in probes if owner(probe.path, probe.name) == key)
+        every = merge_probes(p for r in recorder.measurements for p in r.probes)
+        for key, (args, kwargs) in parts.items():
+            calls.check_part(recorder, key, args, kwargs, learned[key], mine(every, key))
+        probes = recorder.probes(steps)
+        try:
+            # From the calls to the hand-over of their records, SIGINT waits, as for the call of a `spark.jit` function.
+            with hold_interrupt() as held:
+                results, records = {}, []
+                for key, (args, kwargs) in parts.items():
+                    recorded = mine(probes, key)
+                    if recorded:
+                        start = start_of(recorded, recorder.step, steps)
+                        results[key], part = calls.recorded(
+                            *args, _spark_probes=recorded, _spark_start=start, _spark_learned=learned[key], **kwargs,
+                        )
+                        records.append(part)
+                    else:
+                        results[key] = function.jitted(*args, **kwargs)
+                recorder.push(merge_packed(records, probes, device), steps)
+        except BaseException:
+            # The calls not handed over did not run for the recorder: the next one is decided again.
+            recorder._pending = None
+            raise
+        if held is not None and held.frame is not None:
+            recorder._hold_interrupt(held)
+        return results
 
     def warmup(self, function: Jit, args: tuple, kwargs: dict) -> int:
         """

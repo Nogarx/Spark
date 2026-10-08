@@ -1145,7 +1145,8 @@ class RunViewerWindow(QMainWindow):
         Notes
         -----
         When the model of the run cannot be loaded, the window shows the error in place of the
-        graph. Custom neurons must be registered before the run is opened, as for the editor.
+        graph. Neurons defined by a configuration are read from the run; modules defined in code
+        must be imported before the run is opened.
         Closing the window drops what it read from the run.
 
         See Also
@@ -1382,8 +1383,8 @@ class RunViewerWindow(QMainWindow):
         if self.data.config is None:
             label = QLabel(
                 'The model of this run could not be loaded, so its graph is not shown.\n'
-                f'{self.data.config_error}\n\nCustom neurons must be registered before the run is opened, '
-                'as for the editor (spark.register_neuron_from_config_file).'
+                f'{self.data.config_error}\n\nNeurons defined by a configuration are read from the run, but modules '
+                'defined in code must be imported before the run is opened.'
             )
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             label.setWordWrap(True)

@@ -4,11 +4,13 @@
 
 from __future__ import annotations
 
+import os
 import re
 import jax
 import jax.numpy as jnp
 import enum
 import string
+import pathlib
 import numpy as np
 import typing as tp
 import collections.abc
@@ -711,6 +713,54 @@ def ascii_tree(text: str) -> str:
         return out
 
     return '\n'.join(render(tree))
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def with_extension(path: str | os.PathLike, extension: str) -> pathlib.Path:
+    """
+        Returns a path whose name ends with an extension.
+
+        Parameters
+        ----------
+        path : str or path-like
+            A file path.
+        extension : str
+            The extension, with its dot, as ``'.scfg'``.
+
+        Returns
+        -------
+        pathlib.Path
+            ``path`` when its name ends with ``extension``, and ``path`` with ``extension`` added to
+            its name otherwise: ``brain`` becomes ``brain.scfg``, and ``brain.v2`` becomes
+            ``brain.v2.scfg``.
+    """
+    path = pathlib.Path(path)
+    return path if path.name.endswith(extension) else path.with_name(path.name + extension)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def file_with_extension(path: str | os.PathLike, extension: str) -> pathlib.Path:
+    """
+        Returns the file a path names, written with or without its extension.
+
+        Parameters
+        ----------
+        path : str or path-like
+            A file path.
+        extension : str
+            The extension, with its dot, as ``'.scfg'``.
+
+        Returns
+        -------
+        pathlib.Path
+            ``path`` when it is a file; else ``path`` with ``extension`` added, when that is a file;
+            else ``path``.
+    """
+    path = pathlib.Path(path)
+    if path.is_file():
+        return path
+    extended = with_extension(path, extension)
+    return extended if extended.is_file() else path
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#

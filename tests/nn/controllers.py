@@ -91,6 +91,28 @@ class ProbeHandwired(spark.nn.Module):
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+@spark.register_interface
+class ContractedIntegrator(spark.nn.interfaces.ExponentialIntegrator):
+    """
+        An integrator giving its output before it is built.
+    """
+
+    def recurrent_contract(self):
+        return {'signal': spark.FloatArray(jnp.zeros((self.config.num_outputs,), dtype=self.config.dtype))}, {}
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@spark.register_interface
+class MiscontractedIntegrator(spark.nn.interfaces.ExponentialIntegrator):
+    """
+        An integrator giving, before it is built, an output larger than the one it gives.
+    """
+
+    def recurrent_contract(self):
+        return {'signal': spark.FloatArray(jnp.zeros((self.config.num_outputs + 1,), dtype=self.config.dtype))}, {}
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 @jax.jit
 def _run_split(graph: nnx.GraphDef, state: nnx.State, inputs: dict) -> tuple[dict, nnx.State]:
     model = spark.merge(graph, state)
@@ -315,6 +337,123 @@ class TestBrain:
         ])
         with pytest.raises(Exception):
             spark.nn.Brain(config=config)(signal=self._signal())
+
+    def test_a_property_named_as_an_output_is_refused(self) -> None:
+        config = spark.nn.BrainConfig(modules_specs=[
+            spark.ModuleSpecs(
+                name = 'spiker',
+                module_cls = spark.nn.interfaces.PoissonSpiker,
+                inputs = {'signal': [spark.PortMap(origin='__call__', port='signal')]},
+            ),
+            spark.ModuleSpecs(
+                name = 'synapses',
+                module_cls = spark.nn.synapses.LinearSynapses,
+                inputs = {'spikes': [spark.PortMap(origin='spiker', port='spikes')]},
+                outputs = {'weights': 'kernel'},
+                config = spark.nn.synapses.LinearSynapsesConfig(units=(4,)),
+            ),
+        ])
+        with pytest.raises(ValueError, match='"kernel" is a property of module "synapses", not an output port'):
+            spark.nn.Brain(config=config)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TestBrainWithEffects:
+    """
+        A brain whose modules include a plasticity rule writing the kernel of a synapse.
+    """
+
+    @pytest.fixture
+    def brain(self):
+        config = spark.nn.BrainConfig(modules_specs=[
+            spark.ModuleSpecs(
+                name = 'spiker',
+                module_cls = spark.nn.interfaces.PoissonSpiker,
+                inputs = {'signal': [spark.PortMap(origin='__call__', port='signal')]},
+            ),
+            spark.ModuleSpecs(
+                name = 'synapses',
+                module_cls = spark.nn.synapses.LinearSynapses,
+                inputs = {'spikes': [spark.PortMap(origin='spiker', port='spikes')]},
+                effects = {'kernel': [spark.PortMap(origin='rule', port='kernel')]},
+                config = spark.nn.synapses.LinearSynapsesConfig(units=(4,), kernel__scale=20000),
+            ),
+            spark.ModuleSpecs(
+                name = 'soma',
+                module_cls = spark.nn.somas.LeakySoma,
+                inputs = {'current': [spark.PortMap(origin='synapses', port='currents')]},
+                outputs = {'spikes': 'spikes'},
+                config = spark.nn.somas.LeakySomaConfig(units=(4,)),
+            ),
+            spark.ModuleSpecs(
+                name = 'rule',
+                module_cls = spark.nn.plasticity.HebbianRule,
+                inputs = {
+                    'pre_spikes': [spark.PortMap(origin='spiker', port='spikes')],
+                    'post_spikes': [spark.PortMap(origin='soma', port='spikes')],
+                    'kernel': [spark.PortMap(origin='synapses', port='kernel', is_property=True)],
+                },
+            ),
+        ])
+        return spark.nn.Brain(config=config)
+
+    def test_the_rule_writes_the_kernel_after_each_step(self, brain) -> None:
+        signal = spark.FloatArray(jnp.ones((8,), dtype=jnp.float16))
+        brain(signal=signal)
+        first = np.asarray(brain.synapses.kernel.value)
+        for _ in range(50):
+            brain(signal=signal)
+            np.testing.assert_array_equal(np.asarray(brain.synapses.kernel.value), np.asarray(brain._cache['rule', 'kernel'].value))
+        assert not np.array_equal(np.asarray(brain.synapses.kernel.value), first)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TestLoops:
+    """
+        Modules reading one another in a loop, built in an order the recurrent contracts of some of them allow.
+    """
+
+    @staticmethod
+    def _loop(readout_cls: type = spark.nn.interfaces.ExponentialIntegrator, through_pool: bool = True) -> spark.nn.BrainConfig:
+        """
+            A pool fed back by a spiker reading an integrator. The integrator reads the pool, or the spiker alone.
+        """
+        pm = spark.PortMap
+        return spark.nn.BrainConfig(seed=3, modules_specs=[
+            spark.ModuleSpecs(name='pool', module_cls=spark.nn.neurons.ALIFNeuron, config=spark.nn.neurons.ALIFNeuronConfig(units=(8,)),
+                              inputs={'in_spikes': [pm('__call__', 'in_spikes'), pm('feedback', 'spikes')]}),
+            spark.ModuleSpecs(name='readout', module_cls=readout_cls, outputs={'action': 'signal'},
+                              inputs={'spikes': [pm('pool', 'out_spikes') if through_pool else pm('feedback', 'spikes')]},
+                              config=spark.nn.interfaces.ExponentialIntegratorConfig(num_outputs=2)),
+            spark.ModuleSpecs(name='feedback', module_cls=spark.nn.interfaces.LinearSpiker, inputs={'signal': [pm('readout', 'signal')]}),
+        ])
+
+    def test_a_loop_closes_through_a_pool_read_before_it_is_built(self, spikes) -> None:
+        config = self._loop()
+        assert spark.nn.Brain._execution_order(config.modules_specs) == [['readout'], ['feedback'], ['pool']]
+        brain = spark.nn.Brain(config=config)
+        brain(in_spikes=spikes(4))
+        assert brain.pool.synapses.kernel.value.shape == (8, 6)
+
+    def test_the_modules_of_one_step_keep_the_order_of_their_specifications(self) -> None:
+        specs = tuple(
+            spark.ModuleSpecs(name=name, module_cls=spark.nn.interfaces.PoissonSpiker, inputs={'signal': [spark.PortMap('__call__', 'signal')]})
+            for name in ('b', 'c', 'a')
+        )
+        assert spark.nn.Brain._execution_order(specs) == [['b', 'c', 'a']]
+
+    def test_a_loop_without_a_contract_is_named(self) -> None:
+        with pytest.raises(RuntimeError, match='"feedback", which reads "readout", which reads "feedback".* The module "pool" waits on it'):
+            spark.nn.Brain._execution_order(self._loop(through_pool=False).modules_specs)
+
+    def test_a_contract_closes_a_loop_of_interfaces(self, spikes) -> None:
+        brain = spark.nn.Brain(config=self._loop(ContractedIntegrator, through_pool=False))
+        assert brain(in_spikes=spikes(4))['action'].value.shape == (2,)
+
+    def test_a_contract_other_than_what_the_module_gives_is_refused(self, spikes) -> None:
+        brain = spark.nn.Brain(config=self._loop(MiscontractedIntegrator, through_pool=False))
+        with pytest.raises(ValueError, match=r'contract of "readout" gives "signal" as a FloatArray of shape \(3,\).* gives a FloatArray of shape \(2,\)'):
+            brain(in_spikes=spikes(4))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

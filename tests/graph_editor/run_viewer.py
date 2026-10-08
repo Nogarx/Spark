@@ -24,6 +24,10 @@ pytest.importorskip('PySide6', reason='the run viewer needs PySide6')
 from PySide6.QtCore import Qt, QEvent
 from PySide6.QtWidgets import QLabel
 
+# The tests of this module share fixtures computed once per worker: with pytest-xdist and --dist loadgroup,
+# they run on one worker.
+pytestmark = pytest.mark.xdist_group('run_viewer')
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

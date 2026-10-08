@@ -7,7 +7,11 @@ from spark.nn.initializers.common import (
     ConstantInitializer, ConstantInitializerConfig,
     UniformInitializer, UniformInitializerConfig,
     SparseUniformInitializer, SparseUniformInitializerConfig,
-    NormalizedSparseUniformInitializer, NormalizedSparseUniformInitializerConfig
+    NormalizedSparseUniformInitializer, NormalizedSparseUniformInitializerConfig,
+    NormalInitializer, NormalInitializerConfig,
+    SparseNormalInitializer, SparseNormalInitializerConfig,
+    LogNormalInitializer, LogNormalInitializerConfig,
+    SparseLogNormalInitializer, SparseLogNormalInitializerConfig,
 )
 
 __all__ = [
@@ -17,7 +21,12 @@ __all__ = [
     'ConstantInitializer', 'ConstantInitializerConfig',
     'UniformInitializer', 'UniformInitializerConfig',
     'SparseUniformInitializer', 'SparseUniformInitializerConfig',
-    'NormalizedSparseUniformInitializer', 'NormalizedSparseUniformInitializerConfig'
+    'NormalizedSparseUniformInitializer', 'NormalizedSparseUniformInitializerConfig',
+    # Normal
+    'NormalInitializer', 'NormalInitializerConfig',
+    'SparseNormalInitializer', 'SparseNormalInitializerConfig',
+    'LogNormalInitializer', 'LogNormalInitializerConfig',
+    'SparseLogNormalInitializer', 'SparseLogNormalInitializerConfig'
 ]
 
 #################################################################################################################################################
