@@ -192,7 +192,9 @@ class QDimsEdit(QWidget):
 
     def set_value(self, value: tp.Iterable | None) -> None:
         """
-            Rebuilds the editor from a value, without emitting change notifications.
+            Shows a value in the editor, without emitting change notifications.
+
+            The spin boxes are kept and updated in place; only the dimensions added or removed are rebuilt.
         """
         entries: list[float] = []
         if value is not None:
@@ -202,14 +204,20 @@ class QDimsEdit(QWidget):
                 entries = []
         if len(entries) < self.min_dims:
             entries += [self.minimum] * (self.min_dims - len(entries))
+        entries = [max(self.minimum, min(self.maximum, entry)) for entry in entries]
         self._emit_blocked = True
         try:
-            for spin in self._spins:
+            # NOTE: Every edit comes back here through the graph model. Rebuilding the spin box being edited
+            # would take its focus away after each keystroke.
+            while len(self._spins) > len(entries):
+                spin = self._spins.pop()
                 self._dims_layout.removeWidget(spin)
                 spin.deleteLater()
-            self._spins = []
-            for entry in entries:
-                spin = self._make_spin(max(self.minimum, min(self.maximum, entry)))
+            for spin, entry in zip(self._spins, entries):
+                if spin.value() != entry:
+                    spin.setValue(entry)
+            for entry in entries[len(self._spins):]:
+                spin = self._make_spin(entry)
                 self._spins.append(spin)
                 self._dims_layout.addWidget(spin)
             self._refresh_buttons()

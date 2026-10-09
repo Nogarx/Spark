@@ -23,7 +23,8 @@ from spark.graph_editor.models.controller_profile import (
 )
 from spark.graph_editor.models import graph_export
 from spark.graph_editor.models.edge_model import EdgeModel
-from spark.graph_editor.models.node_model import SinkNodeModel
+from spark.graph_editor.models.node_model import SinkNodeModel, SourceNodeModel
+from spark.core.payloads import SparkPayload, SpikeArray, FloatArray
 from spark.graph_editor.models.model_import import ImportedGraph, expand_controller_config
 from spark.core.registry import RegistryNamespace
 
@@ -191,6 +192,233 @@ class TestImport:
         positions = [tuple(node.pos) for node in imported_graph.nodes]
         assert len(positions) == len(set(positions))
 
+    def test_inputs_of_any_name_reach_the_port_that_gathers_them(self, qapp) -> None:
+        graph = GraphModel()
+        graph.set_profile(BRAIN_PROFILE, force=True)
+        config = spark.nn.BrainConfig(modules_specs=[
+            spark.ModuleSpecs(
+                name = name,
+                module_cls = spark.nn.interfaces.PoissonSpiker,
+                inputs = {'signal': [spark.PortMap(origin='__call__', port=f'{name}_signal')]},
+            ) for name in ('left', 'right')
+        ] + [
+            spark.ModuleSpecs(
+                name = 'join',
+                module_cls = spark.nn.interfaces.Concat,
+                inputs = {
+                    'from_left': [spark.PortMap(origin='left', port='spikes')],
+                    'from_right': [spark.PortMap(origin='right', port='spikes')],
+                },
+                outputs = {'joined': 'output'},
+            ),
+        ])
+        imported = _import_into(graph, config)
+        assert imported.warnings == []
+        join = next(node for node in graph.nodes if node.name == 'join')
+        sources = [edge.source_port.node.name for edge in join.get_port_by_name('inputs', True).edges]
+        assert sources == ['left', 'right']
+        exported = graph_export.build_controller_config(graph, strict=True)
+        assert exported.problems == []
+        import jax.numpy as jnp
+        outputs = spark.nn.Brain(config=exported.config)(
+            left_signal=spark.FloatArray(jnp.zeros((5,), dtype=jnp.float16)),
+            right_signal=spark.FloatArray(jnp.zeros((3,), dtype=jnp.float16)),
+        )
+        assert outputs['joined'].value.shape == (8,)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _node(namespace, registered: str, **kwargs):
+    """
+        A node of the module registered as ``registered``.
+    """
+    from spark.graph_editor.models.node_factory import NODE_REGISTRY
+    return NODE_REGISTRY.get(getattr(REGISTRY, namespace).get(registered).get_cls())(**kwargs)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TestNodePorts:
+    """
+        The ports a node reads off the class of its module.
+    """
+
+    @pytest.mark.parametrize('name, outputs', [('concat', ['output']), ('concat_reshape', ['output']), ('sampler', ['output_0'])])
+    def test_a_module_taking_any_inputs_has_its_ports(self, qapp, name, outputs) -> None:
+        ports = _node('Interfaces', name).call_section.ports
+        assert [port.name for port in ports if port.is_input] == ['inputs']
+        assert [port.name for port in ports if not port.is_input] == outputs
+
+    def test_they_stay_after_a_module_of_the_class_was_built(self, qapp) -> None:
+        import jax.numpy as jnp
+        spark.nn.interfaces.Sampler(sample_size=2)(a=spark.FloatArray(jnp.ones((4,), dtype=jnp.float16)))
+        ports = _node('Interfaces', 'sampler').call_section.ports
+        assert [port.name for port in ports if port.is_input] == ['inputs']
+
+    def test_any_payload_may_reach_a_sampler_and_leave_it(self, qapp) -> None:
+        spiker, sampler = _node('Interfaces', 'poisson_spiker'), _node('Interfaces', 'sampler')
+        pool = _node('Neurons', 'alif_neuron')
+        assert EdgeModel.validate_connection(spiker.get_port_by_name('spikes', False), sampler.get_port_by_name('inputs', True))[0]
+        assert EdgeModel.validate_connection(sampler.get_port_by_name('output_0', False), pool.get_port_by_name('in_spikes', True))[0]
+
+    def test_ports_of_two_payload_types_are_not_connected(self, qapp) -> None:
+        integrator, pool = _node('Interfaces', 'exponential_integrator'), _node('Neurons', 'alif_neuron')
+        is_valid, _ = EdgeModel.validate_connection(integrator.get_port_by_name('signal', False), pool.get_port_by_name('in_spikes', True))
+        assert not is_valid
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TestPortTypes:
+    """
+        The type carried by the generic ports, as those of a Sampler or of the controller inputs and outputs.
+    """
+
+    @pytest.fixture
+    def graph(self, qapp) -> GraphModel:
+        model = GraphModel()
+        model.set_profile(BRAIN_PROFILE, force=True)
+        return model
+
+    @staticmethod
+    def _add(graph: GraphModel, namespace: str, name: str):
+        node = _node(namespace, name, name=graph.get_next_free_name(name))
+        graph.add_node(node)
+        return node
+
+    @staticmethod
+    def _wired(graph: GraphModel) -> set[tuple[str, str]]:
+        return {(edge.source_port.node.name, edge.target_port.node.name) for edge in graph.edges}
+
+    def test_a_sampler_takes_the_type_of_its_first_connection(self, graph) -> None:
+        spiker, sampler = self._add(graph, 'Interfaces', 'poisson_spiker'), self._add(graph, 'Interfaces', 'sampler')
+        assert sampler.get_port_by_name('output_0', False).port_type is SparkPayload
+        graph.connect(spiker.get_port_by_name('spikes', False), sampler.get_port_by_name('inputs', True))
+        assert sampler.get_port_by_name('inputs', True).port_type is SpikeArray
+        assert sampler.get_port_by_name('output_0', False).port_type is SpikeArray
+
+    def test_it_carries_no_type_once_its_connections_are_gone(self, graph) -> None:
+        spiker, sampler = self._add(graph, 'Interfaces', 'poisson_spiker'), self._add(graph, 'Interfaces', 'sampler')
+        graph.connect(spiker.get_port_by_name('spikes', False), sampler.get_port_by_name('inputs', True))
+        graph.undo_stack.undo()
+        assert sampler.get_port_by_name('output_0', False).port_type is SparkPayload
+
+    def test_the_type_travels_along_generic_ports(self, graph) -> None:
+        spiker, concat = self._add(graph, 'Interfaces', 'poisson_spiker'), self._add(graph, 'Interfaces', 'concat')
+        sampler, sink = self._add(graph, 'Interfaces', 'sampler'), SinkNodeModel(name='out')
+        graph.add_node(sink)
+        graph.connect(concat.get_port_by_name('output', False), sampler.get_port_by_name('inputs', True))
+        graph.connect(sampler.get_port_by_name('output_0', False), sink.value_port)
+        assert sink.value_port.port_type is SparkPayload
+        graph.connect(spiker.get_port_by_name('spikes', False), concat.get_port_by_name('inputs', True))
+        assert sampler.get_port_by_name('output_0', False).port_type is SpikeArray
+        assert sink.value_port.port_type is SpikeArray
+
+    def test_a_connection_of_another_type_replaces_those_of_the_old_one(self, graph) -> None:
+        spiker, sampler = self._add(graph, 'Interfaces', 'poisson_spiker'), self._add(graph, 'Interfaces', 'sampler')
+        pool, integrator = self._add(graph, 'Neurons', 'alif_neuron'), self._add(graph, 'Interfaces', 'exponential_integrator')
+        graph.connect(spiker.get_port_by_name('spikes', False), sampler.get_port_by_name('inputs', True))
+        graph.connect(sampler.get_port_by_name('output_0', False), pool.get_port_by_name('in_spikes', True))
+        signal = integrator.get_port_by_name('signal', False)
+        graph.connect(signal, sampler.get_port_by_name('inputs', True), carrier=signal)
+        assert self._wired(graph) == {(integrator.name, sampler.name)}
+        assert sampler.get_port_by_name('output_0', False).port_type is FloatArray
+        # One undo brings the replaced connections back.
+        graph.undo_stack.undo()
+        assert self._wired(graph) == {(spiker.name, sampler.name), (sampler.name, pool.name)}
+        assert sampler.get_port_by_name('output_0', False).port_type is SpikeArray
+
+    def test_the_type_of_a_concrete_port_stands(self, graph) -> None:
+        spiker, sampler = self._add(graph, 'Interfaces', 'poisson_spiker'), self._add(graph, 'Interfaces', 'sampler')
+        second = self._add(graph, 'Interfaces', 'poisson_spiker')
+        graph.connect(spiker.get_port_by_name('spikes', False), sampler.get_port_by_name('inputs', True))
+        output = sampler.get_port_by_name('output_0', False)
+        graph.connect(output, second.get_port_by_name('signal', True), carrier=output)
+        assert self._wired(graph) == {(sampler.name, second.name)}
+        assert output.port_type is FloatArray
+
+    def test_between_two_generic_ports_the_one_drawn_from_stands(self, graph) -> None:
+        spiker, concat = self._add(graph, 'Interfaces', 'poisson_spiker'), self._add(graph, 'Interfaces', 'concat')
+        integrator, sampler = self._add(graph, 'Interfaces', 'exponential_integrator'), self._add(graph, 'Interfaces', 'sampler')
+        graph.connect(spiker.get_port_by_name('spikes', False), concat.get_port_by_name('inputs', True))
+        graph.connect(integrator.get_port_by_name('signal', False), sampler.get_port_by_name('inputs', True))
+        output = concat.get_port_by_name('output', False)
+        graph.connect(output, sampler.get_port_by_name('inputs', True), carrier=output)
+        assert self._wired(graph) == {(spiker.name, concat.name), (concat.name, sampler.name)}
+        assert sampler.get_port_by_name('output_0', False).port_type is SpikeArray
+
+    def test_the_inputs_and_outputs_of_the_controller_take_the_type_they_carry(self, graph) -> None:
+        pool, integrator = self._add(graph, 'Neurons', 'alif_neuron'), self._add(graph, 'Interfaces', 'exponential_integrator')
+        source, sink = SourceNodeModel(name='drive'), SinkNodeModel(name='action')
+        graph.add_node(source)
+        graph.add_node(sink)
+        assert EdgeModel.validate_connection(source.value_port, pool.get_port_by_name('in_spikes', True))[0]
+        graph.connect(source.value_port, pool.get_port_by_name('in_spikes', True))
+        graph.connect(integrator.get_port_by_name('signal', False), sink.value_port)
+        assert (source.value_port.port_type, sink.value_port.port_type) == (SpikeArray, FloatArray)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TestPortsOfTheConfiguration:
+    """
+        The output ports of a Sampler, as many as its configuration asks for.
+    """
+
+    @pytest.fixture
+    def graph(self, qapp) -> GraphModel:
+        model = GraphModel()
+        model.set_profile(BRAIN_PROFILE, force=True)
+        return model
+
+    @staticmethod
+    def _outputs(node) -> list[str]:
+        return [port.name for port in node.call_section.ports if not port.is_input]
+
+    def test_more_outputs_give_more_ports_of_the_type_carried(self, graph) -> None:
+        spiker, sampler = _node('Interfaces', 'poisson_spiker', name='spiker'), _node('Interfaces', 'sampler', name='sampler')
+        graph.add_node(spiker)
+        graph.add_node(sampler)
+        graph.connect(spiker.get_port_by_name('spikes', False), sampler.get_port_by_name('inputs', True))
+        graph.set_node_config_value([sampler.id, 'num_outputs'], 3)
+        assert self._outputs(sampler) == ['output_0', 'output_1', 'output_2']
+        assert sampler.get_port_by_name('output_2', False).port_type is SpikeArray
+
+    def test_fewer_outputs_drop_the_connections_of_the_ports_removed(self, graph) -> None:
+        sampler, pool = _node('Interfaces', 'sampler', name='sampler'), _node('Neurons', 'alif_neuron', name='pool')
+        graph.add_node(sampler)
+        graph.add_node(pool)
+        graph.set_node_config_value([sampler.id, 'num_outputs'], 2)
+        edge = graph.connect(sampler.get_port_by_name('output_1', False), pool.get_port_by_name('in_spikes', True))
+        dropped = graph.set_node_config_value([sampler.id, 'num_outputs'], 1)
+        assert dropped == [edge]
+        assert self._outputs(sampler) == ['output_0']
+        assert graph.edges == []
+
+    def test_an_imported_brain_keeps_the_connections_of_every_output(self, graph) -> None:
+        config = spark.nn.BrainConfig(modules_specs=[
+            spark.ModuleSpecs(
+                name = 'spiker',
+                module_cls = spark.nn.interfaces.PoissonSpiker,
+                inputs = {'signal': [spark.PortMap(origin='__call__', port='signal')]},
+            ),
+            spark.ModuleSpecs(
+                name = 'split',
+                module_cls = spark.nn.interfaces.Sampler,
+                inputs = {'spikes': [spark.PortMap(origin='spiker', port='spikes')]},
+                config = spark.nn.interfaces.SamplerConfig(sample_size=4, num_outputs=2),
+            ),
+            spark.ModuleSpecs(
+                name = 'readout',
+                module_cls = spark.nn.interfaces.ExponentialIntegrator,
+                inputs = {'spikes': [spark.PortMap(origin='split', port='output_1')]},
+                outputs = {'action': 'signal'},
+                config = spark.nn.interfaces.ExponentialIntegratorConfig(num_outputs=1),
+            ),
+        ])
+        imported = _import_into(graph, config)
+        assert imported.warnings == []
+        split = next(node for node in graph.nodes if node.name == 'split')
+        assert self._outputs(split) == ['output_0', 'output_1']
+        assert [edge.target_port.node.name for edge in split.get_port_by_name('output_1', False).edges] == ['readout']
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
 class TestExport:
@@ -244,7 +472,8 @@ class TestExport:
 
     def test_a_property_cannot_be_wired_to_an_output(self, imported_graph) -> None:
         kernel, output = self._kernel_and_output(imported_graph)
-        assert kernel.port_type is output.port_type
+        # An output of the controller takes any type, the property is refused for being one.
+        assert output.is_generic
         is_valid, message = EdgeModel.validate_connection(kernel, output)
         assert not is_valid
         assert 'property' in message

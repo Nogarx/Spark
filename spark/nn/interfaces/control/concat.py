@@ -11,7 +11,7 @@ from spark.core.specs import PortSpecs
 from spark.core.registry import register_interface, register_config
 from spark.core.payloads import SparkPayload
 from spark.core.config_validation import TypeValidator, PositiveValidator
-from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceConfig, ControlInterfaceOutput, _build_signature_from_inputs
+from spark.nn.interfaces.control.base import ControlInterface, ControlInterfaceConfig, ControlInterfaceOutput
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -70,10 +70,6 @@ class Concat(ControlInterface):
                     f'but input spec \"{key}\" is of type "{type(value)}".'
                 )
         self._payload_type = payload_type
-
-    def _overwrite_call_signature(self, raw_kwargs: dict[str, SparkPayload]) -> None:
-        # Create the new Signature object and assign it to the __call__ method
-        self.__call__.__func__.__signature__ = _build_signature_from_inputs(raw_kwargs)
 
     def __call__(self, **inputs: SparkPayload) -> ControlInterfaceOutput:
         """
@@ -171,10 +167,6 @@ class ConcatReshape(ControlInterface):
             jnp.concatenate([jnp.zeros(s.shape).reshape(-1) for s in abc_args.values()]).reshape(self.reshape)
         except:
             raise ValueError(f'Shapes {[s.shape for s in abc_args.values()]} are not broadcastable to {self.reshape}')
-
-    def _overwrite_call_signature(self, raw_kwargs: dict[str, SparkPayload]) -> None:
-        # Create the new Signature object and assign it to the __call__ method
-        self.__call__.__func__.__signature__ = _build_signature_from_inputs(raw_kwargs)
 
     def __call__(self, **inputs: SparkPayload) -> ControlInterfaceOutput:
         """

@@ -4,7 +4,11 @@
 #################################################################################################################################################
 
 import pytest
-from spark.core.signature_parser import is_instance, normalize_typehint
+import spark
+from spark.core.payloads import SparkPayload
+from spark.core.signature_parser import (
+	is_instance, normalize_typehint, get_input_specs, get_optional_input_names, get_variadic_input_name,
+)
 
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
@@ -391,6 +395,24 @@ data_normalize_typehint_test = [
 def test_normalize_typehint(name, valid_types, expected) -> None:
 	assert set(normalize_typehint(valid_types)) == set(expected)
 	
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+@pytest.mark.parametrize('module_cls', [
+	spark.nn.interfaces.Concat, spark.nn.interfaces.ConcatReshape, spark.nn.interfaces.Sampler,
+])
+def test_a_module_taking_any_inputs_has_input_specs(module_cls) -> None:
+	# Their modules postpone annotations, so the declared signature holds strings.
+	specs = get_input_specs(module_cls)
+	assert list(specs) == ['inputs']
+	assert specs['inputs'].payload_type is SparkPayload
+	assert get_variadic_input_name(module_cls) == 'inputs'
+	assert get_optional_input_names(module_cls) == []
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def test_a_module_with_named_inputs_has_no_variadic_input() -> None:
+	assert get_variadic_input_name(spark.nn.interfaces.PoissonSpiker) is None
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

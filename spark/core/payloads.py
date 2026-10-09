@@ -323,3 +323,27 @@ class IntegerArray(ValueSparkPayload):
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################
+
+def payload_types_match(expected: type[SparkPayload] | None, found: type[SparkPayload] | None) -> bool:
+    """
+        Whether an output of payload type ``found`` may feed a port of payload type ``expected``.
+
+        Parameters
+        ----------
+        expected : type of SparkPayload or None
+            Payload type of the port fed.
+        found : type of SparkPayload or None
+            Payload type of the output feeding it.
+
+        Returns
+        -------
+        bool
+            True if one of the two types derives from the other.
+    """
+    if not (isinstance(expected, type) and isinstance(found, type)):
+        return expected == found
+    return issubclass(found, expected) or issubclass(expected, found)
+
+#################################################################################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+#################################################################################################################################################

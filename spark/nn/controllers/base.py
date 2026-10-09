@@ -23,7 +23,7 @@ from spark.core.config import SparkConfig
 from spark.core.module import SparkModule, SparkMeta
 from spark.core.checkpoint import Checkpointable
 from spark.core.specs import PortSpecs, PortMap, ModuleSpecs
-from spark.core.payloads import SparkPayload, SpikeArray
+from spark.core.payloads import SparkPayload, SpikeArray, payload_types_match
 from spark.core.decorators import spark_property, limit_recursion
 from spark.core.config_validation import TypeValidator, PositiveValidator
 from spark.core.recording_hooks import active_probe_context
@@ -222,7 +222,7 @@ class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass
             if issubclass(spec.module_cls, Controller):
                 key_list = list(spec.module_cls._get_controller_output_specs(spec.config.modules_specs).keys())
             else:
-                key_list = list(spec.module_cls._get_output_specs().keys())
+                key_list = list(spec.module_cls._get_output_specs(spec.config).keys())
             self._modules_output_map[spec.name] = key_list
         # Save original specs
         self._modules_specs = copy.deepcopy(self.config.modules_specs)
@@ -286,7 +286,7 @@ class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass
                 module_input_specs = module_specs.module_cls._get_controller_input_specs(module_specs.config.modules_specs)
                 module_optional_ports = set()
             else:
-                module_input_specs = module_specs.module_cls._get_input_specs()
+                module_input_specs = module_specs.module_cls._get_input_specs(module_specs.inputs.keys())
                 module_optional_ports = set(sig_parser.get_optional_input_names(module_specs.module_cls))
             # Validate that input names are well defined.
             module_input_ports = set(module_input_specs.keys())
@@ -341,7 +341,7 @@ class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass
                         module_output_ports = {k:v['spec'] for k, v in module_specs.module_cls._get_controller_output_specs(module_specs.config.modules_specs).items()}
                         module_property_ports = module_specs.module_cls._get_controller_property_specs()
                     else:
-                        module_output_ports = module_specs.module_cls._get_output_specs()
+                        module_output_ports = module_specs.module_cls._get_output_specs(module_specs.config)
                         module_property_ports = module_specs.module_cls._get_property_specs()
                 # A property is state, not something the step produces: probes record it.
                 if port_name in module_property_ports:
@@ -418,7 +418,7 @@ class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass
                 output_specs = {k:v['spec'] for k, v in spec.module_cls._get_controller_output_specs(spec.config.modules_specs).items()}
                 property_specs = spec.module_cls._get_controller_property_specs()
             else:
-                output_specs = spec.module_cls._get_output_specs()
+                output_specs = spec.module_cls._get_output_specs(spec.config)
                 property_specs = spec.module_cls._get_property_specs()
             name_intersection = list(set(output_specs.keys()).intersection(set(property_specs.keys())))
             if len(name_intersection) > 0:
@@ -442,7 +442,7 @@ class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass
                 }
             else:
                 module_input_specs = {
-                    **spec.module_cls._get_input_specs(),
+                    **spec.module_cls._get_input_specs(spec.inputs.keys()),
                     **spec.module_cls._get_property_specs(),
                 }
             for input_name, port_spec_list in spec.inputs.items():
@@ -459,7 +459,7 @@ class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass
                         )    
                     # Validate port types
                     other_port_specs = modules_origins_specs[port_map.origin][port_map.port]
-                    if not other_port_specs.payload_type == expected_port_specs.payload_type:
+                    if not payload_types_match(expected_port_specs.payload_type, other_port_specs.payload_type):
                         raise ValueError(
                             f'Payload type "{other_port_specs.payload_type}" at output port "{port_map.port}" '
                             f'in module "{port_map.origin}" does not match the expected payload type "{expected_port_specs.payload_type}" '
@@ -492,7 +492,7 @@ class Controller(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT], metaclass
                         )    
                     # Validate port types
                     other_port_specs = modules_origins_specs[port_map.origin][port_map.port]
-                    if not other_port_specs.payload_type == expected_port_specs.payload_type:
+                    if not payload_types_match(expected_port_specs.payload_type, other_port_specs.payload_type):
                         raise ValueError(
                             f'Payload type "{other_port_specs.payload_type}" at output port "{port_map.port}" '
                             f'in module "{port_map.origin}" does not match the expected payload type "{expected_port_specs.payload_type}" '

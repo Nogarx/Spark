@@ -497,6 +497,34 @@ def test_delays_past_255_steps_are_held_and_released_on_time(module_cls, config_
     released = [bool(np.asarray(module(in_spikes=spike if step == 0 else silent)['out_spikes'].spikes).any()) for step in range(302)]
     assert [step for step, any_spike in enumerate(released) if any_spike] == [300]
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def _entries(size: int) -> spark.FloatArray:
+    return spark.FloatArray(jnp.arange(size, dtype=jnp.float16))
+
+def test_a_sampler_gives_one_port_per_output() -> None:
+    module = spark.nn.interfaces.Sampler(sample_size=3, num_outputs=4)
+    outputs = module(a=_entries(10))
+    assert list(outputs) == ['output_0', 'output_1', 'output_2', 'output_3']
+    assert list(module.get_output_specs()) == list(outputs)
+    # Each output reads the entries of its row of indices.
+    for k, output in enumerate(outputs.values()):
+        np.testing.assert_array_equal(np.asarray(output.value), np.asarray(module.indices[k]).astype(np.float16))
+
+def test_disjoint_outputs_share_no_entry_while_the_input_holds_enough() -> None:
+    module = spark.nn.interfaces.Sampler(sample_size=5, num_outputs=4, disjoint=True)
+    module(a=_entries(12), b=_entries(8))
+    assert len(set(np.asarray(module.indices).ravel().tolist())) == 20
+
+def test_disjoint_outputs_draw_every_entry_evenly_past_that() -> None:
+    module = spark.nn.interfaces.Sampler(sample_size=4, num_outputs=5, disjoint=True)
+    module(a=_entries(7))
+    indices = np.asarray(module.indices)
+    counts = np.bincount(indices.ravel(), minlength=7)
+    assert counts.max() - counts.min() <= 1
+    # Each output takes fewer entries than the input holds, and holds none twice.
+    assert all(len(set(row.tolist())) == 4 for row in indices)
+
 #################################################################################################################################################
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 #################################################################################################################################################

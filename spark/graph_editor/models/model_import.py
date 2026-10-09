@@ -13,8 +13,11 @@ import logging
 import typing as tp
 import dataclasses as dc
 
+import spark.core.signature_parser as sig_parser
 from spark.core.specs import ModuleSpecs, PortMap
-from spark.graph_editor.models.node_model import NodeModel, SourceNodeModel, SinkNodeModel, SelfPropertyNodeModel
+from spark.graph_editor.models.node_model import (
+    NodeModel, SourceNodeModel, SinkNodeModel, SelfPropertyNodeModel, ControllerNodeModel,
+)
 from spark.graph_editor.models.port_model import PortModel
 from spark.graph_editor.models.edge_model import EdgeModel
 from spark.graph_editor.models.node_factory import NODE_REGISTRY
@@ -150,8 +153,9 @@ def expand_controller_config(
             result.warnings.append(f'No node is available for "{spec.module_cls.__name__}", module "{spec.name}" was skipped.')
             continue
         node = node_cls(name=_unique_name(spec.name, taken_names))
-        # The configuration of the model is the configuration of the node.
+        # The configuration of the model is the configuration of the node, and may ask for other outputs.
         node.config = copy.deepcopy(spec.config)
+        node.refresh_output_ports()
         module_nodes[spec.name] = node
         result.nodes.append(node)
         stored = layout.get(spec.name, None) or _stored_position(spec.config)
@@ -205,6 +209,12 @@ def expand_controller_config(
             continue
         for port_name, port_map, is_effect in _iter_port_maps(spec):
             target_port = target_node.get_port_by_name(port_name, is_input=True)
+            if target_port is None and not is_effect and not isinstance(target_node, ControllerNodeModel):
+                # Inputs of any name (Concat & friends) gather on the port of the ** parameter, whose maps the
+                # controller joins in order.
+                variadic = sig_parser.get_variadic_input_name(spec.module_cls)
+                if variadic is not None:
+                    target_port = target_node.get_port_by_name(variadic, is_input=True)
             if target_port is None:
                 kind = 'property' if is_effect else 'input'
                 result.warnings.append(f'Module "{spec.name}" has no {kind} port "{port_name}", the connection was skipped.')
