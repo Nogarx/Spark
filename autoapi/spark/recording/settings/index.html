@@ -1,0 +1,890 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spark.recording.settings &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=30646c52"></script>
+    <script src="../../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/spark/recording/settings/index';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="spark.recording.store" href="../store/index.html" />
+    <link rel="prev" title="spark.recording.scan" href="../scan/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../../../../_static/searchtools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <script src="../../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <img src="../../../../_static/spark_250px.png" class="logo__image only-dark pst-js-only" alt="Spark  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/neurons.html">Tutorial #3: Neurons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/brains.html">Tutorial #4: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/graph_editor.html">Tutorial #5: Graph Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/cartpole.html">Tutorial #6: Solving the CartPole™</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/recording.html">Tutorial #7: Recording</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/sharding.html">Tutorial #8: Sharding</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../index.html">spark</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../core/addresses/index.html">spark.core.addresses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/backend/index.html">spark.core.backend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/checkpoint/index.html">spark.core.checkpoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/decorators/index.html">spark.core.decorators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/recording_hooks/index.html">spark.core.recording_hooks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/validation/index.html">spark.core.validation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/commands/index.html">spark.graph_editor.commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/runs/index.html">spark.graph_editor.runs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/styles/index.html">spark.graph_editor.styles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/view/index.html">spark.graph_editor.view</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../nn/index.html">spark.nn</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/components/index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/controllers/index.html">spark.nn.controllers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../index.html">spark.recording</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../calls/index.html">spark.recording.calls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../current/index.html">spark.recording.current</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../measurements/index.html">spark.recording.measurements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../presets/index.html">spark.recording.presets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../probe/index.html">spark.recording.probe</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../probe_context/index.html">spark.recording.probe_context</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../probe_targets/index.html">spark.recording.probe_targets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../recorder/index.html">spark.recording.recorder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../records/index.html">spark.recording.records</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reduce/index.html">spark.recording.reduce</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../run/index.html">spark.recording.run</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../runner/index.html">spark.recording.runner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../scan/index.html">spark.recording.scan</a></li>
+<li class="toctree-l4 current active"><a class="current reference internal" href="#">spark.recording.settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../store/index.html">spark.recording.store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../triggers/index.html">spark.recording.triggers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../utils/index.html">spark.recording.utils</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">spark</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">spark.recording</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">spark.recording.settings</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../../_sources/autoapi/spark/recording/settings/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>spark.recording.settings</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings"><code class="docutils literal notranslate"><span class="pre">RecordingSettings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.variant_warning"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.variant_warning</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.tag_warning_calls"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.tag_warning_calls</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.warmup_calls"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.warmup_calls</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.warmup_subsets"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.warmup_subsets</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.requests_every"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.requests_every</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.request_reads"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.request_reads</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.commit_every"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.commit_every</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.retry_after"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.retry_after</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.open_timeout"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.open_timeout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.sync_timeout"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.sync_timeout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.signals_every"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.signals_every</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.decision_block"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.decision_block</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.masked_slots"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.masked_slots</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.select_per_step"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.select_per_step</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.histogram_compare_limit"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.histogram_compare_limit</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.histogram_compare_bins"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.histogram_compare_bins</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.histogram_scatter_limit"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.histogram_scatter_limit</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.histogram_rows_limit"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.histogram_rows_limit</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.spaced_rows_limit"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.spaced_rows_limit</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.busy_timeout"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.busy_timeout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.read_timeout"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.read_timeout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.page_rows"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.page_rows</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.crashed_after"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.crashed_after</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.abandoned_after"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.abandoned_after</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.creation_expires_after"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.creation_expires_after</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.git_untracked"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.git_untracked</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.SETTINGS"><code class="docutils literal notranslate"><span class="pre">SETTINGS</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-spark.recording.settings">
+<span id="spark-recording-settings"></span><h1>spark.recording.settings<a class="headerlink" href="#module-spark.recording.settings" title="Link to this heading">#</a></h1>
+<p>Settings of <cite>spark.recording</cite>: the thresholds, periods and timeouts the recorder works with.</p>
+<p><cite>SETTINGS</cite> holds the settings of the process. Each one is read when it is used, so a change
+applies from its next use.</p>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.settings.SETTINGS" title="spark.recording.settings.SETTINGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SETTINGS</span></code></a></p></td>
+<td><p>The settings of <cite>spark.recording</cite> in use.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.settings.RecordingSettings" title="spark.recording.settings.RecordingSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RecordingSettings</span></code></a></p></td>
+<td><p>The thresholds, periods and timeouts of <cite>spark.recording</cite>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.recording.settings.</span></span><span class="sig-name descname"><span class="pre">RecordingSettings</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings" title="Link to this definition">#</a></dt>
+<dd><p>The thresholds, periods and timeouts of <cite>spark.recording</cite>.</p>
+<p><cite>SETTINGS</cite> holds the settings in use. Each one is read when it is used, so a change applies
+from its next use. Setting an attribute that is not a setting raises AttributeError.</p>
+<p>A setting read while a function is traced, such as the limits of the reductions, applies to
+the calls traced after the change. Calls compiled before keep the value they were traced
+with.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spark</span><span class="o">.</span><span class="n">recording</span><span class="o">.</span><span class="n">SETTINGS</span><span class="o">.</span><span class="n">open_timeout</span> <span class="o">=</span> <span class="mf">1200.0</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.variant_warning">
+<span class="sig-name descname"><span class="pre">variant_warning</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.variant_warning" title="Link to this definition">#</a></dt>
+<dd><p>Number of distinct sets of recorded measurements past which <cite>Recorder.probes</cite> warns. Each set is
+compiled once.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.tag_warning_calls">
+<span class="sig-name descname"><span class="pre">tag_warning_calls</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.tag_warning_calls" title="Link to this definition">#</a></dt>
+<dd><p>Calls of the model after which <cite>Recorder.probes</cite> warns about triggers counting a tag never set
+as an integer, and about measurements grouped by a tag never set.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.warmup_calls">
+<span class="sig-name descname"><span class="pre">warmup_calls</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100000</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.warmup_calls" title="Link to this definition">#</a></dt>
+<dd><p>Bound on the calls of the model <cite>Recorder.warmup_sets</cite> simulates.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.warmup_subsets">
+<span class="sig-name descname"><span class="pre">warmup_subsets</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">64</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.warmup_subsets" title="Link to this definition">#</a></dt>
+<dd><p>Number of probe sets past which <cite>Recorder.warmup_sets</cite> adds the measurements not recorded by a
+step trigger one at a time and all together, instead of in every combination.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.requests_every">
+<span class="sig-name descname"><span class="pre">requests_every</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.5</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.requests_every" title="Link to this definition">#</a></dt>
+<dd><p>Seconds between two reads of the requests of a run by the writer.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.request_reads">
+<span class="sig-name descname"><span class="pre">request_reads</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.request_reads" title="Link to this definition">#</a></dt>
+<dd><p>Attempts the writer makes at reading a request file before it rejects the request.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.commit_every">
+<span class="sig-name descname"><span class="pre">commit_every</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.commit_every" title="Link to this definition">#</a></dt>
+<dd><p>Seconds between two commits of the index while items keep arriving. Scalars, events, tags, spans
+and groups reach the index at most about this long after the writer handles them.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.retry_after">
+<span class="sig-name descname"><span class="pre">retry_after</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(1.0,</span> <span class="pre">4.0)</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.retry_after" title="Link to this definition">#</a></dt>
+<dd><p>Seconds waited before each new attempt at a file write or an operation on the index that failed
+with a transient error, as network file systems give. A write that fails every attempt fails the
+writer.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.open_timeout">
+<span class="sig-name descname"><span class="pre">open_timeout</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">600.0</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.open_timeout" title="Link to this definition">#</a></dt>
+<dd><p>With several processes, seconds process 0 waits for every other process to create its recorder
+before it raises.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.sync_timeout">
+<span class="sig-name descname"><span class="pre">sync_timeout</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">86400.0</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.sync_timeout" title="Link to this definition">#</a></dt>
+<dd><p>With several processes, seconds a process waits for a decision of process 0, or for the other
+processes at a barrier, before it raises.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.signals_every">
+<span class="sig-name descname"><span class="pre">signals_every</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.5</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.signals_every" title="Link to this definition">#</a></dt>
+<dd><p>Seconds between two reads, by process 0, of the signals the other processes received.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.decision_block">
+<span class="sig-name descname"><span class="pre">decision_block</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.decision_block" title="Link to this definition">#</a></dt>
+<dd><p>With several processes, calls of the model after which every process waits for the others at a
+barrier. No process runs more than a block ahead of another. The decisions of the block before
+the last are then removed from the key-value store of <code class="docutils literal notranslate"><span class="pre">jax.distributed</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.masked_slots">
+<span class="sig-name descname"><span class="pre">masked_slots</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.masked_slots" title="Link to this definition">#</a></dt>
+<dd><p>Largest number of groups of a call for which a summary updates the statistics of every group on
+every step, masked to the group of the step. With more groups, only the statistics of the group
+of the step are read and written, at a dynamic index.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.select_per_step">
+<span class="sig-name descname"><span class="pre">select_per_step</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4096</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.select_per_step" title="Link to this definition">#</a></dt>
+<dd><p>Smallest size of a value from which scattered <code class="docutils literal notranslate"><span class="pre">units</span></code> of a trace or raster, at most a quarter
+of its entries, are selected on every step. Below it, whole values are stacked and their units
+selected after the scan.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.histogram_compare_limit">
+<span class="sig-name descname"><span class="pre">histogram_compare_limit</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2097152</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.histogram_compare_limit" title="Link to this definition">#</a></dt>
+<dd><p>Largest <code class="docutils literal notranslate"><span class="pre">bins</span> <span class="pre">*</span> <span class="pre">values</span></code> a histogram counts by comparing every value with every edge. Beyond
+it, with more than <cite>histogram_compare_bins</cite> bins, the bin of each value is computed and the
+values are counted by bin.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.histogram_compare_bins">
+<span class="sig-name descname"><span class="pre">histogram_compare_bins</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.histogram_compare_bins" title="Link to this definition">#</a></dt>
+<dd><p>Largest number of bins for which a histogram compares every value with every edge, for any
+number of values.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.histogram_scatter_limit">
+<span class="sig-name descname"><span class="pre">histogram_scatter_limit</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">262144</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.histogram_scatter_limit" title="Link to this definition">#</a></dt>
+<dd><p>Most values a histogram counts by scattering them into their bins, on backends other than the
+CPU. Beyond it, their bin indices are sorted and counted by a search, except on the CPU, which
+always scatters.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.histogram_rows_limit">
+<span class="sig-name descname"><span class="pre">histogram_rows_limit</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16777216</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.histogram_rows_limit" title="Link to this definition">#</a></dt>
+<dd><p>Largest size in bytes of the values of all the steps of a call that a histogram stacks on the
+device and counts after the call. Beyond it, the histogram counts the values of each step within
+the step, with device memory in proportion to its bins.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.spaced_rows_limit">
+<span class="sig-name descname"><span class="pre">spaced_rows_limit</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16777216</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.spaced_rows_limit" title="Link to this definition">#</a></dt>
+<dd><p>Largest size in bytes of the values of all the steps of a call that a trace or raster with a
+stride stacks on the device, the steps it does not keep included. Beyond it, only the steps kept
+are written, to a buffer of their own, with one write per step.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.busy_timeout">
+<span class="sig-name descname"><span class="pre">busy_timeout</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">60.0</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.busy_timeout" title="Link to this definition">#</a></dt>
+<dd><p>Seconds a statement of the recorder waits for readers holding the index before SQLite reports
+the index busy. <cite>store.commit</cite> then warns and waits again.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.read_timeout">
+<span class="sig-name descname"><span class="pre">read_timeout</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10.0</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.read_timeout" title="Link to this definition">#</a></dt>
+<dd><p>Seconds a reader of a run waits for the index while the recorder holds it.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.page_rows">
+<span class="sig-name descname"><span class="pre">page_rows</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100000</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.page_rows" title="Link to this definition">#</a></dt>
+<dd><p>Number of rows, or of row ids, one statement reads. The recorder writing the run cannot commit
+while a statement runs.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.crashed_after">
+<span class="sig-name descname"><span class="pre">crashed_after</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.crashed_after" title="Link to this definition">#</a></dt>
+<dd><p>Heartbeat periods without a heartbeat after which a run marked as running reads as crashed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.abandoned_after">
+<span class="sig-name descname"><span class="pre">abandoned_after</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">600.0</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.abandoned_after" title="Link to this definition">#</a></dt>
+<dd><p>Seconds without a heartbeat after which a run marked as running is taken as abandoned by its
+process. Used when that process cannot be looked up.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.creation_expires_after">
+<span class="sig-name descname"><span class="pre">creation_expires_after</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3600.0</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.creation_expires_after" title="Link to this definition">#</a></dt>
+<dd><p>Seconds after which the directory of a run left half created, by a process that ended while
+creating it, is removed by the next run created beside it.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.settings.RecordingSettings.git_untracked">
+<span class="sig-name descname"><span class="pre">git_untracked</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">200</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.RecordingSettings.git_untracked" title="Link to this definition">#</a></dt>
+<dd><p>Maximum number of untracked files listed in <code class="docutils literal notranslate"><span class="pre">run.json</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.settings.SETTINGS">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.settings.</span></span><span class="sig-name descname"><span class="pre">SETTINGS</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/settings.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.settings.SETTINGS" title="Link to this definition">#</a></dt>
+<dd><p>The settings of <cite>spark.recording</cite> in use.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../scan/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">spark.recording.scan</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../store/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">spark.recording.store</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings"><code class="docutils literal notranslate"><span class="pre">RecordingSettings</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.variant_warning"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.variant_warning</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.tag_warning_calls"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.tag_warning_calls</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.warmup_calls"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.warmup_calls</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.warmup_subsets"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.warmup_subsets</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.requests_every"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.requests_every</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.request_reads"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.request_reads</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.commit_every"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.commit_every</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.retry_after"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.retry_after</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.open_timeout"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.open_timeout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.sync_timeout"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.sync_timeout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.signals_every"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.signals_every</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.decision_block"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.decision_block</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.masked_slots"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.masked_slots</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.select_per_step"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.select_per_step</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.histogram_compare_limit"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.histogram_compare_limit</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.histogram_compare_bins"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.histogram_compare_bins</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.histogram_scatter_limit"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.histogram_scatter_limit</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.histogram_rows_limit"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.histogram_rows_limit</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.spaced_rows_limit"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.spaced_rows_limit</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.busy_timeout"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.busy_timeout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.read_timeout"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.read_timeout</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.page_rows"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.page_rows</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.crashed_after"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.crashed_after</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.abandoned_after"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.abandoned_after</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.creation_expires_after"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.creation_expires_after</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.RecordingSettings.git_untracked"><code class="docutils literal notranslate"><span class="pre">RecordingSettings.git_untracked</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.settings.SETTINGS"><code class="docutils literal notranslate"><span class="pre">SETTINGS</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

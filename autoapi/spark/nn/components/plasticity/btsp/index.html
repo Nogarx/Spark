@@ -1,0 +1,984 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spark.nn.components.plasticity.btsp &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../../../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../../../_static/copybutton.js?v=30646c52"></script>
+    <script src="../../../../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../../../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/spark/nn/components/plasticity/btsp/index';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../../../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" />
+    <link rel="next" title="spark.nn.components.plasticity.hebbian_rule" href="../hebbian_rule/index.html" />
+    <link rel="prev" title="spark.nn.components.plasticity.base" href="../base/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../../../../../../_static/searchtools.js"></script>
+    <script src="../../../../../../_static/language_data.js"></script>
+    <script src="../../../../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../../../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <img src="../../../../../../_static/spark_250px.png" class="logo__image only-dark pst-js-only" alt="Spark  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/neurons.html">Tutorial #3: Neurons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/brains.html">Tutorial #4: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/graph_editor.html">Tutorial #5: Graph Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/cartpole.html">Tutorial #6: Solving the CartPole™</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/recording.html">Tutorial #7: Recording</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/sharding.html">Tutorial #8: Sharding</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../../../index.html">spark</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/addresses/index.html">spark.core.addresses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/backend/index.html">spark.core.backend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/checkpoint/index.html">spark.core.checkpoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/decorators/index.html">spark.core.decorators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/recording_hooks/index.html">spark.core.recording_hooks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/validation/index.html">spark.core.validation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/commands/index.html">spark.graph_editor.commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/runs/index.html">spark.graph_editor.runs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/styles/index.html">spark.graph_editor.styles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/view/index.html">spark.graph_editor.view</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../../../index.html">spark.nn</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4 current active"><a class="reference internal" href="../../index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../controllers/index.html">spark.nn.controllers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../recording/index.html">spark.recording</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/calls/index.html">spark.recording.calls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/current/index.html">spark.recording.current</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/measurements/index.html">spark.recording.measurements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/presets/index.html">spark.recording.presets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/probe/index.html">spark.recording.probe</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/probe_context/index.html">spark.recording.probe_context</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/probe_targets/index.html">spark.recording.probe_targets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/recorder/index.html">spark.recording.recorder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/records/index.html">spark.recording.records</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/reduce/index.html">spark.recording.reduce</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/run/index.html">spark.recording.run</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/runner/index.html">spark.recording.runner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/scan/index.html">spark.recording.scan</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/settings/index.html">spark.recording.settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/store/index.html">spark.recording.store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/triggers/index.html">spark.recording.triggers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/utils/index.html">spark.recording.utils</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../../../index.html" class="nav-link">spark</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">spark.nn</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">spark.nn.components</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">spark.nn.components.plasticity</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">spark.nn.components.plasticity.btsp</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../../../../_sources/autoapi/spark/nn/components/plasticity/btsp/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>spark.nn.components.plasticity.btsp</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.et_tau"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.et_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.et_scale"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.et_scale</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.is_tau"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.is_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.is_scale"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.is_scale</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.w_max"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.w_max</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.k_pot"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.k_pot</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.k_dep"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.k_dep</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.k_neg"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.k_neg</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.et_post_tau"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.et_post_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.alpha_pot"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.alpha_pot</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.beta_pot"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.beta_pot</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.alpha_dep"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.alpha_dep</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.beta_dep"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.beta_dep</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.eta"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.eta</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRule"><code class="docutils literal notranslate"><span class="pre">BTSPRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRule.config"><code class="docutils literal notranslate"><span class="pre">BTSPRule.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRule.build"><code class="docutils literal notranslate"><span class="pre">BTSPRule.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRule.reset"><code class="docutils literal notranslate"><span class="pre">BTSPRule.reset()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRule.__call__"><code class="docutils literal notranslate"><span class="pre">BTSPRule.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.ModulatedBTSPRuleConfig"><code class="docutils literal notranslate"><span class="pre">ModulatedBTSPRuleConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.ModulatedBTSPRule"><code class="docutils literal notranslate"><span class="pre">ModulatedBTSPRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.ModulatedBTSPRule.config"><code class="docutils literal notranslate"><span class="pre">ModulatedBTSPRule.config</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-spark.nn.components.plasticity.btsp">
+<span id="spark-nn-components-plasticity-btsp"></span><h1>spark.nn.components.plasticity.btsp<a class="headerlink" href="#module-spark.nn.components.plasticity.btsp" title="Link to this heading">#</a></h1>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig" title="spark.nn.components.plasticity.btsp.BTSPRuleConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BTSPRuleConfig</span></code></a></p></td>
+<td><p>Configuration for <cite>BTSPRule</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.btsp.BTSPRule" title="spark.nn.components.plasticity.btsp.BTSPRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BTSPRule</span></code></a></p></td>
+<td><p>Behavioral timescale synaptic plasticity.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.btsp.ModulatedBTSPRuleConfig" title="spark.nn.components.plasticity.btsp.ModulatedBTSPRuleConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedBTSPRuleConfig</span></code></a></p></td>
+<td><p>Configuration for <cite>ModulatedBTSPRule</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.plasticity.btsp.ModulatedBTSPRule" title="spark.nn.components.plasticity.btsp.ModulatedBTSPRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedBTSPRule</span></code></a></p></td>
+<td><p>Three-factor BTSP rule.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRuleConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.btsp.</span></span><span class="sig-name descname"><span class="pre">BTSPRuleConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityConfig" title="spark.nn.components.plasticity.base.PlasticityConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.base.PlasticityConfig</span></code></a></p>
+<p>Configuration for <cite>BTSPRule</cite>.</p>
+<p>Every parameter may be given as a single value or as a 4-tuple holding one value per
+connection type, in the order <code class="docutils literal notranslate"><span class="pre">(EE,</span> <span class="pre">EI,</span> <span class="pre">IE,</span> <span class="pre">II)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>et_tau</strong> (<a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><em>PlasticityParamLike</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 863.91</em>) – Decay constant of the eligibility trace, in ms.</p></li>
+<li><p><strong>et_scale</strong> (<a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><em>PlasticityParamLike</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 0.05</em>) – Increment added to the eligibility trace by each presynaptic spike. Pick it so the
+trace peaks near 1 at the presynaptic rates in use: a rate <code class="docutils literal notranslate"><span class="pre">f</span></code> sustained for
+longer than <code class="docutils literal notranslate"><span class="pre">et_tau</span></code> settles near <code class="docutils literal notranslate"><span class="pre">et_scale</span> <span class="pre">*</span> <span class="pre">f</span> <span class="pre">*</span> <span class="pre">et_tau</span> <span class="pre">/</span> <span class="pre">1000</span></code>.</p></li>
+<li><p><strong>is_tau</strong> (<a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><em>PlasticityParamLike</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 542.76</em>) – Decay constant of the instructive signal, in ms.</p></li>
+<li><p><strong>is_scale</strong> (<a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><em>PlasticityParamLike</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 2.36</em>) – Gain on the plateau entering the instructive signal. The default normalizes a
+300 ms plateau to a peak of 1, which is the plateau duration the rule was fitted
+on. For a plateau of duration <code class="docutils literal notranslate"><span class="pre">D</span></code> use <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">-</span> <span class="pre">exp(-D</span> <span class="pre">/</span> <span class="pre">is_tau))</span></code>.</p></li>
+<li><p><strong>w_max</strong> (<a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><em>PlasticityParamLike</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 4.02</em>) – Upper bound on the weights, and the target the potentiation term pulls towards. The
+fitted value is normalized, in multiples of the initial weight, while a synaptic
+kernel is in pA. Scale it into the units of the kernel it bounds, or the first step
+clips the whole kernel down to it.</p></li>
+<li><p><strong>k_pot</strong> (<a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><em>PlasticityParamLike</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 2.27</em>) – Potentiation rate, per second.</p></li>
+<li><p><strong>k_dep</strong> (<a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><em>PlasticityParamLike</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 0.33</em>) – Depression rate, per second.</p></li>
+<li><p><strong>k_neg</strong> (<a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><em>PlasticityParamLike</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 2.27</em>) – Depression rate under a negative instructive sign, per second. Read only when the
+<code class="docutils literal notranslate"><span class="pre">sign</span></code> port is wired. Defaults to the potentiation rate, so that one negative
+event unlearns as much as one positive event learns.</p></li>
+<li><p><strong>alpha_pot</strong> (<a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><em>PlasticityParamLike</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 0.24</em>) – Half maximum of the potentiation sigmoid, in units of the overlap.</p></li>
+<li><p><strong>beta_pot</strong> (<a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><em>PlasticityParamLike</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 30.32</em>) – Slope of the potentiation sigmoid.</p></li>
+<li><p><strong>alpha_dep</strong> (<a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><em>PlasticityParamLike</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 0.09</em>) – Half maximum of the depression sigmoid, in units of the overlap.</p></li>
+<li><p><strong>beta_dep</strong> (<a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><em>PlasticityParamLike</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 2260.61</em>) – Slope of the depression sigmoid. The fitted value is steep enough that depression
+is effectively switched on at <code class="docutils literal notranslate"><span class="pre">alpha_dep</span></code>.</p></li>
+<li><p><strong>eta</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em>, </em><em>default 1.0</em>) – Overall gain on the update. The rates are carried by <code class="docutils literal notranslate"><span class="pre">k_pot</span></code> and <code class="docutils literal notranslate"><span class="pre">k_dep</span></code>, so
+this is left at one unless the whole rule is being scaled.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRuleConfig.et_tau">
+<span class="sig-name descname"><span class="pre">et_tau</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.et_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRuleConfig.et_scale">
+<span class="sig-name descname"><span class="pre">et_scale</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.et_scale" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRuleConfig.is_tau">
+<span class="sig-name descname"><span class="pre">is_tau</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.is_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRuleConfig.is_scale">
+<span class="sig-name descname"><span class="pre">is_scale</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.is_scale" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRuleConfig.w_max">
+<span class="sig-name descname"><span class="pre">w_max</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.w_max" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRuleConfig.k_pot">
+<span class="sig-name descname"><span class="pre">k_pot</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.k_pot" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRuleConfig.k_dep">
+<span class="sig-name descname"><span class="pre">k_dep</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.k_dep" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRuleConfig.k_neg">
+<span class="sig-name descname"><span class="pre">k_neg</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.k_neg" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRuleConfig.et_post_tau">
+<span class="sig-name descname"><span class="pre">et_post_tau</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.et_post_tau" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRuleConfig.alpha_pot">
+<span class="sig-name descname"><span class="pre">alpha_pot</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.alpha_pot" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRuleConfig.beta_pot">
+<span class="sig-name descname"><span class="pre">beta_pot</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.beta_pot" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRuleConfig.alpha_dep">
+<span class="sig-name descname"><span class="pre">alpha_dep</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.alpha_dep" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRuleConfig.beta_dep">
+<span class="sig-name descname"><span class="pre">beta_dep</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityParamLike" title="spark.nn.components.plasticity.base.PlasticityParamLike"><span class="pre">spark.nn.components.plasticity.base.PlasticityParamLike</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.beta_dep" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRuleConfig.eta">
+<span class="sig-name descname"><span class="pre">eta</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.eta" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRule">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.btsp.</span></span><span class="sig-name descname"><span class="pre">BTSPRule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRule" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.Plasticity" title="spark.nn.components.plasticity.base.Plasticity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.base.Plasticity</span></code></a></p>
+<p>Behavioral timescale synaptic plasticity.</p>
+<p>Weights are moved by the overlap of two slow signals, both held by the rule: an
+eligibility trace laid down locally by presynaptic activity, and an instructive signal
+laid down by the dendritic plateau. Both last on the order of a second, so an input
+active seconds before or after a plateau is still modified by it.</p>
+<p>The update is bidirectional and depends on the weight rather than on postsynaptic
+firing: weak synapses potentiate towards <code class="docutils literal notranslate"><span class="pre">w_max</span></code> and strong ones depress towards
+zero, which makes the rule stable without a separate homeostatic term.</p>
+<p>The plateau carries no sign. An optional <code class="docutils literal notranslate"><span class="pre">sign</span></code> port gates the rule with the sign
+of the instructive event: positive runs the fitted rule, negative depresses every
+eligible input, zero leaves the weights alone.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig" title="spark.nn.components.plasticity.btsp.BTSPRuleConfig"><em>BTSPRuleConfig</em></a><em>, </em><em>optional</em>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>modulation</strong> (<em>FloatArray</em>) – The third factor, in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>. Wire the <code class="docutils literal notranslate"><span class="pre">plateau</span></code> port of a dendrite onto it.
+It drives the instructive signal.</p></li>
+<li><p><strong>pre_spikes</strong> (<em>SpikeArray</em>) – Presynaptic spikes, after any conduction delay. They drive the eligibility trace.</p></li>
+<li><p><strong>kernel</strong> (<em>FloatArray</em>) – Current synaptic weights, read from the synapse.</p></li>
+<li><p><strong>sign</strong> (<em>FloatArray, optional</em>) – Sign of the instructive event, in <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>, one entry per postsynaptic unit or
+a scalar. Values in between scale the gated terms, so pass the sign alone for a
+hard gate. Without the port the rule is unsigned, as fitted.</p></li>
+<li><p><strong>inhibition_mask</strong> (<em>BooleanMask, optional</em>) – Marks the inhibitory units of the pool. Supplied by the enclosing <cite>Neuron</cite> without
+being wired, and read only to type the connections. The update never reads the
+postsynaptic state, which is what separates BTSP from a Hebbian rule.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kernel</strong> (<em>FloatArray</em>) – The updated weights, written back onto the synapse as an effect.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The rule holds both traces: the eligibility one per presynaptic unit, the instructive
+one per dendrite.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\tau_{ET} \frac{dET}{dt} = -ET + \lambda_{ET} R \\
+\tau_{IS} \frac{dIS}{dt} = -IS + \lambda_{IS} P\end{split}\]</div>
+<p>The two are driven differently because their inputs are. Presynaptic spikes are events,
+so each one adds <code class="docutils literal notranslate"><span class="pre">et_scale</span></code> to the eligibility trace. The plateau is a sustained
+level, so the instructive signal relaxes towards <code class="docutils literal notranslate"><span class="pre">is_scale</span></code> times it.</p>
+<p>Their pointwise product is the overlap that drives both processes:</p>
+<div class="math notranslate nohighlight">
+\[\frac{dW}{dt} = (W_{\max} - W) \, k_+ \, q_+(ET \cdot IS)
+              - W \, k_- \, q_-(ET \cdot IS)\]</div>
+<p>with <span class="math notranslate nohighlight">\(q_\pm\)</span> a sigmoid rescaled to pass through 0 at an overlap of 0 and 1 at an
+overlap of 1:</p>
+<div class="math notranslate nohighlight">
+\[q(x) = \frac{\sigma(\beta (x - \alpha)) - \sigma(-\beta \alpha)}
+            {\sigma(\beta (1 - \alpha)) - \sigma(-\beta \alpha)}\]</div>
+<p>The overlap is clipped to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>, which is the range the sigmoids were fitted on.
+The rates are given per second and the weights are bounded to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">w_max]</span></code>. Both
+<code class="docutils literal notranslate"><span class="pre">lambda</span></code> factors are free normalizations, chosen so neither trace exceeds 1.</p>
+<p>For a constant overlap <span class="math notranslate nohighlight">\(x\)</span> the weight relaxes to the fixed point</p>
+<div class="math notranslate nohighlight">
+\[W^*(x) = W_{\max} \frac{k_+ q_+(x)}{k_+ q_+(x) + k_- q_-(x)}\]</div>
+<p>at rate <span class="math notranslate nohighlight">\(k_+ q_+(x) + k_- q_-(x)\)</span>. The target rises with the overlap, so an
+input active close to the plateau is pulled towards <code class="docutils literal notranslate"><span class="pre">w_max</span></code> and an eligible input far
+from it towards a low weight, whatever the postsynaptic activity. This is what keeps
+the total drive bounded without a homeostatic term.</p>
+<p>With the <code class="docutils literal notranslate"><span class="pre">sign</span></code> port wired, the sign <span class="math notranslate nohighlight">\(s\)</span> gates the terms:</p>
+<div class="math notranslate nohighlight">
+\[\frac{dW}{dt} = [s]_+ \left( (W_{\max} - W) k_+ q_+ - W k_- q_- \right)
+              - [s]_- \, W k_{\mathrm{neg}} \, q_+\]</div>
+<p>A negative event therefore depresses eligible inputs in proportion to their weight,
+following the potentiation profile so that the inputs closest to the event lose the
+most. A zero sign gates plasticity off.</p>
+<p>The reference implementation applies each induction lap as one step with the weight
+held fixed during the lap. Here the equation is integrated every step, so one plateau
+closes a fraction <span class="math notranslate nohighlight">\(1 - \exp(-k \int q \, dt)\)</span> of the gap to the target rather
+than <span class="math notranslate nohighlight">\(k \int q \, dt\)</span> of it, and cannot overshoot.</p>
+<p>The modulation and the sign are expected in a shape that broadcasts against the
+kernel: a scalar, the postsynaptic shape, or the kernel shape itself.</p>
+<p class="rubric">References</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id1" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>A. D. Milstein et al., “Bidirectional synaptic plasticity rapidly modifies
+hippocampal representations”, eLife 10, e73046, 2021.
+<a class="reference external" href="https://doi.org/10.7554/eLife.73046">https://doi.org/10.7554/eLife.73046</a></p>
+</aside>
+</aside>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRule.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig" title="spark.nn.components.plasticity.btsp.BTSPRuleConfig"><span class="pre">BTSPRuleConfig</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRule.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRule.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modulation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inhibition_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_spikes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRule.build" title="Link to this definition">#</a></dt>
+<dd><p>Lazy initialize method.</p>
+<p>Called once, by <cite>_build</cite>, with the payloads of the first call. Used by any subclass of
+<cite>SparkModule</cite> to define any variable that depends on the shape of the input to the module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>**abc_args</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.SparkPayload" title="spark.core.payloads.SparkPayload"><em>SparkPayload</em></a>) – The payloads that arrived on the first call, by port name.</p></li>
+<li><p><strong>modulation</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><em>spark.core.payloads.FloatArray</em></a>)</p></li>
+<li><p><strong>pre_spikes</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>spark.core.payloads.SpikeArray</em></a>)</p></li>
+<li><p><strong>kernel</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><em>spark.core.payloads.FloatArray</em></a>)</p></li>
+<li><p><strong>sign</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><em>spark.core.payloads.FloatArray</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>inhibition_mask</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.BooleanMask" title="spark.core.payloads.BooleanMask"><em>spark.core.payloads.BooleanMask</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>post_spikes</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>spark.core.payloads.SpikeArray</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRule.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRule.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets component state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.BTSPRule.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modulation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inhibition_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_spikes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.BTSPRule.__call__" title="Link to this definition">#</a></dt>
+<dd><p>Computes the weights for the next step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modulation</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><em>FloatArray</em></a>) – The third factor, in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>. Wire a dendritic <code class="docutils literal notranslate"><span class="pre">plateau</span></code> onto it.</p></li>
+<li><p><strong>pre_spikes</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>SpikeArray</em></a>) – Presynaptic spikes, after any conduction delay.</p></li>
+<li><p><strong>kernel</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><em>FloatArray</em></a>) – Current synaptic weights.</p></li>
+<li><p><strong>sign</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><em>FloatArray</em></a><em>, </em><em>optional</em>) – Sign of the instructive event, in <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>. Gates the rule.</p></li>
+<li><p><strong>inhibition_mask</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.BooleanMask" title="spark.core.payloads.BooleanMask"><em>BooleanMask</em></a><em>, </em><em>optional</em>) – Marks the inhibitory units of the pool. Not read by the update.</p></li>
+<li><p><strong>post_spikes</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>SpikeArray</em></a><em>, </em><em>optional</em>) – Postsynaptic spikes. Read only when <code class="docutils literal notranslate"><span class="pre">et_post_tau</span></code> &gt; 0, for the coincidence
+eligibility.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary with one entry, <code class="docutils literal notranslate"><span class="pre">kernel</span></code>, the updated weights.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../base/index.html#spark.nn.components.plasticity.base.PlasticityOutput" title="spark.nn.components.plasticity.base.PlasticityOutput">PlasticityOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.ModulatedBTSPRuleConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.btsp.</span></span><span class="sig-name descname"><span class="pre">ModulatedBTSPRuleConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.ModulatedBTSPRuleConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../modulated/index.html#spark.nn.components.plasticity.modulated.ModulatedPlasticityConfig" title="spark.nn.components.plasticity.modulated.ModulatedPlasticityConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.modulated.ModulatedPlasticityConfig</span></code></a>, <a class="reference internal" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig" title="spark.nn.components.plasticity.btsp.BTSPRuleConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BTSPRuleConfig</span></code></a></p>
+<p>Configuration for <cite>ModulatedBTSPRule</cite>.</p>
+<p>Union of <cite>BTSPRuleConfig</cite> and <cite>ModulatedPlasticityConfig</cite>. It declares no field of its
+own, so the defaults are those of <cite>BTSPRuleConfig</cite>.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.ModulatedBTSPRule">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.plasticity.btsp.</span></span><span class="sig-name descname"><span class="pre">ModulatedBTSPRule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.ModulatedBTSPRule" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../modulated/index.html#spark.nn.components.plasticity.modulated.ModulatedPlasticity" title="spark.nn.components.plasticity.modulated.ModulatedPlasticity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.plasticity.modulated.ModulatedPlasticity</span></code></a>, <a class="reference internal" href="#spark.nn.components.plasticity.btsp.BTSPRule" title="spark.nn.components.plasticity.btsp.BTSPRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BTSPRule</span></code></a></p>
+<p>Three-factor BTSP rule.</p>
+<p><cite>BTSPRule</cite> composed with <cite>ModulatedPlasticity</cite>.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.nn.components.plasticity.btsp.BTSPRule" title="spark.nn.components.plasticity.btsp.BTSPRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BTSPRule</span></code></a></dt><dd><p>The same rule without the third factor.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModulatedPlasticity</span></code></dt><dd><p>The mixin supplying the third factor.</p>
+</dd>
+</dl>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.plasticity.btsp.ModulatedBTSPRuleConfig" title="spark.nn.components.plasticity.btsp.ModulatedBTSPRuleConfig"><em>ModulatedBTSPRuleConfig</em></a><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.plasticity.btsp.ModulatedBTSPRule.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.plasticity.btsp.ModulatedBTSPRuleConfig" title="spark.nn.components.plasticity.btsp.ModulatedBTSPRuleConfig"><span class="pre">ModulatedBTSPRuleConfig</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/plasticity/btsp.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.plasticity.btsp.ModulatedBTSPRule.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../base/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">spark.nn.components.plasticity.base</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../hebbian_rule/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">spark.nn.components.plasticity.hebbian_rule</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.et_tau"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.et_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.et_scale"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.et_scale</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.is_tau"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.is_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.is_scale"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.is_scale</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.w_max"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.w_max</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.k_pot"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.k_pot</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.k_dep"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.k_dep</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.k_neg"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.k_neg</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.et_post_tau"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.et_post_tau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.alpha_pot"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.alpha_pot</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.beta_pot"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.beta_pot</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.alpha_dep"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.alpha_dep</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.beta_dep"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.beta_dep</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRuleConfig.eta"><code class="docutils literal notranslate"><span class="pre">BTSPRuleConfig.eta</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRule"><code class="docutils literal notranslate"><span class="pre">BTSPRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRule.config"><code class="docutils literal notranslate"><span class="pre">BTSPRule.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRule.build"><code class="docutils literal notranslate"><span class="pre">BTSPRule.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRule.reset"><code class="docutils literal notranslate"><span class="pre">BTSPRule.reset()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.BTSPRule.__call__"><code class="docutils literal notranslate"><span class="pre">BTSPRule.__call__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.ModulatedBTSPRuleConfig"><code class="docutils literal notranslate"><span class="pre">ModulatedBTSPRuleConfig</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.ModulatedBTSPRule"><code class="docutils literal notranslate"><span class="pre">ModulatedBTSPRule</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.plasticity.btsp.ModulatedBTSPRule.config"><code class="docutils literal notranslate"><span class="pre">ModulatedBTSPRule.config</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

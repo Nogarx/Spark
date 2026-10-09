@@ -1,0 +1,968 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spark.nn.components.dendrites.base &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../../../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../../../_static/copybutton.js?v=30646c52"></script>
+    <script src="../../../../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../../../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/spark/nn/components/dendrites/base/index';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../../../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" />
+    <link rel="next" title="spark.nn.components.dendrites.leaky" href="../leaky/index.html" />
+    <link rel="prev" title="spark.nn.components.dendrites" href="../index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../../../../../../_static/searchtools.js"></script>
+    <script src="../../../../../../_static/language_data.js"></script>
+    <script src="../../../../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../../../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <img src="../../../../../../_static/spark_250px.png" class="logo__image only-dark pst-js-only" alt="Spark  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/neurons.html">Tutorial #3: Neurons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/brains.html">Tutorial #4: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/graph_editor.html">Tutorial #5: Graph Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/cartpole.html">Tutorial #6: Solving the CartPole™</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/recording.html">Tutorial #7: Recording</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../../tutorials/sharding.html">Tutorial #8: Sharding</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../../../index.html">spark</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/addresses/index.html">spark.core.addresses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/backend/index.html">spark.core.backend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/checkpoint/index.html">spark.core.checkpoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/decorators/index.html">spark.core.decorators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/recording_hooks/index.html">spark.core.recording_hooks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../core/validation/index.html">spark.core.validation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/commands/index.html">spark.graph_editor.commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/runs/index.html">spark.graph_editor.runs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/styles/index.html">spark.graph_editor.styles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/view/index.html">spark.graph_editor.view</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../../../index.html">spark.nn</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4 current active"><a class="reference internal" href="../../index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../controllers/index.html">spark.nn.controllers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../recording/index.html">spark.recording</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/calls/index.html">spark.recording.calls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/current/index.html">spark.recording.current</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/measurements/index.html">spark.recording.measurements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/presets/index.html">spark.recording.presets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/probe/index.html">spark.recording.probe</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/probe_context/index.html">spark.recording.probe_context</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/probe_targets/index.html">spark.recording.probe_targets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/recorder/index.html">spark.recording.recorder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/records/index.html">spark.recording.records</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/reduce/index.html">spark.recording.reduce</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/run/index.html">spark.recording.run</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/runner/index.html">spark.recording.runner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/scan/index.html">spark.recording.scan</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/settings/index.html">spark.recording.settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/store/index.html">spark.recording.store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/triggers/index.html">spark.recording.triggers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../recording/utils/index.html">spark.recording.utils</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../../../index.html" class="nav-link">spark</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">spark.nn</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">spark.nn.components</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">spark.nn.components.dendrites</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">spark.nn.components.dendrites.base</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../../../../_sources/autoapi/spark/nn/components/dendrites/base/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>spark.nn.components.dendrites.base</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteOutput"><code class="docutils literal notranslate"><span class="pre">DendriteOutput</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteOutput.out_current"><code class="docutils literal notranslate"><span class="pre">DendriteOutput.out_current</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteOutput.plateau"><code class="docutils literal notranslate"><span class="pre">DendriteOutput.plateau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">DendriteOutput.out_current</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1"><code class="docutils literal notranslate"><span class="pre">DendriteOutput.plateau</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig"><code class="docutils literal notranslate"><span class="pre">DendriteConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.potential_rest"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.potential_rest</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.coupling"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.coupling</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.soma_potential_rest"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.soma_potential_rest</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.bap_conductance"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.bap_conductance</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.bap_reversal"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.bap_reversal</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.bap_rise"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.bap_rise</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.bap_decay"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.bap_decay</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.threshold"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.threshold</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.plateau_slope"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.plateau_slope</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.ConfigT"><code class="docutils literal notranslate"><span class="pre">ConfigT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.Dendrite"><code class="docutils literal notranslate"><span class="pre">Dendrite</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.Dendrite.config"><code class="docutils literal notranslate"><span class="pre">Dendrite.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.Dendrite.build"><code class="docutils literal notranslate"><span class="pre">Dendrite.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.Dendrite.potential"><code class="docutils literal notranslate"><span class="pre">Dendrite.potential()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.Dendrite.reset"><code class="docutils literal notranslate"><span class="pre">Dendrite.reset()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.Dendrite.__call__"><code class="docutils literal notranslate"><span class="pre">Dendrite.__call__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-spark.nn.components.dendrites.base">
+<span id="spark-nn-components-dendrites-base"></span><h1>spark.nn.components.dendrites.base<a class="headerlink" href="#module-spark.nn.components.dendrites.base" title="Link to this heading">#</a></h1>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.dendrites.base.ConfigT" title="spark.nn.components.dendrites.base.ConfigT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConfigT</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.dendrites.base.DendriteOutput" title="spark.nn.components.dendrites.base.DendriteOutput"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DendriteOutput</span></code></a></p></td>
+<td><p>Output ports of a dendrite model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.nn.components.dendrites.base.DendriteConfig" title="spark.nn.components.dendrites.base.DendriteConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DendriteConfig</span></code></a></p></td>
+<td><p>Base configuration for dendrite models.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.nn.components.dendrites.base.Dendrite" title="spark.nn.components.dendrites.base.Dendrite"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dendrite</span></code></a></p></td>
+<td><p>Base class for dendrite models.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.DendriteOutput">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.dendrites.base.</span></span><span class="sig-name descname"><span class="pre">DendriteOutput</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.DendriteOutput" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
+<p>Output ports of a dendrite model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.DendriteOutput.out_current">
+<span class="sig-name descname"><span class="pre">out_current</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.DendriteOutput.out_current" title="Link to this definition">#</a></dt>
+<dd><p>One entry per unit, the axial current the dendrite delivers to the soma, in pA.
+Positive when the dendrite is more depolarized than the soma.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.CurrentArray" title="spark.core.payloads.CurrentArray">CurrentArray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.DendriteOutput.plateau">
+<span class="sig-name descname"><span class="pre">plateau</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.DendriteOutput.plateau" title="Link to this definition">#</a></dt>
+<dd><p>One entry per unit, how far the dendrite is into a plateau. Rises from 0 to 1 as
+the membrane crosses <code class="docutils literal notranslate"><span class="pre">threshold</span></code>, and reads 0.5 exactly at it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray">FloatArray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Initialize</span> <span class="pre">self.</span>&#160; <span class="pre">See</span> <span class="pre">help(type(self))</span> <span class="pre">for</span> <span class="pre">accurate</span> <span class="pre">signature.</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">out_current</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.CurrentArray" title="spark.core.payloads.CurrentArray"><span class="pre">spark.core.payloads.CurrentArray</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">plateau</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.FloatArray" title="spark.core.payloads.FloatArray"><span class="pre">spark.core.payloads.FloatArray</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.DendriteConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.dendrites.base.</span></span><span class="sig-name descname"><span class="pre">DendriteConfig</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.DendriteConfig" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../base/index.html#spark.nn.components.base.ComponentConfig" title="spark.nn.components.base.ComponentConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.base.ComponentConfig</span></code></a></p>
+<p>Base configuration for dendrite models.</p>
+<p>Holds what every dendrite in this package shares: its rest potential, the axial coupling
+to the soma, the back-propagating action potential and the plateau reading. Concrete
+models add the parameters of their membrane.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>potential_rest</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default -55.0</em>) – Dendritic leak reversal potential, in mV. Potentials are stored relative to it.</p></li>
+<li><p><strong>coupling</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 19.777</em>) – Axial conductance between the soma and the dendrite, in nS. The dendrite receives
+<code class="docutils literal notranslate"><span class="pre">coupling</span> <span class="pre">*</span> <span class="pre">(V_soma</span> <span class="pre">-</span> <span class="pre">V_dendrite)</span></code> and delivers the opposite current to the soma.</p></li>
+<li><p><strong>soma_potential_rest</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em> or </em><em>None</em><em>, </em><em>default None</em>) – Rest potential of the soma the dendrite is coupled to, in mV. A soma reports its
+potential relative to its own rest, so this is needed to place both compartments on
+one scale. <code class="docutils literal notranslate"><span class="pre">None</span></code> reads as <code class="docutils literal notranslate"><span class="pre">potential_rest</span></code>, i.e. no offset.</p></li>
+<li><p><strong>bap_conductance</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 27.996</em>) – Peak conductance reached by one back-propagating action potential, in nS.</p></li>
+<li><p><strong>bap_reversal</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 0.0</em>) – Reversal potential of the back-propagating conductance, in mV.</p></li>
+<li><p><strong>bap_rise</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 0.2</em>) – Rise constant of the back-propagating conductance, in ms. Must be shorter than
+<code class="docutils literal notranslate"><span class="pre">bap_decay</span></code>.</p></li>
+<li><p><strong>bap_decay</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 3.0</em>) – Decay constant of the back-propagating conductance, in ms.</p></li>
+<li><p><strong>threshold</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default -25.0</em>) – Potential above which the dendrite counts as being in a plateau, in mV.</p></li>
+<li><p><strong>plateau_slope</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><em>jax.Array</em></a><em> or </em><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><em>Initializer</em></a><em>, </em><em>default 2.0</em>) – Slope of the plateau reading, in mV. Smaller values approach a hard threshold.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The defaults are the distal compartment of the Ca-AdEx neuron of Pastorelli et al.
+(2025), Supplementary Table S1. The table lists <code class="docutils literal notranslate"><span class="pre">w_BAP</span></code> in mV; the reference
+implementation uses it as the peak of a conductance, in nS, and so does this package.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.DendriteConfig.potential_rest">
+<span class="sig-name descname"><span class="pre">potential_rest</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.DendriteConfig.potential_rest" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.DendriteConfig.coupling">
+<span class="sig-name descname"><span class="pre">coupling</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.DendriteConfig.coupling" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.DendriteConfig.soma_potential_rest">
+<span class="sig-name descname"><span class="pre">soma_potential_rest</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.DendriteConfig.soma_potential_rest" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.DendriteConfig.bap_conductance">
+<span class="sig-name descname"><span class="pre">bap_conductance</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.DendriteConfig.bap_conductance" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.DendriteConfig.bap_reversal">
+<span class="sig-name descname"><span class="pre">bap_reversal</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.DendriteConfig.bap_reversal" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.DendriteConfig.bap_rise">
+<span class="sig-name descname"><span class="pre">bap_rise</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.DendriteConfig.bap_rise" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.DendriteConfig.bap_decay">
+<span class="sig-name descname"><span class="pre">bap_decay</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.DendriteConfig.bap_decay" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.DendriteConfig.threshold">
+<span class="sig-name descname"><span class="pre">threshold</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.DendriteConfig.threshold" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.DendriteConfig.plateau_slope">
+<span class="sig-name descname"><span class="pre">plateau_slope</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.jax.dev/en/latest/_autosummary/jax.Array.html#jax.Array" title="(in JAX)"><span class="pre">jax.Array</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../../initializers/base/index.html#spark.nn.initializers.base.Initializer" title="spark.nn.initializers.base.Initializer"><span class="pre">spark.nn.initializers.base.Initializer</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.DendriteConfig.plateau_slope" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.ConfigT">
+<span class="sig-prename descclassname"><span class="pre">spark.nn.components.dendrites.base.</span></span><span class="sig-name descname"><span class="pre">ConfigT</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.ConfigT" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.Dendrite">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.nn.components.dendrites.base.</span></span><span class="sig-name descname"><span class="pre">Dendrite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.Dendrite" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../base/index.html#spark.nn.components.base.Component" title="spark.nn.components.base.Component"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.nn.components.base.Component</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Generic</span></code>[<a class="reference internal" href="#spark.nn.components.dendrites.base.ConfigT" title="spark.nn.components.dendrites.base.ConfigT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConfigT</span></code></a>]</p>
+<p>Base class for dendrite models.</p>
+<p>A dendrite owns a membrane potential, exchanges an axial current with the soma it is
+attached to, and receives the somatic spikes as a back-propagating action potential. The
+step is fixed here and a subclass fills in the membrane:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">V_s</span>    <span class="o">=</span> <span class="n">soma_potential</span> <span class="o">+</span> <span class="p">(</span><span class="n">E_soma</span> <span class="o">-</span> <span class="n">E_dendrite</span><span class="p">)</span>
+<span class="n">g_BAP</span>  <span class="o">=</span> <span class="n">_bap_conductance</span><span class="p">(</span><span class="n">spikes</span><span class="p">)</span>
+<span class="n">I_eff</span>  <span class="o">=</span> <span class="n">_effective_current</span><span class="p">(</span><span class="n">I</span><span class="p">)</span>
+<span class="n">V</span><span class="s1">'     = _integrate(V, I_eff, V_s, g_BAP)</span>
+         <span class="n">_update_state</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">V</span><span class="s1">')</span>
+<span class="n">p</span>      <span class="o">=</span> <span class="n">_plateau_computation</span><span class="p">(</span><span class="n">V</span><span class="s1">', _effective_threshold())</span>
+<span class="n">I_out</span>  <span class="o">=</span> <span class="n">coupling</span> <span class="o">*</span> <span class="p">(</span><span class="n">V</span><span class="s1">' - V_s)</span>
+</pre></div>
+</div>
+<p>Only <cite>_integrate</cite> is required. The other hooks return their argument unchanged or do
+nothing, so a model that is a membrane integration and nothing else defines one method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#spark.nn.components.dendrites.base.DendriteConfig" title="spark.nn.components.dendrites.base.DendriteConfig"><em>DendriteConfig</em></a><em>, </em><em>optional</em>) – Model configuration. Its fields may also be given as keyword arguments.</p>
+</dd>
+<dt class="field-even">Input Ports<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>in_current</strong> (<em>CurrentArray</em>) – Current delivered to the dendrite, in pA. Synaptic input and any injected current.</p></li>
+<li><p><strong>soma_potential</strong> (<em>PotentialArray, optional</em>) – Potential of the soma the dendrite is coupled to, relative to the soma’s rest. Wire
+the <code class="docutils literal notranslate"><span class="pre">potential</span></code> property of the soma onto it. Without it the dendrite is an
+isolated compartment: no axial current flows in either direction.</p></li>
+<li><p><strong>spikes</strong> (<em>SpikeArray, optional</em>) – Somatic spikes. Each one triggers a back-propagating action potential. Without it
+no back-propagation takes place.</p></li>
+<li><p><strong>injected_current</strong> (<em>CurrentArray, optional</em>) – Current injected into the dendrite besides the synaptic one, in pA, summed with
+<code class="docutils literal notranslate"><span class="pre">in_current</span></code>. Meant for instructive or teaching currents that are not synaptic.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Output Ports<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>out_current</strong> (<em>CurrentArray</em>) – Axial current delivered to the soma, in pA. Inside a <cite>Neuron</cite> it is written onto the
+<code class="docutils literal notranslate"><span class="pre">coupling_current</span></code> property of a <cite>CoupledSoma</cite> as an effect, which closes the loop
+between the two compartments without a cycle in the wiring.</p></li>
+<li><p><strong>plateau</strong> (<em>FloatArray</em>) – How far the dendrite is into a plateau, in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Properties<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>potential</strong> (<em>PotentialArray</em>) – Dendritic membrane potential, relative to <code class="docutils literal notranslate"><span class="pre">potential_rest</span></code>. Read only.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The back-propagating action potential follows the reference implementation of the
+Ca-AdEx neuron: a conductance with a double exponential time course, normalized so that
+one spike peaks at <code class="docutils literal notranslate"><span class="pre">bap_conductance</span></code>, driving the membrane towards <code class="docutils literal notranslate"><span class="pre">bap_reversal</span></code>.</p>
+<p>There is no conduction delay parameter. The spike takes on the order of a millisecond
+to travel from the soma to the calcium hot zone, which is at or below the step sizes
+Spark is typically run at, and the reference fit put its delay at the smallest value
+its simulator allowed, one 0.1 ms step. A somatic spike therefore enters the kernel on
+the step it arrives and, since the kernel starts from zero, its conductance acts from
+the next step on. To model a longer conduction delay, put an <cite>NDelays</cite> between the
+<code class="docutils literal notranslate"><span class="pre">spikes</span></code> output of the soma and the <code class="docutils literal notranslate"><span class="pre">spikes</span></code> port of the dendrite.</p>
+<p>Potentials are stored relative to <code class="docutils literal notranslate"><span class="pre">potential_rest</span></code>. The soma potential arrives
+relative to the soma’s own rest and is shifted by <code class="docutils literal notranslate"><span class="pre">soma_potential_rest</span> <span class="pre">-</span>
+<span class="pre">potential_rest</span></code> before use, so <code class="docutils literal notranslate"><span class="pre">soma_potential_rest</span></code> has to name the rest potential
+of the soma actually wired in.</p>
+<p>The plateau is reported as a smooth reading of the threshold crossing rather than as a
+flag, so it can drive a trace or gate a plasticity rule directly. It reads 0.5 at
+<code class="docutils literal notranslate"><span class="pre">threshold</span></code>, so comparing it against 0.5 recovers the hard flag.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">LeakyDendrite</span></code></dt><dd><p>Passive membrane.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">CalciumDendrite</span></code></dt><dd><p>Calcium hot zone with a regenerative calcium spike.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">CoupledSoma</span></code></dt><dd><p>Soma mechanism receiving <code class="docutils literal notranslate"><span class="pre">out_current</span></code>.</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.Dendrite.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#spark.nn.components.dendrites.base.ConfigT" title="spark.nn.components.dendrites.base.ConfigT"><span class="pre">ConfigT</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.Dendrite.config" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.Dendrite.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_current</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soma_potential</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spikes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">injected_current</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.Dendrite.build" title="Link to this definition">#</a></dt>
+<dd><p>Lazy initialize method.</p>
+<p>Called once, by <cite>_build</cite>, with the payloads of the first call. Used by any subclass of
+<cite>SparkModule</cite> to define any variable that depends on the shape of the input to the module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>**abc_args</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.SparkPayload" title="spark.core.payloads.SparkPayload"><em>SparkPayload</em></a>) – The payloads that arrived on the first call, by port name.</p></li>
+<li><p><strong>in_current</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.CurrentArray" title="spark.core.payloads.CurrentArray"><em>spark.core.payloads.CurrentArray</em></a>)</p></li>
+<li><p><strong>soma_potential</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.PotentialArray" title="spark.core.payloads.PotentialArray"><em>spark.core.payloads.PotentialArray</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>spikes</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>spark.core.payloads.SpikeArray</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>injected_current</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.CurrentArray" title="spark.core.payloads.CurrentArray"><em>spark.core.payloads.CurrentArray</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.Dendrite.potential">
+<span class="sig-name descname"><span class="pre">potential</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.Dendrite.potential" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.PotentialArray" title="spark.core.payloads.PotentialArray">spark.core.payloads.PotentialArray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.Dendrite.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.Dendrite.reset" title="Link to this definition">#</a></dt>
+<dd><p>Resets the dendrite state to its initial value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.nn.components.dendrites.base.Dendrite.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_current</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soma_potential</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spikes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">injected_current</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/nn/components/dendrites/base.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.nn.components.dendrites.base.Dendrite.__call__" title="Link to this definition">#</a></dt>
+<dd><p>Advances the dendrite one step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_current</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.CurrentArray" title="spark.core.payloads.CurrentArray"><em>CurrentArray</em></a>) – Current delivered to the dendrite, in pA.</p></li>
+<li><p><strong>soma_potential</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.PotentialArray" title="spark.core.payloads.PotentialArray"><em>PotentialArray</em></a><em>, </em><em>optional</em>) – Potential of the coupled soma, relative to the soma’s rest.</p></li>
+<li><p><strong>spikes</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.SpikeArray" title="spark.core.payloads.SpikeArray"><em>SpikeArray</em></a><em>, </em><em>optional</em>) – Somatic spikes, driving the back-propagating action potential.</p></li>
+<li><p><strong>injected_current</strong> (<a class="reference internal" href="../../../../core/payloads/index.html#spark.core.payloads.CurrentArray" title="spark.core.payloads.CurrentArray"><em>CurrentArray</em></a><em>, </em><em>optional</em>) – Additional current injected into the dendrite, in pA.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary with <code class="docutils literal notranslate"><span class="pre">out_current</span></code> and <code class="docutils literal notranslate"><span class="pre">plateau</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#spark.nn.components.dendrites.base.DendriteOutput" title="spark.nn.components.dendrites.base.DendriteOutput">DendriteOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">spark.nn.components.dendrites</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../leaky/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">spark.nn.components.dendrites.leaky</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteOutput"><code class="docutils literal notranslate"><span class="pre">DendriteOutput</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteOutput.out_current"><code class="docutils literal notranslate"><span class="pre">DendriteOutput.out_current</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteOutput.plateau"><code class="docutils literal notranslate"><span class="pre">DendriteOutput.plateau</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">DendriteOutput.out_current</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1"><code class="docutils literal notranslate"><span class="pre">DendriteOutput.plateau</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig"><code class="docutils literal notranslate"><span class="pre">DendriteConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.potential_rest"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.potential_rest</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.coupling"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.coupling</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.soma_potential_rest"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.soma_potential_rest</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.bap_conductance"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.bap_conductance</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.bap_reversal"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.bap_reversal</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.bap_rise"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.bap_rise</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.bap_decay"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.bap_decay</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.threshold"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.threshold</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.DendriteConfig.plateau_slope"><code class="docutils literal notranslate"><span class="pre">DendriteConfig.plateau_slope</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.ConfigT"><code class="docutils literal notranslate"><span class="pre">ConfigT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.Dendrite"><code class="docutils literal notranslate"><span class="pre">Dendrite</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.Dendrite.config"><code class="docutils literal notranslate"><span class="pre">Dendrite.config</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.Dendrite.build"><code class="docutils literal notranslate"><span class="pre">Dendrite.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.Dendrite.potential"><code class="docutils literal notranslate"><span class="pre">Dendrite.potential()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.Dendrite.reset"><code class="docutils literal notranslate"><span class="pre">Dendrite.reset()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.nn.components.dendrites.base.Dendrite.__call__"><code class="docutils literal notranslate"><span class="pre">Dendrite.__call__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

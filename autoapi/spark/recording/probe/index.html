@@ -1,0 +1,1720 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spark.recording.probe &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=30646c52"></script>
+    <script src="../../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/spark/recording/probe/index';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="spark.recording.probe_context" href="../probe_context/index.html" />
+    <link rel="prev" title="spark.recording.presets" href="../presets/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../../../../_static/searchtools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <script src="../../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <img src="../../../../_static/spark_250px.png" class="logo__image only-dark pst-js-only" alt="Spark  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/neurons.html">Tutorial #3: Neurons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/brains.html">Tutorial #4: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/graph_editor.html">Tutorial #5: Graph Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/cartpole.html">Tutorial #6: Solving the CartPole™</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/recording.html">Tutorial #7: Recording</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/sharding.html">Tutorial #8: Sharding</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../index.html">spark</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../core/addresses/index.html">spark.core.addresses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/backend/index.html">spark.core.backend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/checkpoint/index.html">spark.core.checkpoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/decorators/index.html">spark.core.decorators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/recording_hooks/index.html">spark.core.recording_hooks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/validation/index.html">spark.core.validation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/commands/index.html">spark.graph_editor.commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/runs/index.html">spark.graph_editor.runs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/styles/index.html">spark.graph_editor.styles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/view/index.html">spark.graph_editor.view</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../nn/index.html">spark.nn</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/components/index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/controllers/index.html">spark.nn.controllers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../index.html">spark.recording</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../calls/index.html">spark.recording.calls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../current/index.html">spark.recording.current</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../measurements/index.html">spark.recording.measurements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../presets/index.html">spark.recording.presets</a></li>
+<li class="toctree-l4 current active"><a class="current reference internal" href="#">spark.recording.probe</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../probe_context/index.html">spark.recording.probe_context</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../probe_targets/index.html">spark.recording.probe_targets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../recorder/index.html">spark.recording.recorder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../records/index.html">spark.recording.records</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reduce/index.html">spark.recording.reduce</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../run/index.html">spark.recording.run</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../runner/index.html">spark.recording.runner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../scan/index.html">spark.recording.scan</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../settings/index.html">spark.recording.settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../store/index.html">spark.recording.store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../triggers/index.html">spark.recording.triggers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../utils/index.html">spark.recording.utils</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">spark</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">spark.recording</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">spark.recording.probe</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../../_sources/autoapi/spark/recording/probe/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>spark.recording.probe</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.CALL"><code class="docutils literal notranslate"><span class="pre">CALL</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.ProbeMode"><code class="docutils literal notranslate"><span class="pre">ProbeMode</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.ProbeMode.SUMMARY"><code class="docutils literal notranslate"><span class="pre">ProbeMode.SUMMARY</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.ProbeMode.TRACE"><code class="docutils literal notranslate"><span class="pre">ProbeMode.TRACE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.ProbeMode.RASTER"><code class="docutils literal notranslate"><span class="pre">ProbeMode.RASTER</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.ProbeMode.SNAPSHOT"><code class="docutils literal notranslate"><span class="pre">ProbeMode.SNAPSHOT</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.ProbeMode.DELTA"><code class="docutils literal notranslate"><span class="pre">ProbeMode.DELTA</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction"><code class="docutils literal notranslate"><span class="pre">SummaryReduction</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.MEAN"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.MEAN</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.STD"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.STD</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.MIN"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.MIN</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.MAX"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.MAX</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.ACTIVE_FRACTION"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.ACTIVE_FRACTION</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.ACTIVE_FRACTION_PER_UNIT"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.ACTIVE_FRACTION_PER_UNIT</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.INACTIVE_UNIT_FRACTION"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.INACTIVE_UNIT_FRACTION</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.HIST"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.HIST</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.scalar"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.scalar</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaReduction"><code class="docutils literal notranslate"><span class="pre">DeltaReduction</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaReduction.FULL"><code class="docutils literal notranslate"><span class="pre">DeltaReduction.FULL</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaReduction.NORM"><code class="docutils literal notranslate"><span class="pre">DeltaReduction.NORM</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaReduction.MEAN_ABS"><code class="docutils literal notranslate"><span class="pre">DeltaReduction.MEAN_ABS</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaReduction.scalar"><code class="docutils literal notranslate"><span class="pre">DeltaReduction.scalar</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe"><code class="docutils literal notranslate"><span class="pre">Probe</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.mode"><code class="docutils literal notranslate"><span class="pre">Probe.mode</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.kind"><code class="docutils literal notranslate"><span class="pre">Probe.kind</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.path"><code class="docutils literal notranslate"><span class="pre">Probe.path</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.name"><code class="docutils literal notranslate"><span class="pre">Probe.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.key"><code class="docutils literal notranslate"><span class="pre">Probe.key</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.address"><code class="docutils literal notranslate"><span class="pre">Probe.address</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">Probe.mode</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1"><code class="docutils literal notranslate"><span class="pre">Probe.kind</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2"><code class="docutils literal notranslate"><span class="pre">Probe.path</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id3"><code class="docutils literal notranslate"><span class="pre">Probe.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.__post_init__"><code class="docutils literal notranslate"><span class="pre">Probe.__post_init__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.__eq__"><code class="docutils literal notranslate"><span class="pre">Probe.__eq__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.__hash__"><code class="docutils literal notranslate"><span class="pre">Probe.__hash__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.__reduce__"><code class="docutils literal notranslate"><span class="pre">Probe.__reduce__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id4"><code class="docutils literal notranslate"><span class="pre">Probe.key</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.per_step"><code class="docutils literal notranslate"><span class="pre">Probe.per_step</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.to_dict"><code class="docutils literal notranslate"><span class="pre">Probe.to_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.from_dict"><code class="docutils literal notranslate"><span class="pre">Probe.from_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryProbe"><code class="docutils literal notranslate"><span class="pre">SummaryProbe</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryProbe.mode"><code class="docutils literal notranslate"><span class="pre">SummaryProbe.mode</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryProbe.reduce"><code class="docutils literal notranslate"><span class="pre">SummaryProbe.reduce</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryProbe.bins"><code class="docutils literal notranslate"><span class="pre">SummaryProbe.bins</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryProbe.range"><code class="docutils literal notranslate"><span class="pre">SummaryProbe.range</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryProbe.group"><code class="docutils literal notranslate"><span class="pre">SummaryProbe.group</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.TraceProbe"><code class="docutils literal notranslate"><span class="pre">TraceProbe</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.TraceProbe.mode"><code class="docutils literal notranslate"><span class="pre">TraceProbe.mode</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.TraceProbe.units"><code class="docutils literal notranslate"><span class="pre">TraceProbe.units</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.TraceProbe.stride"><code class="docutils literal notranslate"><span class="pre">TraceProbe.stride</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.RasterProbe"><code class="docutils literal notranslate"><span class="pre">RasterProbe</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.RasterProbe.mode"><code class="docutils literal notranslate"><span class="pre">RasterProbe.mode</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.RasterProbe.units"><code class="docutils literal notranslate"><span class="pre">RasterProbe.units</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.RasterProbe.stride"><code class="docutils literal notranslate"><span class="pre">RasterProbe.stride</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SnapshotProbe"><code class="docutils literal notranslate"><span class="pre">SnapshotProbe</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SnapshotProbe.mode"><code class="docutils literal notranslate"><span class="pre">SnapshotProbe.mode</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SnapshotProbe.units"><code class="docutils literal notranslate"><span class="pre">SnapshotProbe.units</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SnapshotProbe.group"><code class="docutils literal notranslate"><span class="pre">SnapshotProbe.group</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaProbe"><code class="docutils literal notranslate"><span class="pre">DeltaProbe</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaProbe.mode"><code class="docutils literal notranslate"><span class="pre">DeltaProbe.mode</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaProbe.reduce"><code class="docutils literal notranslate"><span class="pre">DeltaProbe.reduce</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaProbe.group"><code class="docutils literal notranslate"><span class="pre">DeltaProbe.group</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.address"><code class="docutils literal notranslate"><span class="pre">address()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.probe_addresses"><code class="docutils literal notranslate"><span class="pre">probe_addresses()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.expand"><code class="docutils literal notranslate"><span class="pre">expand()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.validate"><code class="docutils literal notranslate"><span class="pre">validate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.get_recorded_array"><code class="docutils literal notranslate"><span class="pre">get_recorded_array()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.check_units"><code class="docutils literal notranslate"><span class="pre">check_units()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.STEP_PROBES"><code class="docutils literal notranslate"><span class="pre">STEP_PROBES</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.BOUNDARY_PROBES"><code class="docutils literal notranslate"><span class="pre">BOUNDARY_PROBES</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.GROUPED_PROBES"><code class="docutils literal notranslate"><span class="pre">GROUPED_PROBES</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-spark.recording.probe">
+<span id="spark-recording-probe"></span><h1>spark.recording.probe<a class="headerlink" href="#module-spark.recording.probe" title="Link to this heading">#</a></h1>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.probe.CALL" title="spark.recording.probe.CALL"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CALL</span></code></a></p></td>
+<td><p>Path segment naming the inputs of a controller.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.probe.STEP_PROBES" title="spark.recording.probe.STEP_PROBES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">STEP_PROBES</span></code></a></p></td>
+<td><p>Probes read on every step.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.probe.BOUNDARY_PROBES" title="spark.recording.probe.BOUNDARY_PROBES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BOUNDARY_PROBES</span></code></a></p></td>
+<td><p>Probes read before and after the steps of each group, not on every step. Attributes only.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.probe.GROUPED_PROBES" title="spark.recording.probe.GROUPED_PROBES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GROUPED_PROBES</span></code></a></p></td>
+<td><p>Probes giving one record per group of steps.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.probe.ProbeMode" title="spark.recording.probe.ProbeMode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProbeMode</span></code></a></p></td>
+<td><p>How a probe records its value.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.probe.SummaryReduction" title="spark.recording.probe.SummaryReduction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SummaryReduction</span></code></a></p></td>
+<td><p><cite>SummaryProbe</cite> requested operations (reductions) on the Probes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.probe.DeltaReduction" title="spark.recording.probe.DeltaReduction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeltaReduction</span></code></a></p></td>
+<td><p><cite>DeltaProbe</cite> requested operations (reductions) on the Probes. Unlike <cite>SummaryProbe</cite>, <cite>DeltaProbe</cite></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.probe.Probe" title="spark.recording.probe.Probe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Probe</span></code></a></p></td>
+<td><p>Specification for a measurement, denoted by a port address and the measurement operator:</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.probe.SummaryProbe" title="spark.recording.probe.SummaryProbe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SummaryProbe</span></code></a></p></td>
+<td><p>Reductions of a value over the units and over each group of steps.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.probe.TraceProbe" title="spark.recording.probe.TraceProbe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TraceProbe</span></code></a></p></td>
+<td><p>The value on every step.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.probe.RasterProbe" title="spark.recording.probe.RasterProbe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RasterProbe</span></code></a></p></td>
+<td><p>Whether each unit is active, on every step.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.probe.SnapshotProbe" title="spark.recording.probe.SnapshotProbe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SnapshotProbe</span></code></a></p></td>
+<td><p>The value of an attribute at the end of each group of steps.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.probe.DeltaProbe" title="spark.recording.probe.DeltaProbe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeltaProbe</span></code></a></p></td>
+<td><p>Reductions of the change of an attribute over each group of steps.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.probe.address" title="spark.recording.probe.address"><code class="xref py py-obj docutils literal notranslate"><span class="pre">address</span></code></a>(path, name, kind)</p></td>
+<td><p>Returns the address of the port or attribute <code class="docutils literal notranslate"><span class="pre">name</span></code> of the module at <code class="docutils literal notranslate"><span class="pre">path</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.probe.probe_addresses" title="spark.recording.probe.probe_addresses"><code class="xref py py-obj docutils literal notranslate"><span class="pre">probe_addresses</span></code></a>(controller)</p></td>
+<td><p>Returns the address of every value of a built controller that a probe can read.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.probe.expand" title="spark.recording.probe.expand"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expand</span></code></a>(controller, probes)</p></td>
+<td><p>Returns the probes with every pattern replaced by a probe of each address it matches.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.probe.validate" title="spark.recording.probe.validate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate</span></code></a>(controller, probes)</p></td>
+<td><p>Checks that every probe is a valid probe (targets an existing variable within the controller).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.probe.resolve" title="spark.recording.probe.resolve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code></a>(controller, path[, address])</p></td>
+<td><p>Retrieves the module pointed by <code class="docutils literal notranslate"><span class="pre">path</span></code>, within <code class="docutils literal notranslate"><span class="pre">controller</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.probe.get_recorded_array" title="spark.recording.probe.get_recorded_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_recorded_array</span></code></a>(value)</p></td>
+<td><p>Returns the array a probe reduces.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.probe.check_units" title="spark.recording.probe.check_units"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_units</span></code></a>(size, units, address)</p></td>
+<td><p>Checks that <code class="docutils literal notranslate"><span class="pre">units</span></code> are indices within a value of <code class="docutils literal notranslate"><span class="pre">size</span></code> entries.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.probe.CALL">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">CALL</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'__call__'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.CALL" title="Link to this definition">#</a></dt>
+<dd><p>Path segment naming the inputs of a controller.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.recording.probe.ProbeMode">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">ProbeMode</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.ProbeMode" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.StrEnum" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.StrEnum</span></code></a></p>
+<p>How a probe records its value.</p>
+<p>Each probe is associated with a specific <cite>Probe.mode</cite>.</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.ProbeMode.SUMMARY">
+<span class="sig-name descname"><span class="pre">SUMMARY</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'summary'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.ProbeMode.SUMMARY" title="Link to this definition">#</a></dt>
+<dd><p>reductions of the value over the units and over each group of steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>SummaryProbe</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.ProbeMode.TRACE">
+<span class="sig-name descname"><span class="pre">TRACE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'trace'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.ProbeMode.TRACE" title="Link to this definition">#</a></dt>
+<dd><p>the value on every step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>TraceProbe</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.ProbeMode.RASTER">
+<span class="sig-name descname"><span class="pre">RASTER</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'raster'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.ProbeMode.RASTER" title="Link to this definition">#</a></dt>
+<dd><p>whether each unit is active, on every step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>RasterProbe</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.ProbeMode.SNAPSHOT">
+<span class="sig-name descname"><span class="pre">SNAPSHOT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'snapshot'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.ProbeMode.SNAPSHOT" title="Link to this definition">#</a></dt>
+<dd><p>the value of an attribute at the end of each group of steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>SnapshotProbe</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.ProbeMode.DELTA">
+<span class="sig-name descname"><span class="pre">DELTA</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'delta'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.ProbeMode.DELTA" title="Link to this definition">#</a></dt>
+<dd><p>reductions of the change of an attribute over each group of steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>DeltaProbe</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.recording.probe.SummaryReduction">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">SummaryReduction</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SummaryReduction" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.StrEnum" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.StrEnum</span></code></a></p>
+<p><cite>SummaryProbe</cite> requested operations (reductions) on the Probes.</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.SummaryReduction.MEAN">
+<span class="sig-name descname"><span class="pre">MEAN</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'mean'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SummaryReduction.MEAN" title="Link to this definition">#</a></dt>
+<dd><p>Mean over the units and the steps.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.SummaryReduction.STD">
+<span class="sig-name descname"><span class="pre">STD</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'std'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SummaryReduction.STD" title="Link to this definition">#</a></dt>
+<dd><p>Standard deviation over the units and the steps.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.SummaryReduction.MIN">
+<span class="sig-name descname"><span class="pre">MIN</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'min'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SummaryReduction.MIN" title="Link to this definition">#</a></dt>
+<dd><p>Minimum over the units and the steps.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.SummaryReduction.MAX">
+<span class="sig-name descname"><span class="pre">MAX</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'max'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SummaryReduction.MAX" title="Link to this definition">#</a></dt>
+<dd><p>Maximum over the units and the steps.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.SummaryReduction.ACTIVE_FRACTION">
+<span class="sig-name descname"><span class="pre">ACTIVE_FRACTION</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'active_fraction'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SummaryReduction.ACTIVE_FRACTION" title="Link to this definition">#</a></dt>
+<dd><p>Fraction of the units active, averaged over the steps. For spikes, the firing rate per step.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.SummaryReduction.ACTIVE_FRACTION_PER_UNIT">
+<span class="sig-name descname"><span class="pre">ACTIVE_FRACTION_PER_UNIT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'active_fraction_per_unit'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SummaryReduction.ACTIVE_FRACTION_PER_UNIT" title="Link to this definition">#</a></dt>
+<dd><p>Fraction of the steps on which each unit is active. One value per unit.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.SummaryReduction.INACTIVE_UNIT_FRACTION">
+<span class="sig-name descname"><span class="pre">INACTIVE_UNIT_FRACTION</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'inactive_unit_fraction'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SummaryReduction.INACTIVE_UNIT_FRACTION" title="Link to this definition">#</a></dt>
+<dd><p>Fraction of the units inactive in the group.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.SummaryReduction.HIST">
+<span class="sig-name descname"><span class="pre">HIST</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'hist'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SummaryReduction.HIST" title="Link to this definition">#</a></dt>
+<dd><p>Counts of the values of the units and the steps in <code class="docutils literal notranslate"><span class="pre">bins</span></code> equal bins over <code class="docutils literal notranslate"><span class="pre">range</span></code>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.recording.probe.SummaryReduction.scalar">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">scalar</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SummaryReduction.scalar" title="Link to this definition">#</a></dt>
+<dd><p>Whether the reduction gives one number per group of steps. <code class="docutils literal notranslate"><span class="pre">ACTIVE_FRACTION_PER_UNIT</span></code>
+and <code class="docutils literal notranslate"><span class="pre">HIST</span></code> give an array. A <cite>Recorder</cite> also writes the scalar reductions to the
+scalars of the run.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.recording.probe.DeltaReduction">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">DeltaReduction</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.DeltaReduction" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.StrEnum" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.StrEnum</span></code></a></p>
+<p><cite>DeltaProbe</cite> requested operations (reductions) on the Probes. Unlike <cite>SummaryProbe</cite>, <cite>DeltaProbe</cite>
+compute differences of an attribute over each group of steps.</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.DeltaReduction.FULL">
+<span class="sig-name descname"><span class="pre">FULL</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'full'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.DeltaReduction.FULL" title="Link to this definition">#</a></dt>
+<dd><p>The change of every unit.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.DeltaReduction.NORM">
+<span class="sig-name descname"><span class="pre">NORM</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'norm'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.DeltaReduction.NORM" title="Link to this definition">#</a></dt>
+<dd><p>Euclidean norm of the change.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.DeltaReduction.MEAN_ABS">
+<span class="sig-name descname"><span class="pre">MEAN_ABS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'mean_abs'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.DeltaReduction.MEAN_ABS" title="Link to this definition">#</a></dt>
+<dd><p>Mean absolute change over the units.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.recording.probe.DeltaReduction.scalar">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">scalar</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.DeltaReduction.scalar" title="Link to this definition">#</a></dt>
+<dd><p>Whether the reduction gives one number per group of steps. <code class="docutils literal notranslate"><span class="pre">FULL</span></code> gives an array. A
+<cite>Recorder</cite> also writes the scalar reductions to the scalars of the run.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.recording.probe.Probe">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">Probe</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.Probe" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Specification for a measurement, denoted by a port address and the measurement operator:
+<cite>SummaryProbe</cite>, <cite>TraceProbe</cite>, <cite>RasterProbe</cite>, <cite>SnapshotProbe</cite> or <cite>DeltaProbe</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>address</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – <p>Address of the value. <code class="docutils literal notranslate"><span class="pre">path</span></code> is the dotted chain of module names from the root
+controller.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">path:port</span></code>: an output port of a module.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path.__call__:port</span></code>: an input port of a controller, <code class="docutils literal notranslate"><span class="pre">__call__:port</span></code> for the root.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path.name</span></code>: an attribute of a module.</p></li>
+</ul>
+<p>A pattern, as <code class="docutils literal notranslate"><span class="pre">*_excitatory.soma:spikes</span></code> or <code class="docutils literal notranslate"><span class="pre">**.soma.potential</span></code>, stands for a probe
+of every address it matches, with the same fields (see <cite>spark.core.addresses</cite>). It is
+matched when the probes are checked against a built model: by <cite>validate</cite>, and by a
+<cite>Recorder</cite> given the model.</p>
+</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.Probe.mode">
+<span class="sig-name descname"><span class="pre">mode</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.Probe.mode" title="Link to this definition">#</a></dt>
+<dd><p>Mode of the class of the probe.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#spark.recording.probe.ProbeMode" title="spark.recording.probe.ProbeMode">ProbeMode</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.Probe.kind">
+<span class="sig-name descname"><span class="pre">kind</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.Probe.kind" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">'port'</span></code> or <code class="docutils literal notranslate"><span class="pre">'attribute'</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.Probe.path">
+<span class="sig-name descname"><span class="pre">path</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.Probe.path" title="Link to this definition">#</a></dt>
+<dd><p>Path of the module producing the port or holding the attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a> of <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.Probe.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.Probe.name" title="Link to this definition">#</a></dt>
+<dd><p>Port or attribute name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.Probe.key">
+<span class="sig-name descname"><span class="pre">key</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.Probe.key" title="Link to this definition">#</a></dt>
+<dd><p>Name of the entry of the probe in the records, <code class="docutils literal notranslate"><span class="pre">address&#64;mode</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – When the address is malformed, or a field is invalid.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Probes are frozen and hashable. Probes of the same class with equal fields compare and hash
+equal. A tuple of probes can be a static argument of a jitted function.</p>
+<p>Ports are read as the module produces them. Attributes are read at the end of each step,
+after every module of the step ran.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">Measurements</span></code></dt><dd><p>A named set of probes recorded together.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_probe_targets</span></code></dt><dd><p>Lists the values of a controller that a probe can address.</p>
+</dd>
+<dt><a class="reference internal" href="#spark.recording.probe.validate" title="spark.recording.probe.validate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate</span></code></a></dt><dd><p>Checks probes against a controller.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">Recorder</span></code></dt><dd><p>Records the measurements asked for and writes them to a run.</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.Probe.address">
+<span class="sig-name descname"><span class="pre">address</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.Probe.address" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">mode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#spark.recording.probe.ProbeMode" title="spark.recording.probe.ProbeMode"><span class="pre">ProbeMode</span></a><span class="p"><span class="pre">]</span></span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">kind</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">path</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id2" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id3" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.probe.Probe.__post_init__">
+<span class="sig-name descname"><span class="pre">__post_init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.Probe.__post_init__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.probe.Probe.__eq__">
+<span class="sig-name descname"><span class="pre">__eq__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.Probe.__eq__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><em>object</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.probe.Probe.__hash__">
+<span class="sig-name descname"><span class="pre">__hash__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.Probe.__hash__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.probe.Probe.__reduce__">
+<span class="sig-name descname"><span class="pre">__reduce__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.Probe.__reduce__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id4">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">key</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id4" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="spark.recording.probe.Probe.per_step">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">per_step</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.Probe.per_step" title="Link to this definition">#</a></dt>
+<dd><p>Whether the probe is read on every step (<cite>STEP_PROBES</cite>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.probe.Probe.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.Probe.to_dict" title="Link to this definition">#</a></dt>
+<dd><p>Returns the mode and the fields of the probe as JSON types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">mode</span></code>, and the keyword arguments of the class, with lists in place of tuples.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.probe.Probe.from_dict">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.Probe.from_dict" title="Link to this definition">#</a></dt>
+<dd><p>Rebuilds a probe from <cite>to_dict</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a>) – Mode and fields of a probe, as <cite>to_dict</cite> gives them.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A probe of the class of the mode.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#spark.recording.probe.Probe" title="spark.recording.probe.Probe">Probe</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – When the mode is unknown, or is not the mode of the class called.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.recording.probe.SummaryProbe">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">SummaryProbe</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SummaryProbe" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.recording.probe.Probe" title="spark.recording.probe.Probe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Probe</span></code></a></p>
+<p>Reductions of a value over the units and over each group of steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Address of the value, as in <cite>Probe</cite>.</p></li>
+<li><p><strong>reduce</strong> (<a class="reference internal" href="#spark.recording.probe.SummaryReduction" title="spark.recording.probe.SummaryReduction"><em>SummaryReduction</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><em>sequence</em><em> of </em><em>them</em><em>, </em><em>default</em><em> (</em><em>'mean'</em><em>, </em><em>'std'</em><em>, </em><em>'min'</em><em>, </em><em>'max'</em><em>)</em>) – <p>Reductions, as <cite>SummaryReduction</cite> members or their names.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">MEAN</span></code>, <code class="docutils literal notranslate"><span class="pre">STD</span></code>, <code class="docutils literal notranslate"><span class="pre">MIN</span></code>, <code class="docutils literal notranslate"><span class="pre">MAX</span></code>: over the units and the steps of the group.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ACTIVE_FRACTION</span></code>: fraction of the units active, averaged over the steps.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ACTIVE_FRACTION_PER_UNIT</span></code>: fraction of the steps on which each unit is active.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">INACTIVE_UNIT_FRACTION</span></code>: fraction of the units active on none of the steps.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HIST</span></code>: counts in <code class="docutils literal notranslate"><span class="pre">bins</span></code> equal bins over <code class="docutils literal notranslate"><span class="pre">range</span></code>.</p></li>
+</ul>
+</p></li>
+<li><p><strong>bins</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>default 32</em>) – Number of bins of <code class="docutils literal notranslate"><span class="pre">HIST</span></code>. Ignored without it.</p></li>
+<li><p><strong>range</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><em>tuple</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>optional</em>) – Lower and upper edges of <code class="docutils literal notranslate"><span class="pre">HIST</span></code>, finite as float32. Required by <code class="docutils literal notranslate"><span class="pre">HIST</span></code> and ignored
+without it. Values outside the range, and NaN, are not counted.</p></li>
+<li><p><strong>group</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – <p>How the steps are split into groups, one record per group. Set by the <cite>Measurements</cite>
+holding the probe; see <cite>Measurements</cite> for how a group is recorded.</p>
+<ul>
+<li><p>A number of steps <code class="docutils literal notranslate"><span class="pre">n</span></code>: groups of <code class="docutils literal notranslate"><span class="pre">n</span></code> steps on the steps of the run, <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">n)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">[n,</span> <span class="pre">2n)</span></code>, and so on.</p></li>
+<li><p>The name of a tag, such as <code class="docutils literal notranslate"><span class="pre">'episode'</span></code>: a new group each time the tag takes a
+different value (<cite>Recorder.tag</cite>).</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>A unit is an entry of the value. A unit is active on a step when its value is nonzero.</p>
+<p>Means, spreads and fractions are computed in float32 and counts in int32, whatever the dtype
+of the value. Histogram counts are int64. <code class="docutils literal notranslate"><span class="pre">MIN</span></code> and <code class="docutils literal notranslate"><span class="pre">MAX</span></code> keep integer dtypes, and are
+float32 for floating values and uint8 for bool.</p>
+<p>A NaN in a value makes <code class="docutils literal notranslate"><span class="pre">MEAN</span></code>, <code class="docutils literal notranslate"><span class="pre">STD</span></code>, <code class="docutils literal notranslate"><span class="pre">MIN</span></code> and <code class="docutils literal notranslate"><span class="pre">MAX</span></code> NaN, and counts as active for
+the fractions. An infinity makes <code class="docutils literal notranslate"><span class="pre">MIN</span></code> or <code class="docutils literal notranslate"><span class="pre">MAX</span></code> infinite, and <code class="docutils literal notranslate"><span class="pre">MEAN</span></code> and <code class="docutils literal notranslate"><span class="pre">STD</span></code> NaN.
+A float32 value near 1e19 or beyond can overflow <code class="docutils literal notranslate"><span class="pre">STD</span></code>.</p>
+<p>Summaries keep device memory in proportion to the value and to the groups a call
+touches. A histogram is counted after the call from the values of every step, or step by
+step when those values take more than <cite>SETTINGS.histogram_rows_limit</cite> bytes.</p>
+<p>Histogram edges are float32, as in <code class="docutils literal notranslate"><span class="pre">numpy.histogram</span></code> of float32 values. XLA on the CPU
+reads float32 subnormals (below about 1.2e-38 in magnitude) as zero in fractions and
+histograms. GPUs do not read them as zero.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">SummaryProbe</span><span class="p">(</span><span class="s1">'first_pool:out_spikes'</span><span class="p">,</span> <span class="n">reduce</span><span class="o">=</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">SummaryReduction</span><span class="o">.</span><span class="n">ACTIVE_FRACTION</span><span class="p">,</span> <span class="n">SummaryReduction</span><span class="o">.</span><span class="n">INACTIVE_UNIT_FRACTION</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SummaryProbe</span><span class="p">(</span><span class="s1">'first_pool.soma.potential'</span><span class="p">,</span> <span class="n">reduce</span><span class="o">=</span><span class="n">SummaryReduction</span><span class="o">.</span><span class="n">HIST</span><span class="p">,</span>
+<span class="gp">... </span>             <span class="nb">range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">80.0</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.SummaryProbe.mode">
+<span class="sig-name descname"><span class="pre">mode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#spark.recording.probe.ProbeMode" title="spark.recording.probe.ProbeMode"><span class="pre">ProbeMode</span></a><span class="p"><span class="pre">]</span></span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SummaryProbe.mode" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.SummaryProbe.reduce">
+<span class="sig-name descname"><span class="pre">reduce</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#spark.recording.probe.SummaryReduction" title="spark.recording.probe.SummaryReduction"><span class="pre">SummaryReduction</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('mean',</span> <span class="pre">'std',</span> <span class="pre">'min',</span> <span class="pre">'max')</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SummaryProbe.reduce" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.SummaryProbe.bins">
+<span class="sig-name descname"><span class="pre">bins</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">32</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SummaryProbe.bins" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.SummaryProbe.range">
+<span class="sig-name descname"><span class="pre">range</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SummaryProbe.range" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.SummaryProbe.group">
+<span class="sig-name descname"><span class="pre">group</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SummaryProbe.group" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.recording.probe.TraceProbe">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">TraceProbe</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.TraceProbe" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.recording.probe.Probe" title="spark.recording.probe.Probe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Probe</span></code></a></p>
+<p>The value on every step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Address of the value, as in <cite>Probe</cite>.</p></li>
+<li><p><strong>units</strong> (<em>sequence</em><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Flat indices of the units kept. All units when omitted.</p></li>
+<li><p><strong>stride</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>default 1</em>) – Keeps the steps <code class="docutils literal notranslate"><span class="pre">t</span></code> of the run with <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">%</span> <span class="pre">stride</span> <span class="pre">==</span> <span class="pre">0</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>A unit is an entry of the value. A trace keeps the dtype of the value. A trace of an
+attribute holds the value the next step starts from.</p>
+<p>A trace keeps every step of the call it records. With a stride, it keeps only the steps of
+the stride when every step would take more than <cite>SETTINGS.spaced_rows_limit</cite>
+bytes.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">TraceProbe</span><span class="p">(</span><span class="s1">'first_pool.soma.potential'</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">64</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TraceProbe</span><span class="p">(</span><span class="s1">'__call__:signal'</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.TraceProbe.mode">
+<span class="sig-name descname"><span class="pre">mode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#spark.recording.probe.ProbeMode" title="spark.recording.probe.ProbeMode"><span class="pre">ProbeMode</span></a><span class="p"><span class="pre">]</span></span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.TraceProbe.mode" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.TraceProbe.units">
+<span class="sig-name descname"><span class="pre">units</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.TraceProbe.units" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.TraceProbe.stride">
+<span class="sig-name descname"><span class="pre">stride</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.TraceProbe.stride" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.recording.probe.RasterProbe">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">RasterProbe</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.RasterProbe" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.recording.probe.Probe" title="spark.recording.probe.Probe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Probe</span></code></a></p>
+<p>Whether each unit is active, on every step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Address of the value, as in <cite>Probe</cite>.</p></li>
+<li><p><strong>units</strong> (<em>sequence</em><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Flat indices of the units kept. All units when omitted.</p></li>
+<li><p><strong>stride</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>default 1</em>) – Keeps the steps <code class="docutils literal notranslate"><span class="pre">t</span></code> of the run with <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">%</span> <span class="pre">stride</span> <span class="pre">==</span> <span class="pre">0</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>A unit is an entry of the value. A unit is active on a step when its value is nonzero. A
+NaN counts as active. A float16 or bfloat16 value is rounded to its dtype before the test.</p>
+<p>A raster is moved and stored as bits, and read as bool. It keeps every step of the call it
+records. With a stride, it keeps only the steps of the stride when every step would take
+more than <cite>SETTINGS.spaced_rows_limit</cite> bytes.</p>
+<p>XLA on the CPU reads float32 subnormals (below about 1.2e-38 in magnitude) as zero. GPUs do
+not read them as zero.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">RasterProbe</span><span class="p">(</span><span class="s1">'first_pool:out_spikes'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">RasterProbe</span><span class="p">(</span><span class="s1">'first_pool:out_spikes'</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">256</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.RasterProbe.mode">
+<span class="sig-name descname"><span class="pre">mode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#spark.recording.probe.ProbeMode" title="spark.recording.probe.ProbeMode"><span class="pre">ProbeMode</span></a><span class="p"><span class="pre">]</span></span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.RasterProbe.mode" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.RasterProbe.units">
+<span class="sig-name descname"><span class="pre">units</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.RasterProbe.units" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.RasterProbe.stride">
+<span class="sig-name descname"><span class="pre">stride</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.RasterProbe.stride" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.recording.probe.SnapshotProbe">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">SnapshotProbe</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SnapshotProbe" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.recording.probe.Probe" title="spark.recording.probe.Probe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Probe</span></code></a></p>
+<p>The value of an attribute at the end of each group of steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Address of an attribute, as in <cite>Probe</cite>.</p></li>
+<li><p><strong>units</strong> (<em>sequence</em><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Flat indices of the units kept. All units when omitted.</p></li>
+<li><p><strong>group</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – How the steps are split into groups, one record per group, as for <cite>SummaryProbe</cite>: a
+number of steps or the name of a tag. Set by the <cite>Measurements</cite> holding the probe.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The value is read after the last step of each group. Until the group ends, a snapshot with a
+group keeps the value after each call on the device, and, for a call crossing the end of a
+group, the value at that end.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">SnapshotProbe</span><span class="p">(</span><span class="s1">'first_pool.synapses.kernel'</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.SnapshotProbe.mode">
+<span class="sig-name descname"><span class="pre">mode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#spark.recording.probe.ProbeMode" title="spark.recording.probe.ProbeMode"><span class="pre">ProbeMode</span></a><span class="p"><span class="pre">]</span></span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SnapshotProbe.mode" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.SnapshotProbe.units">
+<span class="sig-name descname"><span class="pre">units</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SnapshotProbe.units" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.SnapshotProbe.group">
+<span class="sig-name descname"><span class="pre">group</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.SnapshotProbe.group" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.recording.probe.DeltaProbe">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">DeltaProbe</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.DeltaProbe" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spark.recording.probe.Probe" title="spark.recording.probe.Probe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Probe</span></code></a></p>
+<p>Reductions of the change of an attribute over each group of steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Address of an attribute, as in <cite>Probe</cite>.</p></li>
+<li><p><strong>reduce</strong> (<a class="reference internal" href="#spark.recording.probe.DeltaReduction" title="spark.recording.probe.DeltaReduction"><em>DeltaReduction</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><em>sequence</em><em> of </em><em>them</em><em>, </em><em>default</em><em> (</em><em>'norm'</em><em>,</em><em>)</em>) – <p>Reductions, as <cite>DeltaReduction</cite> members or their names.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">FULL</span></code>: the change of every unit.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NORM</span></code>: the Euclidean norm of the change.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MEAN_ABS</span></code>: the mean absolute change over the units.</p></li>
+</ul>
+</p></li>
+<li><p><strong>group</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – How the steps are split into groups, one record per group, as for <cite>SummaryProbe</cite>: a
+number of steps or the name of a tag. Set by the <cite>Measurements</cite> holding the probe.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The change is the value after the last step of the group minus the value before its first
+step recorded, computed in float32. Until the group ends, a delta with a group keeps the
+value before and after each call on the device, and, for a call crossing the end of a group,
+the value at that end.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">DeltaProbe</span><span class="p">(</span><span class="s1">'first_pool.synapses.kernel'</span><span class="p">,</span>
+<span class="gp">... </span>           <span class="n">reduce</span><span class="o">=</span><span class="p">(</span><span class="n">DeltaReduction</span><span class="o">.</span><span class="n">NORM</span><span class="p">,</span> <span class="n">DeltaReduction</span><span class="o">.</span><span class="n">MEAN_ABS</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.DeltaProbe.mode">
+<span class="sig-name descname"><span class="pre">mode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#spark.recording.probe.ProbeMode" title="spark.recording.probe.ProbeMode"><span class="pre">ProbeMode</span></a><span class="p"><span class="pre">]</span></span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.DeltaProbe.mode" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.DeltaProbe.reduce">
+<span class="sig-name descname"><span class="pre">reduce</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#spark.recording.probe.DeltaReduction" title="spark.recording.probe.DeltaReduction"><span class="pre">DeltaReduction</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('norm',)</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.DeltaProbe.reduce" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.probe.DeltaProbe.group">
+<span class="sig-name descname"><span class="pre">group</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.DeltaProbe.group" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.probe.address">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">address</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.address" title="Link to this definition">#</a></dt>
+<dd><p>Returns the address of the port or attribute <code class="docutils literal notranslate"><span class="pre">name</span></code> of the module at <code class="docutils literal notranslate"><span class="pre">path</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>sequence</em><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Module path. Ends with <cite>CALL</cite> for the inputs of a controller.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Port or attribute name.</p></li>
+<li><p><strong>kind</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – <code class="docutils literal notranslate"><span class="pre">'port'</span></code> or <code class="docutils literal notranslate"><span class="pre">'attribute'</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">path:name</span></code> for a port, <code class="docutils literal notranslate"><span class="pre">path.name</span></code> for an attribute.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.probe.probe_addresses">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">probe_addresses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controller</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.probe_addresses" title="Link to this definition">#</a></dt>
+<dd><p>Returns the address of every value of a built controller that a probe can read.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>controller</strong> (<a class="reference internal" href="../../nn/controllers/base/index.html#spark.nn.controllers.base.Controller" title="spark.nn.controllers.base.Controller"><em>Controller</em></a>) – A built controller.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The inputs of every controller (<code class="docutils literal notranslate"><span class="pre">path.__call__:port</span></code>), the output ports of every module
+of a controller (<code class="docutils literal notranslate"><span class="pre">path:port</span></code>), and every attribute holding an array (<code class="docutils literal notranslate"><span class="pre">path.name</span></code>).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a> of <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_probe_targets</span></code></dt><dd><p>Lists the same values, with their shapes and dtypes, from example inputs.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.probe.expand">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">expand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controller</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.expand" title="Link to this definition">#</a></dt>
+<dd><p>Returns the probes with every pattern replaced by a probe of each address it matches.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>controller</strong> (<a class="reference internal" href="../../nn/controllers/base/index.html#spark.nn.controllers.base.Controller" title="spark.nn.controllers.base.Controller"><em>Controller</em></a>) – A built controller.</p></li>
+<li><p><strong>probes</strong> (<em>iterable</em><em> of </em><a class="reference internal" href="#spark.recording.probe.Probe" title="spark.recording.probe.Probe"><em>Probe</em></a>) – Probes, whose addresses may be patterns (see <cite>spark.core.addresses</cite>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The probes in the order given, each pattern replaced by probes with the same fields, one for
+each address it matches, in the order of <cite>probe_addresses</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a> of <a class="reference internal" href="#spark.recording.probe.Probe" title="spark.recording.probe.Probe">Probe</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – When a pattern matches nothing.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.probe.validate">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controller</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.validate" title="Link to this definition">#</a></dt>
+<dd><p>Checks that every probe is a valid probe (targets an existing variable within the controller).</p>
+<p>The address of each probe must name a module, port or attribute of the controller. <code class="docutils literal notranslate"><span class="pre">units</span></code> must
+be within the size of the value, and a <cite>SummaryProbe</cite> or a <cite>DeltaProbe</cite> must have entries to reduce.
+An attribute must hold an array. A pattern is checked as the probes of the addresses it matches,
+and must match one at least.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>controller</strong> (<a class="reference internal" href="../../nn/controllers/base/index.html#spark.nn.controllers.base.Controller" title="spark.nn.controllers.base.Controller"><em>Controller</em></a>) – A built controller, called at least once.</p></li>
+<li><p><strong>probes</strong> (<em>iterable</em><em> of </em><a class="reference internal" href="#spark.recording.probe.Probe" title="spark.recording.probe.Probe"><em>Probe</em></a>) – Probes to check, one per key.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.15)"><strong>TypeError</strong></a> – When <code class="docutils literal notranslate"><span class="pre">controller</span></code> is not a controller, or a probe is not a <cite>Probe</cite>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – When the controller is not built, two probes share a key, or a probe does not fit the controller.
+The message lists the names available where the address failed.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The sizes of controller inputs and of the ports of nested controllers are not known before
+the controller is traced, and are not checked. <cite>Runner</cite> traces every probe of its recorder before
+its first call.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_probe_targets</span></code></dt><dd><p>Lists the values of a controller that a probe can address.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.probe.resolve">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">resolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controller</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.resolve" title="Link to this definition">#</a></dt>
+<dd><p>Retrieves the module pointed by <code class="docutils literal notranslate"><span class="pre">path</span></code>, within <code class="docutils literal notranslate"><span class="pre">controller</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>controller</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><em>object</em></a>) – Object the path starts from, such as a controller.</p></li>
+<li><p><strong>path</strong> (<em>sequence</em><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Attribute names, followed one after the other.</p></li>
+<li><p><strong>address</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Address named in the error message. Defaults to the path.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The object at the end of the path.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)">object</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – When a segment is not found. The message lists the names available at that level.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.probe.get_recorded_array">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">get_recorded_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.get_recorded_array" title="Link to this definition">#</a></dt>
+<dd><p>Returns the array a probe reduces.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<a class="reference internal" href="../../core/payloads/index.html#spark.core.payloads.SparkPayload" title="spark.core.payloads.SparkPayload"><em>SparkPayload</em></a><em> or </em><a class="reference internal" href="../../core/backend/index.html#spark.core.backend.Variable" title="spark.core.backend.Variable"><em>Variable</em></a><em> or </em><em>array</em>) – Value read from the controller.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.15)"><strong>TypeError</strong></a> – When the value holds no array.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.probe.check_units">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">check_units</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.check_units" title="Link to this definition">#</a></dt>
+<dd><p>Checks that <code class="docutils literal notranslate"><span class="pre">units</span></code> are indices within a value of <code class="docutils literal notranslate"><span class="pre">size</span></code> entries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>size</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – Number of entries of the value.</p></li>
+<li><p><strong>units</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><em>tuple</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em> or </em><em>None</em>) – Flat indices, or None for all units.</p></li>
+<li><p><strong>address</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Address named in the error message.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – When an index of <code class="docutils literal notranslate"><span class="pre">units</span></code> is not below <code class="docutils literal notranslate"><span class="pre">size</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.probe.STEP_PROBES">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">STEP_PROBES</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.STEP_PROBES" title="Link to this definition">#</a></dt>
+<dd><p>Probes read on every step.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.probe.BOUNDARY_PROBES">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">BOUNDARY_PROBES</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.BOUNDARY_PROBES" title="Link to this definition">#</a></dt>
+<dd><p>Probes read before and after the steps of each group, not on every step. Attributes only.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.probe.GROUPED_PROBES">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.probe.</span></span><span class="sig-name descname"><span class="pre">GROUPED_PROBES</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/probe.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.probe.GROUPED_PROBES" title="Link to this definition">#</a></dt>
+<dd><p>Probes giving one record per group of steps.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../presets/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">spark.recording.presets</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../probe_context/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">spark.recording.probe_context</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.CALL"><code class="docutils literal notranslate"><span class="pre">CALL</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.ProbeMode"><code class="docutils literal notranslate"><span class="pre">ProbeMode</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.ProbeMode.SUMMARY"><code class="docutils literal notranslate"><span class="pre">ProbeMode.SUMMARY</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.ProbeMode.TRACE"><code class="docutils literal notranslate"><span class="pre">ProbeMode.TRACE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.ProbeMode.RASTER"><code class="docutils literal notranslate"><span class="pre">ProbeMode.RASTER</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.ProbeMode.SNAPSHOT"><code class="docutils literal notranslate"><span class="pre">ProbeMode.SNAPSHOT</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.ProbeMode.DELTA"><code class="docutils literal notranslate"><span class="pre">ProbeMode.DELTA</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction"><code class="docutils literal notranslate"><span class="pre">SummaryReduction</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.MEAN"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.MEAN</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.STD"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.STD</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.MIN"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.MIN</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.MAX"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.MAX</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.ACTIVE_FRACTION"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.ACTIVE_FRACTION</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.ACTIVE_FRACTION_PER_UNIT"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.ACTIVE_FRACTION_PER_UNIT</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.INACTIVE_UNIT_FRACTION"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.INACTIVE_UNIT_FRACTION</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.HIST"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.HIST</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryReduction.scalar"><code class="docutils literal notranslate"><span class="pre">SummaryReduction.scalar</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaReduction"><code class="docutils literal notranslate"><span class="pre">DeltaReduction</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaReduction.FULL"><code class="docutils literal notranslate"><span class="pre">DeltaReduction.FULL</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaReduction.NORM"><code class="docutils literal notranslate"><span class="pre">DeltaReduction.NORM</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaReduction.MEAN_ABS"><code class="docutils literal notranslate"><span class="pre">DeltaReduction.MEAN_ABS</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaReduction.scalar"><code class="docutils literal notranslate"><span class="pre">DeltaReduction.scalar</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe"><code class="docutils literal notranslate"><span class="pre">Probe</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.mode"><code class="docutils literal notranslate"><span class="pre">Probe.mode</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.kind"><code class="docutils literal notranslate"><span class="pre">Probe.kind</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.path"><code class="docutils literal notranslate"><span class="pre">Probe.path</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.name"><code class="docutils literal notranslate"><span class="pre">Probe.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.key"><code class="docutils literal notranslate"><span class="pre">Probe.key</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.address"><code class="docutils literal notranslate"><span class="pre">Probe.address</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">Probe.mode</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1"><code class="docutils literal notranslate"><span class="pre">Probe.kind</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2"><code class="docutils literal notranslate"><span class="pre">Probe.path</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id3"><code class="docutils literal notranslate"><span class="pre">Probe.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.__post_init__"><code class="docutils literal notranslate"><span class="pre">Probe.__post_init__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.__eq__"><code class="docutils literal notranslate"><span class="pre">Probe.__eq__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.__hash__"><code class="docutils literal notranslate"><span class="pre">Probe.__hash__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.__reduce__"><code class="docutils literal notranslate"><span class="pre">Probe.__reduce__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id4"><code class="docutils literal notranslate"><span class="pre">Probe.key</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.per_step"><code class="docutils literal notranslate"><span class="pre">Probe.per_step</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.to_dict"><code class="docutils literal notranslate"><span class="pre">Probe.to_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.Probe.from_dict"><code class="docutils literal notranslate"><span class="pre">Probe.from_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryProbe"><code class="docutils literal notranslate"><span class="pre">SummaryProbe</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryProbe.mode"><code class="docutils literal notranslate"><span class="pre">SummaryProbe.mode</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryProbe.reduce"><code class="docutils literal notranslate"><span class="pre">SummaryProbe.reduce</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryProbe.bins"><code class="docutils literal notranslate"><span class="pre">SummaryProbe.bins</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryProbe.range"><code class="docutils literal notranslate"><span class="pre">SummaryProbe.range</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SummaryProbe.group"><code class="docutils literal notranslate"><span class="pre">SummaryProbe.group</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.TraceProbe"><code class="docutils literal notranslate"><span class="pre">TraceProbe</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.TraceProbe.mode"><code class="docutils literal notranslate"><span class="pre">TraceProbe.mode</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.TraceProbe.units"><code class="docutils literal notranslate"><span class="pre">TraceProbe.units</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.TraceProbe.stride"><code class="docutils literal notranslate"><span class="pre">TraceProbe.stride</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.RasterProbe"><code class="docutils literal notranslate"><span class="pre">RasterProbe</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.RasterProbe.mode"><code class="docutils literal notranslate"><span class="pre">RasterProbe.mode</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.RasterProbe.units"><code class="docutils literal notranslate"><span class="pre">RasterProbe.units</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.RasterProbe.stride"><code class="docutils literal notranslate"><span class="pre">RasterProbe.stride</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SnapshotProbe"><code class="docutils literal notranslate"><span class="pre">SnapshotProbe</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SnapshotProbe.mode"><code class="docutils literal notranslate"><span class="pre">SnapshotProbe.mode</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SnapshotProbe.units"><code class="docutils literal notranslate"><span class="pre">SnapshotProbe.units</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.SnapshotProbe.group"><code class="docutils literal notranslate"><span class="pre">SnapshotProbe.group</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaProbe"><code class="docutils literal notranslate"><span class="pre">DeltaProbe</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaProbe.mode"><code class="docutils literal notranslate"><span class="pre">DeltaProbe.mode</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaProbe.reduce"><code class="docutils literal notranslate"><span class="pre">DeltaProbe.reduce</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.DeltaProbe.group"><code class="docutils literal notranslate"><span class="pre">DeltaProbe.group</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.address"><code class="docutils literal notranslate"><span class="pre">address()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.probe_addresses"><code class="docutils literal notranslate"><span class="pre">probe_addresses()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.expand"><code class="docutils literal notranslate"><span class="pre">expand()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.validate"><code class="docutils literal notranslate"><span class="pre">validate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.get_recorded_array"><code class="docutils literal notranslate"><span class="pre">get_recorded_array()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.check_units"><code class="docutils literal notranslate"><span class="pre">check_units()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.STEP_PROBES"><code class="docutils literal notranslate"><span class="pre">STEP_PROBES</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.BOUNDARY_PROBES"><code class="docutils literal notranslate"><span class="pre">BOUNDARY_PROBES</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.probe.GROUPED_PROBES"><code class="docutils literal notranslate"><span class="pre">GROUPED_PROBES</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,1615 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spark.graph_editor.runs.viewer &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../../_static/copybutton.js?v=30646c52"></script>
+    <script src="../../../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/spark/graph_editor/runs/viewer/index';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <link rel="next" title="spark.graph_editor.runs.workspace" href="../workspace/index.html" />
+    <link rel="prev" title="spark.graph_editor.runs.timeline" href="../timeline/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../../../../../_static/searchtools.js"></script>
+    <script src="../../../../../_static/language_data.js"></script>
+    <script src="../../../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <img src="../../../../../_static/spark_250px.png" class="logo__image only-dark pst-js-only" alt="Spark  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/neurons.html">Tutorial #3: Neurons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/brains.html">Tutorial #4: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/graph_editor.html">Tutorial #5: Graph Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/cartpole.html">Tutorial #6: Solving the CartPole™</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/recording.html">Tutorial #7: Recording</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../tutorials/sharding.html">Tutorial #8: Sharding</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../../index.html">spark</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/addresses/index.html">spark.core.addresses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/backend/index.html">spark.core.backend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/checkpoint/index.html">spark.core.checkpoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/decorators/index.html">spark.core.decorators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/recording_hooks/index.html">spark.core.recording_hooks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../core/validation/index.html">spark.core.validation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../../index.html">spark.graph_editor</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../commands/index.html">spark.graph_editor.commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4 current active"><a class="reference internal" href="../index.html">spark.graph_editor.runs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../styles/index.html">spark.graph_editor.styles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../view/index.html">spark.graph_editor.view</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../widgets/index.html">spark.graph_editor.widgets</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../nn/index.html">spark.nn</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../nn/components/index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../nn/controllers/index.html">spark.nn.controllers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../nn/initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../nn/interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../nn/neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../recording/index.html">spark.recording</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/calls/index.html">spark.recording.calls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/current/index.html">spark.recording.current</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/measurements/index.html">spark.recording.measurements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/presets/index.html">spark.recording.presets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/probe/index.html">spark.recording.probe</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/probe_context/index.html">spark.recording.probe_context</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/probe_targets/index.html">spark.recording.probe_targets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/recorder/index.html">spark.recording.recorder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/records/index.html">spark.recording.records</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/reduce/index.html">spark.recording.reduce</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/run/index.html">spark.recording.run</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/runner/index.html">spark.recording.runner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/scan/index.html">spark.recording.scan</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/settings/index.html">spark.recording.settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/store/index.html">spark.recording.store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/triggers/index.html">spark.recording.triggers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../recording/utils/index.html">spark.recording.utils</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">spark</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">spark.graph_editor</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">spark.graph_editor.runs</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">spark.graph_editor.runs.viewer</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../../../_sources/autoapi/spark/graph_editor/runs/viewer/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>spark.graph_editor.runs.viewer</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.PREFERENCES"><code class="docutils literal notranslate"><span class="pre">PREFERENCES</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ActivityBadge"><code class="docutils literal notranslate"><span class="pre">ActivityBadge</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ActivityBadge.value"><code class="docutils literal notranslate"><span class="pre">ActivityBadge.value</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ActivityBadge.set_value"><code class="docutils literal notranslate"><span class="pre">ActivityBadge.set_value()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ActivityBadge.boundingRect"><code class="docutils literal notranslate"><span class="pre">ActivityBadge.boundingRect()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ActivityBadge.paint"><code class="docutils literal notranslate"><span class="pre">ActivityBadge.paint()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel"><code class="docutils literal notranslate"><span class="pre">ProbePanel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.cursor_moved"><code class="docutils literal notranslate"><span class="pre">ProbePanel.cursor_moved</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.view_requested"><code class="docutils literal notranslate"><span class="pre">ProbePanel.view_requested</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.LINES"><code class="docutils literal notranslate"><span class="pre">ProbePanel.LINES</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.SPREAD"><code class="docutils literal notranslate"><span class="pre">ProbePanel.SPREAD</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.data"><code class="docutils literal notranslate"><span class="pre">ProbePanel.data</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.selection"><code class="docutils literal notranslate"><span class="pre">ProbePanel.selection</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.store"><code class="docutils literal notranslate"><span class="pre">ProbePanel.store</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.node"><code class="docutils literal notranslate"><span class="pre">ProbePanel.node</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.cursor"><code class="docutils literal notranslate"><span class="pre">ProbePanel.cursor</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.view"><code class="docutils literal notranslate"><span class="pre">ProbePanel.view</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.tabs"><code class="docutils literal notranslate"><span class="pre">ProbePanel.tabs</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.release"><code class="docutils literal notranslate"><span class="pre">ProbePanel.release()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.plots"><code class="docutils literal notranslate"><span class="pre">ProbePanel.plots()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.show_node"><code class="docutils literal notranslate"><span class="pre">ProbePanel.show_node()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.refresh"><code class="docutils literal notranslate"><span class="pre">ProbePanel.refresh()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.set_view"><code class="docutils literal notranslate"><span class="pre">ProbePanel.set_view()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.set_cursor"><code class="docutils literal notranslate"><span class="pre">ProbePanel.set_cursor()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.InputsPanel"><code class="docutils literal notranslate"><span class="pre">InputsPanel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.InputsPanel.data"><code class="docutils literal notranslate"><span class="pre">InputsPanel.data</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.InputsPanel.set_cursor"><code class="docutils literal notranslate"><span class="pre">InputsPanel.set_cursor()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunPanel"><code class="docutils literal notranslate"><span class="pre">RunPanel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunPanel.cursor_requested"><code class="docutils literal notranslate"><span class="pre">RunPanel.cursor_requested</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunPanel.WARNINGS"><code class="docutils literal notranslate"><span class="pre">RunPanel.WARNINGS</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunPanel.data"><code class="docutils literal notranslate"><span class="pre">RunPanel.data</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunPanel.record_rows"><code class="docutils literal notranslate"><span class="pre">RunPanel.record_rows</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunPanel.refresh"><code class="docutils literal notranslate"><span class="pre">RunPanel.refresh()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.project"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.project</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.exploration"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.exploration</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.selection"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.selection</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.store"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.store</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.data"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.data</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.cursor"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.cursor</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.badges"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.badges</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.refresh_every"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.refresh_every</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.project</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.selection</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.store</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id3"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.data</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id4"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.cursor</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id5"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.badges</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.center"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.center</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.workspace"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.workspace</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id6"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.refresh_every</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id7"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.exploration</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.state"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.state()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.resume"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.resume()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.keep_exploration"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.keep_exploration()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.save_exploration"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.save_exploration()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.open_exploration"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.open_exploration()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.show_run"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.show_run()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.open_run"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.open_run()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.quit"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.quit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.open_preferences"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.open_preferences()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.restyle"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.restyle()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.set_cursor"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.set_cursor()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.refresh"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.refresh()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.showEvent"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.showEvent()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.closeEvent"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.closeEvent()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.SparkRunViewer"><code class="docutils literal notranslate"><span class="pre">SparkRunViewer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.SparkRunViewer.app"><code class="docutils literal notranslate"><span class="pre">SparkRunViewer.app</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.SparkRunViewer.windows"><code class="docutils literal notranslate"><span class="pre">SparkRunViewer.windows</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id8"><code class="docutils literal notranslate"><span class="pre">SparkRunViewer.app</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id9"><code class="docutils literal notranslate"><span class="pre">SparkRunViewer.windows</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.SparkRunViewer.open"><code class="docutils literal notranslate"><span class="pre">SparkRunViewer.open()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-spark.graph_editor.runs.viewer">
+<span id="spark-graph-editor-runs-viewer"></span><h1>spark.graph_editor.runs.viewer<a class="headerlink" href="#module-spark.graph_editor.runs.viewer" title="Link to this heading">#</a></h1>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.graph_editor.runs.viewer.PREFERENCES" title="spark.graph_editor.runs.viewer.PREFERENCES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PREFERENCES</span></code></a></p></td>
+<td><p>Sections of the preferences of the editor that change the viewer.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.graph_editor.runs.viewer.ActivityBadge" title="spark.graph_editor.runs.viewer.ActivityBadge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ActivityBadge</span></code></a></p></td>
+<td><p>Badge showing the firing rate of a node at the cursor.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.graph_editor.runs.viewer.ProbePanel" title="spark.graph_editor.runs.viewer.ProbePanel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProbePanel</span></code></a></p></td>
+<td><p>Panel of plots of what was recorded for one node of the graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.graph_editor.runs.viewer.InputsPanel" title="spark.graph_editor.runs.viewer.InputsPanel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InputsPanel</span></code></a></p></td>
+<td><p>Panel of what the model received at the cursor.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.graph_editor.runs.viewer.RunPanel" title="spark.graph_editor.runs.viewer.RunPanel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RunPanel</span></code></a></p></td>
+<td><p>Panel of the status, step, environment and parameters of the run, of its warnings and</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.graph_editor.runs.viewer.RunViewerWindow" title="spark.graph_editor.runs.viewer.RunViewerWindow"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RunViewerWindow</span></code></a></p></td>
+<td><p>Window comparing the runs of a directory, and showing one of them over the graph of its</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.graph_editor.runs.viewer.SparkRunViewer" title="spark.graph_editor.runs.viewer.SparkRunViewer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SparkRunViewer</span></code></a></p></td>
+<td><p>Opens directories of runs, and runs, in windows of their own from a script or a notebook.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.PREFERENCES">
+<span class="sig-prename descclassname"><span class="pre">spark.graph_editor.runs.viewer.</span></span><span class="sig-name descname"><span class="pre">PREFERENCES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('Canvas',</span> <span class="pre">'Nodes',</span> <span class="pre">'Ports</span> <span class="pre">&amp;</span> <span class="pre">Payloads',</span> <span class="pre">'Edges',</span> <span class="pre">'Run</span> <span class="pre">Viewer',</span> <span class="pre">'Window')</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.PREFERENCES" title="Link to this definition">#</a></dt>
+<dd><p>Sections of the preferences of the editor that change the viewer.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ActivityBadge">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.graph_editor.runs.viewer.</span></span><span class="sig-name descname"><span class="pre">ActivityBadge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ActivityBadge" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">PySide6.QtWidgets.QGraphicsItem</span></code></p>
+<p>Badge showing the firing rate of a node at the cursor.</p>
+<p>Drawn above the top right corner of the node, at the same size at any zoom. Its colour goes
+from the low to the high colour of <code class="docutils literal notranslate"><span class="pre">THEME.badge</span></code> as the rate rises to its full scale, in Hz.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="../../view/node_item/index.html#spark.graph_editor.view.node_item.NodeItem" title="spark.graph_editor.view.node_item.NodeItem"><em>spark.graph_editor.view.node_item.NodeItem</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ActivityBadge.value">
+<span class="sig-name descname"><span class="pre">value</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ActivityBadge.value" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ActivityBadge.set_value">
+<span class="sig-name descname"><span class="pre">set_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hz</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ActivityBadge.set_value" title="Link to this definition">#</a></dt>
+<dd><p>Sets the rate shown, in Hz, or hides the badge for None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>hz</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em> | </em><em>None</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ActivityBadge.boundingRect">
+<span class="sig-name descname"><span class="pre">boundingRect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ActivityBadge.boundingRect" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>PySide6.QtCore.QRectF</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ActivityBadge.paint">
+<span class="sig-name descname"><span class="pre">paint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">painter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">option</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">widget</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ActivityBadge.paint" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>painter</strong> (<em>PySide6.QtGui.QPainter</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.graph_editor.runs.viewer.</span></span><span class="sig-name descname"><span class="pre">ProbePanel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">PySide6.QtWidgets.QWidget</span></code></p>
+<p>Panel of plots of what was recorded for one node of the graph.</p>
+<p>Each set of measurements recording the node has a tab. Within a tab, plots are grouped by
+module and titled by port or attribute and reduction. Without a node, the panel plots the
+scalars logged with <cite>Recorder.log</cite>, in tabs by the prefix of their names. <code class="docutils literal notranslate"><span class="pre">inputs</span></code>, when
+given, is the last tab. The tab chosen last is shown again for the next node that has a tab
+of that name.</p>
+<p>Scalar series are drawn in their natural space, the tag they were written per, or in the
+space <code class="docutils literal notranslate"><span class="pre">selection</span></code> chooses, over the steps of <cite>view</cite>; the <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code> and
+<code class="docutils literal notranslate"><span class="pre">max</span></code> of a summary share one plot. The cursor, a step, is drawn at the tag value it falls
+in, and a click moves it to the first step of the value clicked. The runs and groups
+<code class="docutils literal notranslate"><span class="pre">selection</span></code> shows besides this run are drawn with it, each in its color, and listed under
+the name of the node. A box drawn with the right button in a scalar plot asks for its steps
+with <cite>view_requested</cite>, for every plot.
+Values recorded once per group, such as histograms, active fractions per unit, snapshots
+and changes, show the last written group starting at or before the cursor. Traces and
+rasters show the consecutive recorded steps around the cursor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<a class="reference internal" href="../data/index.html#spark.graph_editor.runs.data.RunData" title="spark.graph_editor.runs.data.RunData"><em>spark.graph_editor.runs.data.RunData</em></a>)</p></li>
+<li><p><strong>selection</strong> (<a class="reference internal" href="../workspace/index.html#spark.graph_editor.runs.workspace.Selection" title="spark.graph_editor.runs.workspace.Selection"><em>spark.graph_editor.runs.workspace.Selection</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>store</strong> (<a class="reference internal" href="../workspace/index.html#spark.graph_editor.runs.workspace.SeriesStore" title="spark.graph_editor.runs.workspace.SeriesStore"><em>spark.graph_editor.runs.workspace.SeriesStore</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>inputs</strong> (<em>PySide6.QtWidgets.QWidget</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>parent</strong> (<em>PySide6.QtWidgets.QWidget</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.cursor_moved">
+<span class="sig-name descname"><span class="pre">cursor_moved</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.cursor_moved" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.view_requested">
+<span class="sig-name descname"><span class="pre">view_requested</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.view_requested" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.LINES">
+<span class="sig-name descname"><span class="pre">LINES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.LINES" title="Link to this definition">#</a></dt>
+<dd><p>Largest number of units of a trace drawn as lines. Wider traces are drawn as images.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.SPREAD">
+<span class="sig-name descname"><span class="pre">SPREAD</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('mean',</span> <span class="pre">'std',</span> <span class="pre">'min',</span> <span class="pre">'max')</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.SPREAD" title="Link to this definition">#</a></dt>
+<dd><p>the mean as a line, the band of one standard
+deviation around it, and the band from the lowest to the highest value, fainter. Runs
+compared draw their means.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../../recording/records/index.html#spark.recording.records.Reductions" title="spark.recording.records.Reductions">Reductions</a> of a summary drawn in one plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.data">
+<span class="sig-name descname"><span class="pre">data</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.data" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.selection">
+<span class="sig-name descname"><span class="pre">selection</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.selection" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.store">
+<span class="sig-name descname"><span class="pre">store</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.store" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.node">
+<span class="sig-name descname"><span class="pre">node</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.node" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.cursor">
+<span class="sig-name descname"><span class="pre">cursor</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.cursor" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.view">
+<span class="sig-name descname"><span class="pre">view</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.view" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.tabs">
+<span class="sig-name descname"><span class="pre">tabs</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.tabs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.release">
+<span class="sig-name descname"><span class="pre">release</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.release" title="Link to this definition">#</a></dt>
+<dd><p>Stops following the lines shown, before the panel is dropped.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.plots">
+<span class="sig-name descname"><span class="pre">plots</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.plots" title="Link to this definition">#</a></dt>
+<dd><p>Returns the plots shown, in the order of the tabs and within them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a>[PySide6.QtWidgets.QWidget]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.show_node">
+<span class="sig-name descname"><span class="pre">show_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.show_node" title="Link to this definition">#</a></dt>
+<dd><p>Shows the plots of <code class="docutils literal notranslate"><span class="pre">node</span></code>, or of the logged scalars for None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><em>None</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.refresh">
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.refresh" title="Link to this definition">#</a></dt>
+<dd><p>Draws the scalar series again with the rows read since, and the runs compared.</p>
+<p>Without a node, logged scalars that appeared since are added.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.set_view">
+<span class="sig-name descname"><span class="pre">set_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.set_view" title="Link to this definition">#</a></dt>
+<dd><p>Shows the steps from <code class="docutils literal notranslate"><span class="pre">start</span></code> to <code class="docutils literal notranslate"><span class="pre">end</span></code> in the scalar plots, each in its space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>)</p></li>
+<li><p><strong>end</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.ProbePanel.set_cursor">
+<span class="sig-name descname"><span class="pre">set_cursor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.ProbePanel.set_cursor" title="Link to this definition">#</a></dt>
+<dd><p>Moves the cursor of every plot to step <code class="docutils literal notranslate"><span class="pre">t</span></code>, in the space of each, and updates the
+values shown at it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>t</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.InputsPanel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.graph_editor.runs.viewer.</span></span><span class="sig-name descname"><span class="pre">InputsPanel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.InputsPanel" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">PySide6.QtWidgets.QWidget</span></code></p>
+<p>Panel of what the model received at the cursor.</p>
+<p>Shows the recorded inputs of the model and the raw streams of every set of measurements, as
+last recorded at or before the cursor, with the step they were recorded at. Single values
+are listed together; vectors are drawn as bars, and a raw stream viewed as an image as an
+image, following the views of its measurements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<a class="reference internal" href="../data/index.html#spark.graph_editor.runs.data.RunData" title="spark.graph_editor.runs.data.RunData"><em>spark.graph_editor.runs.data.RunData</em></a>)</p></li>
+<li><p><strong>parent</strong> (<em>PySide6.QtWidgets.QWidget</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.InputsPanel.data">
+<span class="sig-name descname"><span class="pre">data</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.InputsPanel.data" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.InputsPanel.set_cursor">
+<span class="sig-name descname"><span class="pre">set_cursor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.InputsPanel.set_cursor" title="Link to this definition">#</a></dt>
+<dd><p>Shows the inputs and raw frames at step <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>t</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunPanel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.graph_editor.runs.viewer.</span></span><span class="sig-name descname"><span class="pre">RunPanel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunPanel" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">PySide6.QtWidgets.QWidget</span></code></p>
+<p>Panel of the status, step, environment and parameters of the run, of its warnings and
+errors, and of its measurements.</p>
+<p>While the run is written, each set of measurements can be recorded for a number of steps.
+The request is made with <cite>Run.record</cite>, and its status is shown under the row. Clicking the
+step of a warning or an error emits <cite>cursor_requested</cite> with that step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<a class="reference internal" href="../data/index.html#spark.graph_editor.runs.data.RunData" title="spark.graph_editor.runs.data.RunData"><em>spark.graph_editor.runs.data.RunData</em></a>)</p></li>
+<li><p><strong>parent</strong> (<em>PySide6.QtWidgets.QWidget</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunPanel.cursor_requested">
+<span class="sig-name descname"><span class="pre">cursor_requested</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunPanel.cursor_requested" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunPanel.WARNINGS">
+<span class="sig-name descname"><span class="pre">WARNINGS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">50</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunPanel.WARNINGS" title="Link to this definition">#</a></dt>
+<dd><p>Largest number of warnings and errors listed. The others are counted.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunPanel.data">
+<span class="sig-name descname"><span class="pre">data</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunPanel.data" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunPanel.record_rows">
+<span class="sig-name descname"><span class="pre">record_rows</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_RecordRow</span><span class="p"><span class="pre">]</span></span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunPanel.record_rows" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunPanel.refresh">
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunPanel.refresh" title="Link to this definition">#</a></dt>
+<dd><p>Shows the status and step of the run and the status of the last request of each row.</p>
+<p>The rows can record only while the run is written.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.graph_editor.runs.viewer.</span></span><span class="sig-name descname"><span class="pre">RunViewerWindow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">PySide6.QtWidgets.QMainWindow</span></code></p>
+<p>Window comparing the runs of a directory, and showing one of them over the graph of its
+model.</p>
+<p>Opened on a directory, the window shows its Workspace: a panel for every scalar series of its
+runs, drawn for every run or group the Runs table shows, each in the space it was recorded
+in. Opened on a run, it shows that run, compared with nothing until other runs are shown. A
+double click on a run of the table shows it on the Graph tab, the Details and Probes panels
+and the timeline. Runs added to the directory are listed as they appear.</p>
+<p>The exploration of the directory, what the window shows and how, is kept as it changes, in a
+file of the viewer rather than within the directory, and resumed when the directory is opened
+again. File &gt; Save Exploration As keeps a copy elsewhere, which File &gt; Open Exploration
+resumes.</p>
+<p>The graph shows at the cursor the firing rate of every node whose spikes are summarized.
+Selecting a node shows what was recorded for it. The timeline moves the cursor through the
+run, and its zoom sets the steps the scalar plots show. The toolbar plays the run forward
+and moves the cursor to the previous or next recorded span. A run still being written is
+read again periodically. Its measurements can be recorded from the window, and Follow keeps
+the cursor at the last step. The Probes panel shows what was recorded for the node selected,
+and what the model received, in tabs. The Probes panel and the timeline belong to the Graph
+tab: both are collapsed while the Workspace is shown, and open again with the Graph tab
+unless closed there. The Runs and Details panels span the height of the window; the timeline lies
+under the graph and the Probes panel. On the Graph tab, the Probes panel can take all but a
+sliver of the graph.</p>
+<p>The runs and groups the Runs table shows besides the run shown are drawn with it in the scalar
+plots of the Probes panel. The menu bar opens other directories and runs, the preferences of
+the look of the viewer, and the panels closed.</p>
+<p>Keys: Left and Right move the cursor by 1% of the steps the timeline shows, one step with
+Shift. Home and End go to the first and the last step, PageUp and PageDown to the start of
+the previous and next recorded span. Space plays and pauses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><em>path-like</em>) – Directory of a run, or of runs.</p></li>
+<li><p><strong>refresh_every</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>default 1000</em>) – Milliseconds between two reads of the run. Once a read finds a change while the run is
+not being written, the interval is five times as long.</p></li>
+<li><p><strong>parent</strong> (<em>QWidget</em><em>, </em><em>optional</em>) – Parent widget.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.project">
+<span class="sig-name descname"><span class="pre">project</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.project" title="Link to this definition">#</a></dt>
+<dd><p>The runs of the directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../workspace/index.html#spark.graph_editor.runs.workspace.Project" title="spark.graph_editor.runs.workspace.Project">Project</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.exploration">
+<span class="sig-name descname"><span class="pre">exploration</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.exploration" title="Link to this definition">#</a></dt>
+<dd><p>Where the state of the window is kept for the directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../workspace/index.html#spark.graph_editor.runs.workspace.Exploration" title="spark.graph_editor.runs.workspace.Exploration">Exploration</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.selection">
+<span class="sig-name descname"><span class="pre">selection</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.selection" title="Link to this definition">#</a></dt>
+<dd><p>The runs shown, their groups and how they are drawn.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../workspace/index.html#spark.graph_editor.runs.workspace.Selection" title="spark.graph_editor.runs.workspace.Selection">Selection</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.store">
+<span class="sig-name descname"><span class="pre">store</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.store" title="Link to this definition">#</a></dt>
+<dd><p>The series read from the runs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../workspace/index.html#spark.graph_editor.runs.workspace.SeriesStore" title="spark.graph_editor.runs.workspace.SeriesStore">SeriesStore</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.data">
+<span class="sig-name descname"><span class="pre">data</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.data" title="Link to this definition">#</a></dt>
+<dd><p>What the window read from the run shown.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../data/index.html#spark.graph_editor.runs.data.RunData" title="spark.graph_editor.runs.data.RunData">RunData</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.cursor">
+<span class="sig-name descname"><span class="pre">cursor</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.cursor" title="Link to this definition">#</a></dt>
+<dd><p>Step at the cursor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.badges">
+<span class="sig-name descname"><span class="pre">badges</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.badges" title="Link to this definition">#</a></dt>
+<dd><p>Badge of every node of the graph, by name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a> of str to ActivityBadge</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.refresh_every">
+<span class="sig-name descname"><span class="pre">refresh_every</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.refresh_every" title="Link to this definition">#</a></dt>
+<dd><p>Milliseconds between two reads of a run being written.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Notes</p>
+<p>When the model of the run cannot be loaded, the window shows the error in place of the
+graph. Neurons defined by a configuration are read from the run; modules defined in code
+must be imported before the run is opened.
+Closing the window drops what it read from the run.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.graph_editor.runs.viewer.SparkRunViewer" title="spark.graph_editor.runs.viewer.SparkRunViewer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SparkRunViewer</span></code></a></dt><dd><p>Opens runs in windows of their own from a script or a notebook.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">RunData</span></code></dt><dd><p>What the viewer reads from a run.</p>
+</dd>
+<dt><a class="reference internal" href="../../../recording/index.html#spark.recording.Run" title="spark.recording.Run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.recording.Run</span></code></a></dt><dd><p>A run written by a <cite>Recorder</cite>, read back.</p>
+</dd>
+</dl>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">project</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">selection</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">store</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id2" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">data</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id3" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">cursor</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id4" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">badges</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#spark.graph_editor.runs.viewer.ActivityBadge" title="spark.graph_editor.runs.viewer.ActivityBadge"><span class="pre">ActivityBadge</span></a><span class="p"><span class="pre">]</span></span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id5" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.center">
+<span class="sig-name descname"><span class="pre">center</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.center" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.workspace">
+<span class="sig-name descname"><span class="pre">workspace</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.workspace" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">refresh_every</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id6" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">exploration</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id7" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.state">
+<span class="sig-name descname"><span class="pre">state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.state" title="Link to this definition">#</a></dt>
+<dd><p>Returns the state of the exploration: the directory, the run shown, its node selected,
+the cursor and the view of the timeline, the tab shown, the runs shown and how, the
+table, the workspace and the layout of the panels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a>, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.resume">
+<span class="sig-name descname"><span class="pre">resume</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shown</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.resume" title="Link to this definition">#</a></dt>
+<dd><p>Resumes the exploration <code class="docutils literal notranslate"><span class="pre">state</span></code>, with the run it shows when <code class="docutils literal notranslate"><span class="pre">shown</span></code>.</p>
+<p>What no longer applies, such as a run deleted since, is left out. A state that cannot be
+resumed whole is reported in the status bar.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>shown</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.keep_exploration">
+<span class="sig-name descname"><span class="pre">keep_exploration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.keep_exploration" title="Link to this definition">#</a></dt>
+<dd><p>Writes the state of the window to its exploration when it changed since last written.</p>
+<p>A failure is shown in the status bar.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.save_exploration">
+<span class="sig-name descname"><span class="pre">save_exploration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.save_exploration" title="Link to this definition">#</a></dt>
+<dd><p>Writes the state of the window to the file <code class="docutils literal notranslate"><span class="pre">path</span></code>, which cannot be within a directory
+of runs.</p>
+<p>Returns whether it was written; a refusal or a failure is reported in a message box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.open_exploration">
+<span class="sig-name descname"><span class="pre">open_exploration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.open_exploration" title="Link to this definition">#</a></dt>
+<dd><p>Resumes the exploration saved in the file <code class="docutils literal notranslate"><span class="pre">path</span></code>: in this window when it explores the
+same directory, else in a window of its own.</p>
+<p>Returns the window, or None when the file cannot be read or its directory opened, which
+is reported in a message box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#spark.graph_editor.runs.viewer.RunViewerWindow" title="spark.graph_editor.runs.viewer.RunViewerWindow">RunViewerWindow</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.show_run">
+<span class="sig-name descname"><span class="pre">show_run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.show_run" title="Link to this definition">#</a></dt>
+<dd><p>Shows the run at <code class="docutils literal notranslate"><span class="pre">path</span></code> on the Graph tab, the Details and Probes panels and the timeline.</p>
+<p>A run that cannot be read is reported in a message box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.open_run">
+<span class="sig-name descname"><span class="pre">open_run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.open_run" title="Link to this definition">#</a></dt>
+<dd><p>Opens the run, or the directory of runs, at <code class="docutils literal notranslate"><span class="pre">path</span></code> in a window of its own.</p>
+<p>Returns the window, or None when nothing at <code class="docutils literal notranslate"><span class="pre">path</span></code> can be opened, which is reported in
+a message box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#spark.graph_editor.runs.viewer.RunViewerWindow" title="spark.graph_editor.runs.viewer.RunViewerWindow">RunViewerWindow</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.quit">
+<span class="sig-name descname"><span class="pre">quit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checked</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.quit" title="Link to this definition">#</a></dt>
+<dd><p>Closes every window of the run viewer.</p>
+<p>The application goes on when it holds other windows, such as the editor’s, or runs in a
+notebook.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>checked</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.open_preferences">
+<span class="sig-name descname"><span class="pre">open_preferences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checked</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.open_preferences" title="Link to this definition">#</a></dt>
+<dd><p>Opens the preferences of the editor, limited to what changes the viewer.</p>
+<p>Applying them redraws every window of the viewer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>checked</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.restyle">
+<span class="sig-name descname"><span class="pre">restyle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.restyle" title="Link to this definition">#</a></dt>
+<dd><p>Draws the window again with the style: the plots, the timeline and the graph.</p>
+<p>Called when the style is reloaded, as by the preferences, once <cite>THEME</cite> has read it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.set_cursor">
+<span class="sig-name descname"><span class="pre">set_cursor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.set_cursor" title="Link to this definition">#</a></dt>
+<dd><p>Moves the cursor to a step and updates the timeline, the plots and the badges.</p>
+<p>The status bar shows the step and the error of the last read that failed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – Step, clipped to the steps of the run.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.refresh">
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.refresh" title="Link to this definition">#</a></dt>
+<dd><p>Reads what the run added since the last refresh and redraws what changed.</p>
+<p>Called by a timer. A read that fails is shown in the status bar and tried again on the
+next refresh. With Follow checked, the cursor moves to the last step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.showEvent">
+<span class="sig-name descname"><span class="pre">showEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.showEvent" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.RunViewerWindow.closeEvent">
+<span class="sig-name descname"><span class="pre">closeEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.RunViewerWindow.closeEvent" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.SparkRunViewer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.graph_editor.runs.viewer.</span></span><span class="sig-name descname"><span class="pre">SparkRunViewer</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.SparkRunViewer" title="Link to this definition">#</a></dt>
+<dd><p>Opens directories of runs, and runs, in windows of their own from a script or a notebook.</p>
+<p>Available as <code class="docutils literal notranslate"><span class="pre">spark.RunViewer</span></code>. In a notebook, the Qt event loop runs within the kernel
+and <cite>open</cite> returns at once. In a script, <cite>open</cite> runs the event loop until the windows are
+closed.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.SparkRunViewer.app">
+<span class="sig-name descname"><span class="pre">app</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.SparkRunViewer.app" title="Link to this definition">#</a></dt>
+<dd><p>The application, created when none exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>QApplication</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.SparkRunViewer.windows">
+<span class="sig-name descname"><span class="pre">windows</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.SparkRunViewer.windows" title="Link to this definition">#</a></dt>
+<dd><p>Windows opened, those closed dropped at the next <cite>open</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a> of <a class="reference internal" href="#spark.graph_editor.runs.viewer.RunViewerWindow" title="spark.graph_editor.runs.viewer.RunViewerWindow">RunViewerWindow</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.graph_editor.runs.viewer.RunViewerWindow" title="spark.graph_editor.runs.viewer.RunViewerWindow"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RunViewerWindow</span></code></a></dt><dd><p>The window of a directory of runs.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">SparkGraphEditor</span></code></dt><dd><p>The graph editor, opened in the same way.</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">viewer</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">RunViewer</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">viewer</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">'runs'</span><span class="p">)</span>                                         <span class="c1"># every run, compared</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">viewer</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">'runs/20260923-091240_cartpole_4784ed'</span><span class="p">)</span>        <span class="c1"># one run</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">app</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id8" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">windows</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#spark.graph_editor.runs.viewer.RunViewerWindow" title="spark.graph_editor.runs.viewer.RunViewerWindow"><span class="pre">RunViewerWindow</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id9" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.graph_editor.runs.viewer.SparkRunViewer.open">
+<span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/graph_editor/runs/viewer.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.graph_editor.runs.viewer.SparkRunViewer.open" title="Link to this definition">#</a></dt>
+<dd><p>Opens the directory of runs, or the run, at <code class="docutils literal notranslate"><span class="pre">path</span></code> in a new window.</p>
+<p>Outside a notebook, blocks until the windows are closed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><em>path-like</em>) – Directory of runs, opened on its workspace, or of a run.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The window.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#spark.graph_editor.runs.viewer.RunViewerWindow" title="spark.graph_editor.runs.viewer.RunViewerWindow">RunViewerWindow</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#FileNotFoundError" title="(in Python v3.15)"><strong>FileNotFoundError</strong></a> – When <code class="docutils literal notranslate"><span class="pre">path</span></code> is not a run and holds none.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – When the run was written with another version of the index.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../timeline/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">spark.graph_editor.runs.timeline</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../workspace/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">spark.graph_editor.runs.workspace</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.PREFERENCES"><code class="docutils literal notranslate"><span class="pre">PREFERENCES</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ActivityBadge"><code class="docutils literal notranslate"><span class="pre">ActivityBadge</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ActivityBadge.value"><code class="docutils literal notranslate"><span class="pre">ActivityBadge.value</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ActivityBadge.set_value"><code class="docutils literal notranslate"><span class="pre">ActivityBadge.set_value()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ActivityBadge.boundingRect"><code class="docutils literal notranslate"><span class="pre">ActivityBadge.boundingRect()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ActivityBadge.paint"><code class="docutils literal notranslate"><span class="pre">ActivityBadge.paint()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel"><code class="docutils literal notranslate"><span class="pre">ProbePanel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.cursor_moved"><code class="docutils literal notranslate"><span class="pre">ProbePanel.cursor_moved</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.view_requested"><code class="docutils literal notranslate"><span class="pre">ProbePanel.view_requested</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.LINES"><code class="docutils literal notranslate"><span class="pre">ProbePanel.LINES</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.SPREAD"><code class="docutils literal notranslate"><span class="pre">ProbePanel.SPREAD</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.data"><code class="docutils literal notranslate"><span class="pre">ProbePanel.data</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.selection"><code class="docutils literal notranslate"><span class="pre">ProbePanel.selection</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.store"><code class="docutils literal notranslate"><span class="pre">ProbePanel.store</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.node"><code class="docutils literal notranslate"><span class="pre">ProbePanel.node</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.cursor"><code class="docutils literal notranslate"><span class="pre">ProbePanel.cursor</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.view"><code class="docutils literal notranslate"><span class="pre">ProbePanel.view</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.tabs"><code class="docutils literal notranslate"><span class="pre">ProbePanel.tabs</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.release"><code class="docutils literal notranslate"><span class="pre">ProbePanel.release()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.plots"><code class="docutils literal notranslate"><span class="pre">ProbePanel.plots()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.show_node"><code class="docutils literal notranslate"><span class="pre">ProbePanel.show_node()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.refresh"><code class="docutils literal notranslate"><span class="pre">ProbePanel.refresh()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.set_view"><code class="docutils literal notranslate"><span class="pre">ProbePanel.set_view()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.ProbePanel.set_cursor"><code class="docutils literal notranslate"><span class="pre">ProbePanel.set_cursor()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.InputsPanel"><code class="docutils literal notranslate"><span class="pre">InputsPanel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.InputsPanel.data"><code class="docutils literal notranslate"><span class="pre">InputsPanel.data</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.InputsPanel.set_cursor"><code class="docutils literal notranslate"><span class="pre">InputsPanel.set_cursor()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunPanel"><code class="docutils literal notranslate"><span class="pre">RunPanel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunPanel.cursor_requested"><code class="docutils literal notranslate"><span class="pre">RunPanel.cursor_requested</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunPanel.WARNINGS"><code class="docutils literal notranslate"><span class="pre">RunPanel.WARNINGS</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunPanel.data"><code class="docutils literal notranslate"><span class="pre">RunPanel.data</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunPanel.record_rows"><code class="docutils literal notranslate"><span class="pre">RunPanel.record_rows</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunPanel.refresh"><code class="docutils literal notranslate"><span class="pre">RunPanel.refresh()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.project"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.project</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.exploration"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.exploration</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.selection"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.selection</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.store"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.store</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.data"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.data</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.cursor"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.cursor</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.badges"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.badges</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.refresh_every"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.refresh_every</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.project</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.selection</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.store</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id3"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.data</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id4"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.cursor</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id5"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.badges</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.center"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.center</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.workspace"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.workspace</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id6"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.refresh_every</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id7"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.exploration</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.state"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.state()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.resume"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.resume()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.keep_exploration"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.keep_exploration()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.save_exploration"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.save_exploration()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.open_exploration"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.open_exploration()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.show_run"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.show_run()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.open_run"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.open_run()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.quit"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.quit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.open_preferences"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.open_preferences()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.restyle"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.restyle()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.set_cursor"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.set_cursor()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.refresh"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.refresh()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.showEvent"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.showEvent()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.RunViewerWindow.closeEvent"><code class="docutils literal notranslate"><span class="pre">RunViewerWindow.closeEvent()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.SparkRunViewer"><code class="docutils literal notranslate"><span class="pre">SparkRunViewer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.SparkRunViewer.app"><code class="docutils literal notranslate"><span class="pre">SparkRunViewer.app</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.SparkRunViewer.windows"><code class="docutils literal notranslate"><span class="pre">SparkRunViewer.windows</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id8"><code class="docutils literal notranslate"><span class="pre">SparkRunViewer.app</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id9"><code class="docutils literal notranslate"><span class="pre">SparkRunViewer.windows</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.graph_editor.runs.viewer.SparkRunViewer.open"><code class="docutils literal notranslate"><span class="pre">SparkRunViewer.open()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

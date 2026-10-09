@@ -1,0 +1,1411 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spark.recording.store &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=30646c52"></script>
+    <script src="../../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/spark/recording/store/index';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="spark.recording.triggers" href="../triggers/index.html" />
+    <link rel="prev" title="spark.recording.settings" href="../settings/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../../../../_static/searchtools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <script src="../../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <img src="../../../../_static/spark_250px.png" class="logo__image only-dark pst-js-only" alt="Spark  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/neurons.html">Tutorial #3: Neurons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/brains.html">Tutorial #4: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/graph_editor.html">Tutorial #5: Graph Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/cartpole.html">Tutorial #6: Solving the CartPole™</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/recording.html">Tutorial #7: Recording</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/sharding.html">Tutorial #8: Sharding</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../index.html">spark</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../core/addresses/index.html">spark.core.addresses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/backend/index.html">spark.core.backend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/checkpoint/index.html">spark.core.checkpoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/decorators/index.html">spark.core.decorators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/recording_hooks/index.html">spark.core.recording_hooks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/validation/index.html">spark.core.validation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/commands/index.html">spark.graph_editor.commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/runs/index.html">spark.graph_editor.runs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/styles/index.html">spark.graph_editor.styles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/view/index.html">spark.graph_editor.view</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../nn/index.html">spark.nn</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/components/index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/controllers/index.html">spark.nn.controllers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../index.html">spark.recording</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../calls/index.html">spark.recording.calls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../current/index.html">spark.recording.current</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../measurements/index.html">spark.recording.measurements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../presets/index.html">spark.recording.presets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../probe/index.html">spark.recording.probe</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../probe_context/index.html">spark.recording.probe_context</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../probe_targets/index.html">spark.recording.probe_targets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../recorder/index.html">spark.recording.recorder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../records/index.html">spark.recording.records</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reduce/index.html">spark.recording.reduce</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../run/index.html">spark.recording.run</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../runner/index.html">spark.recording.runner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../scan/index.html">spark.recording.scan</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../settings/index.html">spark.recording.settings</a></li>
+<li class="toctree-l4 current active"><a class="current reference internal" href="#">spark.recording.store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../triggers/index.html">spark.recording.triggers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../utils/index.html">spark.recording.utils</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">spark</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">spark.recording</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">spark.recording.store</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../../_sources/autoapi/spark/recording/store/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>spark.recording.store</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.fcntl"><code class="docutils literal notranslate"><span class="pre">fcntl</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.msvcrt"><code class="docutils literal notranslate"><span class="pre">msvcrt</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.SCHEMA_VERSION"><code class="docutils literal notranslate"><span class="pre">SCHEMA_VERSION</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.SCHEMA"><code class="docutils literal notranslate"><span class="pre">SCHEMA</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.MAX_STEPS"><code class="docutils literal notranslate"><span class="pre">MAX_STEPS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.SCHEDULER_VARIABLES"><code class="docutils literal notranslate"><span class="pre">SCHEDULER_VARIABLES</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.TEMPORARY"><code class="docutils literal notranslate"><span class="pre">TEMPORARY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.now"><code class="docutils literal notranslate"><span class="pre">now()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.timestamp"><code class="docutils literal notranslate"><span class="pre">timestamp()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.to_json"><code class="docutils literal notranslate"><span class="pre">to_json()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.from_json"><code class="docutils literal notranslate"><span class="pre">from_json()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.write_json"><code class="docutils literal notranslate"><span class="pre">write_json()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.write_arrays"><code class="docutils literal notranslate"><span class="pre">write_arrays()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.remove_partial"><code class="docutils literal notranslate"><span class="pre">remove_partial()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.git_state"><code class="docutils literal notranslate"><span class="pre">git_state()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.environment"><code class="docutils literal notranslate"><span class="pre">environment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.new_run_dir"><code class="docutils literal notranslate"><span class="pre">new_run_dir()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.move_run_dir"><code class="docutils literal notranslate"><span class="pre">move_run_dir()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.is_temporary"><code class="docutils literal notranslate"><span class="pre">is_temporary()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.window_file"><code class="docutils literal notranslate"><span class="pre">window_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.window_files"><code class="docutils literal notranslate"><span class="pre">window_files()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.checkpoint_file"><code class="docutils literal notranslate"><span class="pre">checkpoint_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.checkpoint_steps"><code class="docutils literal notranslate"><span class="pre">checkpoint_steps()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.read_info"><code class="docutils literal notranslate"><span class="pre">read_info()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.heartbeat_age"><code class="docutils literal notranslate"><span class="pre">heartbeat_age()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.process"><code class="docutils literal notranslate"><span class="pre">process()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.abandoned"><code class="docutils literal notranslate"><span class="pre">abandoned()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.connect"><code class="docutils literal notranslate"><span class="pre">connect()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.connect_read_only"><code class="docutils literal notranslate"><span class="pre">connect_read_only()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.commit"><code class="docutils literal notranslate"><span class="pre">commit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.write_request"><code class="docutils literal notranslate"><span class="pre">write_request()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.pending_requests"><code class="docutils literal notranslate"><span class="pre">pending_requests()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.read_request"><code class="docutils literal notranslate"><span class="pre">read_request()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.blank_request"><code class="docutils literal notranslate"><span class="pre">blank_request()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.lock"><code class="docutils literal notranslate"><span class="pre">lock()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.unlock"><code class="docutils literal notranslate"><span class="pre">unlock()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.locked"><code class="docutils literal notranslate"><span class="pre">locked()</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-spark.recording.store">
+<span id="spark-recording-store"></span><h1>spark.recording.store<a class="headerlink" href="#module-spark.recording.store" title="Link to this heading">#</a></h1>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.fcntl" title="spark.recording.store.fcntl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fcntl</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.msvcrt" title="spark.recording.store.msvcrt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">msvcrt</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.SCHEMA_VERSION" title="spark.recording.store.SCHEMA_VERSION"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SCHEMA_VERSION</span></code></a></p></td>
+<td><p>Version of the tables of <code class="docutils literal notranslate"><span class="pre">index.sqlite</span></code>, stored as its <code class="docutils literal notranslate"><span class="pre">user_version</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.SCHEMA" title="spark.recording.store.SCHEMA"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SCHEMA</span></code></a></p></td>
+<td><p>SQL creating the tables of <code class="docutils literal notranslate"><span class="pre">index.sqlite</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.MAX_STEPS" title="spark.recording.store.MAX_STEPS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MAX_STEPS</span></code></a></p></td>
+<td><p>Most steps a request can ask the recorder of a run to record. The steps stay within int64.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.SCHEDULER_VARIABLES" title="spark.recording.store.SCHEDULER_VARIABLES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SCHEDULER_VARIABLES</span></code></a></p></td>
+<td><p>Environment variables of cluster schedulers written to <code class="docutils literal notranslate"><span class="pre">run.json</span></code> when set.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.TEMPORARY" title="spark.recording.store.TEMPORARY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TEMPORARY</span></code></a></p></td>
+<td><p>Suffix of the directory of a run being created. The directory is <code class="docutils literal notranslate"><span class="pre">.&lt;name&gt;.&lt;id&gt;.creating</span></code>, next</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.now" title="spark.recording.store.now"><code class="xref py py-obj docutils literal notranslate"><span class="pre">now</span></code></a>()</p></td>
+<td><p>Returns the local time in ISO 8601, to the second, with its UTC offset.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.timestamp" title="spark.recording.store.timestamp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">timestamp</span></code></a>(text)</p></td>
+<td><p>Returns a time written by <cite>now</cite> as a POSIX timestamp.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.to_json" title="spark.recording.store.to_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_json</span></code></a>(data, **kwargs)</p></td>
+<td><p>Encodes <code class="docutils literal notranslate"><span class="pre">data</span></code> as JSON, NumPy and JAX values included.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.from_json" title="spark.recording.store.from_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_json</span></code></a>(text, kind, default)</p></td>
+<td><p>Decodes <code class="docutils literal notranslate"><span class="pre">text</span></code> as JSON when it holds a <code class="docutils literal notranslate"><span class="pre">kind</span></code>, such as a dict, and returns <code class="docutils literal notranslate"><span class="pre">default</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.write_json" title="spark.recording.store.write_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_json</span></code></a>(path, data)</p></td>
+<td><p>Writes <code class="docutils literal notranslate"><span class="pre">data</span></code> to <code class="docutils literal notranslate"><span class="pre">path</span></code> as indented JSON.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.write_arrays" title="spark.recording.store.write_arrays"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_arrays</span></code></a>(path, arrays)</p></td>
+<td><p>Writes <code class="docutils literal notranslate"><span class="pre">arrays</span></code> to <code class="docutils literal notranslate"><span class="pre">path</span></code> as an uncompressed <code class="docutils literal notranslate"><span class="pre">.npz</span></code> file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.remove_partial" title="spark.recording.store.remove_partial"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_partial</span></code></a>(directory)</p></td>
+<td><p>Removes the temporary files left under <code class="docutils literal notranslate"><span class="pre">directory</span></code> by writes a process did not finish.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.git_state" title="spark.recording.store.git_state"><code class="xref py py-obj docutils literal notranslate"><span class="pre">git_state</span></code></a>(run_dir)</p></td>
+<td><p>Returns the commit, branch and uncommitted changes of the repository of the working</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.environment" title="spark.recording.store.environment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">environment</span></code></a>()</p></td>
+<td><p>Returns the versions, devices, host, command line and scheduler job of the process.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.new_run_dir" title="spark.recording.store.new_run_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">new_run_dir</span></code></a>(root, name[, run_id])</p></td>
+<td><p>Creates the directory of a new run under a temporary name.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.move_run_dir" title="spark.recording.store.move_run_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">move_run_dir</span></code></a>(temporary, final)</p></td>
+<td><p>Moves the directory of a new run into place.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.is_temporary" title="spark.recording.store.is_temporary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_temporary</span></code></a>(path)</p></td>
+<td><p>Returns whether <code class="docutils literal notranslate"><span class="pre">path</span></code> is the directory of a run not moved into place yet.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.window_file" title="spark.recording.store.window_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">window_file</span></code></a>(measurements, number)</p></td>
+<td><p>Returns the path of a window file within its run, <code class="docutils literal notranslate"><span class="pre">windows/&lt;measurements&gt;/&lt;number&gt;.npz</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.window_files" title="spark.recording.store.window_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">window_files</span></code></a>(run_dir)</p></td>
+<td><p>Returns the window files of a run on disk, as <code class="docutils literal notranslate"><span class="pre">(measurements,</span> <span class="pre">number)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.checkpoint_file" title="spark.recording.store.checkpoint_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">checkpoint_file</span></code></a>(run_dir, step)</p></td>
+<td><p>Returns the file of the checkpoint of a run at <code class="docutils literal notranslate"><span class="pre">step</span></code>, <code class="docutils literal notranslate"><span class="pre">checkpoints/&lt;step&gt;.spark</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.checkpoint_steps" title="spark.recording.store.checkpoint_steps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">checkpoint_steps</span></code></a>(run_dir)</p></td>
+<td><p>Returns the steps of the checkpoints of a run, in increasing order.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.read_info" title="spark.recording.store.read_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_info</span></code></a>(run_dir)</p></td>
+<td><p>Reads <code class="docutils literal notranslate"><span class="pre">run.json</span></code> of a run.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.heartbeat_age" title="spark.recording.store.heartbeat_age"><code class="xref py py-obj docutils literal notranslate"><span class="pre">heartbeat_age</span></code></a>(info)</p></td>
+<td><p>Returns the time since the last heartbeat of a run and the time between heartbeats.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.process" title="spark.recording.store.process"><code class="xref py py-obj docutils literal notranslate"><span class="pre">process</span></code></a>()</p></td>
+<td><p>Returns the host and process id of this process, as written to <code class="docutils literal notranslate"><span class="pre">run.json</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.abandoned" title="spark.recording.store.abandoned"><code class="xref py py-obj docutils literal notranslate"><span class="pre">abandoned</span></code></a>(run_dir)</p></td>
+<td><p>Returns whether the process writing a run marked as running is gone.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.connect" title="spark.recording.store.connect"><code class="xref py py-obj docutils literal notranslate"><span class="pre">connect</span></code></a>(run_dir)</p></td>
+<td><p>Opens the index of a run for writing, creating its tables.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.connect_read_only" title="spark.recording.store.connect_read_only"><code class="xref py py-obj docutils literal notranslate"><span class="pre">connect_read_only</span></code></a>(run_dir)</p></td>
+<td><p>Opens the index of a run for reading.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.commit" title="spark.recording.store.commit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">commit</span></code></a>(connection, run_dir)</p></td>
+<td><p>Commits <code class="docutils literal notranslate"><span class="pre">connection</span></code>, waiting as long as another process holds the index.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.write_request" title="spark.recording.store.write_request"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_request</span></code></a>(run_dir, kind, payload)</p></td>
+<td><p>Writes a request to the recorder of a run as a file of <code class="docutils literal notranslate"><span class="pre">requests/</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.pending_requests" title="spark.recording.store.pending_requests"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pending_requests</span></code></a>(run_dir)</p></td>
+<td><p>Returns the files of the requests not yet read by the recorder, oldest first.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.read_request" title="spark.recording.store.read_request"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_request</span></code></a>(path)</p></td>
+<td><p>Reads a request written by <cite>write_request</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.blank_request" title="spark.recording.store.blank_request"><code class="xref py py-obj docutils literal notranslate"><span class="pre">blank_request</span></code></a>(path)</p></td>
+<td><p>Returns the request of a file that cannot be read: its id, as <cite>read_request</cite> gives it, and no</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.lock" title="spark.recording.store.lock"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lock</span></code></a>(run_dir[, wait])</p></td>
+<td><p>Takes the exclusive lock of a run.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.store.unlock" title="spark.recording.store.unlock"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unlock</span></code></a>(file)</p></td>
+<td><p>Releases a lock taken by <cite>lock</cite> and closes its file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.store.locked" title="spark.recording.store.locked"><code class="xref py py-obj docutils literal notranslate"><span class="pre">locked</span></code></a>(run_dir)</p></td>
+<td><p>Returns whether a recorder holds the lock of a run.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.store.fcntl">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">fcntl</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.fcntl" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.store.msvcrt">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">msvcrt</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.msvcrt" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.store.SCHEMA_VERSION">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">SCHEMA_VERSION</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.SCHEMA_VERSION" title="Link to this definition">#</a></dt>
+<dd><p>Version of the tables of <code class="docutils literal notranslate"><span class="pre">index.sqlite</span></code>, stored as its <code class="docutils literal notranslate"><span class="pre">user_version</span></code>.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.store.SCHEMA">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">SCHEMA</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Multiline-String</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.SCHEMA" title="Link to this definition">#</a></dt>
+<dd><details><summary>Show Value</summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">"""</span>
+<span class="sd">CREATE TABLE IF NOT EXISTS keys (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, tag TEXT);</span>
+<span class="sd">CREATE TABLE IF NOT EXISTS scalars (t INTEGER, key INTEGER, value REAL, wall REAL);</span>
+<span class="sd">CREATE INDEX IF NOT EXISTS scalars_by_key ON scalars (key, t, value);</span>
+<span class="sd">CREATE TABLE IF NOT EXISTS events (t INTEGER, kind TEXT, payload TEXT, wall REAL);</span>
+<span class="sd">CREATE TABLE IF NOT EXISTS tags (t INTEGER, key TEXT, value TEXT, wall REAL);</span>
+<span class="sd">CREATE TABLE IF NOT EXISTS windows (</span>
+<span class="sd">    measurements TEXT, window INTEGER, t0 INTEGER, t1 INTEGER, spans INTEGER, groups INTEGER, file TEXT, raw TEXT, wall REAL</span>
+<span class="sd">);</span>
+<span class="sd">CREATE INDEX IF NOT EXISTS windows_by_number ON windows (measurements, window);</span>
+<span class="sd">CREATE TABLE IF NOT EXISTS requests (id TEXT PRIMARY KEY, kind TEXT, payload TEXT, wall REAL, status TEXT, handled REAL);</span>
+<span class="sd">CREATE TABLE IF NOT EXISTS progress (key TEXT PRIMARY KEY, value INTEGER);</span>
+<span class="sd">CREATE TABLE IF NOT EXISTS spans (measurements TEXT, window INTEGER, t0 INTEGER, steps INTEGER);</span>
+<span class="sd">CREATE TABLE IF NOT EXISTS groups (measurements TEXT, window INTEGER, t0 INTEGER, steps INTEGER);</span>
+<span class="sd">"""</span>
+</pre></div>
+</div>
+</details><p>SQL creating the tables of <code class="docutils literal notranslate"><span class="pre">index.sqlite</span></code>.</p>
+<p>A scalar names its series by the id of a row of <code class="docutils literal notranslate"><span class="pre">keys</span></code>. <code class="docutils literal notranslate"><span class="pre">spans</span></code> holds one row per span a set
+of measurements recorded. <code class="docutils literal notranslate"><span class="pre">groups</span></code> holds one row per group written, from its first step
+recorded. A span or group whose <code class="docutils literal notranslate"><span class="pre">window</span></code> is -1 was listed but lost: its window was being
+filled when the process ended. The <code class="docutils literal notranslate"><span class="pre">raw</span></code> column of <code class="docutils literal notranslate"><span class="pre">windows</span></code> lists the raw streams of a
+window as a JSON list.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.store.MAX_STEPS">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">MAX_STEPS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4611686018427387904</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.MAX_STEPS" title="Link to this definition">#</a></dt>
+<dd><p>Most steps a request can ask the recorder of a run to record. The steps stay within int64.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.store.SCHEDULER_VARIABLES">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">SCHEDULER_VARIABLES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('SLURM_JOB_ID',</span> <span class="pre">'SLURM_ARRAY_JOB_ID',</span> <span class="pre">'SLURM_ARRAY_TASK_ID',</span> <span class="pre">'SLURM_JOB_NAME',...</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.SCHEDULER_VARIABLES" title="Link to this definition">#</a></dt>
+<dd><p>Environment variables of cluster schedulers written to <code class="docutils literal notranslate"><span class="pre">run.json</span></code> when set.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.store.TEMPORARY">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">TEMPORARY</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'.creating'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.TEMPORARY" title="Link to this definition">#</a></dt>
+<dd><p>Suffix of the directory of a run being created. The directory is <code class="docutils literal notranslate"><span class="pre">.&lt;name&gt;.&lt;id&gt;.creating</span></code>, next
+to the runs.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.now">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">now</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.now" title="Link to this definition">#</a></dt>
+<dd><p>Returns the local time in ISO 8601, to the second, with its UTC offset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.timestamp">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">timestamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.timestamp" title="Link to this definition">#</a></dt>
+<dd><p>Returns a time written by <cite>now</cite> as a POSIX timestamp.</p>
+<p>Times written on hosts of other time zones compare correctly. Raises a ValueError or a
+TypeError when <code class="docutils literal notranslate"><span class="pre">text</span></code> is not such a time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>text</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.to_json">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.to_json" title="Link to this definition">#</a></dt>
+<dd><p>Encodes <code class="docutils literal notranslate"><span class="pre">data</span></code> as JSON, NumPy and JAX values included.</p>
+<p>Keyword arguments are passed to <cite>json.dumps</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>Any</em>)</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.from_json">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">from_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.from_json" title="Link to this definition">#</a></dt>
+<dd><p>Decodes <code class="docutils literal notranslate"><span class="pre">text</span></code> as JSON when it holds a <code class="docutils literal notranslate"><span class="pre">kind</span></code>, such as a dict, and returns <code class="docutils literal notranslate"><span class="pre">default</span></code>
+otherwise, or for an empty or invalid <code class="docutils literal notranslate"><span class="pre">text</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>kind</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#type" title="(in Python v3.15)"><em>type</em></a>)</p></li>
+<li><p><strong>default</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.write_json">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">write_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.write_json" title="Link to this definition">#</a></dt>
+<dd><p>Writes <code class="docutils literal notranslate"><span class="pre">data</span></code> to <code class="docutils literal notranslate"><span class="pre">path</span></code> as indented JSON.</p>
+<p>The file is written to a temporary name, flushed to disk and moved into place.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p></li>
+<li><p><strong>data</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.write_arrays">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">write_arrays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrays</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.write_arrays" title="Link to this definition">#</a></dt>
+<dd><p>Writes <code class="docutils literal notranslate"><span class="pre">arrays</span></code> to <code class="docutils literal notranslate"><span class="pre">path</span></code> as an uncompressed <code class="docutils literal notranslate"><span class="pre">.npz</span></code> file.</p>
+<p>Creates the parent directories. The file is written to a temporary name, flushed to disk and
+moved into place.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p></li>
+<li><p><strong>arrays</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>numpy.ndarray</em></a><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.remove_partial">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">remove_partial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.remove_partial" title="Link to this definition">#</a></dt>
+<dd><p>Removes the temporary files left under <code class="docutils literal notranslate"><span class="pre">directory</span></code> by writes a process did not finish.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>directory</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.git_state">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">git_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.git_state" title="Link to this definition">#</a></dt>
+<dd><p>Returns the commit, branch and uncommitted changes of the repository of the working
+directory.</p>
+<p>Uncommitted changes to tracked files are written to <code class="docutils literal notranslate"><span class="pre">git.patch</span></code> in the run.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>run_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>) – Directory of the run, where <code class="docutils literal notranslate"><span class="pre">git.patch</span></code> is written.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">sha</span></code>, <code class="docutils literal notranslate"><span class="pre">branch</span></code>, <code class="docutils literal notranslate"><span class="pre">dirty</span></code>, <code class="docutils literal notranslate"><span class="pre">patch</span></code> (the name of the patch file, or None) and
+<code class="docutils literal notranslate"><span class="pre">untracked</span></code> (at most <cite>SETTINGS.git_untracked</cite> untracked files). None outside a repository,
+or when <code class="docutils literal notranslate"><span class="pre">git</span></code> cannot be run.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a> or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.environment">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">environment</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.environment" title="Link to this definition">#</a></dt>
+<dd><p>Returns the versions, devices, host, command line and scheduler job of the process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a>, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.new_run_dir">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">new_run_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.new_run_dir" title="Link to this definition">#</a></dt>
+<dd><p>Creates the directory of a new run under a temporary name.</p>
+<p><cite>move_run_dir</cite> moves it into place once the run is written. Temporary directories left under
+<code class="docutils literal notranslate"><span class="pre">root</span></code> for more than <cite>SETTINGS.creation_expires_after</cite> seconds are removed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>root</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><em>path-like</em>) – Directory of the runs.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Name of the run, used without <code class="docutils literal notranslate"><span class="pre">run_id</span></code>. Characters other than letters, digits, <code class="docutils literal notranslate"><span class="pre">_</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.</span></code> and <code class="docutils literal notranslate"><span class="pre">-</span></code> are replaced by <code class="docutils literal notranslate"><span class="pre">-</span></code>. An empty name gives <code class="docutils literal notranslate"><span class="pre">run</span></code>.</p></li>
+<li><p><strong>run_id</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the final directory. By default, <code class="docutils literal notranslate"><span class="pre">&lt;date&gt;-&lt;time&gt;_&lt;name&gt;_&lt;id&gt;</span></code> with a random
+<code class="docutils literal notranslate"><span class="pre">&lt;id&gt;</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>temporary</strong> (<em>pathlib.Path</em>) – Absolute path of the directory created.</p></li>
+<li><p><strong>final</strong> (<em>pathlib.Path</em>) – Absolute path the run is moved to.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – When <code class="docutils literal notranslate"><span class="pre">run_id</span></code> is not a string of letters, digits, <code class="docutils literal notranslate"><span class="pre">_</span></code>, <code class="docutils literal notranslate"><span class="pre">.</span></code> and <code class="docutils literal notranslate"><span class="pre">-</span></code> starting with
+a letter or a digit.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#FileExistsError" title="(in Python v3.15)"><strong>FileExistsError</strong></a> – When the directory of <code class="docutils literal notranslate"><span class="pre">run_id</span></code> exists.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)">pathlib.Path</a>, <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)">pathlib.Path</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.move_run_dir">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">move_run_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temporary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.move_run_dir" title="Link to this definition">#</a></dt>
+<dd><p>Moves the directory of a new run into place.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>temporary</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>) – Paths given by <cite>new_run_dir</cite>.</p></li>
+<li><p><strong>final</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>) – Paths given by <cite>new_run_dir</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">final</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)">pathlib.Path</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#FileExistsError" title="(in Python v3.15)"><strong>FileExistsError</strong></a> – When another run took <code class="docutils literal notranslate"><span class="pre">final</span></code> meanwhile.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.is_temporary">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">is_temporary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.is_temporary" title="Link to this definition">#</a></dt>
+<dd><p>Returns whether <code class="docutils literal notranslate"><span class="pre">path</span></code> is the directory of a run not moved into place yet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.window_file">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">window_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measurements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.window_file" title="Link to this definition">#</a></dt>
+<dd><p>Returns the path of a window file within its run, <code class="docutils literal notranslate"><span class="pre">windows/&lt;measurements&gt;/&lt;number&gt;.npz</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>measurements</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p></li>
+<li><p><strong>number</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.PurePosixPath" title="(in Python v3.15)">pathlib.PurePosixPath</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.window_files">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">window_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.window_files" title="Link to this definition">#</a></dt>
+<dd><p>Returns the window files of a run on disk, as <code class="docutils literal notranslate"><span class="pre">(measurements,</span> <span class="pre">number)</span></code>.</p>
+<p>Listed or not in the index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>run_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#set" title="(in Python v3.15)">set</a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)">int</a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.checkpoint_file">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">checkpoint_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.checkpoint_file" title="Link to this definition">#</a></dt>
+<dd><p>Returns the file of the checkpoint of a run at <code class="docutils literal notranslate"><span class="pre">step</span></code>, <code class="docutils literal notranslate"><span class="pre">checkpoints/&lt;step&gt;.spark</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>run_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)">pathlib.Path</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.checkpoint_steps">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">checkpoint_steps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.checkpoint_steps" title="Link to this definition">#</a></dt>
+<dd><p>Returns the steps of the checkpoints of a run, in increasing order.</p>
+<p>A checkpoint is written aside and moved in place once complete, so a file
+<code class="docutils literal notranslate"><span class="pre">checkpoints/&lt;step&gt;.spark</span></code> is a complete checkpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>run_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)">int</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.read_info">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">read_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.read_info" title="Link to this definition">#</a></dt>
+<dd><p>Reads <code class="docutils literal notranslate"><span class="pre">run.json</span></code> of a run.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – When the file is not valid JSON or does not hold a JSON object.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>run_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a>, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.heartbeat_age">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">heartbeat_age</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">info</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.heartbeat_age" title="Link to this definition">#</a></dt>
+<dd><p>Returns the time since the last heartbeat of a run and the time between heartbeats.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>info</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a>) – Contents of <code class="docutils literal notranslate"><span class="pre">run.json</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>age</strong> (<em>float</em>) – Seconds since the last heartbeat. Infinity when <code class="docutils literal notranslate"><span class="pre">heartbeat</span></code> cannot be read.</p></li>
+<li><p><strong>period</strong> (<em>float</em>) – Seconds between heartbeats, 5 when <code class="docutils literal notranslate"><span class="pre">heartbeat_every</span></code> is missing. Zero when
+<code class="docutils literal notranslate"><span class="pre">heartbeat</span></code> cannot be read.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)">float</a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)">float</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.process">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.process" title="Link to this definition">#</a></dt>
+<dd><p>Returns the host and process id of this process, as written to <code class="docutils literal notranslate"><span class="pre">run.json</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a>, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.abandoned">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">abandoned</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.abandoned" title="Link to this definition">#</a></dt>
+<dd><p>Returns whether the process writing a run marked as running is gone.</p>
+<p>On POSIX, a process of this host is gone when it has ended. Any other process is gone when the
+heartbeat of the run is older than both <cite>SETTINGS.abandoned_after</cite> seconds and
+<cite>SETTINGS.crashed_after</cite> heartbeat periods. A run with another status, such as a finished run
+being resumed, or whose <code class="docutils literal notranslate"><span class="pre">run.json</span></code> cannot be read, is not abandoned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>run_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.connect">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.connect" title="Link to this definition">#</a></dt>
+<dd><p>Opens the index of a run for writing, creating its tables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – When the index was written by another version of the tables.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>run_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection" title="(in Python v3.15)">sqlite3.Connection</a></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The index uses a rollback journal, deleted after each commit. A finished run is then a
+single file, readable from a read-only location or another host. A commit waits for the
+readers reading at that moment. Pages are not written before the commit (<code class="docutils literal notranslate"><span class="pre">cache_spill</span></code>),
+and no statement but the commit waits for readers. Statements wait <cite>SETTINGS.busy_timeout</cite>
+seconds for a busy index.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.connect_read_only">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">connect_read_only</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.connect_read_only" title="Link to this definition">#</a></dt>
+<dd><p>Opens the index of a run for reading.</p>
+<p>The journal of a commit left unfinished by a process that ended is rolled back first. That
+happens when the process is gone (<cite>abandoned</cite>), no recorder holds the lock of the run and
+its directory can be written. Otherwise the index is opened as immutable and read as it
+stands, with a warning, and the journal is left for <cite>Recorder.resume</cite> to roll back.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/sqlite3.html#sqlite3.OperationalError" title="(in Python v3.15)"><strong>sqlite3.OperationalError</strong></a> – When the index is locked, or cannot be opened for a reason other than an unfinished
+commit.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>run_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection" title="(in Python v3.15)">sqlite3.Connection</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.commit">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">commit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">connection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.commit" title="Link to this definition">#</a></dt>
+<dd><p>Commits <code class="docutils literal notranslate"><span class="pre">connection</span></code>, waiting as long as another process holds the index.</p>
+<p>Warns each time the busy timeout of the connection runs out, every <cite>SETTINGS.busy_timeout</cite>
+seconds for a connection of <cite>connect</cite>. A reader in the middle of a long query holds the index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>connection</strong> (<a class="reference external" href="https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection" title="(in Python v3.15)"><em>sqlite3.Connection</em></a>)</p></li>
+<li><p><strong>run_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.write_request">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">write_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">payload</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.write_request" title="Link to this definition">#</a></dt>
+<dd><p>Writes a request to the recorder of a run as a file of <code class="docutils literal notranslate"><span class="pre">requests/</span></code>.</p>
+<p>The recorder reads the file, lists the request in the index and removes the file. Only the
+recorder writes the index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>run_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>) – Directory of the run.</p></li>
+<li><p><strong>kind</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Kind of the request, such as <code class="docutils literal notranslate"><span class="pre">'record'</span></code>.</p></li>
+<li><p><strong>payload</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a>) – Arguments of the request, written as JSON.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Id of the request, the time in nanoseconds followed by a random suffix. It orders the
+requests by the time they were written.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.pending_requests">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">pending_requests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.pending_requests" title="Link to this definition">#</a></dt>
+<dd><p>Returns the files of the requests not yet read by the recorder, oldest first.</p>
+<p>Empty when <code class="docutils literal notranslate"><span class="pre">requests/</span></code> is missing or cannot be read.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>run_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)">pathlib.Path</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.read_request">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">read_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.read_request" title="Link to this definition">#</a></dt>
+<dd><p>Reads a request written by <cite>write_request</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">id</span></code>, from the file name, with <code class="docutils literal notranslate"><span class="pre">kind</span></code>, <code class="docutils literal notranslate"><span class="pre">payload</span></code> and <code class="docutils literal notranslate"><span class="pre">wall</span></code>. A field missing or
+of the wrong type reads as None, or as an empty payload.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#OSError" title="(in Python v3.15)"><strong>OSError</strong></a> – When the file cannot be read.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.blank_request">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">blank_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.blank_request" title="Link to this definition">#</a></dt>
+<dd><p>Returns the request of a file that cannot be read: its id, as <cite>read_request</cite> gives it, and no
+kind, payload or time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a>, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.lock">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">lock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.lock" title="Link to this definition">#</a></dt>
+<dd><p>Takes the exclusive lock of a run.</p>
+<p>The recorder writing a run holds its lock until it closes. The lock is taken on
+<code class="docutils literal notranslate"><span class="pre">run.lock</span></code>, created when missing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>run_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>) – Directory of the run.</p></li>
+<li><p><strong>wait</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>default 0.0</em>) – Seconds to keep trying while another process holds the lock.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The open lock file, for <cite>unlock</cite>. None when another process holds the lock. Where the
+file system has no locks, the file is returned unlocked, with a warning. Where the
+platform has no locks, the file is returned unlocked.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../index.html#id12" title="spark.recording.Window.file">file</a> or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.unlock">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">unlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.unlock" title="Link to this definition">#</a></dt>
+<dd><p>Releases a lock taken by <cite>lock</cite> and closes its file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file</strong> (<em>IO</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.recording.store.locked">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.store.</span></span><span class="sig-name descname"><span class="pre">locked</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/store.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.store.locked" title="Link to this definition">#</a></dt>
+<dd><p>Returns whether a recorder holds the lock of a run.</p>
+<p>None when it cannot be told, as when the run has no lock file, the file cannot be opened or
+the platform has no locks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>run_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)">bool</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../settings/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">spark.recording.settings</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../triggers/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">spark.recording.triggers</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.fcntl"><code class="docutils literal notranslate"><span class="pre">fcntl</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.msvcrt"><code class="docutils literal notranslate"><span class="pre">msvcrt</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.SCHEMA_VERSION"><code class="docutils literal notranslate"><span class="pre">SCHEMA_VERSION</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.SCHEMA"><code class="docutils literal notranslate"><span class="pre">SCHEMA</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.MAX_STEPS"><code class="docutils literal notranslate"><span class="pre">MAX_STEPS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.SCHEDULER_VARIABLES"><code class="docutils literal notranslate"><span class="pre">SCHEDULER_VARIABLES</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.TEMPORARY"><code class="docutils literal notranslate"><span class="pre">TEMPORARY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.now"><code class="docutils literal notranslate"><span class="pre">now()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.timestamp"><code class="docutils literal notranslate"><span class="pre">timestamp()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.to_json"><code class="docutils literal notranslate"><span class="pre">to_json()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.from_json"><code class="docutils literal notranslate"><span class="pre">from_json()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.write_json"><code class="docutils literal notranslate"><span class="pre">write_json()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.write_arrays"><code class="docutils literal notranslate"><span class="pre">write_arrays()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.remove_partial"><code class="docutils literal notranslate"><span class="pre">remove_partial()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.git_state"><code class="docutils literal notranslate"><span class="pre">git_state()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.environment"><code class="docutils literal notranslate"><span class="pre">environment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.new_run_dir"><code class="docutils literal notranslate"><span class="pre">new_run_dir()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.move_run_dir"><code class="docutils literal notranslate"><span class="pre">move_run_dir()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.is_temporary"><code class="docutils literal notranslate"><span class="pre">is_temporary()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.window_file"><code class="docutils literal notranslate"><span class="pre">window_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.window_files"><code class="docutils literal notranslate"><span class="pre">window_files()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.checkpoint_file"><code class="docutils literal notranslate"><span class="pre">checkpoint_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.checkpoint_steps"><code class="docutils literal notranslate"><span class="pre">checkpoint_steps()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.read_info"><code class="docutils literal notranslate"><span class="pre">read_info()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.heartbeat_age"><code class="docutils literal notranslate"><span class="pre">heartbeat_age()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.process"><code class="docutils literal notranslate"><span class="pre">process()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.abandoned"><code class="docutils literal notranslate"><span class="pre">abandoned()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.connect"><code class="docutils literal notranslate"><span class="pre">connect()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.connect_read_only"><code class="docutils literal notranslate"><span class="pre">connect_read_only()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.commit"><code class="docutils literal notranslate"><span class="pre">commit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.write_request"><code class="docutils literal notranslate"><span class="pre">write_request()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.pending_requests"><code class="docutils literal notranslate"><span class="pre">pending_requests()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.read_request"><code class="docutils literal notranslate"><span class="pre">read_request()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.blank_request"><code class="docutils literal notranslate"><span class="pre">blank_request()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.lock"><code class="docutils literal notranslate"><span class="pre">lock()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.unlock"><code class="docutils literal notranslate"><span class="pre">unlock()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.store.locked"><code class="docutils literal notranslate"><span class="pre">locked()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

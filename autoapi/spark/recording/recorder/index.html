@@ -1,0 +1,1552 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spark.recording.recorder &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=30646c52"></script>
+    <script src="../../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/spark/recording/recorder/index';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="spark.recording.records" href="../records/index.html" />
+    <link rel="prev" title="spark.recording.probe_targets" href="../probe_targets/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../../../../_static/searchtools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <script src="../../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <img src="../../../../_static/spark_250px.png" class="logo__image only-dark pst-js-only" alt="Spark  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/neurons.html">Tutorial #3: Neurons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/brains.html">Tutorial #4: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/graph_editor.html">Tutorial #5: Graph Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/cartpole.html">Tutorial #6: Solving the CartPole™</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/recording.html">Tutorial #7: Recording</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../tutorials/sharding.html">Tutorial #8: Sharding</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../index.html">spark</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../core/addresses/index.html">spark.core.addresses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/backend/index.html">spark.core.backend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/checkpoint/index.html">spark.core.checkpoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/decorators/index.html">spark.core.decorators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/recording_hooks/index.html">spark.core.recording_hooks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../core/validation/index.html">spark.core.validation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/commands/index.html">spark.graph_editor.commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/runs/index.html">spark.graph_editor.runs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/styles/index.html">spark.graph_editor.styles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/view/index.html">spark.graph_editor.view</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../nn/index.html">spark.nn</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/components/index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/controllers/index.html">spark.nn.controllers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nn/neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../index.html">spark.recording</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../calls/index.html">spark.recording.calls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../current/index.html">spark.recording.current</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../measurements/index.html">spark.recording.measurements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../presets/index.html">spark.recording.presets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../probe/index.html">spark.recording.probe</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../probe_context/index.html">spark.recording.probe_context</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../probe_targets/index.html">spark.recording.probe_targets</a></li>
+<li class="toctree-l4 current active"><a class="current reference internal" href="#">spark.recording.recorder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../records/index.html">spark.recording.records</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reduce/index.html">spark.recording.reduce</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../run/index.html">spark.recording.run</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../runner/index.html">spark.recording.runner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../scan/index.html">spark.recording.scan</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../settings/index.html">spark.recording.settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../store/index.html">spark.recording.store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../triggers/index.html">spark.recording.triggers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../utils/index.html">spark.recording.utils</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">spark</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">spark.recording</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">spark.recording.recorder</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../../_sources/autoapi/spark/recording/recorder/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>spark.recording.recorder</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exceptions">Exceptions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.PREEMPTION_NOTICE"><code class="docutils literal notranslate"><span class="pre">PREEMPTION_NOTICE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.RESERVED_EVENT_KEYS"><code class="docutils literal notranslate"><span class="pre">RESERVED_EVENT_KEYS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.ON_ERROR"><code class="docutils literal notranslate"><span class="pre">ON_ERROR</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.TRANSIENT_ERRORS"><code class="docutils literal notranslate"><span class="pre">TRANSIENT_ERRORS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.RecordingWarning"><code class="docutils literal notranslate"><span class="pre">RecordingWarning</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Preempted"><code class="docutils literal notranslate"><span class="pre">Preempted</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Preempted.signal"><code class="docutils literal notranslate"><span class="pre">Preempted.signal</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">Preempted.signal</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Preempted.__str__"><code class="docutils literal notranslate"><span class="pre">Preempted.__str__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder"><code class="docutils literal notranslate"><span class="pre">Recorder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.path"><code class="docutils literal notranslate"><span class="pre">Recorder.path</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.measurements"><code class="docutils literal notranslate"><span class="pre">Recorder.measurements</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.step"><code class="docutils literal notranslate"><span class="pre">Recorder.step</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.tags"><code class="docutils literal notranslate"><span class="pre">Recorder.tags</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.resume"><code class="docutils literal notranslate"><span class="pre">Recorder.resume()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.probes"><code class="docutils literal notranslate"><span class="pre">Recorder.probes()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.start"><code class="docutils literal notranslate"><span class="pre">Recorder.start()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.record"><code class="docutils literal notranslate"><span class="pre">Recorder.record()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.push"><code class="docutils literal notranslate"><span class="pre">Recorder.push()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.warmup_sets"><code class="docutils literal notranslate"><span class="pre">Recorder.warmup_sets()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.log"><code class="docutils literal notranslate"><span class="pre">Recorder.log()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.event"><code class="docutils literal notranslate"><span class="pre">Recorder.event()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.tag"><code class="docutils literal notranslate"><span class="pre">Recorder.tag()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.raw"><code class="docutils literal notranslate"><span class="pre">Recorder.raw()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.is_recording"><code class="docutils literal notranslate"><span class="pre">Recorder.is_recording()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.checkpoint"><code class="docutils literal notranslate"><span class="pre">Recorder.checkpoint()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.flush"><code class="docutils literal notranslate"><span class="pre">Recorder.flush()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.close"><code class="docutils literal notranslate"><span class="pre">Recorder.close()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.__enter__"><code class="docutils literal notranslate"><span class="pre">Recorder.__enter__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.__exit__"><code class="docutils literal notranslate"><span class="pre">Recorder.__exit__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.__repr__"><code class="docutils literal notranslate"><span class="pre">Recorder.__repr__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-spark.recording.recorder">
+<span id="spark-recording-recorder"></span><h1>spark.recording.recorder<a class="headerlink" href="#module-spark.recording.recorder" title="Link to this heading">#</a></h1>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.recorder.PREEMPTION_NOTICE" title="spark.recording.recorder.PREEMPTION_NOTICE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PREEMPTION_NOTICE</span></code></a></p></td>
+<td><p>Key the preemption service of <code class="docutils literal notranslate"><span class="pre">jax.distributed</span></code> sets when a process receives SIGTERM.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.recorder.RESERVED_EVENT_KEYS" title="spark.recording.recorder.RESERVED_EVENT_KEYS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RESERVED_EVENT_KEYS</span></code></a></p></td>
+<td><p>Keys of an event row, not accepted in its payload.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.recorder.ON_ERROR" title="spark.recording.recorder.ON_ERROR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ON_ERROR</span></code></a></p></td>
+<td><p>Accepted values of the <code class="docutils literal notranslate"><span class="pre">on_error</span></code> argument of <cite>Recorder</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.recorder.TRANSIENT_ERRORS" title="spark.recording.recorder.TRANSIENT_ERRORS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TRANSIENT_ERRORS</span></code></a></p></td>
+<td><p>Error numbers of file writes that are tried again.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="exceptions">
+<h2>Exceptions<a class="headerlink" href="#exceptions" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.recorder.RecordingWarning" title="spark.recording.recorder.RecordingWarning"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RecordingWarning</span></code></a></p></td>
+<td><p>Warns of a mistake in what the loop hands over to a recorder. What it concerns is dropped,</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#spark.recording.recorder.Preempted" title="spark.recording.recorder.Preempted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Preempted</span></code></a></p></td>
+<td><p>Exception raised by <cite>Recorder.probes</cite> after one of the signals the recorder handles.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spark.recording.recorder.Recorder" title="spark.recording.recorder.Recorder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Recorder</span></code></a></p></td>
+<td><p>Records the measurements asked for and writes them to a run.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.recorder.PREEMPTION_NOTICE">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.recorder.</span></span><span class="sig-name descname"><span class="pre">PREEMPTION_NOTICE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'RECEIVED_PREEMPTION_NOTICE'</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.PREEMPTION_NOTICE" title="Link to this definition">#</a></dt>
+<dd><p>Key the preemption service of <code class="docutils literal notranslate"><span class="pre">jax.distributed</span></code> sets when a process receives SIGTERM.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.recorder.RESERVED_EVENT_KEYS">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.recorder.</span></span><span class="sig-name descname"><span class="pre">RESERVED_EVENT_KEYS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('t',</span> <span class="pre">'kind',</span> <span class="pre">'wall')</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.RESERVED_EVENT_KEYS" title="Link to this definition">#</a></dt>
+<dd><p>Keys of an event row, not accepted in its payload.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.recorder.ON_ERROR">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.recorder.</span></span><span class="sig-name descname"><span class="pre">ON_ERROR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('raise',</span> <span class="pre">'continue')</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.ON_ERROR" title="Link to this definition">#</a></dt>
+<dd><p>Accepted values of the <code class="docutils literal notranslate"><span class="pre">on_error</span></code> argument of <cite>Recorder</cite>.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="spark.recording.recorder.TRANSIENT_ERRORS">
+<span class="sig-prename descclassname"><span class="pre">spark.recording.recorder.</span></span><span class="sig-name descname"><span class="pre">TRANSIENT_ERRORS</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.TRANSIENT_ERRORS" title="Link to this definition">#</a></dt>
+<dd><p>Error numbers of file writes that are tried again.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="spark.recording.recorder.RecordingWarning">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.recording.recorder.</span></span><span class="sig-name descname"><span class="pre">RecordingWarning</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.RecordingWarning" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#UserWarning" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UserWarning</span></code></a></p>
+<p>Warns of a mistake in what the loop hands over to a recorder. What it concerns is dropped,
+and the run goes on.</p>
+<p>Given by <cite>Recorder.raw</cite>, <cite>Recorder.record</cite>, <cite>Recorder.log</cite>, <cite>Recorder.event</cite> and
+<cite>Recorder.is_recording</cite>, and when measurements declaring a raw stream are recorded over a
+group, or a stretch of calls, without a frame of it. Each cause warns once per recorder, and
+is written to the run as a <code class="docutils literal notranslate"><span class="pre">warning</span></code> event, which <cite>Run.warnings</cite> lists.</p>
+<p class="rubric">Notes</p>
+<p>A failure of the writer, such as a full disk, is not a warning: it follows the <code class="docutils literal notranslate"><span class="pre">on_error</span></code>
+option of the recorder.</p>
+<p class="rubric">Examples</p>
+<p>In a short run before a long one, every warning raises where it happens:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">'error'</span><span class="p">,</span> <span class="n">spark</span><span class="o">.</span><span class="n">recording</span><span class="o">.</span><span class="n">RecordingWarning</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>From the command line: <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-W</span> <span class="pre">error::spark.recording.RecordingWarning</span> <span class="pre">train.py</span></code>.</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="spark.recording.recorder.Preempted">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.recording.recorder.</span></span><span class="sig-name descname"><span class="pre">Preempted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signum</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Preempted" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#SystemExit" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SystemExit</span></code></a></p>
+<p>Exception raised by <cite>Recorder.probes</cite> after one of the signals the recorder handles.</p>
+<p>The call is not run. A recorder closed on it marks the run <code class="docutils literal notranslate"><span class="pre">'preempted'</span></code>. Uncaught, it
+ends the process with exit code <code class="docutils literal notranslate"><span class="pre">128</span> <span class="pre">+</span> <span class="pre">signal</span></code>. With several processes, it is raised on
+every process at the same call.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>signum</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The signal received.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.recorder.Preempted.signal">
+<span class="sig-name descname"><span class="pre">signal</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Preempted.signal" title="Link to this definition">#</a></dt>
+<dd><p>The signal received.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#spark.recording.recorder.Recorder" title="spark.recording.recorder.Recorder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Recorder</span></code></a></dt><dd><p>Records the measurements asked for and writes them to a run.</p>
+</dd>
+</dl>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Initialize</span></code></p>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">signal</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Preempted.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Preempted.__str__" title="Link to this definition">#</a></dt>
+<dd><p>Return str(self).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spark.recording.recorder.</span></span><span class="sig-name descname"><span class="pre">Recorder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'runs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measurements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experiment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder" title="Link to this definition">#</a></dt>
+<dd><p>Records the measurements asked for and writes them to a run.</p>
+<p><cite>record</cite> asks for measurements over the next steps. A trigger, when the measurements have
+one, also asks for steps on its own. With the default trigger, <cite>Manual</cite>, measurements are
+recorded only when asked. Host values are written with <cite>log</cite>, <cite>event</cite>, <cite>tag</cite> and <cite>raw</cite>.</p>
+<p>The recorder works one call of the model at a time. While it is open, every call of a
+<cite>spark.jit</cite> function running a <cite>spark.scan</cite> is a call of the recorder: before the call, the
+recorder decides what it records, <cite>spark.scan</cite> records it, and the records are handed over
+after the call. <cite>spark.jit</cite> and <cite>Runner</cite> follow the same steps: before a call, <cite>probes</cite>
+returns the probes of the measurements recorded for it, and <cite>start</cite> where the call starts.
+After the call, <cite>push</cite> takes its records, with as many steps as <cite>probes</cite> was given. Their
+transfers start at once, and a writer thread completes the records and writes them.</p>
+<p>Records are placed on the steps of the run. Groups and strides do not depend on how the
+steps are split into calls. The recorder decides at the start of each call what it records,
+and records the call whole.</p>
+<p>The calls of a thread go to the last recorder it opened among those still open. A recorder
+opened within a run, such as one for an evaluation, takes the calls until it closes. Runs
+trained in threads of one process are recorded apart, each by the recorder its thread
+opened. A thread that opened no recorder uses the recorder open in the process, when only
+one is open, and raises at its first call when several are.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>root</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><em>path-like</em><em>, </em><em>default 'runs'</em>) – Directory holding the runs. The run gets its own directory inside, see <cite>path</cite>.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="../../core/config/index.html#spark.core.config.SparkConfig" title="spark.core.config.SparkConfig"><em>SparkConfig</em></a><em> or </em><a class="reference internal" href="../../nn/controllers/base/index.html#spark.nn.controllers.base.Controller" title="spark.nn.controllers.base.Controller"><em>Controller</em></a><em>, </em><em>optional</em>) – The configuration of the model recorded, written to the run. A built model can be given
+in its place: its configuration is written, and the probes are checked against it.</p></li>
+<li><p><strong>measurements</strong> (<em>sequence</em><em> of </em><a class="reference internal" href="../index.html#spark.recording.Measurements" title="spark.recording.Measurements"><em>Measurements</em></a><em>, </em><em>optional</em>) – What can be recorded. Defaults to <cite>presets.default</cite> for a model given as <code class="docutils literal notranslate"><span class="pre">config</span></code>,
+recorded by triggers.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the run, part of its directory name. Defaults to the class name of the model,
+or <code class="docutils literal notranslate"><span class="pre">'run'</span></code> without <code class="docutils literal notranslate"><span class="pre">config</span></code>.</p></li>
+<li><p><strong>experiment</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the experiment the run belongs to, such as one configuration trained with
+several seeds. Written to <code class="docutils literal notranslate"><span class="pre">run.json</span></code>, and read as <cite>Run.experiment</cite>. The run viewer
+draws the runs of one experiment as a whole.</p></li>
+<li><p><strong>run_id</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the directory of the run, in place of <code class="docutils literal notranslate"><span class="pre">&lt;date&gt;-&lt;time&gt;_&lt;name&gt;_&lt;id&gt;</span></code>. A job
+restarted by its scheduler finds its run again with it, see <cite>resume</cite>.</p></li>
+<li><p><strong>hparams</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>, </em><em>optional</em>) – Parameters of the experiment, written to <code class="docutils literal notranslate"><span class="pre">hparams.json</span></code>.</p></li>
+<li><p><strong>source</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><em>path-like</em><em>, </em><em>optional</em>) – File the model configuration was read from. Its metadata, such as the node positions of
+the editor, is written with the configuration of the run.</p></li>
+<li><p><strong>queue_size</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>default 64</em>) – Items waiting to be written, such as the records of a call or a host value, past which
+calls block.</p></li>
+<li><p><strong>queue_bytes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>default 1 GiB</em>) – Bytes of records and raw frames waiting to be written, past which calls block.</p></li>
+<li><p><strong>flush_steps</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Recorded steps after which a file of a set of measurements is written. By default, files
+are written by time and size alone.</p></li>
+<li><p><strong>flush_seconds</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>default 60.0</em>) – Seconds after which an open file is written.</p></li>
+<li><p><strong>flush_bytes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>default 256 MiB</em>) – Host memory, in bytes, of the records and raw frames of an open file, past which it is
+written.</p></li>
+<li><p><strong>heartbeat</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>default 5.0</em>) – Seconds between updates of <code class="docutils literal notranslate"><span class="pre">run.json</span></code> while the run is open.</p></li>
+<li><p><strong>on_error</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>default 'raise'</em>) – What follows a failure of the writer, as on a full disk. With <code class="docutils literal notranslate"><span class="pre">'raise'</span></code>, the next call
+to the recorder raises RuntimeError, and the run stops. With <code class="docutils literal notranslate"><span class="pre">'continue'</span></code>, it warns
+once and training goes on without recording. Mistakes in what the loop hands over are
+not failures of the writer: they give a <cite>RecordingWarning</cite> either way.</p></li>
+<li><p><strong>signals</strong> (<em>sequence</em><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Signals after which <cite>probes</cite> raises <cite>Preempted</cite> before the next call, such as the
+SIGTERM a cluster scheduler sends before it stops a job. The run is then closed as
+<code class="docutils literal notranslate"><span class="pre">'preempted'</span></code>.</p></li>
+<li><p><strong>options</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.path">
+<span class="sig-name descname"><span class="pre">path</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.path" title="Link to this definition">#</a></dt>
+<dd><p>Directory of the run.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)">pathlib.Path</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.measurements">
+<span class="sig-name descname"><span class="pre">measurements</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.measurements" title="Link to this definition">#</a></dt>
+<dd><p>The measurements that can be recorded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a> of <a class="reference internal" href="../index.html#spark.recording.Measurements" title="spark.recording.Measurements">Measurements</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.step">
+<span class="sig-name descname"><span class="pre">step</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.step" title="Link to this definition">#</a></dt>
+<dd><p>Current step of the run, advanced by <cite>push</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.tags">
+<span class="sig-name descname"><span class="pre">tags</span></span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.tags" title="Link to this definition">#</a></dt>
+<dd><p>The last value of every tag.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – When <code class="docutils literal notranslate"><span class="pre">measurements</span></code> is not given and <code class="docutils literal notranslate"><span class="pre">config</span></code> is not a model, when an option is
+invalid, or when two measurements share a name or disagree on a probe they share.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#FileExistsError" title="(in Python v3.15)"><strong>FileExistsError</strong></a> – When the directory of <code class="docutils literal notranslate"><span class="pre">run_id</span></code> exists.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><strong>RuntimeError</strong></a> – With several processes, when <code class="docutils literal notranslate"><span class="pre">jax.distributed</span></code> is not initialized, or when a process
+fails to open the run or to create its recorder within <cite>SETTINGS.open_timeout</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>root</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="../../core/config/index.html#spark.core.config.SparkConfig" title="spark.core.config.SparkConfig"><em>spark.core.config.SparkConfig</em></a><em> | </em><a class="reference internal" href="../../nn/controllers/base/index.html#spark.nn.controllers.base.Controller" title="spark.nn.controllers.base.Controller"><em>spark.nn.controllers.base.Controller</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>measurements</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="../measurements/index.html#spark.recording.measurements.Measurements" title="spark.recording.measurements.Measurements"><em>spark.recording.measurements.Measurements</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>experiment</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>run_id</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>hparams</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>source</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>options</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>A run directory holds:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">run.json</span></code>, the identity, environment, status and progress of the run.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model.scfg</span></code> and <code class="docutils literal notranslate"><span class="pre">hparams.json</span></code>, the configuration of the model and the parameters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">recorder.json</span></code>, the measurements.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index.sqlite</span></code>, the scalars, events, tags, spans and groups recorded, windows, requests
+and progress.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">run.lock</span></code>, held by the recorder writing the run.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">requests/</span></code>, the requests not read yet.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">windows/&lt;measurements&gt;/&lt;number&gt;.npz</span></code>, the window files.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">checkpoints/&lt;step&gt;.spark</span></code>, the checkpoints written by <cite>checkpoint</cite>.</p></li>
+</ul>
+<p>A window file holds what one set of measurements recorded over some time: the rows of its
+traces and rasters, one per step kept; its summaries, snapshots and deltas, one row per
+group of steps; and the raw frames kept meanwhile. An open
+file is written <code class="docutils literal notranslate"><span class="pre">flush_seconds</span></code> after it is opened, or once it holds <code class="docutils literal notranslate"><span class="pre">flush_bytes</span></code>
+bytes. With <code class="docutils literal notranslate"><span class="pre">flush_steps</span></code>, a file holding that many steps is written when the next call of
+its measurements arrives.</p>
+<p>Files are written to a temporary name, flushed to disk and renamed. After a crash, each file is
+complete or absent. The index is committed about once a second (<cite>SETTINGS.commit_every</cite>) and
+when a window is written.</p>
+<p>A group of steps (<cite>Measurements.group</cite>) is written once it ends. A group of a number of
+steps ends with its last step, and a group by tag when the tag takes a different value. The
+group in progress when the recorder closes is written cut short. A group whose steps were
+not all recorded, as when the measurements were recorded from the middle of it, is written
+with the steps it covers.</p>
+<p>While the queue of the writer is full, in items or in bytes, calls to the recorder block
+until the writer catches up. The waits are counted in <code class="docutils literal notranslate"><span class="pre">run.json</span></code> as <code class="docutils literal notranslate"><span class="pre">stalls</span></code>. Records
+waiting to be written hold device memory. A single item larger than <code class="docutils literal notranslate"><span class="pre">queue_bytes</span></code> is let
+through when nothing else waits. After a failure of the writer, the open windows are written
+if they can be, and the run is marked <code class="docutils literal notranslate"><span class="pre">'failed'</span></code>.</p>
+<p>What stops a run, and what does not. A failure of the writer, such as a full disk or a
+quota, stops the run with <code class="docutils literal notranslate"><span class="pre">on_error='raise'</span></code>, the default: the next call to the recorder
+raises RuntimeError. A mistake in what the loop hands over never stops it: a frame of a raw
+stream no measurements declare, or of another shape than the first, measurements named
+without existing, a scalar that is not a number, or a declared raw stream recorded without
+a frame. Each gives a <cite>RecordingWarning</cite> once, is written to the run as a <code class="docutils literal notranslate"><span class="pre">warning</span></code> event
+(<cite>Run.warnings</cite>), and what it concerns is dropped. A short run with
+<code class="docutils literal notranslate"><span class="pre">warnings.simplefilter('error',</span> <span class="pre">RecordingWarning)</span></code> raises each where it happens, before a
+long run is started.</p>
+<p>A recorder left open is closed when the interpreter exits, before the thread pools of the
+interpreter stop, and waits for the checkpoints written in the background. The run is marked
+<code class="docutils literal notranslate"><span class="pre">'preempted'</span></code> after one of <code class="docutils literal notranslate"><span class="pre">signals</span></code>, <code class="docutils literal notranslate"><span class="pre">'failed'</span></code> after an uncaught exception, and
+<code class="docutils literal notranslate"><span class="pre">'finished'</span></code> otherwise, <cite>sys.exit</cite> with an error code included. Closed by a <code class="docutils literal notranslate"><span class="pre">with</span></code>
+block, the run is marked <code class="docutils literal notranslate"><span class="pre">'failed'</span></code> after <cite>sys.exit</cite> with an error code too. In a
+notebook, an uncaught exception does not mark the run <code class="docutils literal notranslate"><span class="pre">'failed'</span></code>.</p>
+<p>An interrupt (Ctrl-C) received during a call of a <cite>spark.jit</cite> function is held until the call
+returns its result, and raised by the next call of the recorder from the loop (<cite>probes</cite>,
+<cite>record</cite>, <cite>log</cite>, <cite>event</cite>, <cite>tag</cite> or <cite>raw</cite>), before it does anything. The steps of the run then
+match the state the loop holds. A second interrupt during the call raises at once. A long
+compilation is not held. An interrupt (Ctrl-C) received while the recorder closes is raised
+once what is left is written. A second interrupt stops the wait, and what is not written yet may be lost. A
+process killed by a signal it does not handle, such as the SIGKILL that follows SIGTERM,
+loses the windows being filled and the groups in progress. <cite>resume</cite> marks the spans and
+groups of those windows as lost.</p>
+<p>Measurements can also be recorded from outside the training process, by the run viewer of
+the editor or by <cite>Run.record</cite> from any process or host with access to the run directory. The
+writer thread reads those requests, and the recorder applies them before its next call.</p>
+<p>The handlers of <code class="docutils literal notranslate"><span class="pre">signals</span></code> are installed from the main thread and shared by the open
+recorders. A handler set before is still called, except the one of SIGINT raising
+KeyboardInterrupt. A signal received after the last call, which <cite>probes</cite> never raised, takes
+its usual effect once the run is closed. Without a handler set before, the process then
+ends. In a notebook, the kernel sets the handler of SIGINT again for every cell, and SIGINT
+is handled only in the cell creating the recorder.</p>
+<p>With several JAX processes (<code class="docutils literal notranslate"><span class="pre">jax.distributed</span></code>), the recorder records one model sharded
+across them, and every process runs the same calls. Every process creates the recorder and
+calls it in the same order. Process 0 creates and writes the run, and decides what every
+call records. The other processes receive its decisions through the key-value store of
+<code class="docutils literal notranslate"><span class="pre">jax.distributed</span></code> and write nothing. A recorder created on process 0 alone raises after
+<cite>SETTINGS.open_timeout</cite>.</p>
+<p>Tags, <cite>record</cite>, <cite>When</cite> conditions and requests take effect from process 0. The processes
+stop together. A failure of the writer with <code class="docutils literal notranslate"><span class="pre">on_error='raise'</span></code>, or a signal of <code class="docutils literal notranslate"><span class="pre">signals</span></code>
+received by any process, raises from <cite>probes</cite> on every process at the same call. When the
+preemption service of <code class="docutils literal notranslate"><span class="pre">jax.distributed</span></code> runs, it notes SIGTERM and keeps its handler.
+Other signals are published by the process receiving them. Process 0 reads both from the
+key-value store. Records are replicated on every device, where process 0 reads them. A
+snapshot of a value too large for one device cannot be recorded.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">Measurements</span></code></dt><dd><p>A named set of probes recorded together.</p>
+</dd>
+<dt><a class="reference internal" href="../../index.html#spark.jit" title="spark.jit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spark.jit</span></code></a></dt><dd><p>Compiles a function whose calls the open recorder records.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">Runner</span></code></dt><dd><p>Steps a model and records what its recorder asks for.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">Run</span></code></dt><dd><p>A run read back from its directory.</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@partial</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">jit</span><span class="p">,</span> <span class="n">static_argnames</span><span class="o">=</span><span class="p">[</span><span class="s1">'steps'</span><span class="p">])</span>
+<span class="gp">... </span><span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="o">**</span><span class="n">inputs</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="n">model</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">inputs</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">model</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="n">outputs</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">spark</span><span class="o">.</span><span class="n">scan</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="n">steps</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">episode</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">recording</span><span class="o">.</span><span class="n">Measurements</span><span class="p">(</span><span class="s1">'episode'</span><span class="p">,</span> <span class="n">probes</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s1">'episode'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">brain</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hparams</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'lr'</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">spark</span><span class="o">.</span><span class="n">recording</span><span class="o">.</span><span class="n">Recorder</span><span class="p">(</span><span class="s1">'runs'</span><span class="p">,</span> <span class="n">brain</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="p">[</span><span class="n">episode</span><span class="p">],</span> <span class="n">hparams</span><span class="o">=</span><span class="n">hparams</span><span class="p">)</span> <span class="k">as</span> <span class="n">recorder</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">number</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="n">recorder</span><span class="o">.</span><span class="n">tag</span><span class="p">(</span><span class="n">episode</span><span class="o">=</span><span class="n">number</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">number</span> <span class="o">%</span> <span class="mi">20</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="n">recorder</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="s1">'episode'</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="n">state</span><span class="p">,</span> <span class="n">outputs</span> <span class="o">=</span> <span class="n">run</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="o">**</span><span class="n">inputs</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="n">recorder</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">reward</span><span class="o">=</span><span class="n">reward</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.resume">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">resume</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measurements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.resume" title="Link to this definition">#</a></dt>
+<dd><p>Reopens a run and appends to it.</p>
+<p>The step count continues from the last step written to the run, or from the step of a
+later checkpoint. Window numbers continue after the last window of each set of
+measurements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><em>path-like</em>) – Directory of the run. With several processes, only process 0 reads it.</p></li>
+<li><p><strong>model</strong> (<a class="reference internal" href="../../nn/controllers/base/index.html#spark.nn.controllers.base.Controller" title="spark.nn.controllers.base.Controller"><em>Controller</em></a><em>, </em><em>optional</em>) – The model recorded. When it is built, the probes are checked against it.</p></li>
+<li><p><strong>measurements</strong> (<em>sequence</em><em> of </em><a class="reference internal" href="../index.html#spark.recording.Measurements" title="spark.recording.Measurements"><em>Measurements</em></a><em>, </em><em>optional</em>) – What can be recorded. Defaults to the measurements the run was last opened with.</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Step to continue from, such as the step of the checkpoint the model was restored
+from. The last step written by default.</p></li>
+<li><p><strong>**options</strong> – The options of <cite>Recorder</cite>: <code class="docutils literal notranslate"><span class="pre">queue_size</span></code>, <code class="docutils literal notranslate"><span class="pre">queue_bytes</span></code>, <code class="docutils literal notranslate"><span class="pre">flush_steps</span></code>,
+<code class="docutils literal notranslate"><span class="pre">flush_seconds</span></code>, <code class="docutils literal notranslate"><span class="pre">flush_bytes</span></code>, <code class="docutils literal notranslate"><span class="pre">heartbeat</span></code>, <code class="docutils literal notranslate"><span class="pre">on_error</span></code> and <code class="docutils literal notranslate"><span class="pre">signals</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The recorder writing the run.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#spark.recording.recorder.Recorder" title="spark.recording.recorder.Recorder">Recorder</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – When <code class="docutils literal notranslate"><span class="pre">step</span></code> is not a non-negative integer, or an option is invalid.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#PermissionError" title="(in Python v3.15)"><strong>PermissionError</strong></a> – When the run directory cannot be written.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><strong>RuntimeError</strong></a> – When another recorder is writing the run.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The spans and groups listed for a window that was never written are marked lost, with
+window -1. A window file written but not listed is listed. Requests left pending expire,
+and files left half written are removed.</p>
+<p>The condition of a <cite>When</cite> trigger is code and is not written to the run. Without
+<code class="docutils literal notranslate"><span class="pre">measurements</span></code>, such measurements come back with a <cite>Manual</cite> trigger, with a warning.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">step</span></code>, the records written after it are kept, and the steps after it are
+recorded twice. The tags take the values they had at <code class="docutils literal notranslate"><span class="pre">step</span></code>. A group holding <code class="docutils literal notranslate"><span class="pre">step</span></code>
+starts again there, and is written twice too.</p>
+<p>A lock left by the file system of a node that failed is released by removing
+<code class="docutils literal notranslate"><span class="pre">run.lock</span></code>, once no process writes the run.</p>
+<p class="rubric">Examples</p>
+<p>A job that its scheduler may restart:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">run</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="s1">'runs'</span><span class="p">)</span> <span class="o">/</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">'SLURM_JOB_ID'</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">step</span> <span class="o">=</span> <span class="kc">None</span>                     <span class="c1"># the step of the last checkpoint, 0 without one</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="p">(</span><span class="n">run</span> <span class="o">/</span> <span class="s1">'run.json'</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="n">step</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">recording</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">run</span><span class="p">)</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">(),</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">jax</span><span class="o">.</span><span class="n">process_count</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>     <span class="c1"># every process goes on as process 0 does</span>
+<span class="gp">... </span>    <span class="n">found</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">step</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">multihost_utils</span><span class="o">.</span><span class="n">broadcast_one_to_all</span><span class="p">(</span><span class="n">found</span><span class="p">))</span>
+<span class="gp">... </span>    <span class="n">step</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">step</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">step</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">brain</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">recorder</span> <span class="o">=</span> <span class="n">Recorder</span><span class="p">(</span><span class="s1">'runs'</span><span class="p">,</span> <span class="n">brain</span><span class="p">,</span> <span class="n">run_id</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">'SLURM_JOB_ID'</span><span class="p">])</span>
+<span class="gp">... </span><span class="k">else</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">saved</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">recording</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">saved</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">():</span>
+<span class="gp">... </span>        <span class="n">brain</span> <span class="o">=</span> <span class="n">saved</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">else</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">brain</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">saved</span><span class="o">.</span><span class="n">config</span><span class="p">())</span>
+<span class="gp">... </span>    <span class="n">recorder</span> <span class="o">=</span> <span class="n">Recorder</span><span class="o">.</span><span class="n">resume</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="n">brain</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">build</span></code> builds a model from a configuration and calls it once with example inputs. The
+model is restored from the last checkpoint, if any, and built from the configuration of
+the run otherwise. The recording goes on from the step of that checkpoint, or from the
+start without one.</p>
+<p>With several processes, one process may see the files of the run a moment before
+another. Every process takes the decision of process 0. <code class="docutils literal notranslate"><span class="pre">multihost_utils</span></code> is
+<code class="docutils literal notranslate"><span class="pre">jax.experimental.multihost_utils</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.probes">
+<span class="sig-name descname"><span class="pre">probes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.probes" title="Link to this definition">#</a></dt>
+<dd><p>Returns the probes of the measurements recorded for the next call of the model.</p>
+<p>The same tuple object is returned for the same set of recorded measurements. Pass it as
+a static keyword argument, <code class="docutils literal notranslate"><span class="pre">()</span></code> included, with <cite>start</cite>. Measurements with a
+<code class="docutils literal notranslate"><span class="pre">lookback</span></code> are captured on every call.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Steps of the next call. A trigger counting steps records the call when any of its
+steps is recorded. Without <code class="docutils literal notranslate"><span class="pre">steps</span></code>, it records the call when its first step is.
+When given, <cite>push</cite> must receive the same steps.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Probes to run in the call. Empty when nothing is recorded or captured.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a> of <a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe">Probe</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#spark.recording.recorder.Preempted" title="spark.recording.recorder.Preempted"><strong>Preempted</strong></a> – When one of the signals of the recorder was received. The call is not run.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><strong>RuntimeError</strong></a> – When the recorder is closed, or its writer failed with <code class="docutils literal notranslate"><span class="pre">on_error='raise'</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>With one process, a second call before <cite>push</cite> warns, and the call the first one recorded
+is not recorded. With several processes, every process calls it for every call. Process
+0 decides what the call records, and the other processes receive the decision.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.start" title="Link to this definition">#</a></dt>
+<dd><p>Returns where the next call starts on the steps of the run, for the recorded scan.</p>
+<p>Called after <cite>probes</cite>. The result holds the current step modulo the group sizes and strides
+of <code class="docutils literal notranslate"><span class="pre">probes</span></code>. The recorded scan aligns its groups and strides on the steps of the run with
+it, however the steps are split into calls. The result also tells whether the call crosses
+the end of a group, from the steps given to <cite>probes</cite>. Without them, the call may cross one.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>probes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><em>tuple</em></a><em> of </em><a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe"><em>Probe</em></a>) – The probes <cite>probes</cite> returned for the call.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Phases of the current step, and whether the call may cross the end of a group.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../reduce/index.html#spark.recording.reduce.Start" title="spark.recording.reduce.Start">Start</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">probes</span> <span class="o">=</span> <span class="n">recorder</span><span class="o">.</span><span class="n">probes</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">start</span> <span class="o">=</span> <span class="n">recorder</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">probes</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">outputs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">records</span> <span class="o">=</span> <span class="n">call</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">probes</span><span class="o">=</span><span class="n">probes</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">recorder</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.record">
+<span class="sig-name descname"><span class="pre">record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.record" title="Link to this definition">#</a></dt>
+<dd><p>Records the measurements <code class="docutils literal notranslate"><span class="pre">name</span></code> for the next <code class="docutils literal notranslate"><span class="pre">steps</span></code> steps.</p>
+<p>The steps count from the current step. Measurements with any trigger can be recorded
+this way. Every call of the model holding one of those steps is recorded whole.
+Measurements with a group are recorded to the end of every group holding one of those
+steps, with one record per group. Called again before those steps end, the recording
+lasts until the later end.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Name of the measurements.</p></li>
+<li><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>default 1</em>) – Steps to record them for.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Warns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RecordingWarning</strong> – When there are no measurements <code class="docutils literal notranslate"><span class="pre">name</span></code>, or <code class="docutils literal notranslate"><span class="pre">steps</span></code> is not a positive integer.
+Nothing is recorded.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>With several processes, only the calls on process 0 take effect.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">recorder</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="s1">'activity'</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>  <span class="c1"># the next 500 steps</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">recorder</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="s1">'episode'</span><span class="p">)</span>        <span class="c1"># grouped by a tag: to the end of the episode</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.push">
+<span class="sig-name descname"><span class="pre">push</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">records</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.push" title="Link to this definition">#</a></dt>
+<dd><p>Hands over the records of the call just dispatched and advances the step count.</p>
+<p>Call it after every call of the model, recorded or not. The transfers of <code class="docutils literal notranslate"><span class="pre">records</span></code>
+start at once, and it returns without waiting for them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>records</strong> (<a class="reference internal" href="../index.html#spark.recording.Packed" title="spark.recording.Packed"><em>Packed</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a>) – The records the call returned. <cite>Packed</cite>, or an empty dictionary when nothing was
+recorded.</p></li>
+<li><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – Steps of the call. The steps given to <cite>probes</cite>, if any.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.15)"><strong>TypeError</strong></a> – When <code class="docutils literal notranslate"><span class="pre">records</span></code> is neither <cite>Packed</cite> nor empty.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – When <code class="docutils literal notranslate"><span class="pre">steps</span></code> is not a positive integer or differs from the steps given to
+<cite>probes</cite>, or when <code class="docutils literal notranslate"><span class="pre">records</span></code> does not match the probes <cite>probes</cite> returned for the
+call.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><strong>RuntimeError</strong></a> – When the recorder is closed, or its writer failed with <code class="docutils literal notranslate"><span class="pre">on_error='raise'</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Blocks while the queue of the writer is full. The step count advances even when handing
+the records over is interrupted. With several processes, only process 0 hands records to
+the writer.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.warmup_sets">
+<span class="sig-name descname"><span class="pre">warmup_sets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.warmup_sets" title="Link to this definition">#</a></dt>
+<dd><p>Returns the probe sets <cite>spark.Jit.warmup</cite> and <cite>Runner.warmup</cite> compile.</p>
+<p>The sets are those the triggers counting steps record over the next <cite>SETTINGS.warmup_calls</cite>
+calls of <code class="docutils literal notranslate"><span class="pre">steps</span></code> steps. Measurements grouped by steps stay recorded until their group
+ends. The measurements recorded otherwise are added to each set. These are the measurements
+recorded by <cite>record</cite>, requests, conditions or triggers counting a tag, and those grouped by
+a tag. The set of all measurements, which needs the most memory, is included. Measurements
+with a <code class="docutils literal notranslate"><span class="pre">lookback</span></code> are captured in every set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Steps of every call. Without it, all measurements count as recorded otherwise.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The distinct probe sets, each the tuple <cite>probes</cite> returns for it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a> of <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a> of <a class="reference internal" href="../index.html#spark.recording.Probe" title="spark.recording.Probe">Probe</a></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The triggers counting steps are simulated over one period of their combined pattern. The
+simulation starts from the current step, from the offsets of <cite>Every</cite>, and from the steps
+where <cite>At</cite> and <cite>Between</cite> start and stop. When the measurements recorded otherwise make more
+than <cite>SETTINGS.warmup_subsets</cite> sets, each is added alone and all together, instead of in
+every combination.</p>
+<p>Measurements with a schedule of their own that <cite>record</cite> records as well, as from the
+viewer, can record a set not compiled ahead. That set compiles when it first occurs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">scalars</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.log" title="Link to this definition">#</a></dt>
+<dd><p>Writes scalars held on the host, at the current step or at <code class="docutils literal notranslate"><span class="pre">step</span></code>.</p>
+<p>A series is logged per step, or per the integer tag <code class="docutils literal notranslate"><span class="pre">tag</span></code>, such as once per episode.
+Its tag is written with its name once, read by <cite>Run.tag_of</cite>; the run viewer draws the
+series against the values of the tag. Scalars logged per a tag are written at the step
+the tag took its value, where the summaries grouped by the tag are, unless <code class="docutils literal notranslate"><span class="pre">step</span></code> is
+given.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>values</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em> of </em><em>str to float</em><em>, </em><em>optional</em>) – Scalars by name.</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Step of the scalars. The current step by default, or the step the tag <code class="docutils literal notranslate"><span class="pre">tag</span></code> took
+its value.</p></li>
+<li><p><strong>tag</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the integer tag, set with <cite>tag</cite>, the scalars are logged per. Per step
+without one.</p></li>
+<li><p><strong>**scalars</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – Scalars by name, added to <code class="docutils literal notranslate"><span class="pre">values</span></code>. Scalars named <code class="docutils literal notranslate"><span class="pre">step</span></code> or <code class="docutils literal notranslate"><span class="pre">tag</span></code> are given in
+<code class="docutils literal notranslate"><span class="pre">values</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><strong>RuntimeError</strong></a> – When the recorder is closed, or its writer failed with <code class="docutils literal notranslate"><span class="pre">on_error='raise'</span></code>.</p>
+</dd>
+<dt class="field-odd">Warns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RecordingWarning</strong> – When a name is not a non-empty string, or a value is not a number. That value is
+dropped. When <code class="docutils literal notranslate"><span class="pre">tag</span></code> is not a name, or is <code class="docutils literal notranslate"><span class="pre">'step'</span></code>: the scalars are logged per
+step. When <code class="docutils literal notranslate"><span class="pre">tag</span></code> is not set to an integer yet: the rows logged before it is have
+no value of it. When a series is logged per another tag than before: it keeps the
+first.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">recorder</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">reward</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">episode_steps</span><span class="o">=</span><span class="mi">212</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">recorder</span><span class="o">.</span><span class="n">log</span><span class="p">({</span><span class="s1">'episode/steps'</span><span class="p">:</span> <span class="mi">212</span><span class="p">},</span> <span class="n">tag</span><span class="o">=</span><span class="s1">'episode'</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.event">
+<span class="sig-name descname"><span class="pre">event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">payload</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.event" title="Link to this definition">#</a></dt>
+<dd><p>Writes an event, such as the end of an episode, with a JSON payload.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kind</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Kind of the event.</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Step of the event. The current step by default.</p></li>
+<li><p><strong>**payload</strong> – Payload of the event, written as JSON. It takes no key of <cite>RESERVED_EVENT_KEYS</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><strong>RuntimeError</strong></a> – When the recorder is closed, or its writer failed with <code class="docutils literal notranslate"><span class="pre">on_error='raise'</span></code>.</p>
+</dd>
+<dt class="field-odd">Warns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RecordingWarning</strong> – When the payload holds a key of <cite>RESERVED_EVENT_KEYS</cite>. The key is dropped.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.tag">
+<span class="sig-name descname"><span class="pre">tag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">tags</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.tag" title="Link to this definition">#</a></dt>
+<dd><p>Sets tags on the timeline, such as <code class="docutils literal notranslate"><span class="pre">episode=3</span></code>.</p>
+<p>The tags are written at the current step. Integer tags can be counted by triggers.
+Measurements grouped by a tag, as <code class="docutils literal notranslate"><span class="pre">group='episode'</span></code>, start a new group of steps each
+time the tag takes a different value. An integer held in a NumPy or JAX array without
+dimensions is read as an int.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**tags</strong> (<em>Any</em>) – Values by tag name.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><strong>RuntimeError</strong></a> – When the recorder is closed, or its writer failed with <code class="docutils literal notranslate"><span class="pre">on_error='raise'</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.raw">
+<span class="sig-name descname"><span class="pre">raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.raw" title="Link to this definition">#</a></dt>
+<dd><p>Keeps a frame of a raw stream when measurements declaring the stream are recorded.</p>
+<p>The frame is copied and kept when measurements declaring <code class="docutils literal notranslate"><span class="pre">name</span></code> are recorded for the
+call starting at the current step. That call is the one being run between <cite>probes</cite> and
+<cite>push</cite>, or else the next one. When none are recorded, nothing is kept. It can be called
+on every step of an environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Name of the raw stream, as declared by <cite>Measurements</cite>.</p></li>
+<li><p><strong>frame</strong> (<em>array-like</em>) – Array of numbers or bools, such as an observation.</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Step of the frame. The current step by default.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><strong>RuntimeError</strong></a> – When a frame is kept after the recorder closed, or after its writer failed with
+<code class="docutils literal notranslate"><span class="pre">on_error='raise'</span></code>.</p>
+</dd>
+<dt class="field-odd">Warns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RecordingWarning</strong> – When no measurements declare <code class="docutils literal notranslate"><span class="pre">name</span></code>, when <code class="docutils literal notranslate"><span class="pre">frame</span></code> holds no numbers or bools, or
+when it differs in shape or dtype from the first frame of <code class="docutils literal notranslate"><span class="pre">name</span></code>. The frame is
+dropped.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>With several processes, only process 0 keeps frames.</p>
+<p>Measurements declaring <code class="docutils literal notranslate"><span class="pre">name</span></code> that are recorded over a group, or over calls one after
+the other, without a frame of it also give a <cite>RecordingWarning</cite>, from the next call of
+the model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.is_recording">
+<span class="sig-name descname"><span class="pre">is_recording</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.is_recording" title="Link to this definition">#</a></dt>
+<dd><p>Returns whether the measurements <code class="docutils literal notranslate"><span class="pre">name</span></code> are recorded for the call at the current step.</p>
+<p>That call is the one being run between <cite>probes</cite> and <cite>push</cite>, or else the next one, as for
+<cite>raw</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Name of the measurements.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)">bool</a></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>With several processes, processes other than process 0 know it between <cite>probes</cite> and
+<cite>push</cite> only.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Warns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RecordingWarning</strong> – When there are no measurements <code class="docutils literal notranslate"><span class="pre">name</span></code>. Returns False.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.checkpoint">
+<span class="sig-name descname"><span class="pre">checkpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.checkpoint" title="Link to this definition">#</a></dt>
+<dd><p>Saves a model to <code class="docutils literal notranslate"><span class="pre">checkpoints/&lt;step&gt;.spark</span></code> in the run, with <cite>Controller.checkpoint</cite>.</p>
+<p>The state of the model is copied to the host before it returns, and the file is written
+in the background. A <code class="docutils literal notranslate"><span class="pre">checkpoint</span></code> event is written when the save starts.
+<cite>Run.checkpoints</cite> lists the checkpoints written completely, and <cite>Run.restore</cite> reads them
+back.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="../../nn/controllers/base/index.html#spark.nn.controllers.base.Controller" title="spark.nn.controllers.base.Controller"><em>Controller</em></a>) – The model, such as <code class="docutils literal notranslate"><span class="pre">spark.merge(graph,</span> <span class="pre">state)</span></code> in a loop over its state.</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Step the checkpoint is filed under. The current step by default.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>File of the checkpoint.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)">pathlib.Path</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><strong>RuntimeError</strong></a> – When the recorder is closed, its writer failed with <code class="docutils literal notranslate"><span class="pre">on_error='raise'</span></code>, or the
+previous checkpoint could not be written.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>A save first waits for the previous one to be written, and <cite>close</cite> waits for the last
+one. A checkpoint at the same step is replaced. With several processes, every process
+calls it, the state is gathered on each of them, and process 0 writes it.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">recorder</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.flush">
+<span class="sig-name descname"><span class="pre">flush</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.flush" title="Link to this definition">#</a></dt>
+<dd><p>Writes everything handed over so far and waits until it is written.</p>
+<p>The open windows are written as they stand. Each call ends the current file of every set
+of measurements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><strong>RuntimeError</strong></a> – When the recorder is closed, or its writer failed with <code class="docutils literal notranslate"><span class="pre">on_error='raise'</span></code>.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>With several processes, it returns at once on processes other than process 0.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'finished'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.close" title="Link to this definition">#</a></dt>
+<dd><p>Writes what is left, marks the run with <code class="docutils literal notranslate"><span class="pre">status</span></code> and releases it.</p>
+<p>The groups in progress are written cut short, and the last checkpoint is waited for. A
+recorder that received one of its signals marks the run <code class="docutils literal notranslate"><span class="pre">'preempted'</span></code> in place of
+<code class="docutils literal notranslate"><span class="pre">'finished'</span></code>. Does nothing when closed already.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>status</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>default 'finished'</em>) – Status written to <code class="docutils literal notranslate"><span class="pre">run.json</span></code>.</p></li>
+<li><p><strong>error</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Error written to <code class="docutils literal notranslate"><span class="pre">run.json</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><strong>RuntimeError</strong></a> – When the writer failed, with <code class="docutils literal notranslate"><span class="pre">on_error='raise'</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>An interrupt (Ctrl-C) received while the writer writes what is left is raised once it is
+done. A second interrupt stops the wait. An interrupt <cite>spark.jit</cite> held during the last call
+is dropped: the loop it would have stopped is over.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.__enter__">
+<span class="sig-name descname"><span class="pre">__enter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.__enter__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#spark.recording.recorder.Recorder" title="spark.recording.recorder.Recorder">Recorder</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.__exit__">
+<span class="sig-name descname"><span class="pre">__exit__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traceback</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.__exit__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spark.recording.recorder.Recorder.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Nogarx/Spark/blob/main/spark/recording/recorder.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spark.recording.recorder.Recorder.__repr__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../probe_targets/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">spark.recording.probe_targets</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../records/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">spark.recording.records</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exceptions">Exceptions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.PREEMPTION_NOTICE"><code class="docutils literal notranslate"><span class="pre">PREEMPTION_NOTICE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.RESERVED_EVENT_KEYS"><code class="docutils literal notranslate"><span class="pre">RESERVED_EVENT_KEYS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.ON_ERROR"><code class="docutils literal notranslate"><span class="pre">ON_ERROR</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.TRANSIENT_ERRORS"><code class="docutils literal notranslate"><span class="pre">TRANSIENT_ERRORS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.RecordingWarning"><code class="docutils literal notranslate"><span class="pre">RecordingWarning</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Preempted"><code class="docutils literal notranslate"><span class="pre">Preempted</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Preempted.signal"><code class="docutils literal notranslate"><span class="pre">Preempted.signal</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">Preempted.signal</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Preempted.__str__"><code class="docutils literal notranslate"><span class="pre">Preempted.__str__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder"><code class="docutils literal notranslate"><span class="pre">Recorder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.path"><code class="docutils literal notranslate"><span class="pre">Recorder.path</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.measurements"><code class="docutils literal notranslate"><span class="pre">Recorder.measurements</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.step"><code class="docutils literal notranslate"><span class="pre">Recorder.step</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.tags"><code class="docutils literal notranslate"><span class="pre">Recorder.tags</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.resume"><code class="docutils literal notranslate"><span class="pre">Recorder.resume()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.probes"><code class="docutils literal notranslate"><span class="pre">Recorder.probes()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.start"><code class="docutils literal notranslate"><span class="pre">Recorder.start()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.record"><code class="docutils literal notranslate"><span class="pre">Recorder.record()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.push"><code class="docutils literal notranslate"><span class="pre">Recorder.push()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.warmup_sets"><code class="docutils literal notranslate"><span class="pre">Recorder.warmup_sets()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.log"><code class="docutils literal notranslate"><span class="pre">Recorder.log()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.event"><code class="docutils literal notranslate"><span class="pre">Recorder.event()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.tag"><code class="docutils literal notranslate"><span class="pre">Recorder.tag()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.raw"><code class="docutils literal notranslate"><span class="pre">Recorder.raw()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.is_recording"><code class="docutils literal notranslate"><span class="pre">Recorder.is_recording()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.checkpoint"><code class="docutils literal notranslate"><span class="pre">Recorder.checkpoint()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.flush"><code class="docutils literal notranslate"><span class="pre">Recorder.flush()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.close"><code class="docutils literal notranslate"><span class="pre">Recorder.close()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.__enter__"><code class="docutils literal notranslate"><span class="pre">Recorder.__enter__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.__exit__"><code class="docutils literal notranslate"><span class="pre">Recorder.__exit__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spark.recording.recorder.Recorder.__repr__"><code class="docutils literal notranslate"><span class="pre">Recorder.__repr__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

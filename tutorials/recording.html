@@ -1,0 +1,1624 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial #7: Recording &#8212; Spark  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=30646c52"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/recording';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../_static/spark_favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tutorial #8: Sharding" href="sharding.html" />
+    <link rel="prev" title="Tutorial #6: Solving the CartPole™" href="cartpole.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/spark_250px.png" class="logo__image only-light" alt="Spark  documentation - Home"/>
+    <img src="../_static/spark_250px.png" class="logo__image only-dark pst-js-only" alt="Spark  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="modules_components.html">Tutorial #1: Modules and Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="execution.html">Tutorial #2: Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="neurons.html">Tutorial #3: Neurons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brains.html">Tutorial #4: Brains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph_editor.html">Tutorial #5: Graph Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cartpole.html">Tutorial #6: Solving the CartPole™</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Tutorial #7: Recording</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sharding.html">Tutorial #8: Sharding</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../autoapi/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../autoapi/spark/index.html">spark</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/core/index.html">spark.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/addresses/index.html">spark.core.addresses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/backend/index.html">spark.core.backend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/cache/index.html">spark.core.cache</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/checkpoint/index.html">spark.core.checkpoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/config/index.html">spark.core.config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/config_validation/index.html">spark.core.config_validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/decorators/index.html">spark.core.decorators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/module/index.html">spark.core.module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/payloads/index.html">spark.core.payloads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/recording_hooks/index.html">spark.core.recording_hooks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/registry/index.html">spark.core.registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/serializer/index.html">spark.core.serializer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/signature_parser/index.html">spark.core.signature_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/specs/index.html">spark.core.specs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/tracers/index.html">spark.core.tracers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/utils/index.html">spark.core.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/core/validation/index.html">spark.core.validation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/graph_editor/index.html">spark.graph_editor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/commands/index.html">spark.graph_editor.commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/editor/index.html">spark.graph_editor.editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/models/index.html">spark.graph_editor.models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/runs/index.html">spark.graph_editor.runs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/styles/index.html">spark.graph_editor.styles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/view/index.html">spark.graph_editor.view</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/graph_editor/widgets/index.html">spark.graph_editor.widgets</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/nn/index.html">spark.nn</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/components/index.html">spark.nn.components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/controllers/index.html">spark.nn.controllers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/initializers/index.html">spark.nn.initializers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/interfaces/index.html">spark.nn.interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/nn/neurons/index.html">spark.nn.neurons</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../autoapi/spark/recording/index.html">spark.recording</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/calls/index.html">spark.recording.calls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/current/index.html">spark.recording.current</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/measurements/index.html">spark.recording.measurements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/presets/index.html">spark.recording.presets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/probe/index.html">spark.recording.probe</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/probe_context/index.html">spark.recording.probe_context</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/probe_targets/index.html">spark.recording.probe_targets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/recorder/index.html">spark.recording.recorder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/records/index.html">spark.recording.records</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/reduce/index.html">spark.recording.reduce</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/run/index.html">spark.recording.run</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/runner/index.html">spark.recording.runner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/scan/index.html">spark.recording.scan</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/settings/index.html">spark.recording.settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/store/index.html">spark.recording.store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/triggers/index.html">spark.recording.triggers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../autoapi/spark/recording/utils/index.html">spark.recording.utils</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../tutorials.html" class="nav-link">Tutorials</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Tutorial #7: Recording</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/Nogarx/Spark" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/tutorials/recording.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Tutorial #7: Recording</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-header">
+<section id="tutorial-7-recording">
+<h1>Tutorial #7: Recording<a class="headerlink" href="#tutorial-7-recording" title="Link to this heading">#</a></h1>
+</div><link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Back in Tutorial #4 we observed a brain by reading its state after every single step (and we promised ourselves not to do that too often, since GPU-CPU communication is expensive). Then, in Tutorial #6, we trained a brain to balance the CartPole™ and we only looked at how many steps the pole stayed up.</p>
+<p>However, <b><i>Spark</i></b> models learn continuously, and the interesting (and possibily important) questions are rarely about the final score. Ideally, we would like to start asking more complex questions: How often does each population fire? How do the membrane potentials move? How much are the weights changing? What was the network is  <i>seeing</i>?</p>
+<p><b><i>Spark</i></b> tries to answers such questions via the module <b>spark.recording</b>. This module can be used to record (almost) anything from any model while it runs relatively efficiently and without having to pay any cost whatsoever when we do not care about the current state of the cat.</p>
+<p>So, let’s run the CartPole™ once more, but this time let’s record it!</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Imports</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tqdm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">spark</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">spark.recording</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">rec</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>As usual, we start by registering classes and building the brain.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">NEURON_PATH</span> <span class="o">=</span> <span class="s1">'./alif_mod_neuron.scfg'</span>
+<span class="n">BRAIN_PATH</span> <span class="o">=</span> <span class="s1">'./ab_brain.scfg'</span>
+
+<span class="c1"># Register the custom models</span>
+<span class="k">try</span><span class="p">:</span>
+	<span class="n">spark</span><span class="o">.</span><span class="n">register_neuron_from_config_file</span><span class="p">(</span><span class="s1">'ALIFModNeuron'</span><span class="p">,</span> <span class="n">NEURON_PATH</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Oh no: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">!'</span><span class="p">)</span>
+
+<span class="c1"># Load, reseed and build the brain</span>
+<span class="n">brain_config</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BrainConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">BRAIN_PATH</span><span class="p">)</span><span class="o">.</span><span class="n">with_new_seeds</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">brain</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Brain</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">brain_config</span><span class="p">)</span>
+
+<span class="c1"># Build the brain</span>
+<span class="n">f16</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">))</span>
+<span class="n">example_inputs</span> <span class="o">=</span> <span class="p">{</span>
+	<span class="s1">'signal'</span><span class="p">:</span> <span class="n">f16</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">4</span><span class="p">)),</span>
+	<span class="o">**</span><span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">f16</span><span class="p">([</span><span class="mf">0.0</span><span class="p">])</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'mod_a_ex'</span><span class="p">,</span> <span class="s1">'mod_a_in'</span><span class="p">,</span> <span class="s1">'mod_b_ex'</span><span class="p">,</span> <span class="s1">'mod_b_in'</span><span class="p">)},</span>
+	<span class="o">**</span><span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">f16</span><span class="p">([</span><span class="mf">0.0</span><span class="p">])</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'drift_ex'</span><span class="p">,</span> <span class="s1">'drift_in'</span><span class="p">)},</span>
+<span class="p">}</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">brain</span><span class="p">(</span><span class="o">**</span><span class="n">example_inputs</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Next, as some chemist used to said: <i>”Give me a target and I’ll give you the drug.”</i>, In order to record anything, we first need to know what we want to record.</p>
+<p>In <b><i>Spark</i></b> this comes from the very same names used to wire the model. Here, we can either start guessing paths and names or we can simply ask the model using <b>spark.recording.get_probe_targets</b>.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">entries</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">get_probe_targets</span><span class="p">(</span><span class="n">brain</span><span class="p">,</span> <span class="n">example_inputs</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+	<span class="nb">print</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>__call__:drift_ex                                port      (1,)             float16  FloatArray     Brain
+__call__:drift_in                                port      (1,)             float16  FloatArray     Brain
+__call__:mod_a_ex                                port      (1,)             float16  FloatArray     Brain
+__call__:mod_a_in                                port      (1,)             float16  FloatArray     Brain
+__call__:mod_b_ex                                port      (1,)             float16  FloatArray     Brain
+__call__:mod_b_in                                port      (1,)             float16  FloatArray     Brain
+__call__:signal                                  port      (4,)             float16  FloatArray     Brain
+A_excitatory.__call__:drift                      port      (1,)             float16  FloatArray     ALIFModNeuron
+A_excitatory.__call__:modulation                 port      (1,)             float16  FloatArray     ALIFModNeuron
+A_excitatory.__call__:in_spikes                  port      (832,)           bool     SpikeArray     ALIFModNeuron
+A_excitatory.delays:out_spikes                   port      (256, 832)       bool     SpikeArray     N2NDelays
+A_excitatory.drift_trace:output                  port      (1,)             float16  FloatArray     SignalAverage
+A_excitatory.synapses:currents                   port      (256,)           float16  CurrentArray   TracedSynapses
+A_excitatory.reward_trace:output                 port      (1,)             float16  FloatArray     SignalAccumulator
+A_excitatory.soma:spikes                         port      (256,)           bool     SpikeArray     AdaptiveLeakySoma
+A_excitatory.plasticity:kernel                   port      (256, 832)       float16  FloatArray     ModulatedQuadrupletRule
+A_excitatory:out_spikes                          port      (256,)           bool     SpikeArray     ALIFModNeuron
+B_excitatory.__call__:drift                      port      (1,)             float16  FloatArray     ALIFModNeuron
+B_excitatory.__call__:modulation                 port      (1,)             float16  FloatArray     ALIFModNeuron
+B_excitatory.__call__:in_spikes                  port      (832,)           bool     SpikeArray     ALIFModNeuron
+B_excitatory.delays:out_spikes                   port      (256, 832)       bool     SpikeArray     N2NDelays
+B_excitatory.drift_trace:output                  port      (1,)             float16  FloatArray     SignalAverage
+B_excitatory.synapses:currents                   port      (256,)           float16  CurrentArray   TracedSynapses
+B_excitatory.reward_trace:output                 port      (1,)             float16  FloatArray     SignalAccumulator
+B_excitatory.soma:spikes                         port      (256,)           bool     SpikeArray     AdaptiveLeakySoma
+B_excitatory.plasticity:kernel                   port      (256, 832)       float16  FloatArray     ModulatedQuadrupletRule
+B_excitatory:out_spikes                          port      (256,)           bool     SpikeArray     ALIFModNeuron
+A_inhibitory.__call__:drift                      port      (1,)             float16  FloatArray     ALIFModNeuron
+A_inhibitory.__call__:modulation                 port      (1,)             float16  FloatArray     ALIFModNeuron
+A_inhibitory.__call__:in_spikes                  port      (768,)           bool     SpikeArray     ALIFModNeuron
+A_inhibitory.delays:out_spikes                   port      (64, 768)        bool     SpikeArray     N2NDelays
+A_inhibitory.drift_trace:output                  port      (1,)             float16  FloatArray     SignalAverage
+A_inhibitory.synapses:currents                   port      (64,)            float16  CurrentArray   TracedSynapses
+A_inhibitory.reward_trace:output                 port      (1,)             float16  FloatArray     SignalAccumulator
+A_inhibitory.soma:spikes                         port      (64,)            bool     SpikeArray     AdaptiveLeakySoma
+A_inhibitory.plasticity:kernel                   port      (64, 768)        float16  FloatArray     ModulatedQuadrupletRule
+A_inhibitory:out_spikes                          port      (64,)            bool     SpikeArray     ALIFModNeuron
+B_inhibitory.__call__:drift                      port      (1,)             float16  FloatArray     ALIFModNeuron
+B_inhibitory.__call__:modulation                 port      (1,)             float16  FloatArray     ALIFModNeuron
+B_inhibitory.__call__:in_spikes                  port      (768,)           bool     SpikeArray     ALIFModNeuron
+B_inhibitory.delays:out_spikes                   port      (64, 768)        bool     SpikeArray     N2NDelays
+B_inhibitory.drift_trace:output                  port      (1,)             float16  FloatArray     SignalAverage
+B_inhibitory.synapses:currents                   port      (64,)            float16  CurrentArray   TracedSynapses
+B_inhibitory.reward_trace:output                 port      (1,)             float16  FloatArray     SignalAccumulator
+B_inhibitory.soma:spikes                         port      (64,)            bool     SpikeArray     AdaptiveLeakySoma
+B_inhibitory.plasticity:kernel                   port      (64, 768)        float16  FloatArray     ModulatedQuadrupletRule
+B_inhibitory:out_spikes                          port      (64,)            bool     SpikeArray     ALIFModNeuron
+spiker:spikes                                    port      (4, 128)         bool     SpikeArray     TopologicalLinearSpiker
+integrator:signal                                port      (2,)             float16  FloatArray     ExponentialIntegrator
+A_excitatory.inhibition_mask                     attribute (256,)           bool     BooleanMask    ALIFModNeuron
+A_excitatory.delays.kernel                       attribute (256, 832)       uint8    IntegerArray   N2NDelays
+A_excitatory.drift_trace.trace.trace             attribute (1,)             float16  Variable       Tracer
+A_excitatory.plasticity.post_trace.trace         attribute (256, 832)       float16  Variable       Tracer
+A_excitatory.plasticity.pre_trace.trace          attribute (256, 832)       float16  Variable       Tracer
+A_excitatory.reward_trace.trace.trace            attribute (1,)             float16  Variable       Tracer
+A_excitatory.soma.potential                      attribute (256,)           float16  PotentialArray AdaptiveLeakySoma
+A_excitatory.soma.spike_counter                  attribute (256,)           int32    Variable       AdaptiveLeakySoma
+A_excitatory.soma.threshold_trace.trace          attribute (256,)           float16  Variable       Tracer
+A_excitatory.synapses.kernel                     attribute (256, 832)       float16  FloatArray     TracedSynapses
+A_excitatory.synapses.current_tracer.trace       attribute (256, 1)         float16  Variable       Tracer
+A_inhibitory.inhibition_mask                     attribute (64,)            bool     BooleanMask    ALIFModNeuron
+A_inhibitory.delays.kernel                       attribute (64, 768)        uint8    IntegerArray   N2NDelays
+A_inhibitory.drift_trace.trace.trace             attribute (1,)             float16  Variable       Tracer
+A_inhibitory.plasticity.post_trace.trace         attribute (64, 768)        float16  Variable       Tracer
+A_inhibitory.plasticity.pre_trace.trace          attribute (64, 768)        float16  Variable       Tracer
+A_inhibitory.reward_trace.trace.trace            attribute (1,)             float16  Variable       Tracer
+A_inhibitory.soma.potential                      attribute (64,)            float16  PotentialArray AdaptiveLeakySoma
+A_inhibitory.soma.spike_counter                  attribute (64,)            int32    Variable       AdaptiveLeakySoma
+A_inhibitory.soma.threshold_trace.trace          attribute (64,)            float16  Variable       Tracer
+A_inhibitory.synapses.kernel                     attribute (64, 768)        float16  FloatArray     TracedSynapses
+A_inhibitory.synapses.current_tracer.trace       attribute (64, 1)          float16  Variable       Tracer
+B_excitatory.inhibition_mask                     attribute (256,)           bool     BooleanMask    ALIFModNeuron
+B_excitatory.delays.kernel                       attribute (256, 832)       uint8    IntegerArray   N2NDelays
+B_excitatory.drift_trace.trace.trace             attribute (1,)             float16  Variable       Tracer
+B_excitatory.plasticity.post_trace.trace         attribute (256, 832)       float16  Variable       Tracer
+B_excitatory.plasticity.pre_trace.trace          attribute (256, 832)       float16  Variable       Tracer
+B_excitatory.reward_trace.trace.trace            attribute (1,)             float16  Variable       Tracer
+B_excitatory.soma.potential                      attribute (256,)           float16  PotentialArray AdaptiveLeakySoma
+B_excitatory.soma.spike_counter                  attribute (256,)           int32    Variable       AdaptiveLeakySoma
+B_excitatory.soma.threshold_trace.trace          attribute (256,)           float16  Variable       Tracer
+B_excitatory.synapses.kernel                     attribute (256, 832)       float16  FloatArray     TracedSynapses
+B_excitatory.synapses.current_tracer.trace       attribute (256, 1)         float16  Variable       Tracer
+B_inhibitory.inhibition_mask                     attribute (64,)            bool     BooleanMask    ALIFModNeuron
+B_inhibitory.delays.kernel                       attribute (64, 768)        uint8    IntegerArray   N2NDelays
+B_inhibitory.drift_trace.trace.trace             attribute (1,)             float16  Variable       Tracer
+B_inhibitory.plasticity.post_trace.trace         attribute (64, 768)        float16  Variable       Tracer
+B_inhibitory.plasticity.pre_trace.trace          attribute (64, 768)        float16  Variable       Tracer
+B_inhibitory.reward_trace.trace.trace            attribute (1,)             float16  Variable       Tracer
+B_inhibitory.soma.potential                      attribute (64,)            float16  PotentialArray AdaptiveLeakySoma
+B_inhibitory.soma.spike_counter                  attribute (64,)            int32    Variable       AdaptiveLeakySoma
+B_inhibitory.soma.threshold_trace.trace          attribute (64,)            float16  Variable       Tracer
+B_inhibitory.synapses.kernel                     attribute (64, 768)        float16  FloatArray     TracedSynapses
+B_inhibitory.synapses.current_tracer.trace       attribute (64, 1)          float16  Variable       Tracer
+integrator.trace.tracer_decay.trace              attribute (2,)             float16  Variable       Tracer
+integrator.trace.tracer_rise.trace               attribute (2,)             float16  Variable       Tracer
+spiker.potential                                 attribute (4, 128)         float32  Variable       TopologicalLinearSpiker
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Now, that with a name at hand we can star revealing its true nature. However, <i>revelations</i> are expensive and we may have to settle with just probing a variable with a <b>spark.recording.Probe</b>. Probes are straightforward to use, although they came in different “flavours”, depending on what we want to record.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>probe</p></th>
+<th class="head"><p>records</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><b>SummaryProbe</b></p></td>
+<td><p><b>mean</b>, <b>std</b>, <b>min</b>, <b>max</b>, <b>active_fraction</b> (fraction of nonzero values), <b>active_fraction_per_unit</b>, <b>inactive_unit_fraction</b> or <b>hist</b> over the chunk</p></td>
+</tr>
+<tr class="row-odd"><td><p><b>TraceProbe</b></p></td>
+<td><p>the value on every step, optionally for a subset of <b>units</b> and with a <b>stride</b></p></td>
+</tr>
+<tr class="row-even"><td><p><b>RasterProbe</b></p></td>
+<td><p>the nonzero entries on every step, packed as bits (perfect for spikes)</p></td>
+</tr>
+<tr class="row-odd"><td><p><b>SnapshotProbe</b></p></td>
+<td><p>an attribute at the end of the chunk</p></td>
+</tr>
+<tr class="row-even"><td><p><b>DeltaProbe</b></p></td>
+<td><p>the change of an attribute over the chunk: <b>full</b>, <b>norm</b> or <b>mean_abs</b></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">probe</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">SummaryProbe</span><span class="p">(</span>						<span class="c1"># &lt;--- Use the probe to record summary statistics</span>
+	<span class="s1">'A_excitatory.soma:spikes'</span><span class="p">,</span>					<span class="c1"># &lt;--- Target: The spikes of the soma of A_excitatory</span>
+	<span class="n">reduce</span><span class="o">=</span><span class="p">(</span>
+		<span class="n">rec</span><span class="o">.</span><span class="n">SummaryReduction</span><span class="o">.</span><span class="n">ACTIVE_FRACTION</span><span class="p">,</span>	<span class="c1"># &lt;--- Compute the firing rate.</span>
+		<span class="n">rec</span><span class="o">.</span><span class="n">SummaryReduction</span><span class="o">.</span><span class="n">INACTIVE_UNIT_FRACTION</span><span class="p">,</span>
+	<span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Since, some experiments can be really expensive, we can validate the probes against the model, to avoid any future pain after a long run that lasted for several days but recorded anything (do not look at me, it could happen to anybody!).</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># A good probe...</span>
+<span class="k">try</span><span class="p">:</span> 
+	<span class="n">rec</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">brain</span><span class="p">,</span> <span class="p">(</span><span class="n">probe</span><span class="p">,))</span>
+	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Oh yes: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">probe</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1"> of </span><span class="si">{</span><span class="n">probe</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s1">!'</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Oh no: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">!'</span><span class="p">)</span>
+
+<span class="c1"># ... and a bad one.</span>
+<span class="k">try</span><span class="p">:</span> 
+	<span class="n">bad_probe</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">SummaryProbe</span><span class="p">(</span><span class="s1">'A_excitatory.stoma:spikes'</span><span class="p">)</span>
+	<span class="n">rec</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">brain</span><span class="p">,</span> <span class="p">(</span><span class="n">bad_probe</span><span class="p">,))</span>
+	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Oh yes: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">bad_probe</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1"> of </span><span class="si">{</span><span class="n">bad_probe</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s1">!'</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Oh no: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">!'</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Oh yes: SummaryProbe of A_excitatory.soma:spikes!
+Oh no: No module "stoma" under A_excitatory for "A_excitatory.stoma:spikes". Available: drift_trace, reward_trace, delays, plasticity, soma, synapses.!
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Writing probes by hand, for every population within the model, can get old fast. Rather than building every probe manually, <b><i>Spark</i></b>  offers <b>spark.recording.presets</b>, which proposes a reasonable set of probes from the model definition:</p>
+<ol class="arabic simple">
+<li><p><b>summary</b> Cheap summary statistics of the population (spikes, potentials, kernel sizes)</p></li>
+<li><p><b>activity</b> General model activity (most inputs/ and outputs plust potentials)</p></li>
+<li><p><b>weights</b> for tracking the synpatic kernels.</p></li>
+</ol>
+<p>Note that these presets are mostly for debugging purposes and we still recommend hand-tailored probes for any real experiment.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">rec_preset</span> <span class="ow">in</span> <span class="n">rec</span><span class="o">.</span><span class="n">presets</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">brain</span><span class="p">):</span>
+	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">rec_preset</span><span class="o">.</span><span class="n">name</span><span class="si">:</span><span class="s1">&lt;9</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+	<span class="k">for</span> <span class="n">probe</span> <span class="ow">in</span> <span class="n">rec_preset</span><span class="o">.</span><span class="n">probes</span><span class="p">[:</span><span class="mi">4</span><span class="p">]:</span>
+		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'    </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">probe</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">:</span><span class="s1">&lt;14</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">probe</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'    ... </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rec_preset</span><span class="o">.</span><span class="n">probes</span><span class="p">)</span><span class="si">}</span><span class="s1"> probes</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>summary  
+    SummaryProbe   A_excitatory.soma:spikes
+    SummaryProbe   A_excitatory.soma.potential
+    SummaryProbe   B_excitatory.soma:spikes
+    SummaryProbe   B_excitatory.soma.potential
+    ... 12 probes
+
+activity 
+    TraceProbe     __call__:drift_ex
+    TraceProbe     __call__:mod_a_ex
+    TraceProbe     __call__:mod_b_ex
+    TraceProbe     __call__:drift_in
+    ... 25 probes
+
+weights  
+    SnapshotProbe  A_excitatory.synapses.kernel
+    SnapshotProbe  B_excitatory.synapses.kernel
+    SnapshotProbe  A_inhibitory.synapses.kernel
+    SnapshotProbe  B_inhibitory.synapses.kernel
+    ... 4 probes
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Although <b>spark.recording</b> makes recording straightforward, it still can slow down if we try to record everything, everywhere, all at once. Not to mention that we will drown in data before the model even had a chance to learn. As such, there is still a need to be conservative when recording data.</p>
+<p>A <b>spark.recording.Measurements</b> puts a few probes together under a single name, or <i>measurement</i>. As any recorder, it should be trigger to start recording by means of <b>recorder.record(name, num_steps)</b>, which tracks the <i>name</i> measurements for the next <i>num_steps</i> steps. We still need to decide what to record: every 20 episodes, a few steps after something interesting happens, when the reward goes up/down, etc.</p>
+<p>Summaries, snapshots and deltas turn many steps into a single record, so the measurements holding them also need a <b>group</b>: the steps each record covers. A number of steps, <b>group=100</b>, gives one record every 100 steps of the run; the name of a tag, <b>group=’episode’</b>, gives one record per episode, however long each one was. Once a step of a group is recorded, the group is recorded until its end, so a record covers its whole group (unless it was recorded from halfway through one, or the run ended first; each record keeps the number of steps it covers anyway). This also means that asking for a single step as an episode starts, <b>recorder.record(‘per_episode’)</b>, records the whole episode. Traces and rasters record every single step, so they need no group.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a summary probe to track the firing rate and the fraction on dead neurons. </span>
+<span class="n">spikes</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">SummaryProbe</span><span class="p">(</span>
+	<span class="s1">'A_excitatory.soma:spikes'</span><span class="p">,</span>
+	<span class="n">reduce</span><span class="o">=</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">SummaryReduction</span><span class="o">.</span><span class="n">ACTIVE_FRACTION</span><span class="p">,</span> <span class="n">rec</span><span class="o">.</span><span class="n">SummaryReduction</span><span class="o">.</span><span class="n">INACTIVE_UNIT_FRACTION</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Recorded only when we ask for it, one summary every 100 steps...</span>
+<span class="n">by_hand</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">Measurements</span><span class="p">(</span><span class="s1">'by_hand'</span><span class="p">,</span> <span class="p">(</span><span class="n">spikes</span><span class="p">,),</span> <span class="n">group</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Additionally, the <i>measurement</i> can be schedule on regular patterns by means of a <b>trigger</b>. Under the hood, triggers count simulation steps, <b>rec.Every(1000, length=100)</b> records 100 steps out of every 1000 steps. Moreover, we can also provide a counting tag, such as <i>episodes</i>: <b>rec.Every(20, unit=’episode’)</b>, which records one episode out of every 20. <b>rec.Always()</b>, as it names suggest, sets the recorder to be always ON.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Record 100 steps out of every 1000 steps.</span>
+<span class="n">regular_measurement</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">Measurements</span><span class="p">(</span><span class="s1">'regular'</span><span class="p">,</span> <span class="p">(</span><span class="n">spikes</span><span class="p">,),</span> <span class="n">group</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">trigger</span><span class="o">=</span><span class="n">rec</span><span class="o">.</span><span class="n">Every</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">100</span><span class="p">))</span>
+
+<span class="c1"># ... or one episode out of every 20, one summary per episode.</span>
+<span class="n">episode_measurement</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">Measurements</span><span class="p">(</span><span class="s1">'episode'</span><span class="p">,</span> <span class="p">(</span><span class="n">spikes</span><span class="p">,),</span> <span class="n">group</span><span class="o">=</span><span class="s1">'episode'</span><span class="p">,</span> <span class="n">trigger</span><span class="o">=</span><span class="n">rec</span><span class="o">.</span><span class="n">Every</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">'episode'</span><span class="p">))</span>
+
+<span class="c1"># ... or everything in collections of 100 steps.</span>
+<span class="n">drowning_measurement</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">Measurements</span><span class="p">(</span><span class="s1">'drowning'</span><span class="p">,</span> <span class="p">(</span><span class="n">spikes</span><span class="p">,),</span> <span class="n">group</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">trigger</span><span class="o">=</span><span class="n">rec</span><span class="o">.</span><span class="n">Always</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Note that certain probes require us to specify the group parameters in order to perform (compute) the measurement.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Summaries need a group.</span>
+<span class="k">try</span><span class="p">:</span>
+	<span class="n">rec</span><span class="o">.</span><span class="n">Measurements</span><span class="p">(</span><span class="s1">'oops'</span><span class="p">,</span> <span class="p">(</span><span class="n">spikes</span><span class="p">,))</span>
+<span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Oh no: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">!'</span><span class="p">)</span>
+
+<span class="c1"># ... while traces and rasters do not.</span>
+<span class="n">potentials</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">Measurements</span><span class="p">(</span>
+	<span class="s1">'potentials'</span><span class="p">,</span>
+	<span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">TraceProbe</span><span class="p">(</span><span class="s1">'A_excitatory.soma.potential'</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span> <span class="n">stride</span><span class="o">=</span><span class="mi">5</span><span class="p">),),</span>	<span class="c1"># &lt;--- 8 neurons, every 5 steps</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Oh yes: </span><span class="si">{</span><span class="n">potentials</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">!'</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Oh no: Measurements "oops": A_excitatory.soma:spikes@summary give one record per group of steps; give "group", a number of steps or the name of a tag.!
+Oh yes: potentials!
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Note that the presets come with predefined triggers. However, for the sake of performance and the health of your storage device, we recommend to always construct the probes manually.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># The presets come with triggers and groups of their own, for runs that do not decide by hand.</span>
+<span class="k">for</span> <span class="n">measurements</span> <span class="ow">in</span> <span class="n">rec</span><span class="o">.</span><span class="n">presets</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">brain</span><span class="p">):</span>
+	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">measurements</span><span class="o">.</span><span class="n">name</span><span class="si">:</span><span class="s1">&lt;9</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">measurements</span><span class="o">.</span><span class="n">trigger</span><span class="si">}</span><span class="s1">, group </span><span class="si">{</span><span class="n">measurements</span><span class="o">.</span><span class="n">group</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>summary   Always(tag=None), group 1000
+activity  Every(tag=None, n=100000, length=1000, offset=0), group None
+weights   Every(tag=None, n=100000, length=1, offset=99999), group 100000
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Now, let’s run the CartPole experiment again, but this time let’s record <i>everything</i> from the training loop:</p>
+<ul class="simple">
+<li><p><b>summary</b>, the population statistics of the preset, for every episode, one summary each.</p></li>
+<li><p><b>episode</b>, every step of one episode out of 20: the spikes of every population, the potentials of 32 neurons per soma, the inputs, the reward and drift traces that drive plasticity, and the output of the integrator.</p></li>
+<li><p><b>weights</b>, a snapshot of every kernel at the end of those same episodes.</p></li>
+</ul>
+<p>Note that we by setting <b>group=’episode’</b> we are asking the recorder to keep track of the entire episode, since its episode counter will increase after the episode is completed.</p>
+<p>Some data never reaches the model at all, for example the observation of the environment before we scale it. We can still record it as <b>raw</b>: the recorder keeps a frame only while measurements that declare it are being recorded, and quietly drops it otherwise, so we can call it on every single environment step without a second thought.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Summary metrics of the entire network</span>
+<span class="n">summary</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">Measurements</span><span class="p">(</span>
+	<span class="s1">'summary'</span><span class="p">,</span>
+	<span class="n">rec</span><span class="o">.</span><span class="n">presets</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">brain</span><span class="p">),</span>											<span class="c1"># &lt;--- Rates, potentials and weight changes of every population</span>
+	<span class="n">group</span><span class="o">=</span><span class="s1">'episode'</span><span class="p">,</span>													<span class="c1"># &lt;--- One summary per episode</span>
+<span class="p">)</span>
+
+<span class="c1"># Activity metrics  of the entire episode</span>
+<span class="n">episode</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">Measurements</span><span class="p">(</span>
+	<span class="s1">'episode'</span><span class="p">,</span>
+	<span class="n">rec</span><span class="o">.</span><span class="n">presets</span><span class="o">.</span><span class="n">activity</span><span class="p">(</span><span class="n">brain</span><span class="p">,</span> <span class="n">trace_units</span><span class="o">=</span><span class="mi">32</span><span class="p">),</span>						<span class="c1"># &lt;--- Spikes, 32 potentials per soma, inputs, traces</span>
+	<span class="n">group</span><span class="o">=</span><span class="s1">'episode'</span><span class="p">,</span>													<span class="c1"># &lt;--- Records the whole episode because rec.presets.activity returns TraceProbe</span>
+	<span class="n">raw</span><span class="o">=</span><span class="p">(</span><span class="s1">'env/observation'</span><span class="p">,),</span>
+	<span class="n">views</span><span class="o">=</span><span class="p">{</span><span class="s1">'env/observation'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">'kind'</span><span class="p">:</span> <span class="s1">'vector'</span><span class="p">,</span> 
+        <span class="s1">'labels'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'position'</span><span class="p">,</span> <span class="s1">'velocity'</span><span class="p">,</span> <span class="s1">'angle'</span><span class="p">,</span> <span class="s1">'angular velocity'</span><span class="p">]</span>
+    <span class="p">}},</span>
+<span class="p">)</span>
+
+<span class="c1"># Snapshots of the kernels after the end of the episode</span>
+<span class="n">weights</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">Measurements</span><span class="p">(</span>
+	<span class="s1">'weights'</span><span class="p">,</span>
+	<span class="n">rec</span><span class="o">.</span><span class="n">presets</span><span class="o">.</span><span class="n">weights</span><span class="p">(</span><span class="n">brain</span><span class="p">),</span>
+	<span class="n">group</span><span class="o">=</span><span class="s1">'episode'</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">measurements</span> <span class="o">=</span> <span class="p">[</span><span class="n">summary</span><span class="p">,</span> <span class="n">episode</span><span class="p">,</span> <span class="n">weights</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Now, for the training loop we are going to reuse the code from Tutorial #6 as it is, with two new names: <b>spark.jit</b> where Tutorial #6 used <b>jax.jit</b>, and <b>spark.scan</b> where it used <b>jax.lax.scan</b>. But first, the shared code.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Cartpole metaparameters (same as Tutorial #6)</span>
+<span class="n">PASSIVE_MODULATION_SCALE</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.0001</span>
+<span class="n">REWARD_FALL_SCALE</span> <span class="o">=</span> <span class="o">-</span><span class="mi">25</span>
+<span class="n">REWARD_OOB_SCALE</span> <span class="o">=</span> <span class="o">-</span><span class="mi">25</span>
+<span class="n">REWARD_OOB_THRESHOLD</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="n">NEG_REWARD_SCALE</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.1</span>
+<span class="n">MOD_INHIBITION_SCALE</span><span class="o">=</span> <span class="mf">0.25</span>
+<span class="n">DT</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">TRAIN_EPOCHES</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="n">UNROLL</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">STEPS</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">50</span><span class="o">/</span><span class="n">DT</span><span class="p">)</span>
+<span class="n">SEED</span> <span class="o">=</span> <span class="mi">42</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Utility function to preprocess information from the environment.</span>
+<span class="c1"># This function just scale the observation environment to the (-1,1) range.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_obs</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+	<span class="c1"># CartPos, CartSpeed, PoleAngle, PoleAngSpeed</span>
+	<span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2.4</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">0.2095</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">])</span>
+	<span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a_min</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">a_max</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Utility method to simplify model ingestion.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">mod_inputs</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">drift</span><span class="p">,</span> <span class="n">mod_a</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">mod_b</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+	<span class="n">f16</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">v</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">))</span>
+	<span class="k">return</span> <span class="p">{</span>
+		<span class="s1">'signal'</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+		<span class="s1">'mod_a_ex'</span><span class="p">:</span> <span class="n">f16</span><span class="p">(</span><span class="n">mod_a</span><span class="p">),</span>
+		<span class="s1">'mod_a_in'</span><span class="p">:</span> <span class="n">f16</span><span class="p">(</span><span class="n">mod_a</span> <span class="o">*</span> <span class="n">MOD_INHIBITION_SCALE</span><span class="p">),</span>
+		<span class="s1">'mod_b_ex'</span><span class="p">:</span> <span class="n">f16</span><span class="p">(</span><span class="n">mod_b</span><span class="p">),</span>
+		<span class="s1">'mod_b_in'</span><span class="p">:</span> <span class="n">f16</span><span class="p">(</span><span class="n">mod_b</span> <span class="o">*</span> <span class="n">MOD_INHIBITION_SCALE</span><span class="p">),</span>
+		<span class="s1">'drift_ex'</span><span class="p">:</span> <span class="n">f16</span><span class="p">(</span><span class="n">drift</span><span class="p">),</span>
+		<span class="s1">'drift_in'</span><span class="p">:</span> <span class="n">f16</span><span class="p">(</span><span class="n">drift</span> <span class="o">*</span> <span class="n">MOD_INHIBITION_SCALE</span><span class="p">),</span>
+	<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">modulation_scale</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">unroll</span><span class="p">):</span>
+	<span class="c1"># Reset environment</span>
+	<span class="n">next_obs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+	<span class="n">rec</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">'env/observation'</span><span class="p">,</span> <span class="n">next_obs</span><span class="p">)</span>
+	<span class="n">next_obs</span> <span class="o">=</span> <span class="n">process_obs</span><span class="p">(</span><span class="n">next_obs</span><span class="p">)</span>
+	<span class="c1"># Loop until the episode ends, either from failing or truncation</span>
+	<span class="n">terminated</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">truncated</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">episode_steps</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="c1"># Allow the network to prepare for the episode.</span>
+	<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+		<span class="n">_</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">run_model_unroll</span><span class="p">(</span>
+			<span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span> <span class="n">unroll</span><span class="o">=</span><span class="n">unroll</span><span class="p">,</span>
+			<span class="o">**</span><span class="n">mod_inputs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">next_obs</span><span class="p">),</span> <span class="n">drift</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+		<span class="p">)</span>
+	<span class="c1"># Start episode</span>
+	<span class="k">while</span> <span class="ow">not</span> <span class="p">(</span><span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span><span class="p">):</span>
+		<span class="c1"># Model logic, let the network do what it wants to do.</span>
+		<span class="n">out</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">run_model_unroll</span><span class="p">(</span>
+			<span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span> <span class="n">unroll</span><span class="o">=</span><span class="n">unroll</span><span class="p">,</span>
+			<span class="o">**</span><span class="n">mod_inputs</span><span class="p">(</span><span class="n">next_obs</span><span class="p">,</span> <span class="n">drift</span><span class="o">=</span><span class="n">PASSIVE_MODULATION_SCALE</span> <span class="o">*</span> <span class="n">modulation_scale</span><span class="p">)</span>
+		<span class="p">)</span>
+		<span class="c1"># Environment logic.</span>
+		<span class="n">next_action</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s1">'action'</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+		<span class="n">prev_episode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">next_obs</span><span class="p">)</span>
+		<span class="n">next_obs</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">next_action</span><span class="p">)</span>
+		<span class="n">rec</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span><span class="s1">'env/observation'</span><span class="p">,</span> <span class="n">next_obs</span><span class="p">)</span>
+		<span class="n">next_obs</span> <span class="o">=</span> <span class="n">process_obs</span><span class="p">(</span><span class="n">next_obs</span><span class="p">)</span>
+		<span class="n">episode_steps</span> <span class="o">+=</span> <span class="mi">1</span>
+	<span class="c1"># Steer the network to what we want with one extra step with the last episode and the reward</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">truncated</span><span class="p">:</span>
+		<span class="c1"># Check if the agent went out of bounds.</span>
+		<span class="n">out_of_bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">next_obs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+		<span class="c1"># Critic-like action update</span>
+		<span class="c1"># Going out of bounds conflicts with learning to balance the pole, adding a second condition</span>
+		<span class="c1"># to check for the the pole to be mostly vertical improves learning speed </span>
+		<span class="k">if</span> <span class="n">out_of_bounds</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">next_obs</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">REWARD_OOB_THRESHOLD</span><span class="p">:</span>
+			<span class="c1"># If the cart went out of bounds, we need to move the cart towards the center</span>
+			<span class="c1"># Going out of bounds is not as bad as the pole falling, so we should not put to much </span>
+			<span class="c1"># punishment towards that action</span>
+			<span class="n">steer_to_b</span> <span class="o">=</span> <span class="n">next_obs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span>
+			<span class="n">reward</span> <span class="o">=</span> <span class="n">REWARD_OOB_SCALE</span> <span class="o">*</span> <span class="n">modulation_scale</span>
+		<span class="k">else</span><span class="p">:</span> 
+			<span class="c1"># If the pole fell, we need to move the cart towards the side it fell</span>
+			<span class="n">steer_to_b</span> <span class="o">=</span> <span class="n">next_obs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span>
+			<span class="n">reward</span> <span class="o">=</span> <span class="n">REWARD_FALL_SCALE</span> <span class="o">*</span> <span class="n">modulation_scale</span>
+		<span class="n">mod_a</span> <span class="o">=</span> <span class="n">reward</span> <span class="k">if</span> <span class="n">steer_to_b</span> <span class="k">else</span> <span class="n">NEG_REWARD_SCALE</span> <span class="o">*</span> <span class="n">reward</span>
+		<span class="n">mod_b</span> <span class="o">=</span> <span class="n">reward</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">steer_to_b</span> <span class="k">else</span> <span class="n">NEG_REWARD_SCALE</span> <span class="o">*</span> <span class="n">reward</span>
+		<span class="c1"># The reward is delivered once. The accumulator inside the neuron carries it through the</span>
+		<span class="c1"># rest of the interaction window.</span>
+		<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+			<span class="n">_</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">run_model_unroll</span><span class="p">(</span>
+				<span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span> <span class="n">unroll</span><span class="o">=</span><span class="n">unroll</span><span class="p">,</span>
+				<span class="o">**</span><span class="n">mod_inputs</span><span class="p">(</span><span class="n">prev_episode</span><span class="p">,</span> <span class="n">drift</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">mod_a</span><span class="o">=</span><span class="n">mod_a</span><span class="p">,</span> <span class="n">mod_b</span><span class="o">=</span><span class="n">mod_b</span><span class="p">)</span>
+			<span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">out_of_bounds</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="k">if</span> <span class="n">out_of_bounds</span><span class="p">:</span>
+		<span class="n">outcome</span> <span class="o">=</span> <span class="s1">'out of bounds'</span>
+	<span class="k">elif</span> <span class="n">truncated</span><span class="p">:</span>
+		<span class="n">outcome</span> <span class="o">=</span> <span class="s1">'truncated'</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">outcome</span> <span class="o">=</span> <span class="s1">'fell'</span>
+	<span class="k">return</span> <span class="n">state</span><span class="p">,</span> <span class="n">episode_steps</span><span class="p">,</span> <span class="n">outcome</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<ul class="simple">
+<li><p>Without an open recorder, <b>spark.jit</b> and <b>spark.scan</b> are <b>jax.jit</b> and <b>jax.lax.scan</b>, and our function compiles to the very same program as in Tutorial #6.</p></li>
+<li><p>While a recorder is open, every call of our function is also a call of the recorder. Before the call, the recorder decides what to record over its steps, and <b>spark.scan</b> records it along the way. After the call, the records are handed over to the recorder, without waiting for them to leave the GPU. Each combination of recorded measurements compiles once.</p></li>
+</ul>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+
+<span class="nd">@partial</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">jit</span><span class="p">,</span> <span class="n">static_argnames</span><span class="o">=</span><span class="p">[</span><span class="s1">'steps'</span><span class="p">,</span> <span class="s1">'unroll'</span><span class="p">])</span>			<span class="c1"># &lt;--- jax.jit in Tutorial #6</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_model_unroll</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">unroll</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="o">**</span><span class="n">inputs</span><span class="p">):</span>
+    <span class="c1"># Reward "reaches" the network only once and then the trace carries it through </span>
+	<span class="c1"># the rest of the interaction window</span>
+    <span class="n">reward_keys</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'mod_a_ex'</span><span class="p">,</span> <span class="s1">'mod_a_in'</span><span class="p">,</span> <span class="s1">'mod_b_ex'</span><span class="p">,</span> <span class="s1">'mod_b_in'</span><span class="p">)</span>
+    <span class="n">delivered_once</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">steps</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">rewards</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">inputs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">delivered_once</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+		<span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">reward_keys</span>
+	<span class="p">}</span>
+    <span class="n">held_inputs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">reward_keys</span>
+	<span class="p">}</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">step_fn</span><span class="p">(</span><span class="n">model_state</span><span class="p">,</span> <span class="n">reward_slice</span><span class="p">):</span>
+        <span class="c1"># Merge model</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">model_state</span><span class="p">)</span>
+        <span class="c1"># Run model. Append the reward to inputs.</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">held_inputs</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">reward_slice</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+        <span class="c1"># Get new state</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">new_state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">model</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">new_state</span><span class="p">,</span> <span class="n">out</span>
+    <span class="c1"># Run the scan loop</span>
+    <span class="n">final_state</span><span class="p">,</span> <span class="n">stacked_outs</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">scan</span><span class="p">(</span>
+        <span class="n">step_fn</span><span class="p">,</span> 
+        <span class="n">state</span><span class="p">,</span> 
+        <span class="n">xs</span><span class="o">=</span><span class="n">rewards</span><span class="p">,</span> 
+        <span class="n">length</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span> 
+        <span class="n">unroll</span><span class="o">=</span><span class="n">unroll</span>
+	<span class="p">)</span>
+    <span class="c1"># Retrieve model output</span>
+    <span class="n">final_out</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">stacked_outs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">final_out</span><span class="p">,</span> <span class="n">final_state</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Time to train! The recorder creates a new run directory inside <b>runs/</b> and writes everything needed to understand the run later: the configuration of the model (including the layout of the Graph Editor, thanks to <b>source</b>), our metaparameters, the git commit of the code and the environment it ran in.</p>
+<p>The first call recording a new combination of measurements compiles it. Here, the first episode compiles the call recording all three, and the second episode the call recording the summary alone. Every later call reuses one of the two.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gym</span>
+
+<span class="c1"># Initialize the environment</span>
+<span class="n">env_name</span> <span class="o">=</span>  <span class="s1">'CartPole-v1'</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">,</span> <span class="n">sutton_barto_reward</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">next_obs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">)</span>
+<span class="n">next_obs</span> <span class="o">=</span> <span class="n">process_obs</span><span class="p">(</span><span class="n">next_obs</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the brain configuration</span>
+<span class="n">brain_config</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BrainConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">BRAIN_PATH</span><span class="p">)</span>
+
+<span class="c1"># Reseed</span>
+<span class="n">brain_config</span> <span class="o">=</span> <span class="n">brain_config</span><span class="o">.</span><span class="n">with_new_seeds</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">)</span>
+
+<span class="c1"># Initialize the brain</span>
+<span class="n">brain</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Brain</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">brain_config</span><span class="p">)</span>
+<span class="n">brain</span><span class="p">(</span>
+    <span class="n">signal</span><span class="o">=</span><span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">next_obs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+    <span class="n">mod_a_ex</span><span class="o">=</span><span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+    <span class="n">mod_a_in</span><span class="o">=</span><span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+    <span class="n">mod_b_ex</span><span class="o">=</span><span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+    <span class="n">mod_b_in</span><span class="o">=</span><span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+    <span class="n">drift_ex</span><span class="o">=</span><span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+    <span class="n">drift_in</span><span class="o">=</span><span class="n">spark</span><span class="o">.</span><span class="n">FloatArray</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float16</span><span class="p">)),</span>
+<span class="p">)</span>
+<span class="c1"># Split brain into the graph and the state</span>
+<span class="n">graph</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">brain</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Now, for the finall change, we just need to update the custom training loop.</p>
+<ol class="arabic simple">
+<li><p>First, we update any <b>recorder.tag</b>. Currently our only custom tag is <i>”episode”</i> tag, so the <b>recorder.record</b></p></li>
+<li><p>Next, we call <b>&gt;recorder.record</b>, to schedule the measurements.</p></li>
+<li><p>Finally, we flush the recorder with <b>recorder.log</b> and <b>recorder.event</b>.</p></li>
+</ol>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Experiment hyperparameters (parameters that are not part of the model definition)</span>
+<span class="c1"># The recorder can also store specific parameters for the run, to make it more easy to fully track entire experiments.</span>
+<span class="n">hparams</span> <span class="o">=</span> <span class="p">{</span>
+	<span class="s1">'steps'</span><span class="p">:</span> <span class="n">STEPS</span><span class="p">,</span>
+	<span class="s1">'episodes'</span><span class="p">:</span> <span class="n">TRAIN_EPOCHES</span><span class="p">,</span>
+	<span class="s1">'passive_modulation_scale'</span><span class="p">:</span> <span class="n">PASSIVE_MODULATION_SCALE</span><span class="p">,</span>
+	<span class="s1">'reward_fall_scale'</span><span class="p">:</span> <span class="n">REWARD_FALL_SCALE</span><span class="p">,</span>
+	<span class="s1">'reward_oob_scale'</span><span class="p">:</span> <span class="n">REWARD_OOB_SCALE</span><span class="p">,</span>
+	<span class="s1">'seed'</span><span class="p">:</span> <span class="n">SEED</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="k">with</span> <span class="n">rec</span><span class="o">.</span><span class="n">Recorder</span><span class="p">(</span><span class="s1">'runs'</span><span class="p">,</span> <span class="n">brain_config</span><span class="p">,</span> <span class="n">measurements</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">'cartpole'</span><span class="p">,</span> <span class="n">hparams</span><span class="o">=</span><span class="n">hparams</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">BRAIN_PATH</span><span class="p">)</span> <span class="k">as</span> <span class="n">recorder</span><span class="p">:</span>
+	<span class="c1"># Split brain into the graph and the state</span>
+	<span class="n">graph</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">brain</span><span class="p">))</span>
+	<span class="c1"># Some classic metrics</span>
+	<span class="n">ema_alpha</span><span class="p">,</span> <span class="n">train_steps_ema</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span> <span class="p">[]</span>
+	<span class="n">current_train_ema_steps</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="c1"># A classic training loop.</span>
+	<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="n">pbar</span> <span class="o">:=</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">TRAIN_EPOCHES</span><span class="p">),</span> <span class="n">mininterval</span><span class="o">=</span><span class="mi">2</span><span class="p">)):</span>
+		<span class="n">recorder</span><span class="o">.</span><span class="n">tag</span><span class="p">(</span><span class="n">episode</span><span class="o">=</span><span class="n">e</span><span class="p">)</span>											<span class="c1"># &lt;--- A new episode, and a new group of every measurements</span>
+		<span class="n">recorder</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="s1">'summary'</span><span class="p">)</span>										<span class="c1"># &lt;--- One summary of every episode</span>
+		<span class="k">if</span> <span class="n">e</span> <span class="o">%</span> <span class="mi">20</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="n">recorder</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="s1">'episode'</span><span class="p">)</span>									<span class="c1"># &lt;--- Every step of this episode...</span>
+			<span class="n">recorder</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="s1">'weights'</span><span class="p">)</span>									<span class="c1"># &lt;--- ...and the weights at its end</span>
+		<span class="c1"># We scale the passive modulation in order to prevent a bad episode from drastically updating the network</span>
+		<span class="n">modulation_scale</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">current_train_ema_steps</span> <span class="o">/</span> <span class="mi">500</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+		<span class="n">state</span><span class="p">,</span> <span class="n">episode_steps</span><span class="p">,</span> <span class="n">outcome</span> <span class="o">=</span> <span class="n">run_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">modulation_scale</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">STEPS</span><span class="p">,</span> <span class="n">unroll</span><span class="o">=</span><span class="n">UNROLL</span><span class="p">)</span>
+		<span class="c1"># Update the classic metrics</span>
+		<span class="n">current_train_ema_steps</span> <span class="o">=</span> <span class="n">train_steps_ema</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_steps_ema</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+		<span class="n">train_steps_ema</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ema_alpha</span> <span class="o">*</span> <span class="n">current_train_ema_steps</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">ema_alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">episode_steps</span><span class="p">)</span>
+		<span class="n">recorder</span><span class="o">.</span><span class="n">log</span><span class="p">({</span><span class="s1">'episode/steps'</span><span class="p">:</span> <span class="n">episode_steps</span><span class="p">,</span> <span class="s1">'episode/steps_ema'</span><span class="p">:</span> <span class="n">train_steps_ema</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">'episode/modulation_scale'</span><span class="p">:</span> <span class="n">modulation_scale</span><span class="p">},</span> <span class="n">tag</span><span class="o">=</span><span class="s1">'episode'</span><span class="p">)</span>
+		<span class="n">recorder</span><span class="o">.</span><span class="n">event</span><span class="p">(</span><span class="s1">'episode_end'</span><span class="p">,</span> <span class="n">episode</span><span class="o">=</span><span class="n">e</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">episode_steps</span><span class="p">,</span> <span class="n">outcome</span><span class="o">=</span><span class="n">outcome</span><span class="p">)</span>
+		<span class="n">pbar</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Train Steps EMA: </span><span class="si">{</span><span class="n">train_steps_ema</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Train Steps EMA: 500.00: 100%|██████████| 200/200 [05:49&lt;00:00,  1.75s/it]
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>To finalize a recording it is enough to close the leave the <b>with</b> block. Note that whatever recorder-related operation that is still buffered gets finalized and the run is marked as <b>finished</b>.</p>
+<p>Additionally, if an exception escapes the with block, the run is marked as <b>failed</b> or if the process dies without properly exiting the block, the run is left reported as <b>crashed</b>. Note that we can reopen the recorder using <b>rec.Recorder.resume</b>.</p>
+<p>Now, let’s read inspect the recording of the experiment with <b>spark.recording.load</b>.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># The output path of the recorder can be accessed with "recorder.path"</span>
+<span class="n">run_recording</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">recorder</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+<span class="c1"># Print run's metadata.</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">run_recording</span><span class="p">,</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="c1"># Print run's hyperparameters.</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'hparams:'</span><span class="p">,</span> <span class="n">run_recording</span><span class="o">.</span><span class="n">hparams</span><span class="p">,</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="c1"># Print run's probes info</span>
+<span class="k">for</span> <span class="n">window</span> <span class="ow">in</span> <span class="n">run_recording</span><span class="o">.</span><span class="n">windows</span><span class="p">()[:</span><span class="mi">6</span><span class="p">]:</span>
+	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">window</span><span class="o">.</span><span class="n">measurements</span><span class="si">:</span><span class="s1">&lt;8</span><span class="si">}</span><span class="s1"> window </span><span class="si">{</span><span class="n">window</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s1">: steps </span><span class="si">{</span><span class="n">window</span><span class="o">.</span><span class="n">t0</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">window</span><span class="o">.</span><span class="n">t1</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">window</span><span class="o">.</span><span class="n">spans</span><span class="si">}</span><span class="s1"> calls, </span><span class="si">{</span><span class="n">window</span><span class="o">.</span><span class="n">groups</span><span class="si">}</span><span class="s1"> groups'</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Run("20261001-133907_cartpole_4b9b2ba3", finished, step 3339950, measurements ['summary', 'episode', 'weights']) 
+
+hparams: {'steps': 50, 'episodes': 200, 'passive_modulation_scale': -0.0001, 'reward_fall_scale': -25, 'reward_oob_scale': -25, 'seed': 42} 
+
+episode  window 0: steps 0 to 372350, 712 calls, 0 groups
+episode  window 1: steps 834950 to 1361000, 1002 calls, 0 groups
+episode  window 2: steps 1836950 to 2363000, 1002 calls, 0 groups
+episode  window 3: steps 2838950 to 2864000, 501 calls, 0 groups
+summary  window 0: steps 0 to 548800, 10976 calls, 88 groups
+summary  window 1: steps 534350 to 1109050, 11205 calls, 22 groups
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>As with the CartPole example, let’s first visualize the learning as a function of the episodes and the number of steps. In order to retrieve the data from the recorder, we need to use the <b>scalar</b> method with the name of the variable of interest.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpl</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">Line2D</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">'axes.spines.right'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">'axes.spines.top'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="c1"># Process data</span>
+<span class="c1"># Extract the episode steps and ema from the recording.</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">train_steps</span> <span class="o">=</span> <span class="n">run_recording</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="s1">'episode/steps'</span><span class="p">)</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">train_steps_ema</span> <span class="o">=</span> <span class="n">run_recording</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="s1">'episode/steps_ema'</span><span class="p">)</span>
+<span class="n">TRAIN_EPOCHES</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_steps</span><span class="p">)</span>
+<span class="c1"># Split the outcomes of the run into fell/oob/truncated</span>
+<span class="n">outcomes</span> <span class="o">=</span> <span class="p">[</span><span class="n">event</span><span class="p">[</span><span class="s1">'outcome'</span><span class="p">]</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">run_recording</span><span class="o">.</span><span class="n">events</span><span class="p">(</span><span class="s1">'episode_end'</span><span class="p">)]</span>
+<span class="n">outcomes_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">outcomes</span><span class="p">)</span>
+<span class="n">x_pole</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">outcomes_array</span> <span class="o">==</span> <span class="s1">'fell'</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">y_pole</span> <span class="o">=</span> <span class="n">train_steps</span><span class="p">[</span><span class="n">x_pole</span><span class="p">]</span>
+<span class="n">x_oob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">outcomes_array</span> <span class="o">==</span> <span class="s1">'out of bounds'</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">y_oob</span> <span class="o">=</span> <span class="n">train_steps</span><span class="p">[</span><span class="n">x_oob</span><span class="p">]</span>
+<span class="n">x_trnc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">outcomes_array</span> <span class="o">==</span> <span class="s1">'truncated'</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">y_trnc</span> <span class="o">=</span> <span class="n">train_steps</span><span class="p">[</span><span class="n">x_trnc</span><span class="p">]</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">TRAIN_EPOCHES</span><span class="p">)</span>
+<span class="n">ts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">train_steps</span><span class="p">)</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+<span class="c1"># General curve</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">train_steps</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">':'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">train_steps_ema</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'tab:purple'</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="c1"># Pole-fell</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_pole</span><span class="p">,</span> <span class="n">y_pole</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'tab:red'</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">'x'</span><span class="p">)</span>
+<span class="c1"># Agent out-of-bounds</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_oob</span><span class="p">,</span> <span class="n">y_oob</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'tab:orange'</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">'v'</span><span class="p">)</span>
+<span class="c1"># Episode truncated</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_trnc</span><span class="p">,</span> <span class="n">y_trnc</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'tab:green'</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">'*'</span><span class="p">)</span>
+
+<span class="c1"># Format plot</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="n">TRAIN_EPOCHES</span><span class="o">+</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">505</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'Episode'</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'# Steps'</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+<span class="n">legend_elements</span> <span class="o">=</span> <span class="p">[</span>
+	<span class="n">Line2D</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">color</span><span class="o">=</span><span class="s1">'tab:red'</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">'v'</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'Pole Fell'</span><span class="p">),</span> 
+	<span class="n">Line2D</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">color</span><span class="o">=</span><span class="s1">'tab:orange'</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">'x'</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'Out of Bounds'</span><span class="p">),</span> 
+	<span class="n">Line2D</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">color</span><span class="o">=</span><span class="s1">'tab:green'</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">'*'</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'Truncation'</span><span class="p">),</span> 
+<span class="p">]</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="o">=</span><span class="n">legend_elements</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.165</span><span class="p">,</span> <span class="mf">0.825</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">'center'</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/3df810e04df1174a0ad83dfd84c7dec3cda855fed9938cfbef3c00778674d334.png" src="../_images/3df810e04df1174a0ad83dfd84c7dec3cda855fed9938cfbef3c00778674d334.png" />
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>A 1 to 1 correspondance with the original cartpole example!.</p>
+<p>However, this plot alone will not justify paying the extra compute time. Fortunately, the current probes can give us much much more information about what is going on in the model itself. Currently, we are tracking firing rates, rasters, potentials and many more. Let’s see what is really in there.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_</span><span class="p">,</span> <span class="n">steps</span> <span class="o">=</span> <span class="n">run_recording</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="s1">'episode/steps'</span><span class="p">)</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">ema</span> <span class="o">=</span> <span class="n">run_recording</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="s1">'episode/steps_ema'</span><span class="p">)</span>
+<span class="n">outcomes</span> <span class="o">=</span> <span class="p">[</span><span class="n">event</span><span class="p">[</span><span class="s1">'outcome'</span><span class="p">]</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">run_recording</span><span class="o">.</span><span class="n">events</span><span class="p">(</span><span class="s1">'episode_end'</span><span class="p">)]</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Training curve</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">train_steps</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">':'</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">train_steps_ema</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'tab:purple'</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_pole</span><span class="p">,</span> <span class="n">y_pole</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'tab:red'</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">'x'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'Fell'</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_oob</span><span class="p">,</span> <span class="n">y_oob</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'tab:orange'</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">'v'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'Out of Bounds'</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_trnc</span><span class="p">,</span> <span class="n">y_trnc</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'tab:green'</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">'*'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'Truncation'</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'# Steps'</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">'upper left'</span><span class="p">)</span>
+
+<span class="c1"># Episode firing rate.</span>
+<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'A_excitatory'</span><span class="p">,</span> <span class="s1">'B_excitatory'</span><span class="p">,</span> <span class="s1">'A_inhibitory'</span><span class="p">,</span> <span class="s1">'B_inhibitory'</span><span class="p">):</span>
+	<span class="n">_</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">run_recording</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="sa">f</span><span class="s1">'summary/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">.soma:spikes/active_fraction'</span><span class="p">)</span>
+	<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>								<span class="c1"># &lt;--- rate per step to Hz (dt = 1 ms)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Firing rate (Hz)'</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">'upper right'</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># Episode inactive units.</span>
+<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'A_excitatory'</span><span class="p">,</span> <span class="s1">'B_excitatory'</span><span class="p">,</span> <span class="s1">'A_inhibitory'</span><span class="p">,</span> <span class="s1">'B_inhibitory'</span><span class="p">):</span>
+	<span class="n">_</span><span class="p">,</span> <span class="n">inactive</span> <span class="o">=</span> <span class="n">run_recording</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="sa">f</span><span class="s1">'summary/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">.soma:spikes/inactive_unit_fraction'</span><span class="p">)</span>
+	<span class="n">axs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">inactive</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>								<span class="c1"># &lt;--- rate per step to Hz (dt = 1 ms)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Inactive Units'</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">'upper right'</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>								<span class="c1"># &lt;--- rate per step to Hz </span>
+
+<span class="c1"># Episode kernel norms.</span>
+<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'A_excitatory'</span><span class="p">,</span> <span class="s1">'B_excitatory'</span><span class="p">,</span> <span class="s1">'A_inhibitory'</span><span class="p">,</span> <span class="s1">'B_inhibitory'</span><span class="p">):</span>
+	<span class="n">_</span><span class="p">,</span> <span class="n">norm</span> <span class="o">=</span> <span class="n">run_recording</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="sa">f</span><span class="s1">'summary/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">.synapses.kernel/norm'</span><span class="p">)</span>
+	<span class="n">axs</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">norm</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>								<span class="c1"># &lt;--- rate per step to Hz (dt = 1 ms)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Kernel norm'</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">'Episode'</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">'upper right'</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>								<span class="c1"># &lt;--- rate per step to Hz </span>
+
+
+<span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axs</span><span class="p">:</span>
+	<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/ad217b9cbd12429dd1dae311725b702a38d984a07b1e3f705ff7c546c989b8e7.png" src="../_images/ad217b9cbd12429dd1dae311725b702a38d984a07b1e3f705ff7c546c989b8e7.png" />
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Moreover, our recorder was also tracking entire episodes which we can inspect in more detail!</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the episode records.</span>
+<span class="n">episodes</span> <span class="o">=</span> <span class="n">run_recording</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">'episode'</span><span class="p">)</span>
+<span class="c1"># ... and let's just focus on the last episode.</span>
+<span class="n">episode</span> <span class="o">=</span> <span class="n">episodes</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">episodes</span><span class="p">)]</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">height_ratios</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+<span class="c1"># Spikes of every population, from their rasters: one bool per unit and step.</span>
+<span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'A_excitatory'</span><span class="p">,</span> <span class="s1">'B_excitatory'</span><span class="p">,</span> <span class="s1">'A_inhibitory'</span><span class="p">,</span> <span class="s1">'B_inhibitory'</span><span class="p">):</span>
+	<span class="c1"># Rasters are bundle in a row format (step, spikes)</span>
+	<span class="n">t</span><span class="p">,</span> <span class="n">spikes</span> <span class="o">=</span> <span class="n">episode</span><span class="o">.</span><span class="n">rasters</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">.soma:spikes'</span><span class="p">]</span>
+	<span class="n">units</span> <span class="o">=</span> <span class="n">spikes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+	<span class="n">step</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">spikes</span><span class="p">)</span>
+	<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">step</span><span class="p">],</span> <span class="n">unit</span> <span class="o">+</span> <span class="n">offset</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'black'</span><span class="p">)</span>
+	<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">units</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="sa">f</span><span class="s1">' </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">'center'</span><span class="p">)</span>
+	<span class="n">offset</span> <span class="o">+=</span> <span class="n">units</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'# Unit'</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+
+<span class="c1"># A few membrane potentials.</span>
+<span class="n">t</span><span class="p">,</span> <span class="n">potential</span> <span class="o">=</span> <span class="n">episode</span><span class="o">.</span><span class="n">traces</span><span class="p">[</span><span class="s1">'A_excitatory.soma.potential'</span><span class="p">]</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">potential</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">8</span><span class="p">],</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Potential</span><span class="se">\n</span><span class="s1">A_excitatory'</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+
+<span class="c1"># What the network was seeing.</span>
+<span class="n">t</span><span class="p">,</span> <span class="n">signal</span> <span class="o">=</span> <span class="n">episode</span><span class="o">.</span><span class="n">traces</span><span class="p">[</span><span class="s1">'__call__:signal'</span><span class="p">]</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">signal</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Signal'</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+
+<span class="c1"># The reward traces that drive plasticity.</span>
+<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'A_excitatory'</span><span class="p">,</span> <span class="s1">'B_excitatory'</span><span class="p">,</span> <span class="s1">'A_inhibitory'</span><span class="p">,</span> <span class="s1">'B_inhibitory'</span><span class="p">):</span>
+	<span class="n">t</span><span class="p">,</span> <span class="n">reward</span> <span class="o">=</span> <span class="n">episode</span><span class="o">.</span><span class="n">traces</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">.reward_trace:output'</span><span class="p">]</span>
+	<span class="n">axs</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Reward trace'</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">'upper right'</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># And what it decided.</span>
+<span class="n">t</span><span class="p">,</span> <span class="n">action</span> <span class="o">=</span> <span class="n">episode</span><span class="o">.</span><span class="n">traces</span><span class="p">[</span><span class="s1">'integrator:signal'</span><span class="p">]</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Integrator'</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Steps [ms]'</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'(Each environment step corresponds to 50ms)'</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">'center'</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">'center'</span><span class="p">)</span>
+
+
+<span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axs</span><span class="p">:</span>
+	<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/23d28d521b67337d6942de4177acc249a04dd81d1968b283130668868302c9b3.png" src="../_images/23d28d521b67337d6942de4177acc249a04dd81d1968b283130668868302c9b3.png" />
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>We also have some snapshots of the kernels at the end of each (recorded) episode. Unlike any other measurement so far, these ones are really large, so we measure this ones sparsely, otherwise the recorder would bottleneck everything (and it is already taking its fair share of the pie!).</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">weights</span> <span class="o">=</span> <span class="n">run_recording</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">'weights'</span><span class="p">)</span>
+<span class="n">first</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">last</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">weights</span><span class="p">)]</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
+
+<span class="c1"># Initial kernel</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">((</span><span class="s1">'A_excitatory'</span><span class="p">,</span> <span class="s1">'B_excitatory'</span><span class="p">,</span> <span class="s1">'A_inhibitory'</span><span class="p">,</span> <span class="s1">'B_inhibitory'</span><span class="p">)):</span>
+	<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">first</span><span class="o">.</span><span class="n">snapshots</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">.synapses.kernel'</span><span class="p">],</span> <span class="n">aspect</span><span class="o">=</span><span class="s1">'auto'</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">'none'</span><span class="p">)</span>
+	<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+	
+<span class="c1"># Final kernel</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">((</span><span class="s1">'A_excitatory'</span><span class="p">,</span> <span class="s1">'B_excitatory'</span><span class="p">,</span> <span class="s1">'A_inhibitory'</span><span class="p">,</span> <span class="s1">'B_inhibitory'</span><span class="p">)):</span>
+	<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">last</span><span class="o">.</span><span class="n">snapshots</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">.synapses.kernel'</span><span class="p">],</span> <span class="n">aspect</span><span class="o">=</span><span class="s1">'auto'</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">'none'</span><span class="p">)</span>
+
+<span class="c1"># Extra format</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">ax</span><span class="p">:</span>
+	<span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+		<span class="n">p</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+		<span class="n">p</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Initial'</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Final'</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/10bea0a729039920a7c01f17163214af2d9d2b81f17643a9479ff00c1ff93678.png" src="../_images/10bea0a729039920a7c01f17163214af2d9d2b81f17643a9479ff00c1ff93678.png" />
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>Plots are nice, but we spent the whole series building our models as graphs, so why not look at a run the same way? <b>spark.RunViewer</b> opens a run over the graph of its model:</p>
+<p>Every node in the graph shows can show any tracked variable: summaries over the whole run, traces, rasters, histograms and weights. Importantly information is organized in a with a clean timeline, which shows what was recorded at each point in time for each node.</p>
+<p>It also works while the run is still being written! The viewer can follow the run live. Moreover, the <b>Record</b> button can ask the recorder to record something right now, similar to <b>run.record(name, steps)</b> does from code; the request reaches the training loop through the run directory, so it works from another process too. The same viewer can be accessed through the Graph Editor, under <b>File &gt; Open Run…</b>.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Feel free to explore the run!</span>
+<span class="c1">#if __name__ == "__main__":</span>
+<span class="c1">#    viewer = spark.RunViewer()</span>
+<span class="c1">#    viewer.open(recorder.path)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>A few more tricks for long runs:</p>
+<p><b>rec.When(condition, watch=…)</b> records a set of measurements when a condition is triggered, for example, when most of a population goes inactive. Importantly, since this condition is checked once the records reaches the host, it start recording after the condtion was triggered, which depending on the workload may be the next model call or a several model calls later. Fortunately, <b>lookback</b> can mitigate this effect by keeping track a few extra steps, which for the sake of efficiency are only kept in the GPU until they are actually needed.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">inactive</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">record</span><span class="p">:</span> <span class="n">record</span><span class="o">.</span><span class="n">summaries</span><span class="p">[</span><span class="s1">'A_excitatory.soma:spikes'</span><span class="p">]</span><span class="o">.</span><span class="n">inactive_unit_fraction</span> <span class="o">&gt;</span> <span class="mf">0.9</span>
+<span class="n">collapse</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">Measurements</span><span class="p">(</span>
+	<span class="s1">'collapse'</span><span class="p">,</span>
+	<span class="n">rec</span><span class="o">.</span><span class="n">presets</span><span class="o">.</span><span class="n">activity</span><span class="p">(</span><span class="n">brain</span><span class="p">,</span> <span class="n">trace_units</span><span class="o">=</span><span class="mi">32</span><span class="p">),</span>
+	<span class="n">trigger</span><span class="o">=</span><span class="n">rec</span><span class="o">.</span><span class="n">When</span><span class="p">(</span><span class="n">inactive</span><span class="p">,</span> <span class="n">watch</span><span class="o">=</span><span class="s1">'summary'</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">500</span><span class="p">),</span>
+	<span class="n">lookback</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>In general lookback is perfect to see what led to an event! (… not only to fix the features)</p>
+<p>For example, it is quite easy to create a probe that keeps track of what happens just before the pole falls.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set an activity measurement of the last 200 steps.</span>
+<span class="n">before_fall</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">Measurements</span><span class="p">(</span>
+	<span class="s1">'before_fall'</span><span class="p">,</span>
+	<span class="n">rec</span><span class="o">.</span><span class="n">presets</span><span class="o">.</span><span class="n">activity</span><span class="p">(</span><span class="n">brain</span><span class="p">,</span> <span class="n">trace_units</span><span class="o">=</span><span class="mi">32</span><span class="p">),</span>
+	<span class="n">lookback</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Written only after the pole falls.</span>
+<span class="k">with</span> <span class="n">rec</span><span class="o">.</span><span class="n">Recorder</span><span class="p">(</span><span class="s1">'runs'</span><span class="p">,</span> <span class="n">brain_config</span><span class="p">,</span> <span class="p">[</span><span class="o">*</span><span class="n">measurements</span><span class="p">,</span> <span class="n">before_fall</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s1">'lookback'</span><span class="p">)</span> <span class="k">as</span> <span class="n">recorder</span><span class="p">:</span>
+	<span class="n">graph</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">brain</span><span class="p">))</span>
+	<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+		<span class="n">recorder</span><span class="o">.</span><span class="n">tag</span><span class="p">(</span><span class="n">episode</span><span class="o">=</span><span class="n">e</span><span class="p">)</span>
+		<span class="n">state</span><span class="p">,</span> <span class="n">episode_steps</span><span class="p">,</span> <span class="n">outcome</span> <span class="o">=</span> <span class="n">run_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">modulation_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">STEPS</span><span class="p">,</span> <span class="n">unroll</span><span class="o">=</span><span class="n">UNROLL</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">outcome</span> <span class="o">==</span> <span class="s1">'fell'</span><span class="p">:</span>
+			<span class="n">recorder</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="s1">'before_fall'</span><span class="p">)</span>										<span class="c1"># &lt;--- The next call, and the 200 steps before it</span>
+
+<span class="n">falls</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">recorder</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">'before_fall'</span><span class="p">)</span>
+<span class="n">falls</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">falls</span><span class="p">)]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Record 2100: steps 2100 to 2350 of the run (250 steps)
+  traces
+    A_excitatory.drift_trace:output   (250, 1) float16
+    A_excitatory.reward_trace:output  (250, 1) float16
+    A_excitatory.soma.potential       (250, 32) float16
+    A_inhibitory.drift_trace:output   (250, 1) float16
+    A_inhibitory.reward_trace:output  (250, 1) float16
+    A_inhibitory.soma.potential       (250, 32) float16
+    B_excitatory.drift_trace:output   (250, 1) float16
+    B_excitatory.reward_trace:output  (250, 1) float16
+    B_excitatory.soma.potential       (250, 32) float16
+    B_inhibitory.drift_trace:output   (250, 1) float16
+    B_inhibitory.reward_trace:output  (250, 1) float16
+    B_inhibitory.soma.potential       (250, 32) float16
+    __call__:drift_ex                 (250, 1) float16
+    __call__:drift_in                 (250, 1) float16
+    __call__:mod_a_ex                 (250, 1) float16
+    __call__:mod_a_in                 (250, 1) float16
+    __call__:mod_b_ex                 (250, 1) float16
+    __call__:mod_b_in                 (250, 1) float16
+    __call__:signal                   (250, 4) float16
+    integrator:signal                 (250, 2) float16
+  rasters
+    A_excitatory.soma:spikes  (250, 256) bool
+    A_inhibitory.soma:spikes  (250, 64) bool
+    B_excitatory.soma:spikes  (250, 256) bool
+    B_inhibitory.soma:spikes  (250, 64) bool
+    spiker:spikes             (250, 512) bool
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p><b>recorder.checkpoint(state)</b> saves the state of the model into the run, and <b>run.restore(model)</b> brings it back, so a run can be resumed with <b>rec.Recorder.resume</b>.</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save the state of the model into the run...</span>
+<span class="k">with</span> <span class="n">rec</span><span class="o">.</span><span class="n">Recorder</span><span class="p">(</span><span class="s1">'runs'</span><span class="p">,</span> <span class="n">brain_config</span><span class="p">,</span> <span class="n">measurements</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">'checkpoint'</span><span class="p">)</span> <span class="k">as</span> <span class="n">recorder</span><span class="p">:</span>
+	<span class="n">graph</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">brain</span><span class="p">))</span>
+	<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+		<span class="n">recorder</span><span class="o">.</span><span class="n">tag</span><span class="p">(</span><span class="n">episode</span><span class="o">=</span><span class="n">e</span><span class="p">)</span>
+		<span class="n">recorder</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="s1">'summary'</span><span class="p">)</span>
+		<span class="n">state</span><span class="p">,</span> <span class="n">episode_steps</span><span class="p">,</span> <span class="n">outcome</span> <span class="o">=</span> <span class="n">run_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">modulation_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">STEPS</span><span class="p">,</span> <span class="n">unroll</span><span class="o">=</span><span class="n">UNROLL</span><span class="p">)</span>
+		<span class="n">recorder</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">))</span>							<span class="c1"># &lt;--- brain.checkpoint, filed under the current step</span>
+
+<span class="c1"># ... and later on, maybe after a crash, bring it back and go on from there.</span>
+<span class="n">run_checkpoint</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">recorder</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+<span class="n">step</span> <span class="o">=</span> <span class="n">run_checkpoint</span><span class="o">.</span><span class="n">checkpoints</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">restored</span> <span class="o">=</span> <span class="n">run_checkpoint</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>											<span class="c1"># &lt;--- The brain, built again from the checkpoint</span>
+<span class="k">with</span> <span class="n">rec</span><span class="o">.</span><span class="n">Recorder</span><span class="o">.</span><span class="n">resume</span><span class="p">(</span><span class="n">recorder</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">restored</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span> <span class="k">as</span> <span class="n">recorder</span><span class="p">:</span>		<span class="c1"># &lt;--- The run goes on from the step of the checkpoint</span>
+	<span class="n">graph</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">restored</span><span class="p">))</span>
+	<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
+		<span class="n">recorder</span><span class="o">.</span><span class="n">tag</span><span class="p">(</span><span class="n">episode</span><span class="o">=</span><span class="n">e</span><span class="p">)</span>
+		<span class="n">recorder</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="s1">'summary'</span><span class="p">)</span>
+		<span class="n">state</span><span class="p">,</span> <span class="n">episode_steps</span><span class="p">,</span> <span class="n">outcome</span> <span class="o">=</span> <span class="n">run_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">modulation_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">STEPS</span><span class="p">,</span> <span class="n">unroll</span><span class="o">=</span><span class="n">UNROLL</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<ul class="simple">
+<li><p>When a pattern is regular, a trigger can do the asking for us: <b>rec.Measurements(…, trigger=rec.Every(20, unit=’episode’))</b> replaces the <b>if</b> of our training loop. Triggers and <b>recorder.record</b> can be combined freely.</p></li>
+</ul>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># The measurements of our training loop, asking for their own steps...</span>
+<span class="n">triggered</span> <span class="o">=</span> <span class="p">[</span>
+	<span class="n">rec</span><span class="o">.</span><span class="n">Measurements</span><span class="p">(</span><span class="s1">'summary'</span><span class="p">,</span> <span class="n">rec</span><span class="o">.</span><span class="n">presets</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">brain</span><span class="p">),</span> <span class="n">group</span><span class="o">=</span><span class="s1">'episode'</span><span class="p">,</span> <span class="n">trigger</span><span class="o">=</span><span class="n">rec</span><span class="o">.</span><span class="n">Always</span><span class="p">()),</span>
+	<span class="n">rec</span><span class="o">.</span><span class="n">Measurements</span><span class="p">(</span><span class="s1">'episode'</span><span class="p">,</span> <span class="n">rec</span><span class="o">.</span><span class="n">presets</span><span class="o">.</span><span class="n">activity</span><span class="p">(</span><span class="n">brain</span><span class="p">,</span> <span class="n">trace_units</span><span class="o">=</span><span class="mi">32</span><span class="p">),</span> <span class="n">group</span><span class="o">=</span><span class="s1">'episode'</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="p">(</span><span class="s1">'env/observation'</span><span class="p">,),</span> <span class="n">trigger</span><span class="o">=</span><span class="n">rec</span><span class="o">.</span><span class="n">Every</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">'episode'</span><span class="p">)),</span>
+	<span class="n">rec</span><span class="o">.</span><span class="n">Measurements</span><span class="p">(</span><span class="s1">'weights'</span><span class="p">,</span> <span class="n">rec</span><span class="o">.</span><span class="n">presets</span><span class="o">.</span><span class="n">weights</span><span class="p">(</span><span class="n">brain</span><span class="p">),</span> <span class="n">group</span><span class="o">=</span><span class="s1">'episode'</span><span class="p">,</span> <span class="n">trigger</span><span class="o">=</span><span class="n">rec</span><span class="o">.</span><span class="n">Every</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">'episode'</span><span class="p">)),</span>
+<span class="p">]</span>
+
+<span class="c1"># ... and a training loop without a single if.</span>
+<span class="k">with</span> <span class="n">rec</span><span class="o">.</span><span class="n">Recorder</span><span class="p">(</span><span class="s1">'runs'</span><span class="p">,</span> <span class="n">brain_config</span><span class="p">,</span> <span class="n">triggered</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">'triggers'</span><span class="p">)</span> <span class="k">as</span> <span class="n">recorder</span><span class="p">:</span>
+	<span class="n">graph</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">split</span><span class="p">((</span><span class="n">brain</span><span class="p">))</span>
+	<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+		<span class="n">recorder</span><span class="o">.</span><span class="n">tag</span><span class="p">(</span><span class="n">episode</span><span class="o">=</span><span class="n">e</span><span class="p">)</span>													<span class="c1"># &lt;--- The triggers count the episodes of this tag</span>
+		<span class="n">state</span><span class="p">,</span> <span class="n">episode_steps</span><span class="p">,</span> <span class="n">outcome</span> <span class="o">=</span> <span class="n">run_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">modulation_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">STEPS</span><span class="p">,</span> <span class="n">unroll</span><span class="o">=</span><span class="n">UNROLL</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>PROTIP: Each combination of recorded measurements compiles the first time it is recorded. <b>warmup</b> compiles ahead of time the combinations that are likely to be recorded, so that no compilation happens mid-run:</p>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">rec</span><span class="o">.</span><span class="n">Recorder</span><span class="p">(</span><span class="s1">'runs'</span><span class="p">,</span> <span class="n">brain_config</span><span class="p">,</span> <span class="n">measurements</span><span class="p">)</span> <span class="k">as</span> <span class="n">recorder</span><span class="p">:</span>
+	<span class="n">run_model_unroll</span><span class="o">.</span><span class="n">warmup</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">STEPS</span><span class="p">,</span> <span class="n">unroll</span><span class="o">=</span><span class="n">UNROLL</span><span class="p">,</span> <span class="o">**</span><span class="n">mod_inputs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">drift</span><span class="o">=</span><span class="mf">0.0</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" type="text/css" href="./style.css">
+<div class="tutorial-text">
+<p>A few things worth keeping in mind:</p>
+<ul class="simple">
+<li><p>Each distinct combination of recorded measurements is compiled once. Try to keep measurements multiples of each other to minimize the number of compilations. For example, having 3 different measurements every A, B and C times may either compile to {A}, {A, B} and {A, B, C} if B is a multiple of A and C is a multiple of A and B; similarly, if all three are independent, this could potentially produce 6 different compilations: {A}, {B}, {C}, {A, B}, {B, C} and {A, B, C}.</p></li>
+<li><p>Summaries, traces of a few neurons and rasters are cheap. Snapshots of large weight matrices are limited by the transfer out of the GPU, so record them rarely.</p></li>
+<li><p>Records are copied to the host and written on a separate thread, so the model never waits for them.</p></li>
+</ul>
+<p>🎉 Congratulations! 🎉</p>
+<p>Now you can watch your SNNs learn, not just count how long the pole stays up!</p>
+</div></section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="cartpole.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorial #6: Solving the CartPole™</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="sharding.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tutorial #8: Sharding</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Mario Franco
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mario Franco.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
