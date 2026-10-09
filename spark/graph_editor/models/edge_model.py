@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 import uuid
 import typing as tp
 from PySide6.QtCore import Signal
+from spark.core.payloads import payload_types_match
 from spark.graph_editor.models.base_model import BaseModel
 
 #################################################################################################################################################
@@ -48,7 +49,7 @@ class EdgeModel(BaseModel):
             return True, 'Self connections allowed.'
         if src_port.is_input == dst_port.is_input:
             return False, 'Cannot connect two inputs or two outputs.'
-        if src_port.port_type != dst_port.port_type:
+        if not payload_types_match(dst_port.declared_type, src_port.declared_type):
             return False, f'Mismatched port types ({src_port.port_type} -> {dst_port.port_type}).'
         from spark.graph_editor.models.node_model import SinkNodeModel
         is_property = src_port.compartment is not None and src_port.compartment is getattr(src_port.node, 'props_section', None)

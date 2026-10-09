@@ -529,6 +529,145 @@ class TestBrainWithArrayConfigurations:
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
+class TestBrainWithInputsOfAnyName:
+    """
+        A brain joining two spikers with a Concat and sampling the result into a pool.
+    """
+
+    @staticmethod
+    def _config(join_inputs: dict[str, list[spark.PortMap]]) -> spark.nn.BrainConfig:
+        spiker = lambda name, port: spark.ModuleSpecs(
+            name = name,
+            module_cls = spark.nn.interfaces.PoissonSpiker,
+            inputs = {'signal': [spark.PortMap(origin='__call__', port=port)]},
+        )
+        return spark.nn.BrainConfig(seed=7, modules_specs=[
+            spiker('left', 'left_signal'),
+            spiker('right', 'right_signal'),
+            spark.ModuleSpecs(name='join', module_cls=spark.nn.interfaces.Concat, inputs=join_inputs),
+            spark.ModuleSpecs(
+                name = 'sample',
+                module_cls = spark.nn.interfaces.Sampler,
+                inputs = {'joined': [spark.PortMap(origin='join', port='output')]},
+                config = spark.nn.interfaces.SamplerConfig(sample_size=6),
+            ),
+            spark.ModuleSpecs(
+                name = 'pool',
+                module_cls = spark.nn.neurons.ALIFNeuron,
+                inputs = {'in_spikes': [spark.PortMap(origin='sample', port='output_0')]},
+                outputs = {'spikes': 'out_spikes'},
+                config = spark.nn.neurons.ALIFNeuronConfig(_s_units=(4,)),
+            ),
+        ])
+
+    @staticmethod
+    def _inputs() -> dict[str, spark.FloatArray]:
+        return {
+            'left_signal': spark.FloatArray(jnp.full((5,), 0.5, dtype=jnp.float16)),
+            'right_signal': spark.FloatArray(jnp.full((3,), 0.5, dtype=jnp.float16)),
+        }
+
+    def test_each_input_keeps_its_name(self) -> None:
+        brain = spark.nn.Brain(config=self._config({
+            'from_left': [spark.PortMap(origin='left', port='spikes')],
+            'from_right': [spark.PortMap(origin='right', port='spikes')],
+        }))
+        outputs = brain(**self._inputs())
+        assert outputs['spikes'].value.shape == (4,)
+        specs = brain.join.get_input_specs()
+        assert list(specs) == ['from_left', 'from_right']
+        assert (specs['from_left'].shape, specs['from_right'].shape) == ((5,), (3,))
+        assert brain.sample.get_output_specs()['output_0'].payload_type is spark.SpikeArray
+
+    def test_one_input_may_join_several_outputs(self) -> None:
+        brain = spark.nn.Brain(config=self._config({
+            'inputs': [spark.PortMap(origin='left', port='spikes'), spark.PortMap(origin='right', port='spikes')],
+        }))
+        brain(**self._inputs())
+        assert brain.join.get_input_specs()['inputs'].shape == (8,)
+
+    def test_it_runs_for_several_jitted_steps(self) -> None:
+        brain = spark.nn.Brain(config=self._config({
+            'from_left': [spark.PortMap(origin='left', port='spikes')],
+            'from_right': [spark.PortMap(origin='right', port='spikes')],
+        }))
+        brain(**self._inputs())
+        graph, state = spark.split((brain))
+        for _ in range(3):
+            outputs, state = _run_split(graph, state, self._inputs())
+        assert outputs['spikes'].value.shape == (4,)
+
+    def test_an_output_of_another_payload_type_is_still_refused(self) -> None:
+        config = spark.nn.BrainConfig(modules_specs=[
+            spark.ModuleSpecs(
+                name = 'spiker',
+                module_cls = spark.nn.interfaces.PoissonSpiker,
+                inputs = {'signal': [spark.PortMap(origin='__call__', port='signal')]},
+            ),
+            spark.ModuleSpecs(
+                name = 'integrator',
+                module_cls = spark.nn.interfaces.ExponentialIntegrator,
+                inputs = {'spikes': [spark.PortMap(origin='spiker', port='spikes')]},
+                config = spark.nn.interfaces.ExponentialIntegratorConfig(num_outputs=2),
+            ),
+            spark.ModuleSpecs(
+                name = 'pool',
+                module_cls = spark.nn.neurons.ALIFNeuron,
+                inputs = {'in_spikes': [spark.PortMap(origin='integrator', port='signal')]},
+                config = spark.nn.neurons.ALIFNeuronConfig(_s_units=(4,)),
+            ),
+        ])
+        with pytest.raises(ValueError, match='does not match the expected payload type'):
+            spark.nn.Brain(config=config)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TestBrainSplittingAPool:
+    """
+        A pool split by a Sampler into two populations, each read by an integrator of its own.
+    """
+
+    @staticmethod
+    def _config(readouts: tuple[int, ...] = (0, 1)) -> spark.nn.BrainConfig:
+        readout = lambda k: spark.ModuleSpecs(
+            name = f'readout_{k}',
+            module_cls = spark.nn.interfaces.ExponentialIntegrator,
+            inputs = {'spikes': [spark.PortMap(origin='split', port=f'output_{k}')]},
+            outputs = {f'signal_{k}': 'signal'},
+            config = spark.nn.interfaces.ExponentialIntegratorConfig(num_outputs=1),
+        )
+        return spark.nn.BrainConfig(seed=7, modules_specs=[
+            spark.ModuleSpecs(
+                name = 'spiker',
+                module_cls = spark.nn.interfaces.PoissonSpiker,
+                inputs = {'signal': [spark.PortMap(origin='__call__', port='signal')]},
+            ),
+            spark.ModuleSpecs(
+                name = 'pool',
+                module_cls = spark.nn.neurons.ALIFNeuron,
+                inputs = {'in_spikes': [spark.PortMap(origin='spiker', port='spikes')]},
+                config = spark.nn.neurons.ALIFNeuronConfig(_s_units=(16,)),
+            ),
+            spark.ModuleSpecs(
+                name = 'split',
+                module_cls = spark.nn.interfaces.Sampler,
+                inputs = {'spikes': [spark.PortMap(origin='pool', port='out_spikes')]},
+                config = spark.nn.interfaces.SamplerConfig(sample_size=8, num_outputs=2, disjoint=True),
+            ),
+        ] + [readout(k) for k in readouts])
+
+    def test_each_population_drives_its_own_signal(self) -> None:
+        brain = spark.nn.Brain(config=self._config())
+        outputs = brain(signal=spark.FloatArray(jnp.full((8,), 0.5, dtype=jnp.float16)))
+        assert set(outputs) == {'signal_0', 'signal_1'}
+        assert len(set(np.asarray(brain.split.indices).ravel().tolist())) == 16
+
+    def test_an_output_past_the_last_one_is_refused(self) -> None:
+        with pytest.raises(ValueError, match='output_2'):
+            spark.nn.Brain(config=self._config(readouts=(0, 2)))
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
 class TestBrainRoundTrip:
     """
         A brain written to a file and built again from it.

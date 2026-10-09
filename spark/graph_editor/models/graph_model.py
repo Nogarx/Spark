@@ -11,7 +11,10 @@ import typing as tp
 from PySide6.QtCore import Signal
 from spark.graph_editor.models.base_model import BaseModel
 from spark.graph_editor.models.node_model import NodeModel
+from spark.graph_editor.models.port_model import PortModel
 from spark.graph_editor.models.edge_model import EdgeModel
+from spark.graph_editor.models.port_types import refresh_port_types, connection_conflicts
+from spark.graph_editor.commands.graph_commands import AddEdgeCommand, RemoveEdgeCommand
 from spark.graph_editor.models.inheritance_tree import InheritanceTree, InheritanceLeaf, InheritanceFlags
 from spark.graph_editor.models.controller_profile import ControllerProfile, get_controller_profile
 from spark.core.specs import ModuleSpecs
@@ -320,9 +323,12 @@ class GraphModel(BaseModel):
             return None
         return getattr(owner, path[-1], None)
 
-    def set_node_config_value(self, path: list[str], value, force: bool = False) -> None:
+    def set_node_config_value(self, path: list[str], value, force: bool = False) -> list[EdgeModel]:
         """
             Writes a value into the configuration of a node.
+
+            A node whose outputs depend on its configuration (see Sampler) takes the output ports the new value asks
+            for. The connections of the ports it loses are removed.
 
             Parameters
             ----------
@@ -332,27 +338,51 @@ class GraphModel(BaseModel):
                 The new value.
             force : bool, default False
                 Bypass the inheritance guard. Reserved for cascaded writes.
+
+            Returns
+            -------
+            list of EdgeModel
+                The connections removed with the ports the node lost.
         """
         if len(path) < 2:
-            return
+            return []
         # A driven field is owned by its ancestor, direct writes are rejected.
         if not force and self.is_driven(self._inheritance_path(path)):
             logger.debug(f'Rejected write to "{"/".join(path)}": the field inherits its value from another field.')
-            return
+            return []
         owner = self._resolve_owner(path)
         if owner is None:
             logger.warning(f'Unable to resolve config path "{"/".join(path)}".')
-            return
+            return []
         attr_name = path[-1]
         if not hasattr(owner, attr_name):
             logger.warning(f'Config path "{"/".join(path)}" does not name a valid field.')
-            return
+            return []
         old_value = getattr(owner, attr_name, None)
         setattr(owner, attr_name, value)
         # Replacing a nested configuration (e.g. toggling an initializer) changes the shape of the tree.
         if isinstance(value, SparkConfig) or isinstance(old_value, SparkConfig):
             self.rebuild_inheritance_tree()
+        dropped = self._refresh_output_ports(path[0])
         self.config_value_changed.emit(path[0], path, value)
+        return dropped
+
+    def _refresh_output_ports(self, node_id: str) -> list[EdgeModel]:
+        """
+            Matches the output ports of a node to its configuration, and returns the connections of the ports it lost.
+        """
+        node = self.get_node_by_id(node_id)
+        if node is None:
+            return []
+        dropped = [edge for port in node.stale_output_ports() for edge in port.edges]
+        for edge in dropped:
+            self.remove_edge(edge)
+        node.refresh_output_ports()
+        # A new port carries the type of the generic ports of its node.
+        for port in node.get_all_ports():
+            if port.is_generic:
+                refresh_port_types(port)
+        return dropped
 
     @staticmethod
     def _inheritance_path(path: list[str]) -> list[str]:
@@ -422,6 +452,7 @@ class GraphModel(BaseModel):
                 edge.source_port.add_edge(edge)
             if edge.target_port:
                 edge.target_port.add_edge(edge)
+            self._refresh_port_types(edge)
             self.edge_added.emit(edge)
 
     def remove_edge(self, edge: EdgeModel) -> None:
@@ -431,7 +462,56 @@ class GraphModel(BaseModel):
                 edge.source_port.remove_edge(edge)
             if edge.target_port:
                 edge.target_port.remove_edge(edge)
+            self._refresh_port_types(edge)
             self.edge_removed.emit(edge)
+
+    @staticmethod
+    def _refresh_port_types(edge: EdgeModel) -> None:
+        # Removing an edge may split a group of generic ports, so each end is refreshed on its own.
+        for port in (edge.source_port, edge.target_port):
+            if port is not None:
+                refresh_port_types(port)
+
+    def connect(self, source: PortModel, target: PortModel, carrier: PortModel | None = None) -> EdgeModel:
+        """
+            Connects two ports in one step of the undo stack, removing the connections the new one replaces.
+
+            A port that takes a single connection drops the one it holds. A generic port that takes the type of the
+            new connection drops the connections of another type (see port_types.connection_conflicts).
+
+            Parameters
+            ----------
+            source : PortModel
+                The output port.
+            target : PortModel
+                The input port.
+            carrier : PortModel, optional
+                The port the connection is drawn from, ``source`` by default. Between two generic ports, its type
+                stands.
+
+            Returns
+            -------
+            EdgeModel
+                The new connection.
+        """
+        replaced = [edge for port in (source, target) if not port.multi_connection for edge in port.edges]
+        conflicts = [
+            edge for edge in connection_conflicts(source, target, carrier or source) if edge not in replaced
+        ]
+        edge = EdgeModel(source, target)
+        self.undo_stack.beginMacro('Connect')
+        try:
+            for stale in replaced + conflicts:
+                self.undo_stack.push(RemoveEdgeCommand(self, stale))
+            self.undo_stack.push(AddEdgeCommand(self, edge))
+        finally:
+            self.undo_stack.endMacro()
+        if conflicts:
+            logger.info(
+                f'The connection carries {source.port_type.__name__}: {len(conflicts)} connection(s) of another '
+                f'payload type were removed.'
+            )
+        return edge
 
     def get_node_by_id(self, node_id: str) -> NodeModel | None:
         for node in self.nodes:

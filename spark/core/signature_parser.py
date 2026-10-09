@@ -202,7 +202,8 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
         Returns
         -------
         dict of str to PortSpecs
-            One entry per parameter of ``__call__``, excluding ``self``.
+            One entry per parameter of ``__call__``, excluding ``self``. A ``**`` parameter has one
+            entry, under its own name (see `get_variadic_input_name`).
 
         Raises
         ------
@@ -228,13 +229,8 @@ def get_input_specs(module: type[SparkModule]) -> dict[str, PortSpecs]:
         if parameter.name in ['self', 'cls']: 
             continue
 
-        # NOTE: Dynamic input workaround (Concat & friends >:c )
-        if hasattr(module, '_overwrite_call_signature'):
-            # Scrap parameter.
-            payload_types = normalize_typehint(parameter.annotation)
-        else:
-            # Scrap parameter.
-            payload_types = normalize_typehint(signature_type_hints[parameter.name])
+        # Scrap parameter.
+        payload_types = normalize_typehint(signature_type_hints[parameter.name])
         # Remove optional
         payload_types = tuple(t for t in payload_types if not (isinstance(t, type) and issubclass(t, type(None))))
         # Extract Payloads from lists
@@ -308,6 +304,31 @@ def get_optional_input_names(module: type[SparkModule]) -> list[str]:
         if type(None) in payload_types:
             optional_input.append(parameter.name)
     return optional_input
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+def get_variadic_input_name(module: type[SparkModule]) -> str | None:
+    """
+        Reads the name of the ``**`` parameter of ``__call__`` off a module class.
+
+        A module with such a parameter, as `Concat`, takes inputs under any name. Each of them is
+        described by the annotation of the parameter.
+
+        Parameters
+        ----------
+        module : type of SparkModule
+            Class to inspect.
+
+        Returns
+        -------
+        str or None
+            Name of the ``**`` parameter, or None if ``__call__`` has none.
+    """
+    signature = inspect.signature(module.__call__)
+    return next(
+        (parameter.name for parameter in signature.parameters.values() if parameter.kind is inspect.Parameter.VAR_KEYWORD),
+        None,
+    )
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 

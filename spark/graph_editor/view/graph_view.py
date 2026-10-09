@@ -218,15 +218,8 @@ class GraphScene(QGraphicsScene):
                 dst_port_model = target_item.model if target_item.model.is_input else self.active_port.model
                 is_valid, msg = EdgeModel.validate_connection(src_port_model, dst_port_model)
                 if is_valid:
-                    src = self.active_port if not self.active_port.model.is_input else target_item
-                    dst = target_item if target_item.model.is_input else self.active_port
-                    # A port that is not multi_connection drops the pipe it already holds.
-                    if not src.model.multi_connection and src.connected_pipes:
-                        for p in list(src.connected_pipes): p.disconnect_pipe()
-                    if not dst.model.multi_connection and dst.connected_pipes:
-                        for p in list(dst.connected_pipes): p.disconnect_pipe()
-                    edge_model = EdgeModel(src.model, dst.model)
-                    self.model.undo_stack.push(AddEdgeCommand(self.model, edge_model))
+                    # The connections the new one replaces are removed in the same step of the undo stack.
+                    self.model.connect(src_port_model, dst_port_model, carrier=self.active_port.model)
                 else:
                     print(f'Connection Denied: {msg}')
             elif self.is_disconnecting:
@@ -507,10 +500,12 @@ class GraphView(QGraphicsView):
         for orig_model, orig_pos in zip(nodes_model, nodes_pos):
             # Clone the model with its own class.
             new_model: NodeModel = orig_model.__class__(orig_model.name, orig_model.type_name)
-            for p in orig_model.call_section.ports:
-                new_model.call_section.add_port(PortModel(p.name, p.is_input, p.port_type, p.is_optional, p.multi_connection))
-            for p in orig_model.props_section.ports:
-                new_model.props_section.add_port(PortModel(p.name, p.is_input, p.port_type, p.is_optional, p.multi_connection))
+            # The class builds the ports of a module node itself. The ports it lacks are copied, as declared: the
+            # type a generic port carries comes from its connections.
+            for section, orig_section in ((new_model.call_section, orig_model.call_section), (new_model.props_section, orig_model.props_section)):
+                for p in orig_section.ports:
+                    if new_model.get_port_by_name(p.name, p.is_input) is None:
+                        section.add_port(PortModel(p.name, p.is_input, p.declared_type, p.is_optional, p.multi_connection))
             new_pos = orig_pos + offset
             # Snap the pasted items when snapping is enabled.
             if STYLES.get_val('graph', 'snapping', 'enabled'):

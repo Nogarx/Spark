@@ -31,6 +31,26 @@ class PortItem(QGraphicsObject):
         self.setAcceptHoverEvents(True)
         self._hovered = False
         self.connected_pipes: list[PipeItem] = []
+        self.model.type_changed.connect(self._on_type_changed)
+        self._update_tooltip()
+
+    def _update_tooltip(self) -> None:
+        # A generic port that carries no type yet takes any payload derived from the one it is declared with.
+        carried = self.model.port_type
+        if self.model.is_generic and carried is self.model.declared_type:
+            label = f'any {getattr(carried, "__name__", carried)}'
+        else:
+            label = getattr(carried, '__name__', str(carried))
+        self.setToolTip(f'{self.model.name}: {label}')
+
+    def _on_type_changed(self, _port_type: tp.Any) -> None:
+        if not isValid(self):
+            return
+        self._update_tooltip()
+        self.update()
+        for pipe in self.connected_pipes:
+            if isValid(pipe):
+                pipe.update()
 
     def add_pipe(self, pipe: PipeItem) -> None:
         if pipe not in self.connected_pipes: 
@@ -206,6 +226,7 @@ class NodeItem(QGraphicsItem):
         self.model.position_changed.connect(self.on_model_pos_changed)
         self.model.selected_changed.connect(self.on_model_selected_changed)
         self.model.name_changed.connect(self.on_model_name_changed)
+        self.model.ports_changed.connect(self.on_model_ports_changed)
 
     def on_model_pos_changed(self, x: float, y: float) -> None:
         if self.pos() != QPointF(x, y):
@@ -217,6 +238,39 @@ class NodeItem(QGraphicsItem):
             
     def on_model_name_changed(self, new_name: str) -> None:
         self.title_item.setPlainText(new_name)
+
+    def _port_items(self) -> list[PortItem]:
+        return [
+            port for row in self.rows if isinstance(row, PropertyRowItem)
+            for port in (row.input_port, row.output_port) if port is not None
+        ]
+
+    def on_model_ports_changed(self) -> None:
+        """
+            Lays the rows out again for the ports of the model. The pipes of the ports that stay move to their new
+            items; those of the ports removed went with their connections.
+        """
+        if not isValid(self):
+            return
+        pipes = {item.model: list(item.connected_pipes) for item in self._port_items()}
+        scene = self.scene()
+        self.prepareGeometryChange()
+        for row in self.rows:
+            if scene is not None:
+                scene.removeItem(row)
+            else:
+                row.setParentItem(None)
+        self._setup_content()
+        for item in self._port_items():
+            for pipe in pipes.get(item.model, []):
+                if pipe.source_port is not None and pipe.source_port.model is item.model:
+                    pipe.source_port = item
+                if pipe.target_port is not None and pipe.target_port.model is item.model:
+                    pipe.target_port = item
+                item.add_pipe(pipe)
+        self.update()
+        if scene is not None:
+            scene.update_all_pipes()
 
     def _setup_content(self) -> None:
         self.section_headers = []

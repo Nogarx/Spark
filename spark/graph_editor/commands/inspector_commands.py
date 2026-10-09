@@ -6,6 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.graph_editor.models.graph_model import GraphModel
+    from spark.graph_editor.models.edge_model import EdgeModel
     from spark.graph_editor.models.inspector_model import ConfigValueNode
 
 import copy
@@ -38,6 +39,8 @@ class ChangeConfigValueCommand(QUndoCommand):
         self.new_value = copy.deepcopy(new_value)
         self.node = node
         self._is_first_run = True
+        # Connections removed with the output ports the change took away (see GraphModel.set_node_config_value).
+        self._dropped_edges: list[EdgeModel] = []
 
     def id(self) -> int:
         # Id built from the node and the config path, so consecutive edits of one field are merged.
@@ -49,6 +52,7 @@ class ChangeConfigValueCommand(QUndoCommand):
             return False
         # Merging keeps the original old_value and takes the newer value.
         self.new_value = copy.deepcopy(command.new_value)
+        self._dropped_edges += [edge for edge in command._dropped_edges if edge not in self._dropped_edges]
         return True
 
     def undo(self) -> None:
@@ -56,6 +60,9 @@ class ChangeConfigValueCommand(QUndoCommand):
         self.graph_model.set_node_config_value(self.path, self.old_value)
         # Propagate through the inheritance tree.
         self.graph_model.update_inherited_value(self.path, self.old_value)
+        # The ports came back with the old value, and so do their connections.
+        for edge in self._dropped_edges:
+            self.graph_model.add_edge(edge)
         
         # Revert the UI state model.
         if isValid(self.node):
@@ -64,7 +71,7 @@ class ChangeConfigValueCommand(QUndoCommand):
 
     def redo(self) -> None:
         # Update the Python backend.
-        self.graph_model.set_node_config_value(self.path, self.new_value)
+        self._dropped_edges = self.graph_model.set_node_config_value(self.path, self.new_value)
         # Propagate through the inheritance tree.
         self.graph_model.update_inherited_value(self.path, self.new_value)
         

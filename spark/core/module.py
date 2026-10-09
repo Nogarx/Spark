@@ -195,12 +195,6 @@ class SparkModule(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT, InputT], 
             Called once, on the first call to the module. Reads the payloads that arrived, records the
             input, output and property specifications, and calls `build`.
         """
-        # Override signatures 
-        # NOTE: This is a particular case for modules that expect many abstract arguments. 
-        # I am looking at you Concat (╯°□°）╯︵ ┻━┻.
-        if hasattr(self, '_overwrite_call_signature'):
-            self._overwrite_call_signature(abc_kwargs)
-
         # Bind arguments to avoid parameter mixing.
         call_signature = inspect.signature(self.__call__)
         try:
@@ -208,9 +202,14 @@ class SparkModule(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT, InputT], 
             bound_args.apply_defaults()
         except TypeError as error:
             raise TypeError(f'Error binding arguments for "{self.name}": {error}') from error
+        # The inputs gathered by a ** parameter (Concat & friends) are inputs of their own, under the names given.
+        arguments = dict(bound_args.arguments)
+        variadic = sig_parser.get_variadic_input_name(type(self))
+        if variadic is not None:
+            arguments.update(arguments.pop(variadic))
 
         # Construct input specs.
-        self._construct_input_specs(bound_args.arguments)
+        self._construct_input_specs(arguments)
         # TODO: This is quick hack to prevent manual initialization of synaptic masks.
         # Ideally, this should be handle within the Plasticity component but it would require
         # to maintain a custom _build method, which is not ideal right now due to the todo below. 
@@ -341,7 +340,7 @@ class SparkModule(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT, InputT], 
         """
 
         # Validate output contract.
-        output_specs = sig_parser.get_output_specs(type(self))
+        output_specs = type(self)._get_output_specs(self.config)
         for port in output_specs.keys():
             if port not in output_contract_specs:
                 raise ValueError(
@@ -392,6 +391,19 @@ class SparkModule(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT, InputT], 
         """
         # Get default spec from signature. Default specs helps validate the user didn't make a mistake.
         input_specs = sig_parser.get_input_specs(type(self))
+        # A ** parameter (Concat & friends) stands for every input outside of the named ones.
+        variadic = sig_parser.get_variadic_input_name(type(self))
+        if variadic is not None:
+            declared = input_specs.pop(variadic).payload_type
+            for key, payload in abc_kwargs.items():
+                if key in input_specs:
+                    continue
+                if not isinstance(payload, declared):
+                    raise TypeError(
+                        f'Module "{self.name}" takes inputs of type "{declared.__name__}", but input "{key}" is of '
+                        f'type "{type(payload).__name__}".'
+                    )
+                input_specs[key] = PortSpecs(payload_type=type(payload), shape=None, dtype=None)
         # Validate specs and abc_kwargs match.
         if input_specs.keys() != abc_kwargs.keys():
             # Check if missing key is optional.
@@ -433,7 +445,7 @@ class SparkModule(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT, InputT], 
             Output spec constructor.
         """
         # Get default spec from signature.
-        output_specs = sig_parser.get_output_specs(type(self))
+        output_specs = type(self)._get_output_specs(self.config)
         # Validate specs and abc_kwargs match.
         if output_specs.keys() != abc_kwargs.keys():
             raise ValueError(
@@ -445,8 +457,10 @@ class SparkModule(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT, InputT], 
         from spark.core.payloads import SpikeArray
         for key in output_specs.keys():
             output_payload: SparkPayload = abc_kwargs[key]
+            # An output declared by a base type, as one that follows the type of the inputs, takes the type produced.
+            declared = output_specs[key].payload_type
             output_specs[key] = PortSpecs(
-                payload_type=output_specs[key].payload_type,
+                payload_type=type(output_payload) if isinstance(output_payload, declared) else declared,
                 shape=output_payload.shape,
                 dtype=output_payload.dtype,
                 description=f'Auto-generated output spec for input \"{key}\" of module \"{self.name}\".',
@@ -538,27 +552,45 @@ class SparkModule(Module, Checkpointable, abc.ABC, tp.Generic[ConfigT, InputT], 
 
 
     @classmethod
-    def _get_input_specs(cls) -> dict[str, PortSpecs]:
+    def _get_input_specs(cls, names: tp.Iterable[str] | None = None) -> dict[str, PortSpecs]:
         """
             Returns the input port specifications read from the class.
 
             Available before the module is built, so shape and dtype are None.
+
+            Parameters
+            ----------
+            names : iterable of str, optional
+                Names of the inputs a controller wires. The ``**`` parameter of ``__call__``, if any,
+                gives its specification to each of them outside of the named parameters, in place of
+                its own entry.
 
             Returns
             -------
             dict of str to PortSpecs
                 One entry per parameter of ``__call__``.
         """
-        return sig_parser.get_input_specs(cls)
+        input_specs = sig_parser.get_input_specs(cls)
+        variadic = sig_parser.get_variadic_input_name(cls)
+        if names is not None and variadic is not None:
+            variadic_spec = input_specs.pop(variadic)
+            input_specs.update({name: variadic_spec for name in names if name not in input_specs})
+        return input_specs
 
 
 
     @classmethod
-    def _get_output_specs(cls) -> dict[str, PortSpecs]:
+    def _get_output_specs(cls, config: SparkConfig | None = None) -> dict[str, PortSpecs]:
         """
             Returns the output port specifications read from the class.
 
-            Available before the module is built, so shape and dtype are None.
+            Available before the module is built, so shape and dtype are None. A module whose outputs depend on
+            its configuration, as `Sampler`, overrides this method and reads them from ``config``.
+
+            Parameters
+            ----------
+            config : SparkConfig, optional
+                Configuration of the module. Read only by modules whose outputs depend on it.
 
             Returns
             -------

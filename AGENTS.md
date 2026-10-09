@@ -121,8 +121,10 @@ lists them with their units, its ports and its properties. The base classes (`So
   - signal to spikes: `PoissonSpiker` (stochastic rate code), `LinearSpiker` (deterministic rate code),
     and the place codes `TopologicalPoissonSpiker` and `TopologicalLinearSpiker`;
   - spikes to signal: `ExponentialIntegrator`;
-  - between modules: `Concat`, `ConcatReshape`, `Sampler`, and the traces of a signal `SignalAccumulator`
-    (which keeps its area) and `SignalAverage` (which keeps its level).
+  - between modules: `Concat`, `ConcatReshape`, `Sampler` (fixed draws of its inputs on `output_0` to
+    `output_{num_outputs - 1}`, from separate entries with `disjoint=True`), and the traces of a signal
+    `SignalAccumulator` (which keeps its area) and `SignalAverage` (which keeps its level). Their inputs take
+    any name, and their type follows the inputs.
 - **Initializers** (`spark.nn.initializers`) draw weights and other parameters: `ConstantInitializer`,
   `UniformInitializer`, `SparseUniformInitializer`, `NormalizedSparseUniformInitializer`.
 - **Probe presets** (`spark.recording.presets`): `summary`, `activity` and `weights` build probes of every
@@ -344,7 +346,8 @@ class Counter(spark.nn.Module):
 ```
 
 - `__call__` takes its inputs by keyword and is annotated with a `TypedDict` of its outputs, from which the
-  ports of the module are read.
+  ports of the module are read. A `**inputs` parameter takes inputs under any name. A module whose outputs
+  depend on its configuration overrides the classmethod `_get_output_specs(config)`, as `Sampler` does.
 - State that changes lives in `spark.Variable`, fixed values in `spark.Constant`.
 - On the first call, the module runs `__call__` once to learn its outputs, then calls `reset`. A module whose
   state changes in `__call__` defines `reset` to return that state to its initial value; without it, that

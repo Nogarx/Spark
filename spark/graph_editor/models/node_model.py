@@ -6,7 +6,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from spark.core.config import SparkConfig
-    from spark.graph_editor.models.edge_model import EdgeModel
     from spark.nn.components.base import Component
     from spark.nn.interfaces.base import Interface
 
@@ -19,7 +18,7 @@ import spark.core.signature_parser as sig_parser
 from spark.graph_editor.models.compartment_model import CompartmentModel
 from spark.graph_editor.models.base_model import BaseModel
 from spark.graph_editor.models.port_model import PortModel
-from spark.core.payloads import FloatArray
+from spark.core.payloads import SparkPayload, FloatArray
 logger = logging.getLogger('spark')
 
 #################################################################################################################################################
@@ -32,6 +31,9 @@ class NodeModel(BaseModel):
     type_changed = Signal(str)
     selected_changed = Signal(bool)
     deleted = Signal()
+    ports_changed = Signal()
+    # The generic ports of one module carry one type, as the inputs and the output of a Concat (see port_types).
+    generic_ports_share_type: bool = True
     
     def __init__(self, name: str | None = None, type_name: str = 'BaseObject', pos=(0, 0), parent=None) -> None:
         super().__init__(parent)
@@ -46,6 +48,8 @@ class NodeModel(BaseModel):
         self.props_section = CompartmentModel('Properties', self)
         self.add_compartment(self.call_section)
         self.add_compartment(self.props_section)
+        # Output ports the configuration stopped asking for, by name, to come back as they were.
+        self._detached_ports: dict[str, PortModel] = {}
 
     @property
     def name(self) -> str: 
@@ -108,6 +112,48 @@ class NodeModel(BaseModel):
             ports.extend(comp.ports)
         return ports
 
+    def _config_output_specs(self) -> dict[str, tp.Any] | None:
+        """
+            The output ports the configuration asks for, or None if the outputs of the node do not depend on it.
+        """
+        return None
+
+    def stale_output_ports(self) -> list[PortModel]:
+        """
+            The output ports the configuration no longer asks for.
+        """
+        wanted = self._config_output_specs()
+        if wanted is None:
+            return []
+        return [port for port in self.call_section.ports if not port.is_input and port.name not in wanted]
+
+    def refresh_output_ports(self) -> None:
+        """
+            Matches the output ports to the configuration, for a module whose outputs depend on it (see Sampler).
+
+            A port the configuration stops asking for is kept by the node, and the same port comes back when it is
+            asked for again. Its connections are the graph's to remove first (see GraphModel.set_node_config_value).
+        """
+        wanted = self._config_output_specs()
+        if wanted is None:
+            return
+        current = {port.name: port for port in self.call_section.ports if not port.is_input}
+        changed = False
+        for name, port in current.items():
+            if name not in wanted:
+                self.call_section.remove_port(port)
+                self._detached_ports[name] = port
+                changed = True
+        for name, spec in wanted.items():
+            if name not in current:
+                port = self._detached_ports.pop(name, None)
+                if port is None:
+                    port = PortModel(name=name, is_input=False, port_type=spec.payload_type, multi_connection=True)
+                self.call_section.add_port(port)
+                changed = True
+        if changed:
+            self.ports_changed.emit()
+
     def delete(self) -> None:
         self.deleted.emit()
 
@@ -162,19 +208,16 @@ class SourceNodeModel(NodeModel):
         if name is None:
             name = 'Source'
         super().__init__(name=name, type_name=type_name, pos=pos, parent=parent)
+        # The input carries the type of the ports it feeds.
         self.value_port = PortModel(
             'value', 
             is_input=False, 
-            port_type=FloatArray, 
+            port_type=SparkPayload, 
             is_optional=False, 
             multi_connection=True, 
             parent=self,
         )
         self.call_section.add_port(self.value_port)
-        self.value_port.connected.connect(self.on_port_connected)
-
-    def on_port_connected(self, edge: EdgeModel) -> None:
-        self.value_port.port_type = edge.target_port.port_type
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -187,19 +230,16 @@ class SinkNodeModel(NodeModel):
         if name is None:
             name = 'Sink'
         super().__init__(name=name, type_name=type_name, pos=pos, parent=parent)
+        # The output carries the type of the port feeding it.
         self.value_port = PortModel(
             name='value', 
             is_input=True, 
-            port_type=FloatArray, 
+            port_type=SparkPayload, 
             is_optional=False, 
             multi_connection=False, 
             parent=self,
         )
         self.call_section.add_port(self.value_port)
-        self.value_port.connected.connect(self.on_port_connected)
-
-    def on_port_connected(self, edge: EdgeModel) -> None:
-        self.value_port.port_type = edge.source_port.port_type
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -237,14 +277,21 @@ class InterfaceNodeModel(NodeModel):
         if type_name is None:
             type_name = utils.to_human_readable(self._cls.__name__)
         super().__init__(name=name, type_name=type_name, pos=pos, parent=parent)
-        self._setup_ports()
+        # The configuration comes first, the outputs of some modules are read from it (see Sampler).
         config_cls: type[SparkConfig] = self._cls.get_config_spec()
         self.config = config_cls.partial()
+        self._setup_ports()
+
+    def _config_output_specs(self) -> dict[str, tp.Any] | None:
+        try:
+            return self._cls._get_output_specs(self.config)
+        except Exception:
+            return None
 
     def _setup_ports(self) -> None:
         try:
             input_specs = self._cls._get_input_specs()
-            output_specs = self._cls._get_output_specs()
+            output_specs = self._cls._get_output_specs(self.config)
             property_specs = self._cls._get_property_specs()
             readonly_properties = set(self._cls.get_readonly_properties())
             optional_inputs = set(sig_parser.get_optional_input_names(self._cls))
@@ -299,6 +346,8 @@ class ControllerNodeModel(NodeModel):
     """
 
     _cls: type
+    # The ports of a controller belong to different modules.
+    generic_ports_share_type = False
 
     def __init__(self, name: str | None = None, type_name: str | None = None, pos=(0, 0), parent=None) -> None:
         if name is None:
@@ -379,14 +428,21 @@ class ComponentNodeModel(NodeModel):
         if type_name is None:
             type_name = utils.to_human_readable(self._cls.__name__)
         super().__init__(name=name, type_name=type_name, pos=pos, parent=parent)
-        self._setup_ports()
+        # The configuration comes first, the outputs of some modules are read from it (see Sampler).
         config_cls: type[SparkConfig] = self._cls.get_config_spec()
         self.config = config_cls.partial()
+        self._setup_ports()
+
+    def _config_output_specs(self) -> dict[str, tp.Any] | None:
+        try:
+            return self._cls._get_output_specs(self.config)
+        except Exception:
+            return None
 
     def _setup_ports(self) -> None:
         try:
             input_specs = self._cls._get_input_specs()
-            output_specs = self._cls._get_output_specs()
+            output_specs = self._cls._get_output_specs(self.config)
             property_specs = self._cls._get_property_specs()
             readonly_properties = set(self._cls.get_readonly_properties())
             optional_inputs = set(sig_parser.get_optional_input_names(self._cls))

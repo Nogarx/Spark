@@ -3,6 +3,7 @@
 #################################################################################################################################################
 
 import pytest
+import inspect
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -122,6 +123,41 @@ class TestContract:
     def test_an_unexpected_input_is_refused(self, signal) -> None:
         with pytest.raises(Exception):
             Counter()(not_a_port=signal)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+class TestInputsOfAnyName:
+    """
+        A module whose call takes inputs under any name, as Concat.
+    """
+
+    @staticmethod
+    def _floats(size: int) -> spark.FloatArray:
+        return spark.FloatArray(jnp.ones((size,), dtype=jnp.float16))
+
+    def test_each_instance_keeps_the_names_it_was_given(self) -> None:
+        first, second = spark.nn.interfaces.Concat(), spark.nn.interfaces.Concat()
+        first(a=self._floats(2))
+        second(b=self._floats(3), c=self._floats(1))
+        assert list(first.get_input_specs()) == ['a']
+        assert list(second.get_input_specs()) == ['b', 'c']
+        assert first(a=self._floats(2))['output'].value.shape == (2,)
+
+    def test_building_leaves_the_class_alone(self) -> None:
+        before = inspect.signature(spark.nn.interfaces.Sampler.__call__)
+        spark.nn.interfaces.Sampler(sample_size=4)(a=self._floats(8))
+        assert inspect.signature(spark.nn.interfaces.Sampler.__call__) == before
+        assert list(spark.nn.interfaces.Sampler._get_input_specs()) == ['inputs']
+
+    def test_the_ports_take_the_types_received(self) -> None:
+        module = spark.nn.interfaces.Concat()
+        module(a=self._floats(2))
+        assert module.get_input_specs()['a'].payload_type is spark.FloatArray
+        assert module.get_output_specs()['output'].payload_type is spark.FloatArray
+
+    def test_an_input_that_is_not_a_payload_is_refused(self) -> None:
+        with pytest.raises(TypeError, match='input "a"'):
+            spark.nn.interfaces.Concat()(a=jnp.ones((2,), dtype=jnp.float16))
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------#
 
