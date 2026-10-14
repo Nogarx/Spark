@@ -179,21 +179,25 @@ Want to contribute but you do not know where to start? The [discussion forum](ht
 
 You can use the following reference to cite this repository, 
 
-<!--
-@article{spark_snn_github,
-  author = {Mario Franco, Carlos Gershenson},
-  title = {Spark: Modular Spiking Neural Networks},
-  url = {},
-  year = {2025},
+```
+@article{spark_snn,
+	author = {Franco, Mario  and Gershenson, Carlos },    
+	title = {Spark: modular spiking neural networks},  
+	journal = {Frontiers in Artificial Intelligence},   
+	volume = {Volume 9 - 2026},
+	year = {2026},
+	url = {https://www.frontiersin.org/journals/artificial-intelligence/articles/10.3389/frai.2026.1817837},
+	doi = {10.3389/frai.2026.1817837},
+	issn = {2624-8212},
 }
---->
+```
 
 ```
-@software{spark_snn_github,
+@software{spark_snn,
   author = {Mario Franco, Carlos Gershenson},
   title = {Spark: Modular Spiking Neural Networks},
   url = {https://github.com/nogarx/spark/},
-  version = {0.1.0},
+  version = {1.2.2},
   year = {2025},
 }
 ```
